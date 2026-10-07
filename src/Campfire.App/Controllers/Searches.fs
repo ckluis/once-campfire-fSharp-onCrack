@@ -45,9 +45,17 @@ module SearchesController =
                 return! c.App.ReadOffloaded(fun conn -> Message.searchReachable conn user.Id query)
         }
 
-    let index (c: Ctx) : Task<Result<Response, Error>> =
+    /// `index`. onCrack: through the read cache (`ReadCache.fs`), on the global and user's versions and those
+    /// of every room the user is in (the messages it can reach).
+    let rec index (c: Ctx) : Task<Result<Response, Error>> =
         act {
             do! Concerns.beforeActions c Before.Default
+            let! (user: User) = Concerns.requireCurrentUser c
+            return! ReadCache.page c "searches#index" user.Id (ReadCache.userRoomsDeps c user.Id) ignore (fun () -> renderIndex c)
+        }
+
+    and private renderIndex (c: Ctx) : Task<Result<Response, Error>> =
+        act {
             let! q = queryParam c
             let! (user: User) = Concerns.requireCurrentUser c
             let query = searchableQuery q

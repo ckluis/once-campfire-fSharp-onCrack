@@ -16,6 +16,7 @@
     <Compile Include="Generations.fs" />
     <Compile Include="Deflater.fs" />
     <Compile Include="Splice.fs" />
+    <Compile Include="FrozenPage.fs" />
     <Compile Include="Actions.fs" />
     <Compile Include="Adapter.fs" />
     <Compile Include="Server.fs" />

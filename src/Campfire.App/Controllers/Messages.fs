@@ -344,9 +344,8 @@ module MessagesController =
     // --- Actions -----------------------------------------------------------------------------------
 
     /// `index` (`layout false`): the page before/after a message, or the last page; 204 when empty.
-    let index (c: Ctx) : Task<Result<Response, Error>> =
+    let private renderIndex (c: Ctx) : Task<Result<Response, Error>> =
         act {
-            do! Concerns.beforeActions c Before.Default
             let! (_: Membership), (room: Room) = Concerns.setRoom c
             let! (messages: Message list) = findPagedMessages c room
             if messages.IsEmpty then
@@ -362,6 +361,9 @@ module MessagesController =
                         Etag = etag
                         LastModified = ValueSome((messages |> List.map (fun m -> m.UpdatedAt) |> List.max).ToDateTimeOffset())
                         Template = TemplateDigestIndex }
+                match c.Current<PageCapture>() with
+                | ValueSome capture -> capture.Freshness <- ValueSome freshness
+                | ValueNone -> ()
                 match c.FreshWhen freshness with
                 | ValueSome notModified -> return notModified
                 | ValueNone ->
@@ -370,6 +372,18 @@ module MessagesController =
                     return!
                         Page.bare c Status.Ok Format.Html (fun ctx ->
                             Render.page 0 (fun w -> IndexPage.render w ctx views))
+        }
+
+    /// `index`. onCrack: through the read cache (`ReadCache.fs`), on the room's, the user's and the global
+    /// versions; `fresh_when`'s validators are kept with the page.
+    let index (c: Ctx) : Task<Result<Response, Error>> =
+        act {
+            do! Concerns.beforeActions c Before.Default
+            let! (user: User) = Concerns.requireCurrentUser c
+            match (match c.ParamStr "room_id" with null -> None | id -> Ruby.integerCast id) with
+            | Some roomId ->
+                return! ReadCache.page c "messages#index" user.Id (ReadCache.roomDeps c user.Id roomId) ignore (fun () -> renderIndex c)
+            | None -> return! renderIndex c
         }
 
     /// `create`: `set_room` runs inside the action, and a room that's gone renders `room_not_found`.

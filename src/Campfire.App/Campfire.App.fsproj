@@ -31,6 +31,7 @@
     <Compile Include="Jobs.fs" />
     <Compile Include="AppState.fs" />
     <Compile Include="Current.fs" />
+    <Compile Include="ReadCache.fs" />
     <Compile Include="FragmentGlue.fs" />
     <Compile Include="Presenters/Common.fs" />
     <Compile Include="Presenters/RichText.fs" />

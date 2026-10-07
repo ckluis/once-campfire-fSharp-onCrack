@@ -36,7 +36,25 @@ module FragmentGlue =
 
     /// `Ctx::render_spliced` for a recorded page: its text with its cached fragments spliced in, which
     /// the kit keeps as parts rather than joining them.
+    ///
+    /// onCrack: while the read cache waits for this request's page (a `PageCapture`), the body is frozen
+    /// (`FrozenPage`) so that the cache can keep it, ETag and gzip member included.
     let renderRecorded (c: Ctx) (status: int) (template: Format) (page: RecordedPage) : Response =
+        match c.Current<PageCapture>() with
+        | ValueSome capture when page.Text.Length > 0 || page.Fragments.Length > 0 ->
+            let frozen =
+                if page.Fragments.Length = 0 then
+                    FrozenPage.OfBytes(ReadOnlyMemory<byte> page.Text)
+                else
+                    match splice page with
+                    | Ok parts -> FrozenPage.OfParts parts
+                    | Error whole -> FrozenPage.OfBytes whole
+            if not (isNull capture.Page) then capture.Spoiled <- true
+            capture.Page <- frozen
+            capture.Status <- status
+            capture.Template <- template
+            c.RenderParts(status, template, frozen)
+        | _ ->
         if page.Fragments.Length = 0 then
             c.Render(status, template, ReadOnlyMemory<byte> page.Text)
         else

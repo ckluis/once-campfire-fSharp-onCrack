@@ -188,9 +188,27 @@ module RoomsController =
     let show (c: Ctx) : Task<Result<Response, Error>> =
         act {
             do! Concerns.beforeActions c Before.Default
-            let! (room: Room) = setRoom c All
-            Concerns.rememberLastRoomVisited c room.Id
-            return! renderShow c room
+            let render () =
+                act {
+                    let! (room: Room) = setRoom c All
+                    Concerns.rememberLastRoomVisited c room.Id
+                    return! renderShow c room
+                }
+            let! (user: User) = Concerns.requireCurrentUser c
+            let id = match c.ParamStr "room_id" with null -> c.ParamStr "id" | id -> id
+            // onCrack: through the read cache (`ReadCache.fs`), which depends on the room's, the user's and the
+            // global versions; a hit implies the `set_room` the page was made after.
+            match (match id with null -> None | id -> Ruby.integerCast id) with
+            | Some roomId ->
+                return!
+                    ReadCache.page
+                        c
+                        "rooms#show"
+                        user.Id
+                        (ReadCache.roomDeps c user.Id roomId)
+                        (fun () -> Concerns.rememberLastRoomVisited c roomId)
+                        render
+            | None -> return! render ()
         }
 
     /// `destroy` (RoomsController and `Rooms::DirectsController`).

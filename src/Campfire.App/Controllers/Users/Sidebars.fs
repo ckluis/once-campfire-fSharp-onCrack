@@ -18,9 +18,17 @@ module Sidebars =
 
     let private showSize = RenderSize()
 
-    let show (c: Ctx) : Task<Result<Response, Error>> =
+    /// `show`. onCrack: through the read cache (`ReadCache.fs`), on the global and user's versions and those
+    /// of every room the user is in.
+    let rec show (c: Ctx) : Task<Result<Response, Error>> =
         act {
             do! Concerns.beforeActions c Before.Default
+            let! (user: User) = Concerns.requireCurrentUser c
+            return! ReadCache.page c "sidebars#show" user.Id (ReadCache.userRoomsDeps c user.Id) ignore (fun () -> render c)
+        }
+
+    and private render (c: Ctx) : Task<Result<Response, Error>> =
+        act {
             do! c.RespondTo [ Format.Html ] |> Result.map ignore
             let! (user: User) = Concerns.requireCurrentUser c
             let secrets = c.App.Secrets
