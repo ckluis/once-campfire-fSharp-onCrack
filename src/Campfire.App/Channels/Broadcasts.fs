@@ -78,8 +78,14 @@ type Broadcasts(server: Cable) =
             | None -> NoTemplate
         broadcastActionTo server streamables action (Target target) template attributes |> ignore
 
+    /// onCrack: a message's or boost's tag is encoded (its fragment escaped as JSON) only when its stream has a
+    /// subscriber; nobody else would receive it. The debug log still names every broadcast, as Rails logs it.
     member private _.ToUtf8(streamables: string list, action: Action, target: string, html: System.ReadOnlyMemory<byte>, attributes: (string * string option) list) : unit =
-        broadcastActionTo server streamables action (Target target) (HtmlUtf8 html) attributes |> ignore
+        let heard =
+            match streamName streamables with
+            | Some name -> server.Hub.HasSubscribers name || server.Logger.IsEnabled Microsoft.Extensions.Logging.LogLevel.Debug
+            | None -> false
+        if heard then broadcastActionTo server streamables action (Target target) (HtmlUtf8 html) attributes |> ignore
 
     // Message::Broadcasts (reference/app/models/message/broadcasts.rb)
 

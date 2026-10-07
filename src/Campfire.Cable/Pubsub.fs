@@ -178,6 +178,10 @@ and [<Sealed>] Hub(capacity: int) =
     let streams = ConcurrentDictionary<string, Group[]>(StringComparer.Ordinal)
     let gate = obj ()
 
+    /// onCrack: whether `broadcasting` has a subscriber now, so that a broadcast nobody would receive needn't be
+    /// encoded. One that subscribes after this answer misses the broadcast, as it would one sent a moment earlier.
+    member _.HasSubscribers(broadcasting: string) : bool = streams.ContainsKey broadcasting
+
     /// Publishes to every current subscriber of `broadcasting`; `payload` is encoded JSON as UTF-8.
     /// Returns how many received it.
     member _.Broadcast(broadcasting: string, payload: ReadOnlySpan<byte>) : int =

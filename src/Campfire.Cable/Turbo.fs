@@ -171,7 +171,7 @@ let refreshTag (requestId: string option) : string =
 // symbols); blank ones are dropped and nothing is sent if none remain, as in `broadcast_stream_to`.
 
 /// The stream name of `streamables` that aren't blank, if any are left.
-let private streamName (streamables: string list) : string option =
+let streamName (streamables: string list) : string option =
     match streamables |> List.filter (fun s -> s.Trim() <> "") with
     | [] -> None
     | remaining -> Some(Naming.streamNameFrom remaining)
