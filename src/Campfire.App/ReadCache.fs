@@ -125,6 +125,11 @@ module ReadCache =
 
         member _.Clear() : unit = lock gate (fun () -> pages <- fresh ())
 
+        /// Sessions by token, under the sessions counter, and users by id, under the global one: what
+        /// authentication reads on every request.
+        member val Sessions = System.Collections.Concurrent.ConcurrentDictionary<string, struct (Dep[] * Campfire.Db.Session option)>(StringComparer.Ordinal)
+        member val Users = System.Collections.Concurrent.ConcurrentDictionary<int64, struct (Dep[] * User option)>()
+
     let private stores = System.Runtime.CompilerServices.ConditionalWeakTable<Versions, Store>()
 
     let storeOf (versions: Versions) : Store = stores.GetValue(versions, fun _ -> Store())
@@ -251,3 +256,41 @@ module ReadCache =
                         | ValueNone -> return Ok ValueNone
                         | ValueSome rooms -> return Ok(ValueSome(Array.append first rooms))
             }
+
+    /// Bound on the sessions and users kept for authentication: past it, they start again.
+    [<Literal>]
+    let private MaxAuthEntries = 50_000
+
+    /// A read through one of the authentication maps: served while its counter is unchanged, read and kept
+    /// (when the counter was even before the read) otherwise.
+    let private through
+        (map: System.Collections.Concurrent.ConcurrentDictionary<'K, struct (Dep[] * 'V)>)
+        (key: 'K)
+        (cell: VersionCell)
+        (load: unit -> Task<Result<'V, Error>>)
+        : Task<Result<'V, Error>> =
+        match map.TryGetValue key with
+        | true, struct (deps, value) when Deps.valid deps -> Task.FromResult(Ok value)
+        | _ ->
+            task {
+                let deps = Deps.take [| cell |]
+                let! result = load ()
+                match result, deps with
+                | Ok value, ValueSome deps when Deps.valid deps ->
+                    if map.Count >= MaxAuthEntries then map.Clear()
+                    map[key] <- struct (deps, value)
+                | _ -> ()
+                return result
+            }
+
+    /// `Session.find_by(token:)`, through the cache (the sessions counter covers every session row).
+    let session (c: Ctx) (token: string) (load: unit -> Task<Result<Campfire.Db.Session option, Error>>) : Task<Result<Campfire.Db.Session option, Error>> =
+        match versions c with
+        | null -> load ()
+        | v -> through (storeOf v).Sessions token v.Sessions load
+
+    /// `User.find_by(id:)`, through the cache (users are global).
+    let user (c: Ctx) (id: int64) (load: unit -> Task<Result<User option, Error>>) : Task<Result<User option, Error>> =
+        match versions c with
+        | null -> load ()
+        | v -> through (storeOf v).Users id v.Global load

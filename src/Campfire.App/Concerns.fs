@@ -140,7 +140,8 @@ module Concerns =
     let findSessionByCookie (c: Ctx) : Task<Result<Session option, Error>> =
         match c.Cookies.Signed "session_token" with
         | null -> Task.FromResult(Ok None)
-        | token -> c.App.Read(fun conn -> Session.findByToken conn token)
+        // onCrack: through the read cache, under the sessions counter.
+        | token -> ReadCache.session c token (fun () -> c.App.Read(fun conn -> Session.findByToken conn token))
 
     /// `cookies.signed.permanent[:session_token] = { value: session.token, httponly: true, same_site: :lax }`
     let private setAuthenticationCookie (c: Ctx) (session: Session) : Result<unit, Error> =
@@ -154,7 +155,7 @@ module Concerns =
             let! user =
                 match user with
                 | Some user -> Task.FromResult(Ok(Some user))
-                | None -> c.App.Read(fun conn -> User.findById conn session.UserId)
+                | None -> ReadCache.user c session.UserId (fun () -> c.App.Read(fun conn -> User.findById conn session.UserId))
             if setCookie then do! setAuthenticationCookie c session
             c.SetCurrent(CurrentSessionSlot session)
             match user with
