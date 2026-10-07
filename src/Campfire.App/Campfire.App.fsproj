@@ -5,6 +5,13 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <TieredPGO>true</TieredPGO>
   </PropertyGroup>
+  <!-- Native AOT (Dockerfile NATIVE_AOT=true; bench/results/oncrack-c4.md). The analysis warnings are FSharp.Core's and the front server's
+       HTTP/2-over-cleartext probe of a Kestrel internal (src/Campfire.Kit/Front/Conn.fs, guarded: with that type trimmed it reports
+       itself unavailable and the port serves HTTP/1.1 only). Speed is ILC's inlining preference. -->
+  <PropertyGroup Condition="'$(PublishAot)' == 'true'">
+    <NoWarn>$(NoWarn);IL2026;IL2075;IL2104;IL3050;IL3053</NoWarn>
+    <OptimizationPreference>Speed</OptimizationPreference>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Config.fs" />
     <Compile Include="Concerns/UserAgent.fs" />

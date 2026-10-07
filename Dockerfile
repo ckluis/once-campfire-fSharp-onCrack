@@ -116,6 +116,9 @@ ENV DOTNET_ROOT=/opt/dotnet \
 ARG TARGETARCH
 # --build-arg READY_TO_RUN=false publishes the IL alone (to measure what ReadyToRun buys).
 ARG READY_TO_RUN=true
+# --build-arg NATIVE_AOT=true publishes a Native AOT binary instead (onCrack C4, bench/results/oncrack-c4.md): cold start and memory
+# roughly halved, about 11% fewer requests a second at sixteen connections (no tiered PGO), more at one. An opt-in, not the default.
+ARG NATIVE_AOT=false
 
 WORKDIR /src
 COPY global.json Directory.Build.props Directory.Packages.props ./
@@ -123,14 +126,19 @@ COPY src src
 COPY reference reference
 
 RUN --mount=type=cache,id=campfire-fsharp-nuget,target=/root/.nuget/packages \
+    if [ "$NATIVE_AOT" = true ]; then \
+      apt-get update -qq && apt-get install --no-install-recommends -y clang zlib1g-dev >/dev/null && rm -rf /var/lib/apt/lists; \
+    fi && \
     case "$TARGETARCH" in \
       amd64) rid=linux-x64 ;; \
       arm64) rid=linux-arm64 ;; \
       *) echo "unsupported architecture: $TARGETARCH" >&2; exit 1 ;; \
     esac && \
     dotnet build src/Campfire.Assets.Build/Campfire.Assets.Build.fsproj -c Release && \
+    if [ "$NATIVE_AOT" = true ]; then aot="-p:PublishAot=true"; READY_TO_RUN=false; else aot=""; fi && \
     dotnet publish src/Campfire.App/Campfire.App.fsproj -c Release -r "$rid" --self-contained true \
-      -p:PublishReadyToRun=$READY_TO_RUN -p:DebugType=None -p:DebugSymbols=false -o /out/campfire
+      -p:PublishReadyToRun=$READY_TO_RUN $aot -p:DebugType=None -p:DebugSymbols=false -o /out/campfire && \
+    if [ "$NATIVE_AOT" = true ]; then touch /out/campfire/.native-aot; fi
 
 
 # The shared libraries and executables that go into the runtime, in one directory tree.
@@ -184,8 +192,13 @@ RUN ln -s /opt/campfire/campfire /usr/local/bin/campfire
 # with TLS_DOMAIN, HTTPS_PORT (443), with the app itself also on TARGET_PORT (3000, loopback only unless TARGET_BIND says otherwise). Thruster's
 # environment (HTTP_*_TIMEOUT, TLS_DOMAIN, ACME_DIRECTORY, CACHE_SIZE, ... and their THRUSTER_
 # forms) means the same.
+# A Native AOT build (NATIVE_AOT=true) leaves /opt/campfire/.native-aot and spins its thread pool workers longer before they sleep:
+# the AOT runtime does not calibrate its spin loop, so its default of 70 spins is far shorter than the JIT runtime's and every hand-off
+# between workers cost a futex wake (one connection: 11.5k -> 15.5k req/s on the room page; bench/results/oncrack-c4.md). Any value the
+# container is given wins.
 COPY --chmod=755 <<'EOF' /rails/bin/boot
 #!/bin/sh
+if [ -e /opt/campfire/.native-aot ]; then export DOTNET_ThreadPool_UnfairSemaphoreSpinLimit="${DOTNET_ThreadPool_UnfairSemaphoreSpinLimit:-100}"; fi
 exec /usr/local/bin/campfire server
 EOF
 

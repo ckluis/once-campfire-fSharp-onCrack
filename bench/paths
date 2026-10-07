@@ -49,4 +49,5 @@ for p in "${PATHS[@]}"; do
     python3 -c 'import json,sys; r=json.loads(sys.argv[1]); c=r["cost"]; print("%-50s c=%-3s %9.0f rps  server %5.1f us/req %4.2f cores  loadgen %5.1f us/req %4.2f cores  %s err %s" % (sys.argv[2], sys.argv[3], r["rps"], c["server_cpu_us_per_req"], c["server_cores_busy"], c["loadgen_cpu_us_per_req"], c["loadgen_cores_busy"], r["statuses"], r["errors"]))' "$res" "$p" "$c"
   done
 done
+echo "  container memory: peak $(( $(cat "$CG/memory.peak" 2>/dev/null || echo 0) / 1048576 )) MB, now $(( $(cat "$CG/memory.current") / 1048576 )) MB (anon $(( $(mem_anon "$CG") / 1048576 )) MB)"
 docker rm -f "$CONTAINER" >/dev/null; rm -rf "${WORK:?}/$APP"

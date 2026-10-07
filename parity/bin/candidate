@@ -187,7 +187,7 @@ build() {
   docker build -t "$APP_IMAGE" -f "$APP_DOCKERFILE" \
     --build-arg APP_VERSION=parity --build-arg GIT_REVISION="$(reference_revision)" \
     --build-arg SOURCE_REVISION="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null)" \
-    --label "org.opencontainers.image.revision=$rev" \
+    --label "org.opencontainers.image.revision=$rev" ${PARITY_CANDIDATE_BUILD_ARGS:-} \
     "$APP_CONTEXT"
   log "building $IMAGE from parity/docker/candidate/Dockerfile"
   docker build -t "$IMAGE" --build-arg BASE_IMAGE="$APP_IMAGE" "$PARITY/docker/candidate"

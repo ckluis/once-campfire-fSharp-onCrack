@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# onCrack C4: cold start and idle memory of one build, in fresh containers, as bench/run's start_app starts them.
+# Run inside colima:  bench/boot [--runs 7] [--mounted DIR] [--env "K=V ..."] [--app oncrack] [--label NAME] [--out FILE]
+#
+# Per run: a fresh container and seed copy (pinned to SERVER_CPUS), then
+#   up_ms     docker run to the first 200 from /up (start_app's number, the one bench/run reports as cold start),
+#   page_ms   docker run to the first 200 for the busy room's page, signed in (JIT or not, the first real page costs more than /up),
+#   idle_mb   the container's memory.current and anon after IDLE_SECS (3 by default) of idleness,
+#   rss_mb    the app process's VmRSS then (what `ps` shows).
+# Prints one line per run and the median of each; --out appends a JSON line with the medians.
+set -euo pipefail
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+export SERVER_CPUS=${SERVER_CPUS:-0-3} LOADGEN_CPUS=${LOADGEN_CPUS:-4-7}
+export WORK=${WORK:-/var/tmp/campfire-bench-work}
+RUNS=7 APP=oncrack ENVX="" MOUNT="" LABEL="" OUTF="" IDLE=${IDLE_SECS:-3}
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --runs) RUNS=$2; shift 2 ;;
+    --app) APP=$2; shift 2 ;;
+    --env) ENVX=$2; shift 2 ;;
+    --mounted) MOUNT=$2; shift 2 ;;
+    --label) LABEL=$2; shift 2 ;;
+    --out) OUTF=$2; shift 2 ;;
+    *) echo "unknown option $1" >&2; exit 2 ;;
+  esac
+done
+[ -z "$MOUNT" ] || export ONCRACK_MOUNT=$MOUNT
+[ -z "$ENVX" ] || export ONCRACK_EXTRA_ENV="$ENVX"
+BENCH_RUN_LIB=1 source "$ROOT/bench/run"
+wait_for_quiet
+ups=() pages=() curs=() anons=() rsss=()
+for i in $(seq 1 "$RUNS"); do
+  t0=$(date +%s.%N)
+  up=$(start_app "$APP")
+  cookie=$(lg login --base "$BASE" --email "$EMAIL" --password "$PASSWORD" | python3 -c 'import json,sys; print(json.load(sys.stdin)["cookie"])')
+  curl -fsS -o /dev/null -H "Cookie: $cookie" "$BASE/rooms/$ROOM"
+  page=$(python3 -c "import sys; print(round((float(sys.argv[2]) - float(sys.argv[1])) * 1000))" "$t0" "$(date +%s.%N)")
+  # page_ms is docker run to the first room page, including the sign-in that precedes it (login hashes a password: bcrypt).
+  sleep "$IDLE"
+  cg=$(cgroup_dir)
+  cur=$(( $(cat "$cg/memory.current") / 1048576 )); an=$(( $(mem_anon "$cg") / 1048576 ))
+  pid=$(docker inspect -f '{{.State.Pid}}' "$CONTAINER")
+  rss=$(awk '/VmRSS/{print int($2/1024)}' "/proc/$pid/status")
+  echo "run $i: up ${up} ms, first room page ${page} ms (after sign-in), idle ${cur} MB (anon ${an}), rss ${rss} MB"
+  ups+=("$up"); pages+=("$page"); curs+=("$cur"); anons+=("$an"); rsss+=("$rss")
+done
+docker rm -f "$CONTAINER" >/dev/null; rm -rf "${WORK:?}/$APP"
+python3 - "$LABEL" "$OUTF" "${ups[*]}" "${pages[*]}" "${curs[*]}" "${anons[*]}" "${rsss[*]}" <<'PY'
+import json, statistics, sys
+label, outf = sys.argv[1], sys.argv[2]
+cols = [[int(x) for x in a.split()] for a in sys.argv[3:8]]
+names = ["up_ms", "page_ms", "idle_mb", "idle_anon_mb", "rss_mb"]
+med = {n: statistics.median(c) for n, c in zip(names, cols)}
+rng = {n: [min(c), max(c)] for n, c in zip(names, cols)}
+print("median " + (label + ": " if label else "") + ", ".join(f"{n} {med[n]:g} [{rng[n][0]}-{rng[n][1]}]" for n in names))
+if outf:
+    with open(outf, "a") as f:
+        f.write(json.dumps({"label": label, "runs": len(cols[0]), "median": med, "range": rng}) + "\n")
+PY
