@@ -21,6 +21,11 @@ still commits before its caller hears back. A write closure must do database wor
 group whose transaction breaks runs again write by write. `CAMPFIRE_GROUP_COMMIT=off` restores one write per transaction;
 `tests/Campfire.Db.Tests/GroupCommitTests.fs` holds the writer to form groups and compares a grouped run with a one-by-one run.
 
+**Content-Length on gzipped answers** (unit C3, `bench/results/oncrack-c3.md`): a gzipped buffer or frozen page goes out with the length of its
+gzip member (made, or fetched from the digest-keyed gzip cache or the frozen page, before the headers) instead of chunked; streams, files and pages in
+parts that are not frozen stay chunked. A chunked answer cost a second send for the terminating chunk, which on a cached hit (27-32 us of CPU) doubled
+the round trip at c=16. `CAMPFIRE_GZIP_LENGTH=off` restores chunking; `bench/paths` measures arbitrary GET paths (with `HEADERS=1`, `SIZES=1`, `PERFSTAT=1`).
+
 # once-campfire-fsharp
 
 Campfire in F#. It is a port that has to be indistinguishable in use from the Rails app in
