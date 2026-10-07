@@ -287,3 +287,46 @@ let ``readers racing a writer never see a page older than the last post that fin
         Assert.True(checks > 100, $"{checks} pages checked")
         Assert.True(not ReadCache.enabled || hits test > hitsBefore, "some of them came from the cache")
     }
+
+/// onCrack C2, group commit: posts arriving together share the writer's transaction. Each must still get its own
+/// message back, be stored once, be on the next page read, and leave the room in the order the writer took them.
+[<Fact>]
+let ``concurrent posts each answer with their own message, and every one is stored and shown`` () =
+    task {
+        use! test = bootSeeded "default"
+        let room = $"/rooms/{ALL_TALK}"
+        let before = lastMessages test ALL_TALK |> List.length
+        let token (poster: int) (i: int) = $"grouped-{poster:D2}-{i:D2}-end"
+        let poster (n: int) =
+            task {
+                let browser = david test
+                let replies = ResizeArray<string * Reply>()
+                for i in 1..6 do
+                    let body = token n i
+                    let! reply = browser.Write(postForm ALL_TALK body)
+                    replies.Add((body, reply))
+                return replies
+            }
+        let! all = Task.WhenAll [| for n in 1..16 -> Task.Run<ResizeArray<string * Reply>>(Func<Task<ResizeArray<string * Reply>>>(fun () -> poster n)) |]
+        let replies = all |> Seq.concat |> List.ofSeq
+        let tokens = replies |> List.map fst
+        for body, reply in replies do
+            Assert.Equal(200, reply.Status)
+            Assert.Contains(body, reply.Text)
+            // No one else's message in this answer.
+            for other in tokens do
+                if other <> body then Assert.DoesNotContain(other, reply.Text)
+        let messages = lastMessages test ALL_TALK
+        Assert.Equal(before + 96, messages.Length)
+        let stored = read test (fun conn -> messages |> List.map (fun m -> m.Id, Message.bodyHtml conn m |> Option.defaultValue ""))
+        for body in tokens do
+            Assert.Equal(1, stored |> List.filter (fun (_, b) -> b.Contains body) |> List.length)
+        // Each poster's own posts were committed in the order it sent them.
+        for n in 1..16 do
+            let mine = stored |> List.filter (fun (_, b) -> b.Contains $"grouped-{n:D2}-") |> List.sortBy fst |> List.map snd
+            Assert.Equal<string list>([ for i in 1..6 -> token n i ], mine |> List.map (fun b -> tokens |> List.find b.Contains))
+        let! page = (david test).Get room
+        Assert.Contains(token 16 6, page.Text)
+        let stats = test.App.Db.WriterStats
+        Assert.True(stats.Writes >= 96L, $"{stats.Writes} writes in {stats.Groups} groups, largest {stats.Largest}")
+    }
