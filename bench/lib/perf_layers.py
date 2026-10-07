@@ -76,7 +76,7 @@ RUST_RULES = [
 ]
 RUST_COMPILED = [(n, [re.compile(p) for p in ps]) for n, ps in RUST_RULES]
 RUST_UNOWNED = "libc, kernel and unnamed code with no Rust frame on the chain"
-WRITE_FRAMES = ("DbRun::runWrite", "Checkpoint::run", "Database+thread@423")
+WRITE_FRAMES = ("DbRun::runWrite", "Checkpoint::run", "Database+thread@423", "Writer::runGroup", "Writer::runAlone")
 
 ALLOC_LAYER = {"alloc": "allocation: runtime allocator (F#: CLR allocation helpers; Rust: jemalloc)",
                "gc": "allocation: reclamation (F#: GC collections and threads; Rust: none)",
@@ -164,7 +164,7 @@ def owner(comm, frames):
         for layer, pats in COMPILED:
             if any(p.search(f) for p in pats):
                 if layer in ("SQLite engine (libe_sqlite3)", "Microsoft.Data.Sqlite and P/Invoke stubs", "Campfire.Db (queries, row mapping, connection pool)") \
-                        and any(w in g for g in frames for w in WRITE_FRAMES):
+                        and (comm.startswith("campfire-db-wri") or any(w in g for g in frames for w in WRITE_FRAMES)):
                     return layer + ", writer thread"
                 return layer
     return UNOWNED

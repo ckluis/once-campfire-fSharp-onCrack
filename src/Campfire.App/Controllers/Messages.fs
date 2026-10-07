@@ -315,21 +315,29 @@ module MessagesController =
             let partials = { Rendered.empty with MessagePresentation = Some html }
             app.Broadcasts.MessageReplace(room, message, Rendered.partials partials))
 
+    /// The bots `deliver_webhooks_to_bots` delivers to: every active bot in a direct room, else every mentioned
+    /// active bot, except the message's creator.
+    let webhookBots (conn: Conn) (app: AppState) (room: Room) (message: Message) : User list =
+        let candidates =
+            if Room.isDirect room then Room.activeBots conn room else Message.mentionees conn app.Db.Env.RichText message
+        candidates
+        |> List.filter (fun (user: User) -> user.Role = Role.Bot && user.Status = Status.Active && user.Id <> message.CreatorId)
+
+    /// `bot.deliver_webhook_later(@message)` for each of `bots`.
+    let deliverWebhooksTo (app: AppState) (bots: User list) (message: Message) : Task<Result<unit, Error>> =
+        if bots.IsEmpty then
+            Task.FromResult(Ok())
+        else
+            let messageId = message.Id
+            app.Write(fun tx -> bots |> List.iter (fun bot -> User.deliverWebhookLater tx bot messageId))
+
     /// `deliver_webhooks_to_bots`: every active bot in a direct room, else every mentioned active
     /// bot, except the message's creator.
     let deliverWebhooksToBots (c: Ctx) (room: Room) (message: Message) : Task<Result<unit, Error>> =
         act {
             let app = c.App
-            let! (bots: User list) =
-                app.Read(fun conn ->
-                    let candidates =
-                        if Room.isDirect room then Room.activeBots conn room else Message.mentionees conn app.Db.Env.RichText message
-                    candidates
-                    |> List.filter (fun (user: User) -> user.Role = Role.Bot && user.Status = Status.Active && user.Id <> message.CreatorId))
-            if not bots.IsEmpty then
-                // bot.deliver_webhook_later(@message)
-                let messageId = message.Id
-                do! app.Write(fun tx -> bots |> List.iter (fun bot -> User.deliverWebhookLater tx bot messageId))
+            let! (bots: User list) = app.Read(fun conn -> webhookBots conn app room message)
+            do! deliverWebhooksTo app bots message
         }
 
     // --- Rendering ---------------------------------------------------------------------------------
@@ -402,24 +410,35 @@ module MessagesController =
             | Some room ->
                 let! attributes = messageParams c
                 let! (message: Message) = createMessage c room attributes
-                do! broadcastCreate c room message
-                do! deliverWebhooksToBots c room message
 
-                // The message partial comes out of the fragment cache `broadcastCreate` just filled
-                // (`cache [ message, "presentation-v3" ]`), so it's the request-less rendering: no CSRF
-                // tokens in its forms.
-                do! c.RespondTo [ Format.TurboStream ] |> Result.map ignore
-                let kind = PresenterSupport.roomKind room.RoomType
+                // onCrack: `broadcast_create`, the webhook candidates of `deliver_webhooks_to_bots` and the answer
+                // from one read (the port takes three): one read transaction, the account read once, and the answer's
+                // message partial out of the fragment cache the broadcast's rendering just filled
+                // (`cache [ message, "presentation-v3" ]`), so it's the request-less rendering, with no CSRF tokens
+                // in its forms. The side effects keep their order: the broadcast, then the webhook jobs (a write),
+                // then the answer.
                 let app = c.App
-                let baseUrl = c.UrlFor ""
-                let! html =
+                let broadcastBaseUrl = Page.rendererBaseUrl c
+                let answerBaseUrl = c.UrlFor ""
+                let kind = PresenterSupport.roomKind room.RoomType
+                let! (bots: User list), (html: byte[]) =
                     app.Read(fun conn ->
                         FragmentCache.withCache app.FragmentCache (fun () ->
                             let presenter = Presenter(conn, app, None)
-                            let item = presenter.MessageItem message
                             let account = Account.first conn
-                            Page.renderDetachedAt app account baseUrl (fun ctx ->
-                                Render.plain (fun w -> CreateStream.render w ctx item kind))))
+                            let view = presenter.Message message
+                            let partial =
+                                Page.renderDetachedAt app account broadcastBaseUrl (fun ctx -> MessagesCached.message ctx view)
+                            app.Broadcasts.MessageCreate(conn, room, message, Rendered.partials { Rendered.empty with Message = Some partial })
+                            let bots = webhookBots conn app room message
+                            let item = presenter.MessageItem message
+                            let html =
+                                Page.renderDetachedAt app account answerBaseUrl (fun ctx ->
+                                    Render.plain (fun w -> CreateStream.render w ctx item kind))
+                            bots, html))
+                do! deliverWebhooksTo app bots message
+
+                do! c.RespondTo [ Format.TurboStream ] |> Result.map ignore
                 return c.Render(Status.Ok, Format.TurboStream, ReadOnlyMemory<byte> html)
         }
 

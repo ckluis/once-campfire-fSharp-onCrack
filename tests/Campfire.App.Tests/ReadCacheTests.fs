@@ -189,7 +189,7 @@ let ``a ban signs the user out and takes their messages off every cached page`` 
         let room = $"/rooms/{ALL_TALK}"
         post test ALL_TALK JASON "echidna by jason" |> ignore
         let! page = warm david room
-        Assert.Contains("echidna by jason", page.Text)
+        Assert.True(page.Text.Contains "echidna by jason", $"the room page has the message (status {page.Status}, {page.Text.Length} bytes, location {page.Location})")
         let! _ = warm jason room
         let! found = warm david "/searches?q=echidna"
         Assert.Contains("echidna by jason", found.Text)
