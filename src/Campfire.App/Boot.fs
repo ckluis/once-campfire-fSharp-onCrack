@@ -135,6 +135,26 @@ module Boot =
                 { Campfire.Db.Config.create config.Storage.Database with
                     Readers = config.DbReaders
                     Environment = config.Environment }
+            // onCrack: group commit (`Campfire.Db.Writer`), on unless `CAMPFIRE_GROUP_COMMIT=off`;
+            // `CAMPFIRE_GROUP_COMMIT_MAX` bounds a group, `CAMPFIRE_GROUP_COMMIT_WINDOW_US` (default 0) lets the writer
+            // wait that long for more writes to join one. Neither changes durability: every write commits before its
+            // caller hears back.
+            let setting (name: string) : string | null = Environment.GetEnvironmentVariable name
+            let positive (name: string) (fallback: int) : int =
+                match setting name with
+                | null -> fallback
+                | value ->
+                    match Int32.TryParse value with
+                    | true, n when n >= 0 -> n
+                    | _ -> fallback
+            let groupOff =
+                match setting "CAMPFIRE_GROUP_COMMIT" with
+                | null -> false
+                | value -> value = "0" || value.Equals("off", StringComparison.OrdinalIgnoreCase) || value.Equals("false", StringComparison.OrdinalIgnoreCase)
+            let dbConfig =
+                { dbConfig with
+                    GroupMax = (if groupOff then 1 else max 1 (positive "CAMPFIRE_GROUP_COMMIT_MAX" dbConfig.GroupMax))
+                    GroupWindowUs = positive "CAMPFIRE_GROUP_COMMIT_WINDOW_US" 0 }
             let env: Env =
                 { Clock = clock
                   Sink = jobs

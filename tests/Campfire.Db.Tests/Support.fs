@@ -39,12 +39,16 @@ let testEnv (sink: RecordingSink) (clock: TestClock) : Env =
       RichText = BasicRichText()
       BcryptCost = 4 }
 
-type TestDb(?fixtures: bool) =
+type TestDb(?fixtures: bool, ?groupMax: int) =
     let dir = new TempDir()
     let sink = RecordingSink()
     let clock = TestClock()
     let db =
-        let config = { Config.create (dir.File "test.sqlite3") with Readers = 2; Environment = "test" }
+        let config =
+            { Config.create (dir.File "test.sqlite3") with
+                Readers = 2
+                Environment = "test"
+                GroupMax = defaultArg groupMax Config.DefaultGroupMax }
         Database.Open(config, testEnv sink clock)
 
     do

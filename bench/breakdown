@@ -203,6 +203,7 @@ case "$MODE" in
     DOCKER_EXTRA_ARGS=(-v "$DIAG_DIR:/tmp")
     for app in ${APPS//,/ }; do
       [ "$app" = fsharp ] && FSHARP_EXTRA_ENV="DOTNET_PerfMapEnabled=1 DOTNET_EnableWriteXorExecute=0"
+      [ "$app" = oncrack ] && ONCRACK_EXTRA_ENV="${ONCRACK_EXTRA_ENV:+$ONCRACK_EXTRA_ENV }DOTNET_PerfMapEnabled=1 DOTNET_EnableWriteXorExecute=0"
       wait_for_quiet
       start_app "$app" >/dev/null
       CG=$(cgroup_dir)
@@ -210,7 +211,7 @@ case "$MODE" in
       sleep 5
       sign_in
       for route in ${ROUTES//,/ }; do perf_record_route "$route" "$app"; done
-      [ "$app" = fsharp ] && sudo cp "$DIAG_DIR/perf-1.map" "/tmp/perf-$PERF_PID.map"
+      case "$app" in fsharp|oncrack) sudo cp "$DIAG_DIR/perf-1.map" "/tmp/perf-$PERF_PID.map" ;; esac
       drop_app_dir "$app"
       for route in ${ROUTES//,/ }; do perf_report_route "$route" "$app"; done
       sudo rm -f "/tmp/perf-$PERF_PID.map"
