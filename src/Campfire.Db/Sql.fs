@@ -12,6 +12,12 @@ open Microsoft.Data.Sqlite
 open Microsoft.FSharp.NativeInterop
 open SQLitePCL
 
+/// onCrack: what a write marks for the read cache (`Versions`): `kind` is a `VersionKind`, `id` a room
+/// or user id (-1 when unknown, which marks the global version).
+[<AllowNullLiteral>]
+type IWriteMarks =
+    abstract Mark: kind: int * id: int64 -> unit
+
 /// A value bound to a `?` of a query.
 [<Struct; NoComparison; NoEquality>]
 type SqlArg =
@@ -393,6 +399,10 @@ type Conn(raw: SqliteConnection, capacity: int) =
     static member OpenInMemory() : Conn = Conn.Open ":memory:"
 
     member _.Raw : SqliteConnection = raw
+
+    /// onCrack: on the writer connection, where writes that no trigger sees (the FTS5 index) mark the read
+    /// cache's versions; null elsewhere.
+    member val Marks: IWriteMarks = null with get, set
 
     /// `Connection::is_autocommit`: no transaction is open.
     member _.IsAutocommit : bool = SQLitePCL.raw.sqlite3_get_autocommit owner <> 0

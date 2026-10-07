@@ -381,7 +381,8 @@ type Database
         readerThreads: Thread list,
         checkpoints: Checkpoints,
         writerThread: Thread,
-        writer: Conn
+        writer: Conn,
+        versions: Versions
     ) =
     // Not a `Monitor`, which the thread already holding it could enter again: a `ReadBlocking` inside
     // another gets a connection of its own.
@@ -404,6 +405,7 @@ type Database
             started: Thread -> unit
         ) : Database =
         let conn = Pragmas.openConnection config.Path false
+        let versions = Versions()
         let readerThreads = ResizeArray<Thread>()
         let queue = WriteQueue(max config.WriteQueue 1)
         let readers = ReadQueue()
@@ -417,6 +419,8 @@ type Database
             // In place of the auto-checkpoint, which the writer's commits note the WAL size for instead
             // (Rust installs `sqlite3_wal_hook`, which the .NET bindings don't expose).
             conn.ExecuteBatch "PRAGMA wal_autocheckpoint = 0"
+            // onCrack: every change the writer makes marks the read cache's versions (`Versions.fs`).
+            Versions.install conn versions
 
             let thread =
                 Thread(
@@ -431,14 +435,19 @@ type Database
                                 // job that fails some other way.
                                 let committed =
                                     try
-                                        job conn env
-                                    with _ ->
-                                        if not conn.IsAutocommit then
-                                            try
-                                                conn.ExecuteBatch "ROLLBACK TRANSACTION"
-                                            with _ ->
-                                                ()
-                                        false
+                                        try
+                                            job conn env
+                                        with _ ->
+                                            if not conn.IsAutocommit then
+                                                try
+                                                    conn.ExecuteBatch "ROLLBACK TRANSACTION"
+                                                with _ ->
+                                                    ()
+                                            false
+                                    finally
+                                        // The job's transaction and after-commit work are over (or rolled back):
+                                        // the versions it marked odd become even, past every stored value.
+                                        versions.Release()
                                 if committed then
                                     match (try Checkpoint.walPages conn with _ -> 0) with
                                     | 0 -> ()
@@ -474,7 +483,7 @@ type Database
                 thread.Start()
                 readerThreads.Add thread
                 started thread
-            new Database(env, config.Path, queue, readers, List.ofSeq readerThreads, cp, thread, conn)
+            new Database(env, config.Path, queue, readers, List.ofSeq readerThreads, cp, thread, conn, versions)
         with _ ->
             // Rust's `?` drops what was built: the queue's sender, which ends the writer thread and
             // with it the writer connection and the checkpointer, and the readers' connections.
@@ -493,6 +502,9 @@ type Database
 
     member _.Path : string = path
 
+    /// onCrack: the read cache's version counters, which this database's writer bumps.
+    member _.Versions : Versions = versions
+
     /// Reader threads still running; zero once disposed.
     member internal _.ReaderThreadsAlive : int = readerThreads |> List.filter (fun t -> t.IsAlive) |> List.length
 
@@ -505,14 +517,18 @@ type Database
             let reply = TaskCompletionSource<Result<'T, DbError>>(TaskCreationOptions.RunContinuationsAsynchronously)
             let job (conn: Conn) (env: Env) : bool =
                 let mutable committed = false
+                // The versions the write marked are released before the caller hears back, so a read
+                // right after its own write finds them even (and already past the pages it replaced).
                 try
-                    reply.SetResult(
+                    let result =
                         DbRun.attempt (fun () ->
                             let value = DbRun.runWrite conn env f
                             committed <- true
                             value)
-                    )
+                    versions.Release()
+                    reply.SetResult result
                 with e ->
+                    versions.Release()
                     reply.SetException e
                 committed
             let! queued = writeQueue.EnqueueAsync job
@@ -537,6 +553,7 @@ type Database
                     )
                 with e ->
                     Some(Error e)
+            versions.Release()
             replied.Set()
             committed
         if writeQueue.Enqueue job then

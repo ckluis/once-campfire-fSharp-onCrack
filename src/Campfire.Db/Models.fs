@@ -1391,11 +1391,20 @@ module Message =
 
     // Creating, updating, destroying
 
+    /// onCrack: the index has no triggers, so its writes mark the message's room themselves (they always run in
+    /// the job that changed the message, which marked it already).
+    let private markRoom (tx: Tx) (roomId: int64) : unit =
+        match tx.Conn.Marks with
+        | null -> ()
+        | marks -> marks.Mark(1, roomId)
+
     let private createInIndex (tx: Tx) (message: Message) : unit =
+        markRoom tx message.RoomId
         let body = plainTextBody tx.Conn tx.RichText message
         tx.Conn.Execute("insert into message_search_index(rowid, body) values (?, ?)", [| I message.Id; S body |]) |> ignore
 
     let private updateInIndex (tx: Tx) (message: Message) : unit =
+        markRoom tx message.RoomId
         let body = plainTextBody tx.Conn tx.RichText message
         tx.Conn.Execute("update message_search_index set body = ? where rowid = ?", [| S body; I message.Id |]) |> ignore
 
@@ -1503,7 +1512,10 @@ module Message =
         tx.Conn.Execute("""DELETE FROM "messages" WHERE "messages"."id" = ?""", [| I message.Id |]) |> ignore
         Room.touch tx message.RoomId
         let id = message.Id
-        tx.AfterCommit(fun tx -> removeFromIndex tx id)
+        let roomId = message.RoomId
+        tx.AfterCommit(fun tx ->
+            markRoom tx roomId
+            removeFromIndex tx id)
 
     let reload (conn: Conn) (message: Message) : Message = find conn message.Id
 

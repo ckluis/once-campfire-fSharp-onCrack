@@ -7,6 +7,7 @@
     <Compile Include="Columns.fs" />
     <Compile Include="RichText.fs" />
     <Compile Include="Schema.fs" />
+    <Compile Include="Versions.fs" />
     <Compile Include="Database.fs" />
     <Compile Include="Sound.fs" />
     <Compile Include="Session.fs" />
