@@ -14,7 +14,10 @@ What is left out of the comparison, because it is not the kit's:
   - the compressed bytes of a gzipped body (each side deflates its own way): what they decode to is compared;
   - the Allow header axum adds to its 404 for a method a route lacks;
   - Content-Length: 0 on a HEAD answered 204 or 304, which hyper sends and Kestrel (RFC 9110) doesn't;
-  - the value of an encrypted session cookie and the session ids in bodies (random per server).
+  - the value of an encrypted session cookie and the session ids in bodies (random per server);
+  - onCrack (unit C3, a deliberate difference): the Content-Length the F# kit sends with a gzipped answer where
+    the Rust kit sends it chunked, when it is exactly the length of the gzip member sent (for a HEAD, which
+    has no body to measure, any length); any other Content-Length difference still counts.
 `_method=head` is not sent: a POST answered as a HEAD has no framing of its own to compare (AdapterTests
 checks what the F# kit does with it).
 Exits 1 if anything else differs.
@@ -29,6 +32,55 @@ import socket
 import subprocess
 import sys
 import time
+
+
+def gzip_length_only_in_fsharp(rust, fsharp, method):
+    """onCrack C3: F#'s answer is gzipped and carries a Content-Length that Rust's (chunked) doesn't, and that
+    length is the gzip member's (any, for a HEAD). F#'s response without it, if so; else the response."""
+    status, headers, body = fsharp
+    if not any(k == "content-encoding" and v == "gzip" for k, v in headers):
+        return fsharp
+    if any(k == "content-length" for k, v in rust[1]) or any(k == "transfer-encoding" for k, v in headers):
+        return fsharp
+    lengths = [v for k, v in headers if k == "content-length"]
+    if len(lengths) != 1 or not lengths[0].isdigit():
+        return fsharp
+    if method == "HEAD" and body == b"" and int(lengths[0]) > 0:
+        pass
+    elif int(lengths[0]) != len(body) or len(body) == 0:
+        return fsharp
+    return status, [(k, v) for k, v in headers if k != "content-length"], body
+
+def selftest():
+    """What the filter above lets through and what it doesn't (`fuzz.py selftest`, run by bin/kit-differential http first)."""
+    member = gzip.compress(b"<h1>Not found</h1>")
+    rust = (404, [("content-type", "text/html"), ("content-encoding", "gzip"), ("transfer-encoding", "chunked")], member)
+    exact = (404, [("content-type", "text/html"), ("content-encoding", "gzip"), ("content-length", str(len(member)))], member)
+    stripped = gzip_length_only_in_fsharp(rust, exact, "GET")
+    assert stripped[1] == [("content-type", "text/html"), ("content-encoding", "gzip")], stripped
+    # A length that isn't the member's, a second length, a chunked answer with a length, a plain answer, or Rust
+    # sending one too: left in, so they differ.
+    wrong = (404, [("content-encoding", "gzip"), ("content-length", str(len(member) + 1))], member)
+    assert gzip_length_only_in_fsharp(rust, wrong, "GET") is wrong
+    twice = (404, [("content-encoding", "gzip"), ("content-length", str(len(member))), ("content-length", str(len(member)))], member)
+    assert gzip_length_only_in_fsharp(rust, twice, "GET") is twice
+    chunked = (404, [("content-encoding", "gzip"), ("transfer-encoding", "chunked"), ("content-length", str(len(member)))], member)
+    assert gzip_length_only_in_fsharp(rust, chunked, "GET") is chunked
+    plain = (404, [("content-length", "18")], b"<h1>Not found</h1>")
+    assert gzip_length_only_in_fsharp(rust, plain, "GET") is plain
+    both = (404, [("content-encoding", "gzip"), ("content-length", str(len(member)))], member)
+    assert gzip_length_only_in_fsharp(both, exact, "GET") is exact
+    empty = (200, [("content-encoding", "gzip"), ("content-length", "0")], b"")
+    assert gzip_length_only_in_fsharp(rust, empty, "GET") is empty
+    # A HEAD has no body to measure: any positive length.
+    head = (200, [("content-encoding", "gzip"), ("content-length", "31")], b"")
+    assert gzip_length_only_in_fsharp(rust, head, "HEAD")[1] == [("content-encoding", "gzip")]
+    print("fuzz.py selftest: ok")
+
+
+if sys.argv[1:] == ["selftest"]:
+    selftest()
+    sys.exit(0)
 
 rust_binary, fsharp_command, seed, count, mode = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5]
 rng = random.Random(seed)
@@ -91,6 +143,7 @@ def parse(data):
     if any(k == "transfer-encoding" and "chunked" in v for k, v in headers):
         body = decode_chunked(body)
     return int(lines[0].split(" ")[1]), headers, body
+
 
 
 SKIPPED = {"date", "server", "x-runtime", "connection", "keep-alive", "transfer-encoding", "allow"}
@@ -233,7 +286,7 @@ for _ in range(count):
                 cookies.append(cookie)
         if name == "etag":
             etags[path.split("?")[0]].append(value)
-    a, b = normalize(rust, method, path), normalize(fsharp, method, path)
+    a, b = normalize(rust, method, path), normalize(gzip_length_only_in_fsharp(rust, fsharp, method), method, path)
     if a != b:
         differences.append((raw, a, b))
 for server in servers:

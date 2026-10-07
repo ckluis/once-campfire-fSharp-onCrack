@@ -34,6 +34,7 @@ if [ $mode = http ]; then
   dotnet build "$http/fsharp" -c Release -v quiet -nologo -o target/kit-http-differential/fsharp
   requests="${1:-1500}"
   status=0
+  python3 "$http/fuzz.py" selftest || status=1
   for traffic in plain ssl; do
     python3 "$http/fuzz.py" "$PWD/target/rust/release/kit-http-differential" \
       "$PWD/target/kit-http-differential/fsharp/HttpApp" "${2:-1}" "$requests" "$traffic" || status=1

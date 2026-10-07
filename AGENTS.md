@@ -27,7 +27,7 @@ an attachment, bots' posts and webhook replies broadcast at once, as before.
 **Content-Length on gzipped answers** (unit C3, `bench/results/oncrack-c3.md`): a gzipped buffer or frozen page goes out with the length of its
 gzip member (made, or fetched from the digest-keyed gzip cache or the frozen page, before the headers) instead of chunked; streams, files and pages in
 parts that are not frozen stay chunked. A chunked answer cost a second send for the terminating chunk, which on a cached hit (27-32 us of CPU) doubled
-the round trip at c=16. `CAMPFIRE_GZIP_LENGTH=off` restores chunking; `bench/paths` measures arbitrary GET paths (with `HEADERS=1`, `SIZES=1`, `PERFSTAT=1`).
+the round trip at c=16. `CAMPFIRE_GZIP_LENGTH=off` restores chunking; `bin/kit-differential http` accepts the length where Rust's kit chunks only when it is exactly the gzip member's (its `fuzz.py selftest` checks that filter); `bench/paths` measures arbitrary GET paths (with `HEADERS=1`, `SIZES=1`, `PERFSTAT=1`).
 
 **Native AOT** (unit C4, `bench/results/oncrack-c4.md`): `docker build --build-arg NATIVE_AOT=true` makes `campfire-oncrack:aot` (cold start ~95 ms, idle 22 MB, 36% smaller image; c=1 +14%,
 c=16 -10% against the default; no HTTP/2-over-cleartext). An opt-in: the default image stays JIT + ReadyToRun. `bench/boot` measures cold start and idle memory; tier 2 AOT builds are `AOT=1 bin/publish-mounted DIR`.
