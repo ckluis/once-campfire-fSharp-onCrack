@@ -11,7 +11,7 @@
 #
 # Built by `parity/bin/candidate build`.
 
-ARG BASE_IMAGE=campfire-fsharp:app
+ARG BASE_IMAGE=campfire-oncrack:app
 
 FROM docker.io/library/debian:trixie-slim AS faketime
 RUN apt-get update -qq && apt-get install --no-install-recommends -y build-essential ca-certificates curl

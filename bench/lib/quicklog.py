@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""F# results against the stored Rust baseline, and the Phase 7 progress log.
+"""onCrack's results against the stored Rust and F# port medians, and onCrack's progress log.
 
-  quicklog.py compare DIR                 table of the F# runs in DIR against bench/results/phase7-start (stored Rust medians,
-                                          the F# starting point), with the validity checks
+  quicklog.py compare DIR                 table of the onCrack runs in DIR (oncrack-N.json) against bench/results/phase7-final: the stored Rust
+                                          medians and the stored F# port medians (same session, 3 reps each), with the validity checks
   quicklog.py log DIR --unit U --tier N --change "..." --kept true|false [--build mounted|DIGEST] [--commit SHA]
-                                          append one line to bench/results/phase7-log.jsonl (raw F# numbers per workload), then rebuild
+                                          append one line to bench/results/oncrack-log.jsonl (raw onCrack numbers per workload), then rebuild
                                           index.html (the climb chart) with bench/progress/build.py
 
-Rust is never measured here: its numbers are the medians of bench/results/phase7-start/rust-*.json (the same warm-up and harness).
-Every ratio this prints is "vs stored Rust baseline".
+Neither Rust nor the port is measured here: their numbers are the medians of bench/results/phase7-final/{rust,fsharp}-*.json (the same
+warm-up and harness). Every ratio this prints is "vs stored Rust baseline" or "vs stored F# port baseline", and never a like-for-like port result
+(plans/oncrack.md rule 4). The port-era log, bench/results/phase7-log.jsonl, is history and is not appended to.
 """
 import argparse
 import glob
@@ -20,8 +21,9 @@ import sys
 from datetime import datetime, timezone
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-START = os.path.join(ROOT, "bench/results/phase7-start")
-LOG = os.path.join(ROOT, "bench/results/phase7-log.jsonl")
+STORED = os.path.join(ROOT, "bench/results/phase7-final")   # Rust and the F# port, measured in one session
+LOG = os.path.join(ROOT, "bench/results/oncrack-log.jsonl")
+APP = "oncrack"
 WORKLOADS = ["room_show", "messages_page", "sidebar", "search", "post_message"]
 LABEL = {"room_show": "room page", "messages_page": "messages page", "sidebar": "sidebar", "search": "search", "post_message": "post a message"}
 
@@ -63,22 +65,22 @@ def fmt(x, d=0):
 
 
 def compare(directory):
-    mine = cells(load(directory, "fsharp"))
+    mine = cells(load(directory, APP))
     if not mine:
-        sys.exit(f"no fsharp-N.json in {directory}")
-    rust = cells(load(START, "rust"))
-    start = cells(load(START, "fsharp"))
-    print(f"F# in {directory} against the stored Rust baseline (bench/results/phase7-start, medians of 3 Rust reps) and the F# starting point\n")
-    print("| Workload | c | F# req/s | F# start | vs start | Rust stored | **F# / Rust (vs stored Rust baseline)** | F# CPU us/req | start | Rust stored |")
+        sys.exit(f"no {APP}-N.json in {directory}")
+    rust = cells(load(STORED, "rust"))
+    port = cells(load(STORED, "fsharp"))
+    print(f"onCrack in {directory} against the stored Rust and F# port medians (bench/results/phase7-final, 3 reps each, one session)\n")
+    print("| Workload | c | onCrack req/s | F# port stored | **onCrack / F# port** | Rust stored | **onCrack / Rust (vs stored Rust baseline)** | onCrack CPU us/req | F# port | Rust |")
     print("|---|---|---|---|---|---|---|---|---|---|")
     for w in WORKLOADS:
         for c in (16, 1):
             m = mine.get((w, c))
             if not m:
                 continue
-            r, s = rust.get((w, c)), start.get((w, c))
+            r, s = rust.get((w, c)), port.get((w, c))
             mr, rr, sr = med(m["rps"]), med(r["rps"]) if r else None, med(s["rps"]) if s else None
-            print(f"| {LABEL[w]} | {c} | {fmt(mr)}{spread(m['rps'])} | {fmt(sr)} | {mr / sr:.3f}x | {fmt(rr)} | **{mr / rr:.3f}x** | "
+            print(f"| {LABEL[w]} | {c} | {fmt(mr)}{spread(m['rps'])} | {fmt(sr)} | **{mr / sr:.3f}x** | {fmt(rr)} | **{mr / rr:.3f}x** | "
                   f"{fmt(med(m['cpu']), 1)}{spread(m['cpu']) if len(m['cpu']) > 1 else ''} | {fmt(med(s['cpu']), 1) if s else '-'} | {fmt(med(r['cpu']), 1) if r else '-'} |")
     # validity: statuses, errors, response bytes, rows written, warm-up, host noise
     print("\nChecks:")
@@ -95,8 +97,8 @@ def compare(directory):
             if ratio and ratio > 1.10:
                 print(f"  note {w} c={c}: host probe {ratio} after the window (noisy host)")
     print(f"  responses: every one 2xx with 0 connection errors in {sum(len(m['runs']) for m in mine.values())} runs" if not bad else f"  {bad} run(s) with errors")
-    rust_probe = {p["route"]: p["gzip"]["decoded_bytes"] for p in (load(START, "rust") or [{"probe": []}])[0]["probe"]}
-    for r in load(directory, "fsharp"):
+    rust_probe = {p["route"]: p["gzip"]["decoded_bytes"] for p in (load(STORED, "rust") or [{"probe": []}])[0]["probe"]}
+    for r in load(directory, APP):
         for p in r["probe"]:
             want = rust_probe.get(p["route"])
             if want is not None and p["gzip"]["decoded_bytes"] != want:
@@ -114,7 +116,7 @@ def compare(directory):
 def source_commit(build):
     """The commit the measured build was made from, not whatever HEAD is when the run is logged (other commits,
     such as the page's, land in between). Mounted builds: the REVISION file bin/publish-mounted writes. Image builds:
-    campfire-fsharp:app's org.opencontainers.image.revision label (SOURCE_REVISION). Otherwise HEAD."""
+    campfire-oncrack:app's org.opencontainers.image.revision label (SOURCE_REVISION). Otherwise HEAD."""
     def run(*cmd):
         try:
             return subprocess.run(cmd, capture_output=True, text=True, timeout=20).stdout.strip()
@@ -130,19 +132,21 @@ def source_commit(build):
                     return rev[:7]
     else:
         # Not GIT_REVISION: that is the reference's pinned commit, which the app echoes for parity.
-        rev = run("docker", "image", "inspect", "-f", '{{index .Config.Labels "org.opencontainers.image.revision"}}', "campfire-fsharp:app")
+        rev = run("docker", "image", "inspect", "-f", '{{index .Config.Labels "org.opencontainers.image.revision"}}', "campfire-oncrack:app")
         if rev and rev != "<no value>":
             return rev[:7]
     return run("git", "-C", ROOT, "rev-parse", "--short", "HEAD")
 
 
 def log(args):
-    mine = cells(load(args.dir, "fsharp"))
+    mine = cells(load(args.dir, APP))
+    if not mine:
+        sys.exit(f"no {APP}-N.json in {args.dir}")
     workloads = {}
     for (w, c), m in mine.items():
         workloads.setdefault(w, {})[f"c{c}"] = {"rps": round(med(m["rps"]), 1), "cpu_us": round(med(m["cpu"]), 1) if m["cpu"] else None, "reps": len(m["rps"])}
     commit = args.commit or source_commit(args.build)
-    entry = {"time": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "unit": args.unit, "tier": args.tier, "change": args.change,
+    entry = {"time": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "unit": args.unit, "tier": args.tier, "change": args.change, "app": APP,
              "commit": commit, "build": args.build, "kept": args.kept == "true", "workloads": workloads}
     with open(LOG, "a") as f:
         f.write(json.dumps(entry) + "\n")
@@ -154,7 +158,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("compare"); c.add_argument("dir")
-    l = sub.add_parser("log"); l.add_argument("dir"); l.add_argument("--unit", required=True, choices=["database", "runtime", "crypto-logging", "post", "final", "threadpool"])
+    l = sub.add_parser("log"); l.add_argument("dir"); l.add_argument("--unit", required=True, help="the unit's topic, e.g. c0, readcache, groupcommit")
     l.add_argument("--tier", type=int, required=True, choices=[2, 3]); l.add_argument("--change", required=True)
     l.add_argument("--kept", required=True, choices=["true", "false"]); l.add_argument("--build", default="mounted"); l.add_argument("--commit")
     a = ap.parse_args()

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Summarize a bench/run results dir: median [min–max] across reps, Rails vs Rust vs F#.
+"""Summarize a bench/run results dir: median [min–max] across reps, Rails vs Rust vs F# (the port) vs onCrack.
 
   bench/report bench/results/<stamp>
 
-"Rust adv." is the Rust advantage over Rails and "F# adv." the F# advantage over Rust: >1 means the
+"Rust adv." is the Rust advantage over Rails and "F# adv." the F# port's advantage over Rust ("onCrack adv." onCrack's over Rust, "onCrack / F#" over the port): >1 means the
 first is better (higher throughput, or lower latency/memory/time), computed from the medians. When the
-results include `rust-identity` or `fsharp-identity` runs (the image serving `Accept-Encoding:
+results include `rust-identity`, `fsharp-identity` or `oncrack-identity` runs (the image serving `Accept-Encoding:
 identity`), the HTTP table adds a "no gzip" column for each, with F# against Rust and each against its own
 gzip run. After the tables come the validity checks: the load average before each run, every response's
 status class, the rows `post_message` wrote against the answers it got, and the response bytes of each
@@ -18,9 +18,10 @@ runs = {}
 for f in sorted(glob.glob(os.path.join(out, "*-*.json"))):
     r = json.load(open(f))
     runs.setdefault(r["app"], []).append(r)
-identity = {a: runs.pop(a) for a in ("rust-identity", "fsharp-identity") if a in runs}
-apps = [a for a in ("reference", "rust", "fsharp") if a in runs]
-NAME = {"reference": "Rails", "rust": "Rust", "fsharp": "F#", "rust-identity": "Rust, no gzip", "fsharp-identity": "F#, no gzip"}
+identity = {a: runs.pop(a) for a in ("rust-identity", "fsharp-identity", "oncrack-identity") if a in runs}
+apps = [a for a in ("reference", "rust", "fsharp", "oncrack") if a in runs]
+NAME = {"reference": "Rails", "rust": "Rust", "fsharp": "F#", "oncrack": "onCrack", "rust-identity": "Rust, no gzip", "fsharp-identity": "F#, no gzip",
+        "oncrack-identity": "onCrack, no gzip"}
 
 
 def cell(vals):
@@ -56,9 +57,15 @@ def columns():
         cols.append("Rust adv.")
     if "rust" in apps and "fsharp" in apps:
         cols.append("F# adv.")
+    if "rust" in apps and "oncrack" in apps:
+        cols.append("onCrack adv.")
+    if "fsharp" in apps and "oncrack" in apps:
+        cols.append("onCrack / F#")
     cols += [NAME[a] for a in identity]
     if "rust-identity" in identity and "fsharp-identity" in identity:
         cols.append("F# adv. (no gzip)")
+    if "rust-identity" in identity and "oncrack-identity" in identity:
+        cols.append("onCrack adv. (no gzip)")
     for a in identity:
         if a[: -len("-identity")] in apps:
             cols.append(f"{NAME[a]} vs gzip")
@@ -75,6 +82,10 @@ def row(name, getter, higher_better, with_identity=False):
         cells.append(ratio(meds["rust"], meds["reference"], higher_better))
     if "rust" in apps and "fsharp" in apps:
         cells.append(ratio(meds["fsharp"], meds["rust"], higher_better, 2))
+    if "rust" in apps and "oncrack" in apps:
+        cells.append(ratio(meds["oncrack"], meds["rust"], higher_better, 2))
+    if "fsharp" in apps and "oncrack" in apps:
+        cells.append(ratio(meds["oncrack"], meds["fsharp"], higher_better, 2))
     imeds = {}
     if with_identity:
         for a, group in identity.items():
@@ -83,6 +94,8 @@ def row(name, getter, higher_better, with_identity=False):
             cells.append(c)
         if "rust-identity" in identity and "fsharp-identity" in identity:
             cells.append(ratio(imeds["fsharp-identity"], imeds["rust-identity"], higher_better, 2))
+        if "rust-identity" in identity and "oncrack-identity" in identity:
+            cells.append(ratio(imeds["oncrack-identity"], imeds["rust-identity"], higher_better, 2))
         for a in identity:
             base = a[: -len("-identity")]
             if base in apps:
@@ -279,7 +292,7 @@ print("The probe is a single request after sign-in, before any load. Bodies carr
       "\"c=16 avg\" is what the load generator received per request on the wire (gzip unless the column says otherwise).\n")
 names = [a for a in apps]
 print("| Route | " + " | ".join(f"{NAME[a]} gzip wire / decoded" for a in names) + " | " + " | ".join(f"{NAME[a]} identity" for a in names)
-      + " | " + " | ".join(f"{NAME[a]} c=16 avg" for a in names) + " | F# vs Rust |")
+      + " | " + " | ".join(f"{NAME[a]} c=16 avg" for a in names) + " | vs Rust |")
 print("|---|" + "---|" * (3 * len(names) + 1))
 probe_routes = []
 for a in names:
@@ -294,15 +307,18 @@ for route in probe_routes + ["post_message"]:
         idc.append(f"{pr['identity']['status']} {pr['identity']['wire_bytes']:,}" if pr else "–")
         v = values(runs[a], lambda r: next(h["avg_bytes"] for h in r["http"] if h["route"] == route and h["conc"] == 16))
         avg.append(f"{statistics.median([x for x in v if x is not None]):,.0f}" if any(x is not None for x in v) else "–")
-    flag = "–"
-    if "rust" in names and "fsharp" in names:
+    flags = []
+    for cand, label in (("fsharp", "F#"), ("oncrack", "onCrack")):
+        if not ("rust" in names and cand in names):
+            continue
         pr = lambda a: next((x for x in runs[a][0].get("probe", []) if x["route"] == route), None)
-        r_, f_ = pr("rust"), pr("fsharp")
+        r_, f_ = pr("rust"), pr(cand)
         if r_ and f_:
             d = f_["identity"]["wire_bytes"] - r_["identity"]["wire_bytes"]
             g = f_["gzip"]["wire_bytes"] / max(r_["gzip"]["wire_bytes"], 1)
-            flag = f"identity {d:+,} B; gzip wire {100 * (g - 1):+.1f}%"
+            flags.append(f"{label}: identity {d:+,} B; gzip wire {100 * (g - 1):+.1f}%")
         else:
-            va, vb = (statistics.median([x for x in values(runs[a], lambda r: next(h["avg_bytes"] for h in r["http"] if h["route"] == route and h["conc"] == 16)) if x is not None] or [0]) for a in ("rust", "fsharp"))
-            flag = f"c=16 avg {vb - va:+,.0f} B" if va else "–"
+            va, vb = (statistics.median([x for x in values(runs[a], lambda r: next(h["avg_bytes"] for h in r["http"] if h["route"] == route and h["conc"] == 16)) if x is not None] or [0]) for a in ("rust", cand))
+            flags.append(f"{label}: c=16 avg {vb - va:+,.0f} B" if va else "–")
+    flag = "; ".join(flags) or "–"
     print(f"| {route} | " + " | ".join(gz) + " | " + " | ".join(idc) + " | " + " | ".join(avg) + f" | {flag} |")

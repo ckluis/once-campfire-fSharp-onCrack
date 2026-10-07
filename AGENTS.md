@@ -4,8 +4,16 @@
 (the parity harness's screenshot layer) and correct, but the work per request may differ from Rails and Rust
 in any way that makes it faster (caches, group commit, AOT, Datastar). Everything below about matching Rust's
 implementation applies to the port this was forked from; where it conflicts with `plans/oncrack.md`, the plan
-wins. Use the image name `campfire-oncrack:app` (`FSHARP_IMAGE=campfire-oncrack:app`); keep `campfire-fsharp:app`
-(the port) untouched for comparison.
+wins. The image is `campfire-oncrack:app` (`bench/run`'s `oncrack` app, `bench/quick`'s default and the parity candidate's default here);
+keep `campfire-fsharp:app` (the port) untouched for comparison.
+
+**onCrack's gates and scoring** (unit C0): `bin/pixel-parity` is the one-command "the UI is identical" check (the parity harness's
+screenshot layer, per seed; see its header for the retry of cells the harness could not capture). `bench/quick` runs onCrack only and
+`bench/quick compare DIR` scores it against the stored Rust and F# port medians of `bench/results/phase7-final/`; `bench/quick log` appends to
+`bench/results/oncrack-log.jsonl` (the port's own `phase7-log.jsonl` is history) and rebuilds `index.html`, whose hero is the climb chart
+(`bench/progress/climb.py`: onCrack over Rust, starting from the port's final result; the port's dots are in a panel). `bench/run --apps
+reference,rust,fsharp,oncrack` measures all four in one session (`fsharp` is the port). Tier 3 of an unchanged image must land within noise of
+the port: `bench/results/oncrack-c0.md`.
 
 # once-campfire-fsharp
 
@@ -134,12 +142,12 @@ Project references follow the crate graph. Don't add an edge Rust doesn't have.
   `bench/front/run` measures the front server against Rust's; run it after changing `Front/` or `Splice.fs`.
   The TLS session-resumption test needs Linux (Kestrel issues no session tickets through macOS's TLS stack, so it skips
   there) and `openssl`; `bin/linux-tests Kit` runs `Campfire.Kit.Tests` in `Dockerfile.toolchain` inside colima.
-- Phase 7 measuring (all inside colima, `SERVER_CPUS=0-3 LOADGEN_CPUS=4-7`): `bench/quick` is the before/after runner, **F# only by default**
-  (`--remeasure-rust` adds Rust, for the re-baseline that closes a phase; otherwise `bench/quick compare DIR` prints F# against the stored Rust
-  medians of `bench/results/phase7-start/`, "vs stored Rust baseline"): the five workloads at c=1 and c=16, 3 reps, `bench/run`'s validity checks and report, plus CPU per
-  request from the container's cgroup; run it a unit at a time, `--only fsharp:1 --part 1/2` and so on, then `bench/quick report DIR`. Tier 2 builds nothing into
+- Measuring (Phase 7's discipline, all inside colima, `SERVER_CPUS=0-3 LOADGEN_CPUS=4-7`): `bench/quick` is the before/after runner, **onCrack only by default**
+  (`--remeasure-rust` adds Rust, for the re-baseline that closes a phase; otherwise `bench/quick compare DIR` prints onCrack against the stored Rust and F# port
+  medians of `bench/results/phase7-final/`, "vs stored Rust baseline" and "vs stored F# port baseline"): the five workloads at c=1 and c=16, 3 reps, `bench/run`'s validity checks and report, plus CPU per
+  request from the container's cgroup; run it a rep at a time, `--only oncrack:1 --part 1/2` and so on, then `bench/quick report DIR`. Tier 2 builds nothing into
   an image: `bin/publish-mounted` (in colima) publishes the app as the Dockerfile does, and `bench/quick --mounted /var/tmp/campfire-mounted` runs it mounted over
-  `/opt/campfire`; `bench/quick log DIR --unit ... --tier 2 --change ... --kept true|false` appends to `bench/results/phase7-log.jsonl` (stamped with the commit the measured build came from: the mounted build's `REVISION` file or the image's revision label; pass `--commit` when building an image another way) and rebuilds `index.html` (its hero is the climb chart, `bench/progress/climb.py`). Tier 1 is
+  `/opt/campfire` of `campfire-oncrack:app`; `bench/quick log DIR --unit ... --tier 2 --change ... --kept true|false` appends to `bench/results/oncrack-log.jsonl` (stamped with the commit the measured build came from: the mounted build's `REVISION` file or the image's revision label; pass `--commit` when building an image another way) and rebuilds `index.html` (its hero is the climb chart, `bench/progress/climb.py`). Tier 1 is
   `dotnet run -c Release --project bench/db-micro` (the database path in process, ns and bytes per page);
   `bench/quick cpu` is CPU per request alone. Crypto and syscall costs differ between macOS and the container, so tier 1 for anything that touches them runs on Linux: `bench/micro-linux crypto-micro|log-micro [args]` runs a `bench/*-micro` project in the toolchain image on two pinned cores with tier-up at once (a single core leaves a hot loop unoptimized for seconds and the numbers swing 5x). `bench/lib/logcount` checks that the batched request log wrote every line (N requests, SIGTERM, count). `bench/run` keeps the last log lines of each rep in `APP-REP-logtail.txt`. Every run warms each route at its measured concurrency until the app is flat
   (`bench/lib/warmup.py`, `WARMUP_SECS`/`WARMUP_MAX_SECS`; `bench/warmup` draws the curve) and `bench/report` flags runs that did
@@ -147,8 +155,8 @@ Project references follow the crate graph. Don't add an edge Rust doesn't have.
   way for both apps (`bench/lib/clr-symbols` installs the libcoreclr and libc symbols it needs). Container logs are capped
   (`LOG_MAX_SIZE`, `LOG_MAX_FILE`; request logging itself stays on). Before every benchmark check `df -h ~`
   (stop under 15 GB free), and run `bin/clean-docker` after image rebuilds and `bin/clean-rust-builds` after Rust builds.
-  Rebuild `campfire-fsharp:app` from HEAD before measuring F# (`CAMPFIRE_REVISION=$(git rev-parse HEAD) parity/bin/candidate build`
-  in colima labels the image with its commit; `bench/run`'s env.txt records the label and the digest).
+  Rebuild `campfire-oncrack:app` from HEAD before measuring (`CAMPFIRE_REVISION=$(git rev-parse HEAD) parity/bin/candidate build`
+  in colima labels the image with its commit; `bench/run`'s env.txt records the label and the digest). `campfire-fsharp:app` is the port, never rebuilt here.
 - `bench/cable/run` measures fan-out to 1,000 local subscribers against `campfire_cable` (needs python3 and mise, like
   `bench/kit/run`); `FanOutTests` measures the same in process, without Kestrel. Run both after changing `Pubsub.fs`,
   `Connection.fs` or `Socket.fs`; the results and what they say of the host's settings are in `bench/results/cable-fanout.md`.
@@ -158,10 +166,10 @@ Project references follow the crate graph. Don't add an edge Rust doesn't have.
   reporting. `bin/storage-media-vectors` runs them in `Dockerfile.toolchain` inside colima, with
   `CAMPFIRE_REQUIRE_MEDIA_VECTORS=1` (the header says why it checks vectors the reference image makes there
   rather than `vectors/storage.json` on aarch64).
-- `Dockerfile` builds the production image (`campfire-fsharp:app`) in colima, a drop-in for the reference's as
+- `Dockerfile` builds the production image (`campfire-oncrack:app` here; `campfire-fsharp:app` is the port's) in colima, a drop-in for the reference's as
   `rust/Dockerfile` is; its `media-base`, `vips`, `ffmpeg` and `dotnet` stages are copies of `Dockerfile.toolchain`'s, so
   the two share layers, and they must stay identical to each other. `parity/bin/candidate build` builds it and the parity
-  candidate image on top (`PARITY_CANDIDATE_APP=rust` runs the Rust port in the same harness instead); `parity/bin/candidate
+  candidate image on top (`campfire-candidate-oncrack`; `PARITY_CANDIDATE_APP=fsharp` or `rust` runs the port or the Rust port in the same harness instead); `parity/bin/candidate
   up` then serves a seed (`curl /up`, `POST /session` with `david@37signals.com` / `secret123456`).
   `bin/linux-tests App` runs `Campfire.App.Tests` on Linux in the toolchain image (the transparent-huge-pages test skips on
   macOS); it builds a private copy of the sources there.

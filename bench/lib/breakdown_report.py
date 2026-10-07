@@ -18,13 +18,27 @@ ROUTES = ["room_show", "messages_page", "sidebar", "search", "post_message", "up
 NAME = {"rust": "Rust", "fsharp": "F#"}
 
 
+ONCRACK = False   # a directory measured with `--apps oncrack`: onCrack takes the F# column, and the tables say so
+
+
 def load_cpu(d):
+    global ONCRACK
     runs = {}
     for f in sorted(glob.glob(os.path.join(d, "*-[0-9].json"))):
         r = json.load(open(f))
+        app = r["app"]
+        if app == "oncrack":
+            ONCRACK, app = True, "fsharp"
         for run in r["runs"]:
-            runs.setdefault((r["app"], run["route"], run["conc"]), []).append((r["rep"], run))
+            runs.setdefault((app, run["route"], run["conc"]), []).append((r["rep"], run))
     return runs
+
+
+_print = print
+
+
+def print(*args, **kw):  # noqa: A001  (onCrack's numbers are never labelled F#)
+    _print(*[a.replace("F#", "onCrack") if ONCRACK and isinstance(a, str) else a for a in args], **kw)
 
 
 def med(vals):
