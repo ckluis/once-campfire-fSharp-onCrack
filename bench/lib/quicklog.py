@@ -3,7 +3,7 @@
 
   quicklog.py compare DIR                 table of the onCrack runs in DIR (oncrack-N.json) against bench/results/phase7-final: the stored Rust
                                           medians and the stored F# port medians (same session, 3 reps each), with the validity checks
-  quicklog.py log DIR --unit U --tier N --change "..." --kept true|false [--build mounted|DIGEST] [--commit SHA]
+  quicklog.py log DIR --unit U --tier N --change "..." --kept true|false [--build mounted|DIGEST] [--commit SHA] [--description TEXT]
                                           append one line to bench/results/oncrack-log.jsonl (raw onCrack numbers per workload), then rebuild
                                           index.html (the climb chart) with bench/progress/build.py
 
@@ -147,6 +147,7 @@ def log(args):
         workloads.setdefault(w, {})[f"c{c}"] = {"rps": round(med(m["rps"]), 1), "cpu_us": round(med(m["cpu"]), 1) if m["cpu"] else None, "reps": len(m["rps"])}
     commit = args.commit or source_commit(args.build)
     entry = {"time": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "unit": args.unit, "tier": args.tier, "change": args.change, "app": APP,
+             **({"description": args.description} if args.description else {}),
              "commit": commit, "build": args.build, "kept": args.kept == "true", "workloads": workloads}
     with open(LOG, "a") as f:
         f.write(json.dumps(entry) + "\n")
@@ -161,6 +162,7 @@ if __name__ == "__main__":
     l = sub.add_parser("log"); l.add_argument("dir"); l.add_argument("--unit", required=True, help="the unit's topic, e.g. c0, readcache, groupcommit")
     l.add_argument("--tier", type=int, required=True, choices=[2, 3]); l.add_argument("--change", required=True)
     l.add_argument("--kept", required=True, choices=["true", "false"]); l.add_argument("--build", default="mounted"); l.add_argument("--commit")
+    l.add_argument("--description", help="what was done, for a dot of its own (the card's \"What was done\"); otherwise the card lists the app commits since the previous dot")
     a = ap.parse_args()
     if a.cmd == "compare":
         sys.exit(1 if compare(a.dir) else 0)
