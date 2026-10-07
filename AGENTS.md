@@ -19,7 +19,10 @@ the port: `bench/results/oncrack-c0.md`.
 savepoint each, one COMMIT, then their after-commit work in one more transaction (`Writer` in `src/Campfire.Db/Database.fs`). Every write
 still commits before its caller hears back. A write closure must do database work only (non-database effects go in after-commit hooks): a
 group whose transaction breaks runs again write by write. `CAMPFIRE_GROUP_COMMIT=off` restores one write per transaction;
-`tests/Campfire.Db.Tests/GroupCommitTests.fs` holds the writer to form groups and compares a grouped run with a one-by-one run.
+`tests/Campfire.Db.Tests/GroupCommitTests.fs` holds the writer to form groups and compares a grouped run with a one-by-one run. A post's broadcast
+goes out in commit order (`BroadcastOrder` in `src/Campfire.App/Channels/Broadcasts.fs`): messages#create takes a place in line in its write's
+after-commit hook and publishes through it once rendered, giving it up in a `finally`; a place nobody fills is skipped after a second. Posts with
+an attachment, bots' posts and webhook replies broadcast at once, as before.
 
 **Content-Length on gzipped answers** (unit C3, `bench/results/oncrack-c3.md`): a gzipped buffer or frozen page goes out with the length of its
 gzip member (made, or fetched from the digest-keyed gzip cache or the frozen page, before the headers) instead of chunked; streams, files and pages in

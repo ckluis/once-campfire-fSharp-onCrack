@@ -214,3 +214,63 @@ let ``broadcast frames use active support json escaping`` () =
             frame
         )
     }
+
+// --- onCrack: BroadcastOrder (posts' broadcasts in commit order) ------------------------------------------
+
+[<Fact>]
+let ``the broadcast line publishes in place order whatever order places are filled in`` () =
+    let order = BroadcastOrder(60_000)
+    let published = System.Collections.Concurrent.ConcurrentQueue<int64>()
+    let places = [| for _ in 1..2000 -> order.Reserve() |]
+    let shuffled = places |> Array.sortBy (fun p -> (p * 7919L) % 2003L)
+    System.Threading.Tasks.Parallel.ForEach(shuffled, (fun (p: int64) -> order.Complete(p, fun () -> published.Enqueue p))) |> ignore
+    Assert.Equal<int64 list>(List.ofArray places, List.ofSeq published)
+    Assert.Equal(0L, order.Skipped)
+
+[<Fact>]
+let ``a place given up does not hold the line, and an empty one is skipped after the stall`` () =
+    task {
+        let order = BroadcastOrder(200)
+        let published = System.Collections.Concurrent.ConcurrentQueue<string>()
+        let a, b, c, d = order.Reserve(), order.Reserve(), order.Reserve(), order.Reserve()
+        order.Complete(c, fun () -> published.Enqueue "c")
+        order.Skip b
+        Assert.Empty published
+        order.Complete(a, fun () -> published.Enqueue "a")
+        Assert.Equal<string list>([ "a"; "c" ], List.ofSeq published)
+        // `d`'s publisher never comes: `e` waits for the stall, then goes.
+        let e = order.Reserve()
+        order.Complete(e, fun () -> published.Enqueue "e")
+        Assert.Equal<string list>([ "a"; "c" ], List.ofSeq published)
+        let deadline = System.DateTime.UtcNow.AddSeconds 5.0
+        while published.Count < 3 && System.DateTime.UtcNow < deadline do
+            do! Task.Delay 20
+        Assert.Equal<string list>([ "a"; "c"; "e" ], List.ofSeq published)
+        Assert.Equal(1L, order.Skipped)
+        // A place filled after it was skipped publishes nothing late and holds nothing.
+        order.Complete(d, fun () -> published.Enqueue "d")
+        let f = order.Reserve()
+        order.Complete(f, fun () -> published.Enqueue "f")
+        Assert.Equal<string list>([ "a"; "c"; "e"; "f" ], List.ofSeq published)
+    }
+
+[<Fact>]
+let ``a ticket takes one place, publishes once, and gives it up only if unpublished`` () =
+    let order = BroadcastOrder(60_000)
+    let published = System.Collections.Concurrent.ConcurrentQueue<string>()
+    let first = BroadcastTicket(order)
+    // A group's after-commit work run again calls the hook twice: still one place.
+    first.Reserve()
+    first.Reserve()
+    let second = BroadcastTicket(order)
+    second.Reserve()
+    second.Publish(fun () -> published.Enqueue "second")
+    second.Abandon()
+    Assert.Empty published
+    first.Abandon()
+    first.Publish(fun () -> published.Enqueue "first")
+    Assert.Equal<string list>([ "second" ], List.ofSeq published)
+    // Without a place (the write never got to its after-commit work), it publishes at once.
+    let unplaced = BroadcastTicket(order)
+    unplaced.Publish(fun () -> published.Enqueue "unplaced")
+    Assert.Equal<string list>([ "second"; "unplaced" ], List.ofSeq published)

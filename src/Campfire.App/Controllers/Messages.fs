@@ -184,7 +184,12 @@ module MessagesController =
     /// `@room.messages.create_with_attachment!(attributes)`: the message (with its uploaded blob, in
     /// one transaction), then `process_attachment`. The upload's file is copied into storage and the
     /// body canonicalized before the transaction, so the writer only inserts rows.
-    let createMessage (c: Ctx) (room: Room) (attributes: MessageParams) : Task<Result<Message, Error>> =
+    /// `createMessage`, taking `ticket`'s place in the broadcasts' line in the write's after-commit work (onCrack,
+    /// `BroadcastOrder`; null for none).
+    let rec createMessage (c: Ctx) (room: Room) (attributes: MessageParams) : Task<Result<Message, Error>> =
+        createMessageInLine c room attributes null
+
+    and createMessageInLine (c: Ctx) (room: Room) (attributes: MessageParams) (ticket: BroadcastTicket) : Task<Result<Message, Error>> =
         act {
             let! (user: User) = Concerns.requireCurrentUser c
             let app = c.App
@@ -214,6 +219,9 @@ module MessagesController =
                               ClientMessageId = attributes.ClientMessageId
                               Body = body
                               AttachmentBlobId = blob |> Option.map (fun blob -> blob.Id) }
+                    match ticket with
+                    | null -> ()
+                    | ticket -> tx.AfterCommit(fun _ -> ticket.Reserve())
                     message, blob)
             // Without an attachment, `message` is the row as stored: nothing after the commit writes to it,
             // and Rails answers with the same record (`create!(attributes).tap(&:process_attachment)`,
@@ -395,7 +403,7 @@ module MessagesController =
         }
 
     /// `create`: `set_room` runs inside the action, and a room that's gone renders `room_not_found`.
-    let create (c: Ctx) : Task<Result<Response, Error>> =
+    let rec create (c: Ctx) : Task<Result<Response, Error>> =
         act {
             do! Concerns.beforeActions c Before.Default
             let! room =
@@ -409,7 +417,23 @@ module MessagesController =
             | None -> return! renderRoomNotFound c
             | Some room ->
                 let! attributes = messageParams c
-                let! (message: Message) = createMessage c room attributes
+                // onCrack: the broadcast goes out in commit order (`BroadcastOrder`), unless the post has an
+                // attachment, whose analysis between the commit and the broadcast would hold the line.
+                match attributes.Attachment with
+                | None ->
+                    let ticket = BroadcastTicket(c.App.Broadcasts.Order)
+                    try
+                        return! createAndAnswer c room attributes ticket
+                    finally
+                        ticket.Abandon()
+                | Some _ -> return! createAndAnswer c room attributes null
+        }
+
+    /// `create` once the room is found: the post, its broadcast (through `ticket`'s place in line when there is
+    /// one), its webhooks and the answer.
+    and private createAndAnswer (c: Ctx) (room: Room) (attributes: MessageParams) (ticket: BroadcastTicket) : Task<Result<Response, Error>> =
+        act {
+                let! (message: Message) = createMessageInLine c room attributes ticket
 
                 // onCrack: `broadcast_create`, the webhook candidates of `deliver_webhooks_to_bots` and the answer
                 // from one read (the port takes three): one read transaction, the account read once, and the answer's
@@ -429,7 +453,11 @@ module MessagesController =
                             let view = presenter.Message message
                             let partial =
                                 Page.renderDetachedAt app account broadcastBaseUrl (fun ctx -> MessagesCached.message ctx view)
-                            app.Broadcasts.MessageCreate(conn, room, message, Rendered.partials { Rendered.empty with Message = Some partial })
+                            let broadcast =
+                                app.Broadcasts.MessageCreateLater(conn, room, message, Rendered.partials { Rendered.empty with Message = Some partial })
+                            match ticket with
+                            | null -> broadcast ()
+                            | ticket -> ticket.Publish broadcast
                             let bots = webhookBots conn app room message
                             let item = presenter.MessageItem message
                             let html =

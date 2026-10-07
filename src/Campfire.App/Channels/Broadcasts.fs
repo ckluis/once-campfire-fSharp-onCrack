@@ -65,6 +65,119 @@ module BroadcastNames =
     let readRoom (server: IServer) (userId: int64) (roomId: int64) : int =
         server.Broadcast(ReadRooms.streamNameFor userId, Value.Object [ "room_id", Value.Int roomId ])
 
+/// onCrack: posts' broadcasts in commit order (the verifier's A5). Under group commit the writer answers the posts of
+/// a group one after another and each request broadcasts from its own continuation, so posts committed together went
+/// out in the order those continuations ran: the client places an appended message by its sort value (milliseconds),
+/// so posts of one millisecond showed in that order live and in commit order after a reload. A post takes a place in
+/// line on the writer, in an after-commit hook (commit order), and its request hands its broadcast to the line when
+/// rendered; the line publishes each one once every earlier place has published or given its place up. Rendering
+/// stays in the requests, in parallel; only the publishing is in order.
+///
+/// A place nobody fills (a request that died between its commit and its broadcast; every path gives its place up in a
+/// `finally`) holds the line for at most `stallMs`, then is skipped.
+[<Sealed>]
+type BroadcastOrder(stallMs: int) =
+    let gate = obj ()
+    let waiting = System.Collections.Generic.Dictionary<int64, unit -> unit>()
+    let mutable reserved = 0L
+    let mutable next = 0L
+    let mutable draining = false
+    // The place the stall timer was armed for (-1: not armed).
+    let mutable armedFor = -1L
+    let mutable timer: System.Threading.Timer | null = null
+    let mutable skipped = 0L
+
+    new() = BroadcastOrder(1000)
+
+    /// A place in line: on the writer thread, after the commit (an after-commit hook), so places follow commit order.
+    member _.Reserve() : int64 = System.Threading.Interlocked.Increment(&reserved) - 1L
+
+    /// Places skipped because nobody filled them in time, for tests and logs.
+    member _.Skipped : int64 = System.Threading.Volatile.Read(&skipped)
+
+    /// Publishes `publish` once every earlier place is done (now, or later on whichever thread fills the gap).
+    member this.Complete(place: int64, publish: unit -> unit) : unit =
+        let drain =
+            lock gate (fun () ->
+                if place >= next then waiting[place] <- publish
+                if draining then
+                    false
+                else
+                    draining <- true
+                    true)
+        if drain then this.Drain()
+
+    /// Gives a place up: nothing to publish.
+    member this.Skip(place: int64) : unit = this.Complete(place, ignore)
+
+    member private this.Drain() : unit =
+        let mutable running = true
+        while running do
+            let publish =
+                lock gate (fun () ->
+                    match waiting.TryGetValue next with
+                    | true, publish ->
+                        waiting.Remove next |> ignore
+                        next <- next + 1L
+                        publish
+                    | _ ->
+                        draining <- false
+                        // Later places wait on one that isn't filled yet: give it `stallMs`.
+                        if waiting.Count > 0 && armedFor <> next then
+                            armedFor <- next
+                            match timer with
+                            | null -> timer <- new System.Threading.Timer((fun _ -> this.Expire()), null, stallMs, System.Threading.Timeout.Infinite)
+                            | t -> t.Change(stallMs, System.Threading.Timeout.Infinite) |> ignore
+                        Unchecked.defaultof<_>)
+            match box publish with
+            | null -> running <- false
+            | _ ->
+                try
+                    publish ()
+                with e ->
+                    eprintfn "ERROR campfire: broadcast failed: %s" e.Message
+
+    member private this.Expire() : unit =
+        let drain =
+            lock gate (fun () ->
+                if armedFor <> next then
+                    // The place it was armed for was filled (a later gap arms it again).
+                    false
+                elif draining || waiting.Count = 0 || waiting.ContainsKey next then
+                    // A drainer is running (it arms again when it stops at a gap), or there is no gap.
+                    armedFor <- -1L
+                    false
+                else
+                    eprintfn "ERROR campfire: broadcast place %d not filled in %d ms: skipped" next stallMs
+                    skipped <- skipped + 1L
+                    next <- next + 1L
+                    armedFor <- -1L
+                    draining <- true
+                    true)
+        if drain then this.Drain()
+
+/// One post's place in `BroadcastOrder`: taken at most once (a group's after-commit work can run again), then
+/// published or given up exactly once.
+[<Sealed; AllowNullLiteral>]
+type BroadcastTicket(order: BroadcastOrder) =
+    let mutable place = -1L
+    let mutable finished = false
+
+    /// In the write's after-commit hook.
+    member _.Reserve() : unit = if place < 0L then place <- order.Reserve()
+
+    /// Publishes in line (now, without a place: the write never reached its after-commit work).
+    member _.Publish(publish: unit -> unit) : unit =
+        if not finished then
+            finished <- true
+            if place >= 0L then order.Complete(place, publish) else publish ()
+
+    /// Gives the place up, unless it was published.
+    member _.Abandon() : unit =
+        if not finished then
+            finished <- true
+            if place >= 0L then order.Skip place
+
 [<Sealed>]
 type Broadcasts(server: Cable) =
     static member private RoomMessages(room: Room) : string list = [ GlobalId.toParam (Gid.roomGid room); BroadcastNames.Messages ]
@@ -93,16 +206,30 @@ type Broadcasts(server: Cable) =
     /// unread stream (`room.memberships.pluck(:user_id)`). Used by MessagesController#create,
     /// Webhook replies, and `Messages::ByBotsController`.
     member this.MessageCreate(conn: Conn, room: Room, message: Message, partials: IPartials) : unit =
+        this.MessageCreateLater(conn, room, message, partials) ()
+
+    /// onCrack: `MessageCreate` with what it reads (the partial, the members) read now, and the broadcasting
+    /// left to the function it returns (for `BroadcastOrder`).
+    member this.MessageCreateLater(conn: Conn, room: Room, message: Message, partials: IPartials) : unit -> unit =
         let html = partials.Message message
-        this.ToUtf8(Broadcasts.RoomMessages room, Append, BroadcastNames.roomDomId room BroadcastNames.Messages, html, [])
-        this.UnreadRoom(conn, room)
+        let members = Membership.forRoom conn room.Id |> List.map (fun membership -> membership.UserId)
+        fun () ->
+            this.ToUtf8(Broadcasts.RoomMessages room, Append, BroadcastNames.roomDomId room BroadcastNames.Messages, html, [])
+            this.UnreadRoomTo(room, members)
+
+    /// onCrack: the posts' broadcasts in commit order (`BroadcastOrder`).
+    member val Order = BroadcastOrder()
 
     /// `broadcast_unread_room`: `{ roomId: }` to each member's `user_<id>_unreads`.
-    member _.UnreadRoom(conn: Conn, room: Room) : unit =
+    member this.UnreadRoom(conn: Conn, room: Room) : unit =
+        this.UnreadRoomTo(room, Membership.forRoom conn room.Id |> List.map (fun membership -> membership.UserId))
+
+    /// `broadcast_unread_room` to `members` (`room.memberships.pluck(:user_id)`, read by the caller).
+    member _.UnreadRoomTo(room: Room, members: int64 list) : unit =
         // The same message to every member's stream: encoded once.
         let json = System.Text.Encoding.UTF8.GetBytes(Json.encode (Value.Object [ "roomId", Value.Int room.Id ]))
-        for membership in Membership.forRoom conn room.Id do
-            server.BroadcastEncoded(UnreadRooms.streamNameFor membership.UserId, System.ReadOnlySpan json) |> ignore
+        for userId in members do
+            server.BroadcastEncoded(UnreadRooms.streamNameFor userId, System.ReadOnlySpan json) |> ignore
 
     /// `message.broadcast_remove`: MessagesController#destroy and `User#remove_banned_content`.
     member this.MessageRemove(room: Room, message: Message) : unit =

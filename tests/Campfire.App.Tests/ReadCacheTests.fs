@@ -331,6 +331,73 @@ let ``concurrent posts each answer with their own message, and every one is stor
         Assert.True(stats.Writes >= 96L, $"{stats.Writes} writes in {stats.Groups} groups, largest {stats.Largest}")
     }
 
+/// onCrack C2, group commit and broadcast order (the verifier's A5). Posts committed in one group were broadcast from
+/// their own requests in whatever order those continued (92-100 adjacent inversions in 319 against 33-49 without group
+/// commit), and the client places an appended message by its `data-sort-value` (`messages_controller.js#followingMessage`),
+/// milliseconds, so posts of one millisecond showed live in arrival order and after a reload in commit order. Posts now
+/// broadcast in commit order (`BroadcastOrder`): every broadcast arrives, in commit order, and so the client's placement is
+/// commit order too.
+[<Fact>]
+let ``concurrent posts are all broadcast in commit order`` () =
+    task {
+        use! test = bootSeeded "default"
+        let roomRow = read test (fun conn -> Room.find conn ALL_TALK)
+        let name =
+            Campfire.Cable.Naming.streamNameFrom [ Campfire.RailsCompat.GlobalId.toParam (Campfire.App.Channels.Gid.roomGid roomRow); "messages" ]
+        let wake = Campfire.Cable.Wake()
+        use sub = test.App.Cable.Hub.Subscribe(name, null, wake)
+        let frames = Collections.Concurrent.ConcurrentQueue<string>()
+        use stop = new CancellationTokenSource()
+        let drain =
+            Task.Run(fun () ->
+                let mutable frame = Unchecked.defaultof<Campfire.Cable.Socket.Frame>
+                let mutable fin = false
+                while not fin do
+                    match sub.TryRecv(&frame) with
+                    | Campfire.Cable.RecvStatus.Got -> frames.Enqueue frame.Text
+                    | Campfire.Cable.RecvStatus.Lagged -> frames.Enqueue "LAGGED"
+                    | _ -> if stop.IsCancellationRequested then fin <- true else Thread.SpinWait 50)
+        let poster (k: int) =
+            task {
+                let b = david test
+                for i in 1..20 do
+                    let! r = b.Write(postForm ALL_TALK $"ordr{k}x{i}y")
+                    Assert.Equal(200, r.Status)
+            }
+        let! _ = Task.WhenAll [| for k in 1..16 -> Task.Run<unit>(fun () -> poster k) |]
+        do! Task.Delay 300
+        stop.Cancel()
+        do! drain
+        Assert.DoesNotContain("LAGGED", frames)
+        let appended =
+            [ for f in frames do
+                  let m = Text.RegularExpressions.Regex.Match(f, """data-message-id=\\"(\d+)\\"[\s\S]*?data-sort-value=\\"(\d+)""")
+                  if m.Success then int64 m.Groups[1].Value, int64 m.Groups[2].Value ]
+        Assert.Equal(320, appended.Length)
+        Assert.Equal(320, appended |> List.distinctBy fst |> List.length)
+        // The client: each appended message moves before the run of earlier siblings with a larger sort value.
+        let dom = ResizeArray<int64 * int64>()
+        for (id, sort) in appended do
+            let mutable at = dom.Count
+            while at > 0 && sort < snd dom[at - 1] do
+                at <- at - 1
+            dom.Insert(at, (id, sort))
+        // Ids follow commit order, and so do sort values.
+        let byId = appended |> List.sortBy fst
+        Assert.Equal<int64 list>(byId |> List.map snd |> List.sort, byId |> List.map snd)
+        let pairs = dom |> List.ofSeq |> List.pairwise
+        let outOfCommitOrder = pairs |> List.filter (fun ((a, _), (b, _)) -> b < a)
+        let inversions = appended |> List.pairwise |> List.filter (fun ((a, _), (b, _)) -> b < a) |> List.length
+        match TestContext.Current.TestOutputHelper with
+        | null -> ()
+        | output ->
+            output.WriteLine
+                $"broadcast order: {inversions} adjacent inversions in arrival order, {outOfCommitOrder.Length} left after the client's placement (same millisecond)"
+        Assert.Equal(0, inversions)
+        Assert.Empty outOfCommitOrder
+        Assert.Equal(0L, test.App.Broadcasts.Order.Skipped)
+    }
+
 // onCrack C3: a gzipped answer carries its Content-Length (it is not chunked), and that length is the bytes sent.
 let private gunzip (bytes: byte[]) : byte[] =
     use input = new System.IO.MemoryStream(bytes)
