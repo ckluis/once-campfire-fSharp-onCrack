@@ -163,3 +163,29 @@ let ``a reader never sees an even counter with a change it doesn't cover yet`` (
     writer.Join()
     Assert.True(seen.Count > 1, "the writer moved the counter")
     Assert.True(checks > 0, "some counts were compared")
+
+[<Fact>]
+let ``room counters stay bounded whatever room ids are asked for, and ids that share one share its marks`` () =
+    // Readers ask for the room id in a URL before anything checks the room exists (the verifier's A2: a
+    // counter per id grew by one per request for a room nobody has, and was never removed).
+    let v = Versions()
+    for i in 0L .. 1_000_000L do
+        v.Room(900_000_000L + i * 7L) |> ignore
+    v.Room(-1L) |> ignore
+    v.Room(System.Int64.MinValue) |> ignore
+    v.Room(System.Int64.MaxValue) |> ignore
+    Assert.True(v.RoomCells <= Versions.RoomStripes, $"{v.RoomCells} room counters")
+    // Rooms whose ids are equal modulo the stripes share a counter: a write to one invalidates the other's
+    // pages, never the reverse of what it covers.
+    let a = v.Room 486777696L
+    let b = v.Room(486777696L + int64 Versions.RoomStripes)
+    Assert.Same(a, b)
+    Assert.NotSame(a, v.Room 486777697L)
+    let before = b.Read()
+    v.Mark a
+    Assert.Equal(before + 1L, b.Read())
+    v.Release()
+    Assert.Equal(before + 2L, b.Read())
+    // The seed's rooms have counters of their own.
+    let seedRooms = [ 104393281L; 186869642L; 201306877L; 340026324L; 486777696L; 654632876L; 699448325L; 699448326L; 699448327L; 699448328L; 699448329L ]
+    Assert.Equal(seedRooms.Length, seedRooms |> List.map (fun id -> v.Room id) |> List.distinctBy (fun c -> System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode c) |> List.length)

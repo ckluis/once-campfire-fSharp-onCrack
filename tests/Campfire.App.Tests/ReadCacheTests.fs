@@ -473,3 +473,22 @@ let ``a role change of the signed-in user shows on the next sidebar while others
                 (fun i html -> html.Contains "New Chat Room" = (roleOf i = Role.Administrator))
         Assert.True(stale.IsEmpty, $"sidebars disagreeing with the committed role: {stale}")
     }
+
+[<Fact>]
+let ``room pages for rooms nobody has keep no counter per id`` () =
+    task {
+        // The verifier's A2: a signed-in user asking for /rooms/N and /rooms/N/messages with a new N each time
+        // made a version counter per N, never removed. Ids a stripe apart now share one counter.
+        use! test = bootSeeded "default"
+        let versions = test.App.Db.Versions
+        let before = versions.RoomCells
+        let cookie = davidCookie ()
+        let stripe = int64 Versions.RoomStripes
+        for i in 0L .. 1999L do
+            let id = 900_000_000L * stripe + i * stripe
+            // No cookie jar: a redirect's flash would make the next request skip the cache.
+            let path = if i % 2L = 0L then $"/rooms/{id}" else $"/rooms/{id}/messages"
+            let! reply = test.Send((getWithCookie path cookie).With("accept", "text/html"))
+            Assert.True(reply.Status = 302 || reply.Status = 404, $"{path}: {reply.Status}")
+        Assert.True(versions.RoomCells - before <= 1, $"{versions.RoomCells - before} counters for 2,000 rooms that don't exist")
+    }

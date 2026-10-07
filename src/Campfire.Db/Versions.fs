@@ -6,7 +6,10 @@
 // - `Global`: anything rare and shared by many pages: accounts, users (names, avatars, roles, status
 //   are rendered in other people's pages), rooms created or destroyed, bans, blobs and their variants,
 //   attachments and rich texts that don't belong to a message, webhooks;
-// - `Room r`: room r's row, its messages, their bodies, attachments and boosts, and who is a member;
+// - `Room r`: room r's row, its messages, their bodies, attachments and boosts, and who is a member
+//   (one counter per room id modulo `RoomStripes`: readers ask for the room id in a URL before anything
+//   checks the room exists, so a counter per id would grow with every id anyone types; rooms that share
+//   a counter only invalidate each other's pages);
 // - `User u`: u's memberships (involvement, unread state, connections), searches and push
 //   subscriptions;
 // - `Sessions`: any session row (sign in, sign out, the hourly activity refresh).
@@ -55,7 +58,7 @@ type VersionKind =
 type Versions() =
     let globalCell = VersionCell()
     let sessionsCell = VersionCell()
-    let rooms = ConcurrentDictionary<int64, VersionCell>()
+    let rooms: VersionCell[] = Array.zeroCreate Versions.RoomStripes
     let users = ConcurrentDictionary<int64, VersionCell>()
     static let make = Func<int64, VersionCell>(fun _ -> VersionCell())
     // The writer thread's: counters made odd by the job in progress.
@@ -64,7 +67,27 @@ type Versions() =
 
     member _.Global : VersionCell = globalCell
     member _.Sessions : VersionCell = sessionsCell
-    member _.Room(id: int64) : VersionCell = rooms.GetOrAdd(id, make)
+    /// Room `id`'s counter, shared with the ids equal to it modulo `RoomStripes` (bounded whatever ids
+    /// requests name; sequential ids share none until there are that many rooms).
+    member _.Room(id: int64) : VersionCell =
+        let i = int (id &&& int64 (Versions.RoomStripes - 1))
+        match Volatile.Read(&rooms[i]) with
+        | null ->
+            let made = VersionCell()
+            match Interlocked.CompareExchange(&rooms[i], made, null) with
+            | null -> made
+            | existing -> existing
+        | cell -> cell
+
+    /// Room counters made so far (at most `RoomStripes`), for tests.
+    member _.RoomCells : int =
+        let mutable n = 0
+        for i in 0 .. rooms.Length - 1 do
+            if not (isNull (Volatile.Read(&rooms[i]))) then n <- n + 1
+        n
+
+    /// How many room counters there are at most (a power of two).
+    static member RoomStripes = 65536
     member _.User(id: int64) : VersionCell = users.GetOrAdd(id, make)
 
     /// The counter for `kind` and `id` (an unknown id, -1, is `Global`).
