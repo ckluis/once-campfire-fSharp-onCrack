@@ -380,7 +380,9 @@ let ``pages of messages go out in parts`` () =
 
             let! gzipped = david.Send(send "GET" true)
             Assert.Equal(Some "gzip", gzipped.Header "content-encoding")
-            Assert.Equal(None, gzipped.Header "content-length")
+            // onCrack: a frozen page's gzip member goes out with its length (a page in parts, with the cache off, is chunked).
+            if Campfire.App.ReadCache.enabled then Assert.Equal(Some(string gzipped.Body.Length), gzipped.Header "content-length")
+            else Assert.Equal(None, gzipped.Header "content-length")
             use decoder = new GZipStream(new MemoryStream(gzipped.Body), CompressionMode.Decompress)
             use decoded = new MemoryStream()
             decoder.CopyTo decoded

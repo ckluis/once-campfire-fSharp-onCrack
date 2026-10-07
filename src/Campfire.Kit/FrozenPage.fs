@@ -88,3 +88,4 @@ type FrozenPage private (parts: PageParts | null, whole: ReadOnlyMemory<byte>) =
         member this.WritePlain writer = this.WritePlain writer
         member this.Gzip mtime = ReadOnlyMemory<byte>(this.Member mtime)
         member this.WriteGzip(writer, mtime) = writer.Write(ReadOnlySpan<byte>(this.Member mtime))
+        member this.GzipIfReady mtime = ReadOnlyMemory<byte>(this.Member mtime)

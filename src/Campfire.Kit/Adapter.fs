@@ -229,10 +229,25 @@ module Adapter =
         | ValueSome digest -> Deflater.gzipDigested body digest mtime
         | ValueNone -> ReadOnlyMemory<byte>(Deflater.gzipMember body.Span mtime)
 
-    let private writeGzipped (http: HttpContext) (response: Response) (mtime: uint32) : Task =
+    /// onCrack: a gzipped buffer or frozen page goes out with its `Content-Length` (the member is made, or fetched from the
+    /// cache, before the headers) rather than chunked: one send per response, not a send and then the terminating chunk.
+    /// `CAMPFIRE_GZIP_LENGTH=off` chunks them as the port does.
+    let private lengthKnown: bool =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_GZIP_LENGTH" with
+        | null -> true
+        | v -> not (v = "0" || v.Equals("off", StringComparison.OrdinalIgnoreCase) || v.Equals("false", StringComparison.OrdinalIgnoreCase))
+
+    let private writeGzipped (http: HttpContext) (response: Response) (mtime: uint32) (ready: ReadOnlyMemory<byte>) : Task =
         task {
             let output = http.Response.Body
             match response.Body with
+            | Body.Parts _ when not ready.IsEmpty ->
+                // onCrack: the member the headers' Content-Length counted.
+                http.Response.BodyWriter.Write ready.Span
+                let! _ = http.Response.BodyWriter.FlushAsync()
+                ()
+            | Body.Bytes _
+            | Body.Pooled _ when not ready.IsEmpty -> do! output.WriteAsync ready
             | Body.Empty ->
                 let writer = new Deflater.GzipWriter(output, mtime)
                 do! writer.Finish()
@@ -312,11 +327,21 @@ module Adapter =
                 | Body.Empty
                 | Body.Stream _ -> ()
                 let mutable gzipMtime: uint32 voption = ValueNone
+                // onCrack: a frozen page's gzip member, known before the headers go: sent with its length, not chunked.
+                let mutable ready = ReadOnlyMemory<byte>.Empty
                 if state.Deflate then
                     let accept = RequestHeaders.get http.Request.Headers Hdr.AcceptEncoding
                     match Deflater.apply accept response appSetLength with
                     | Unchanged -> ()
-                    | Gzip mtime -> gzipMtime <- ValueSome mtime
+                    | Gzip mtime ->
+                        gzipMtime <- ValueSome mtime
+                        if lengthKnown && not head then
+                            match response.Body with
+                            | Body.Parts parts -> ready <- parts.GzipIfReady mtime
+                            | Body.Bytes bytes -> ready <- gzipSingle bytes response.BodyDigest mtime
+                            | Body.Pooled pooled -> ready <- gzipSingle pooled.Memory response.BodyDigest mtime
+                            | _ -> ()
+                            if not ready.IsEmpty then response.Headers.Insert(Hdr.ContentLength, string ready.Length)
                     | NotAcceptable ->
                         // The deflater answers outside the layers below it.
                         state.SkipRequestHeaders <- true
@@ -335,7 +360,7 @@ module Adapter =
                         else
                             match gzipMtime with
                             | ValueNone -> do! writePlain http response
-                            | ValueSome mtime -> do! writeGzipped http response mtime
+                            | ValueSome mtime -> do! writeGzipped http response mtime ready
                     with
                     // The client went away; the host has nothing more to say about it.
                     | :? OperationCanceledException

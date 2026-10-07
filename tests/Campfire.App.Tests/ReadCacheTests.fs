@@ -330,3 +330,53 @@ let ``concurrent posts each answer with their own message, and every one is stor
         let stats = test.App.Db.WriterStats
         Assert.True(stats.Writes >= 96L, $"{stats.Writes} writes in {stats.Groups} groups, largest {stats.Largest}")
     }
+
+// onCrack C3: a gzipped answer carries its Content-Length (it is not chunked), and that length is the bytes sent.
+let private gunzip (bytes: byte[]) : byte[] =
+    use input = new System.IO.MemoryStream(bytes)
+    use gz = new System.IO.Compression.GZipStream(input, System.IO.Compression.CompressionMode.Decompress)
+    use output = new System.IO.MemoryStream()
+    gz.CopyTo output
+    output.ToArray()
+
+[<Fact>]
+let ``a gzipped page, cached or not, is sent with the length of the bytes it sends and decodes to the identity page`` () =
+    task {
+        use! test = bootSeeded "default"
+        let david = david test
+        let room = $"/rooms/{ALL_TALK}"
+        let gz (path: string) = david.Send((get path).With("accept-encoding", "gzip"))
+        for path in [ room; "/users/me/sidebar"; "/searches?q=quokka"; "/searches?q=a" ] do
+            // The first answers are misses (pieces or a buffer), the later ones come from the cache.
+            let! identity = warm david path
+            for _ in 1..4 do
+                let! reply = gz path
+                Assert.Equal(200, reply.Status)
+                Assert.Equal(Some "gzip", reply.Header "content-encoding")
+                // (With the cache off a page in parts is streamed, chunked; with it on, a page is a frozen member.)
+                if ReadCache.enabled then
+                    Assert.Equal(None, reply.Header "transfer-encoding")
+                    Assert.Equal(Some(string reply.Body.Length), reply.Header "content-length")
+                Assert.Equal<byte[]>(identity.Body, gunzip reply.Body)
+        // A write's answer (a buffer, not a page): the same.
+        let! posted = david.Write((postForm ALL_TALK "length check").With("accept-encoding", "gzip"))
+        Assert.Equal(Some "gzip", posted.Header "content-encoding")
+        Assert.Equal(Some(string posted.Body.Length), posted.Header "content-length")
+        Assert.Contains("length check", System.Text.Encoding.UTF8.GetString(gunzip posted.Body))
+        // And a client that doesn't take gzip gets the plain page with its own length.
+        let! plain = david.Get room
+        Assert.Equal(None, plain.Header "content-encoding")
+        Assert.Equal(Some(string plain.Body.Length), plain.Header "content-length")
+    }
+
+[<Fact>]
+let ``a HEAD for a gzipped page has no body and keeps answering as it did`` () =
+    task {
+        use! test = bootSeeded "default"
+        let david = david test
+        let room = $"/rooms/{ALL_TALK}"
+        let! _ = warm david room
+        let! reply = david.Send((request "HEAD" room).With("accept-encoding", "gzip"))
+        Assert.Equal(200, reply.Status)
+        Assert.Empty reply.Body
+    }

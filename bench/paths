@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# onCrack C3: CPU per request and throughput for arbitrary GET paths against one app, in one container, at c=16 (and c=1 with --c1).
+# Run inside colima:  bench/paths [--app oncrack] [--secs 6] [--warmup 12] [--conc "16"] [--env "K=V ..."] [--mounted DIR] PATH [PATH ...]
+# Paths may use @ROOM@ (the busy room's id) and @BEFORE@. Same container start, seed copy, pinning and cgroup accounting as bench/breakdown cpu.
+set -euo pipefail
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+export SERVER_CPUS=${SERVER_CPUS:-0-3} LOADGEN_CPUS=${LOADGEN_CPUS:-4-7}
+export WORK=${WORK:-/var/tmp/campfire-bench-work}
+APP=oncrack SECS=6 WARM=12 CONCS="16" ENVX="" MOUNT=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --app) APP=$2; shift 2 ;;
+    --secs) SECS=$2; shift 2 ;;
+    --warmup) WARM=$2; shift 2 ;;
+    --conc) CONCS=$2; shift 2 ;;
+    --env) ENVX=$2; shift 2 ;;
+    --mounted) MOUNT=$2; shift 2 ;;
+    *) break ;;
+  esac
+done
+PATHS=("$@")
+set --
+[ -z "$MOUNT" ] || export ONCRACK_MOUNT=$MOUNT
+[ -z "$ENVX" ] || export ONCRACK_EXTRA_ENV="$ENVX"
+BENCH_RUN_LIB=1 source "$ROOT/bench/run"
+wait_for_quiet
+start_app "$APP" >/dev/null
+CG=$(cgroup_dir)
+sleep 5
+COOKIE=$(lg login --base "$BASE" --email "$EMAIL" --password "$PASSWORD" | python3 -c 'import json,sys; print(json.load(sys.stdin)["cookie"])')
+for p in "${PATHS[@]}"; do
+  p=${p//@ROOM@/$ROOM}; p=${p//@BEFORE@/$BEFORE}
+  if [ -n "${SIZES:-}" ]; then
+    curl -s -o /dev/null -w "  wire bytes %{size_download} for $p\n" -H "Cookie: $COOKIE" -H "Accept-Encoding: gzip" "$BASE$p"
+    continue
+  fi
+  if [ -n "${HEADERS:-}" ]; then
+    curl -s -o /dev/null -D - -H "Cookie: $COOKIE" -H "Accept-Encoding: gzip" "$BASE$p" | tr -d '\r' | sed "s|^|  [$p] |"
+  fi
+  for c in $CONCS; do
+    WARMUP_SECS=$WARM WARMUP_MAX_SECS=$WARM warm_up "$COOKIE" "$c" --path "$p" >/dev/null
+    if [ -n "${PERFSTAT:-}" ]; then
+      PERF_PID=$(docker inspect -f '{{.State.Pid}}' "$CONTAINER")
+      ( sudo perf stat -e context-switches,cpu-migrations,sched:sched_wakeup,raw_syscalls:sys_enter -p "$PERF_PID" -o "/var/tmp/perfstat.txt" -- sleep "$((SECS + 2))" ) &
+      sleep 1
+    fi
+    res=$(lgc "$CG" http --base "$BASE" --cookie "$COOKIE" --path "$p" --conc "$c" --duration "$SECS")
+    if [ -n "${PERFSTAT:-}" ]; then wait; grep -E "context|migr|wakeup|sys_enter" /var/tmp/perfstat.txt | sed "s|^|    |"; fi
+    python3 -c 'import json,sys; r=json.loads(sys.argv[1]); c=r["cost"]; print("%-50s c=%-3s %9.0f rps  server %5.1f us/req %4.2f cores  loadgen %5.1f us/req %4.2f cores  %s err %s" % (sys.argv[2], sys.argv[3], r["rps"], c["server_cpu_us_per_req"], c["server_cores_busy"], c["loadgen_cpu_us_per_req"], c["loadgen_cores_busy"], r["statuses"], r["errors"]))' "$res" "$p" "$c"
+  done
+done
+docker rm -f "$CONTAINER" >/dev/null; rm -rf "${WORK:?}/$APP"

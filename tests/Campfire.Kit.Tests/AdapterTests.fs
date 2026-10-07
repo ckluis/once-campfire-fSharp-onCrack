@@ -132,8 +132,14 @@ let ``the deflater gzips every kind of body for a client that accepts it`` () =
                 let! reply = app.Send(gz (get target))
                 Assert.Equal(200, reply.Status)
                 Assert.Equal(Some "gzip", reply.Header "content-encoding")
-                Assert.Equal(None, reply.Header "content-length")
-                Assert.Equal(Some "chunked", reply.Header "transfer-encoding")
+                // onCrack: a body held in a buffer goes out with the length of its gzip member (made before the
+                // headers); a stream and a file, whose size isn't known until they are read, are still chunked.
+                if target = "/page" then
+                    Assert.Equal(Some(string reply.Body.Length), reply.Header "content-length")
+                    Assert.Equal(None, reply.Header "transfer-encoding")
+                else
+                    Assert.Equal(None, reply.Header "content-length")
+                    Assert.Equal(Some "chunked", reply.Header "transfer-encoding")
                 Assert.True(reply.HeaderValues("vary") |> List.exists (fun v -> v.Contains "Accept-Encoding"), target)
                 Assert.True((gunzip reply.Body = page), target)
             let! pooled = app.Send(gz (get "/pooled"))

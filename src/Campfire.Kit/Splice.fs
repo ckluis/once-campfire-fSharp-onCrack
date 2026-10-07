@@ -838,3 +838,4 @@ type PageParts internal (length: int, parts: SplicePart[]) =
         member this.WritePlain writer = this.WritePlain writer
         member this.Gzip mtime = ReadOnlyMemory<byte>(this.Gzip mtime)
         member this.WriteGzip(writer, mtime) = this.WriteGzip(writer, mtime)
+        member _.GzipIfReady _ = ReadOnlyMemory<byte>.Empty

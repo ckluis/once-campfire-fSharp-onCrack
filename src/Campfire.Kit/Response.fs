@@ -448,6 +448,9 @@ type IPageParts =
     abstract Gzip: mtime: uint32 -> ReadOnlyMemory<byte>
     /// The same member written into the response's pipe, piece by piece.
     abstract WriteGzip: writer: System.Buffers.IBufferWriter<byte> * mtime: uint32 -> unit
+    /// onCrack: that member when it is already worked out (so the response can carry its `Content-Length` instead of being
+    /// chunked, and be written as it is), or empty when making it would cost more than streaming the pieces.
+    abstract GzipIfReady: mtime: uint32 -> ReadOnlyMemory<byte>
 
 /// A file (or a byte range of one) to stream from disk.
 type FileBody = { Path: string; Offset: int64; Len: int64 }
