@@ -380,3 +380,96 @@ let ``a HEAD for a gzipped page has no body and keeps answering as it did`` () =
         Assert.Equal(200, reply.Status)
         Assert.Empty reply.Body
     }
+
+// --- The signed-in user, read by authentication before the page takes its counters ---------------------
+//
+// Authentication reads the user (name, avatar, role) before the action takes the page's counters. A change
+// to that user committed in between must not leave a page rendered from the old row and kept under the new
+// counters (the verifier's A1, A1b and A1c: 50-93 stale pages in 1,500 writes before the fix, and the stale
+// page served again by the next request). Twelve browsers read the page while the user changes; after each
+// change returns, a fresh request must show it.
+
+/// Changes David `rounds` times with `change i` while twelve browsers read `path`, checking after each change
+/// that a fresh request shows it (`shows i page`); returns the stale pages it saw.
+let private userChangesUnderReaders
+    (test: Test)
+    (path: string)
+    (rounds: int)
+    (change: int -> unit)
+    (shows: int -> string -> bool)
+    : Task<string list> =
+    task {
+        let readers = [ for _ in 1..12 -> david test ]
+        let checker = david test
+        for b in checker :: readers do
+            let! _ = b.Get path
+            ()
+        use stop = new CancellationTokenSource()
+        let reader (b: Browser) =
+            task {
+                while not stop.IsCancellationRequested do
+                    let! _ = b.Get path
+                    ()
+            }
+        let running = readers |> List.map (fun b -> Task.Run(fun () -> reader b :> Task))
+        let stale = ResizeArray<string>()
+        for i in 1..rounds do
+            change i
+            let! page = checker.Get path
+            Assert.Equal(200, page.Status)
+            if not (shows i page.Text) then stale.Add $"round {i}"
+        stop.Cancel()
+        do! Task.WhenAll running
+        if ReadCache.enabled then Assert.True(hits test > 0L, "the readers were served from the cache")
+        return List.ofSeq stale
+    }
+
+let private renameDavid (test: Test) (name: string) : unit =
+    let user = read test (fun conn -> User.find conn DAVID)
+    write test (fun tx -> User.update tx user { UserChanges.none with Name = Some name } |> ignore)
+
+[<Fact>]
+let ``a rename of the signed-in user shows on the next room page while others read it`` () =
+    task {
+        use! test = bootSeeded "default"
+        let meta (name: string) = $"<meta name=\"current-user-name\" content=\"{name}\""
+        let template (html: string) =
+            let m =
+                Text.RegularExpressions.Regex.Match(
+                    html,
+                    "data-messages-target=\"template\">[\\s\\S]*?<span class=\"message__author\"><strong>([^<]*)</strong>"
+                )
+            if m.Success then m.Groups[1].Value else "<none>"
+        let! stale =
+            userChangesUnderReaders test $"/rooms/{ALL_TALK}" 1000 (fun i -> renameDavid test $"David {i}") (fun i html ->
+                html.Contains(meta $"David {i}") && template html = $"David {i}")
+        Assert.True(stale.IsEmpty, $"stale room pages after a committed rename: {stale}")
+    }
+
+[<Fact>]
+let ``a rename of the signed-in user shows on the next sidebar while others read it`` () =
+    task {
+        use! test = bootSeeded "default"
+        let! stale =
+            userChangesUnderReaders test "/users/me/sidebar" 1000 (fun i -> renameDavid test $"Davo {i}x") (fun i html ->
+                html.Contains $"Davo {i}x")
+        Assert.True(stale.IsEmpty, $"stale sidebars after a committed rename: {stale}")
+    }
+
+[<Fact>]
+let ``a role change of the signed-in user shows on the next sidebar while others read it`` () =
+    task {
+        // On the restricted seed only administrators get the sidebar's New Chat Room button.
+        use! test = bootSeeded "restricted"
+        let roleOf i = if i % 2 = 0 then Role.Administrator else Role.Member
+        let! stale =
+            userChangesUnderReaders
+                test
+                "/users/me/sidebar"
+                1000
+                (fun i ->
+                    write test (fun tx ->
+                        tx.Conn.Execute("UPDATE users SET role = ? WHERE id = ?", [| I(int64 (int (roleOf i))); I DAVID |]) |> ignore))
+                (fun i html -> html.Contains "New Chat Room" = (roleOf i = Role.Administrator))
+        Assert.True(stale.IsEmpty, $"sidebars disagreeing with the committed role: {stale}")
+    }

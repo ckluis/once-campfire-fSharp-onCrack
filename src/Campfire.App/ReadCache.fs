@@ -8,7 +8,10 @@
 // - **What it depends on** is a list of version counters with the values they had *before* the request
 //   that made it ran its first query: the global counter, the user's, and the rooms it read (one for a
 //   room or messages page; every room of the user's for the sidebar and search, listed after the
-//   user's counter was taken, so a membership added later moves that counter).
+//   user's counter was taken, so a membership added later moves that counter). The first query is
+//   authentication's: the page renders the signed-in user as authentication read it (name, avatar,
+//   role), so the global counter's value is the one that user was read under (`UserReadAt`), not one
+//   taken when the action starts; a page whose user was read any other way is never stored.
 // - **It is stored** only if every one of those values was even (no write to them in flight) and still
 //   is once the page is finished, and only for a 200 rendered with no flash.
 // - **It is served** only while every counter still has its stored value. A write marks its counters
@@ -55,6 +58,13 @@ module Deps =
             if deps[i].Cell.Read() <> deps[i].Value then ok <- false
             i <- i + 1
         ok
+
+/// The global counter's value the signed-in user was read under (`ReadCache.user`, during
+/// authentication): users are global, so a change to the user committed after this and before the page
+/// takes its other counters moved it, and the page must not be kept under the later value.
+[<Sealed; AllowNullLiteral>]
+type UserReadAt(dep: Dep) =
+    member _.Dep = dep
 
 /// What a cache miss's render left behind for the cache to keep: set while the request runs, read when
 /// it returns.
@@ -227,19 +237,35 @@ module ReadCache =
                         return result
                 }
 
-    /// The counters of a page about one room: the global one, the user's and the room's.
+    /// `cells`' values now after the global counter's value when authentication read the signed-in user,
+    /// or nothing (render, don't keep) when it wasn't read through `user` or a write was in flight.
+    let private afterUser (c: Ctx) (cells: VersionCell[]) : Dep[] voption =
+        match c.Current<UserReadAt>() with
+        | ValueNone -> ValueNone
+        | ValueSome at ->
+            match Deps.take cells with
+            | ValueNone -> ValueNone
+            | ValueSome rest ->
+                let deps = Array.zeroCreate<Dep> (rest.Length + 1)
+                deps[0] <- at.Dep
+                Array.blit rest 0 deps 1 rest.Length
+                ValueSome deps
+
+    /// The counters of a page about one room: the global one (as the user was read under), the user's and
+    /// the room's.
     let roomDeps (c: Ctx) (userId: int64) (roomId: int64) : unit -> Task<Result<Dep[] voption, Error>> =
         fun () ->
             let v = c.App.Db.Versions
-            Task.FromResult(Ok(Deps.take [| v.Global; v.User userId; v.Room roomId |]))
+            Task.FromResult(Ok(afterUser c [| v.User userId; v.Room roomId |]))
 
-    /// The counters of a page about all of a user's rooms: the global one and the user's, taken first,
-    /// then the rooms the user is a member of now (a membership added after that moves the user's).
+    /// The counters of a page about all of a user's rooms: the global one (as the user was read under) and
+    /// the user's, taken first, then the rooms the user is a member of now (a membership added after that
+    /// moves the user's).
     let userRoomsDeps (c: Ctx) (userId: int64) : unit -> Task<Result<Dep[] voption, Error>> =
         fun () ->
             task {
                 let v = c.App.Db.Versions
-                match Deps.take [| v.Global; v.User userId |] with
+                match afterUser c [| v.User userId |] with
                 | ValueNone -> return Ok ValueNone
                 | ValueSome first ->
                     match!
@@ -262,21 +288,26 @@ module ReadCache =
     let private MaxAuthEntries = 50_000
 
     /// A read through one of the authentication maps: served while its counter is unchanged, read and kept
-    /// (when the counter was even before the read) otherwise.
+    /// (when the counter was even before the read) otherwise. `readAt` hears the counter's value the value
+    /// served is as of (none for a read during a write).
     let private through
         (map: System.Collections.Concurrent.ConcurrentDictionary<'K, struct (Dep[] * 'V)>)
         (key: 'K)
         (cell: VersionCell)
+        (readAt: Dep -> unit)
         (load: unit -> Task<Result<'V, Error>>)
         : Task<Result<'V, Error>> =
         match map.TryGetValue key with
-        | true, struct (deps, value) when Deps.valid deps -> Task.FromResult(Ok value)
+        | true, struct (deps, value) when Deps.valid deps ->
+            readAt deps[0]
+            Task.FromResult(Ok value)
         | _ ->
             task {
                 let deps = Deps.take [| cell |]
                 let! result = load ()
                 match result, deps with
                 | Ok value, ValueSome deps when Deps.valid deps ->
+                    readAt deps[0]
                     if map.Count >= MaxAuthEntries then map.Clear()
                     map[key] <- struct (deps, value)
                 | _ -> ()
@@ -287,10 +318,11 @@ module ReadCache =
     let session (c: Ctx) (token: string) (load: unit -> Task<Result<Campfire.Db.Session option, Error>>) : Task<Result<Campfire.Db.Session option, Error>> =
         match versions c with
         | null -> load ()
-        | v -> through (storeOf v).Sessions token v.Sessions load
+        | v -> through (storeOf v).Sessions token v.Sessions ignore load
 
-    /// `User.find_by(id:)`, through the cache (users are global).
+    /// `User.find_by(id:)`, through the cache (users are global). The request remembers the global counter's
+    /// value the user is as of (`UserReadAt`), which the pages it renders depend on.
     let user (c: Ctx) (id: int64) (load: unit -> Task<Result<User option, Error>>) : Task<Result<User option, Error>> =
         match versions c with
         | null -> load ()
-        | v -> through (storeOf v).Users id v.Global load
+        | v -> through (storeOf v).Users id v.Global (fun dep -> c.SetCurrent(UserReadAt dep)) load
