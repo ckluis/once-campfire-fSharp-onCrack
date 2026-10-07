@@ -15,6 +15,12 @@ screenshot layer, per seed; see its header for the retry of cells the harness co
 reference,rust,fsharp,oncrack` measures all four in one session (`fsharp` is the port). Tier 3 of an unchanged image must land within noise of
 the port: `bench/results/oncrack-c0.md`.
 
+**Group commit** (unit C2, `bench/results/oncrack-c2.md`): the writer runs every write already queued (up to 64) in one transaction, a
+savepoint each, one COMMIT, then their after-commit work in one more transaction (`Writer` in `src/Campfire.Db/Database.fs`). Every write
+still commits before its caller hears back. A write closure must do database work only (non-database effects go in after-commit hooks): a
+group whose transaction breaks runs again write by write. `CAMPFIRE_GROUP_COMMIT=off` restores one write per transaction;
+`tests/Campfire.Db.Tests/GroupCommitTests.fs` holds the writer to form groups and compares a grouped run with a one-by-one run.
+
 # once-campfire-fsharp
 
 Campfire in F#. It is a port that has to be indistinguishable in use from the Rails app in
