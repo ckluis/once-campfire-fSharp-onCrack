@@ -1,3 +1,12 @@
+# once-campfire-fSharp-onCrack
+
+**This repository is onCrack, not the port.** Read `plans/oncrack.md` first: the UI must stay pixel-identical
+(the parity harness's screenshot layer) and correct, but the work per request may differ from Rails and Rust
+in any way that makes it faster (caches, group commit, AOT, Datastar). Everything below about matching Rust's
+implementation applies to the port this was forked from; where it conflicts with `plans/oncrack.md`, the plan
+wins. Use the image name `campfire-oncrack:app` (`FSHARP_IMAGE=campfire-oncrack:app`); keep `campfire-fsharp:app`
+(the port) untouched for comparison.
+
 # once-campfire-fsharp
 
 Campfire in F#. It is a port that has to be indistinguishable in use from the Rails app in
