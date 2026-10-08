@@ -27,12 +27,14 @@ module IntegrationJobs =
         task {
             match event, app.WebPush with
             | Event.PushMessage(_, messageId), Some pool ->
-                // Offloaded: it encrypts a notification for every subscriber.
-                match!
-                    app.Db.ReadOffloaded(fun conn ->
-                        let message = Message.find conn messageId
-                        WebPushPool.pushMessage pool conn app.Db.Env.RichText message (app.Db.Env.Now()) |> ignore)
-                with
+                let push (conn: Conn) =
+                    let message = Message.find conn messageId
+                    WebPushPool.pushMessage pool conn app.Db.Env.RichText message (app.Db.Env.Now()) |> ignore
+                // onCrack (unit R2.2, `PostPath.PushInline`): on the job's thread when a reader connection is free, as any
+                // read; the notifications are encrypted when the pool delivers them, not here (as Rails' pool does), so the
+                // read is a handful of queries (the room, the body, the subscriptions, a badge each), not worth the hop
+                // to a reader thread and back.
+                match! (if PostPath.PushInline then app.Db.Read push else app.Db.ReadOffloaded push) with
                 | Ok() -> return Ok()
                 | Error error -> return Error(failure error)
             | _ -> return Ok()

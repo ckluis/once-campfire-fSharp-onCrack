@@ -40,7 +40,12 @@ type PostPath private () =
     /// canonicalizes its body, not by the writer after it.
     static member val PlainTextEarly = env "CAMPFIRE_POST_PLAIN_TEXT_EARLY" true with get, set
 
+    /// `CAMPFIRE_PUSH_INLINE`: the push job's read runs on the job's thread when a reader connection is free (`Database.Read`)
+    /// instead of always on a reader thread.
+    static member val PushInline = env "CAMPFIRE_PUSH_INLINE" true with get, set
+
     static member Reset() : unit =
+        PostPath.PushInline <- env "CAMPFIRE_PUSH_INLINE" true
         PostPath.PlainTextEarly <- env "CAMPFIRE_POST_PLAIN_TEXT_EARLY" true
         PostPath.InlineWrites <- env "CAMPFIRE_WRITE_INLINE" true
         PostPath.UnreadSkip <- env "CAMPFIRE_POST_UNREAD_SKIP" true
@@ -52,6 +57,7 @@ type PostPath private () =
         | "on_commit" -> PostPath.OnCommit <- on; true
         | "inline_writes" -> PostPath.InlineWrites <- on; true
         | "plain_text_early" -> PostPath.PlainTextEarly <- on; true
+        | "push_inline" -> PostPath.PushInline <- on; true
         | _ -> false
 
 /// onCrack (unit R2.2): requests in flight that may write (any method but GET and HEAD), counted by the app's dispatch.
