@@ -75,9 +75,11 @@ def compare(directory):
         sys.exit(f"no {APP}-N.json in {directory}")
     rust = cells(load(STORED, "rust"))
     port = cells(load(STORED, "fsharp"))
-    print(f"onCrack in {directory} against the stored Rust and F# port medians (bench/results/phase7-final, 3 reps each, one session)\n")
-    print("| Workload | c | onCrack req/s | F# port stored | **onCrack / F# port** | Rust stored | **onCrack / Rust (vs stored Rust baseline)** | onCrack CPU us/req | F# port | Rust |")
-    print("|---|---|---|---|---|---|---|---|---|---|")
+    classic = any(w in WORKLOADS for w, _ in mine)
+    if classic:
+        print(f"onCrack in {directory} against the stored Rust and F# port medians (bench/results/phase7-final, 3 reps each, one session)\n")
+        print("| Workload | c | onCrack req/s | F# port stored | **onCrack / F# port** | Rust stored | **onCrack / Rust (vs stored Rust baseline)** | onCrack CPU us/req | F# port | Rust |")
+        print("|---|---|---|---|---|---|---|---|---|---|")
     for w in WORKLOADS:
         for c in (16, 1):
             m = mine.get((w, c))
