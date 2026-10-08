@@ -192,13 +192,11 @@ RUN ln -s /opt/campfire/campfire /usr/local/bin/campfire
 # with TLS_DOMAIN, HTTPS_PORT (443), with the app itself also on TARGET_PORT (3000, loopback only unless TARGET_BIND says otherwise). Thruster's
 # environment (HTTP_*_TIMEOUT, TLS_DOMAIN, ACME_DIRECTORY, CACHE_SIZE, ... and their THRUSTER_
 # forms) means the same.
-# A Native AOT build (NATIVE_AOT=true) leaves /opt/campfire/.native-aot and spins its thread pool workers longer before they sleep:
-# the AOT runtime does not calibrate its spin loop, so its default of 70 spins is far shorter than the JIT runtime's and every hand-off
-# between workers cost a futex wake (one connection: 11.5k -> 15.5k req/s on the room page; bench/results/oncrack-c4.md). Any value the
-# container is given wins.
+# The thread pool's idle workers do not spin (DOTNET_ThreadPool_UnfairSemaphoreSpinLimit=0, set by the app unless the container gives
+# a value): unit R2.4, bench/results/oncrack-r2-c1.md. The AOT build used to be given a longer spin here (R2.4 measured it at one
+# connection: a post cost 405 us with it and 255 without, level at 16 connections). Any value the container is given wins.
 COPY --chmod=755 <<'EOF' /rails/bin/boot
 #!/bin/sh
-if [ -e /opt/campfire/.native-aot ]; then export DOTNET_ThreadPool_UnfairSemaphoreSpinLimit="${DOTNET_ThreadPool_UnfairSemaphoreSpinLimit:-100}"; fi
 exec /usr/local/bin/campfire server
 EOF
 
@@ -224,8 +222,7 @@ USER 1000:1000
 #     comes far less often. The numbers are in the results file; on the room page it took 139 to 121 us of CPU per request at
 #     sixteen connections and the one-connection p99 from 0.41 to 0.24 ms. It is a per-heap budget, so memory grows with the
 #     core count; with 4 cores the peak was 234 MB against 251 MB without it (256 MiB cost 450 MB, and bought nothing more).
-# Measured and not set: DOTNET_ThreadPool_UnfairSemaphoreSpinLimit=0 (CPU per request -34% at one connection, but 10-14% fewer
-# requests a second on the messages page and search at sixteen), workstation GC, TieredPGO=0, ReadyToRun off.
+# Measured and not set: workstation GC, TieredPGO=0, ReadyToRun off.
 #   DOTNET_HillClimbing_Disable=1 (unit 7.5, bench/results/phase7-unit-7.5.md): the thread pool's hill climbing kept adding
 #     workers under steady load (38 -> 43-46 threads after about 60-80 s, with CPU per request rising from 93 to 100 us on the room
 #     page at sixteen connections). Without it the pool stays at 30-31 threads (starvation injection still adds threads for

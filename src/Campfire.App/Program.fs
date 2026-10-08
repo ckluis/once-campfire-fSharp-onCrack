@@ -43,7 +43,10 @@ let main argv =
     // every hand-off, which at one connection was half of a post's CPU (345 -> 263 us, same req/s) and with replays answered on the event
     // threads costs nothing at 16 or 64 (bench/results/oncrack-r2-c1.md). Read by the runtime when the pool first starts, so it is set
     // before anything uses the pool; a value given to the container (DOTNET_ThreadPool_UnfairSemaphoreSpinLimit, in hex) wins.
-    if isNull (Environment.GetEnvironmentVariable "DOTNET_ThreadPool_UnfairSemaphoreSpinLimit") then
+    // Only with replays on the event threads (CAMPFIRE_INLINE, the fast path): with the pool serving every cached hit (R2.3's measurement of
+    // the pool alone) a worker that sleeps between requests cost 29% at 16 connections.
+    if Campfire.Kit.FrontInline.mode <> Campfire.Kit.FrontInline.Off
+       && isNull (Environment.GetEnvironmentVariable "DOTNET_ThreadPool_UnfairSemaphoreSpinLimit") then
         Environment.SetEnvironmentVariable("DOTNET_ThreadPool_UnfairSemaphoreSpinLimit", "0")
     // The health check does no I/O and takes microseconds: the front server runs it on the event thread (`Campfire.Kit.CheapPaths`).
     Campfire.Kit.CheapPaths.register [ "/up"; "/up.html"; "/up.json" ]
