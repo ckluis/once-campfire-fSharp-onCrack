@@ -208,6 +208,17 @@ specific to this port are listed below, each citing the reference file it depart
   - Timestamps in cache keys and `to_fs(:epoch)` are `DateTimeOffset`s, which hold 100 ns where jiff holds 1 ns.
     A key shows microseconds, so no key differs; a record dated before 1970 or outside the years 1 to 9999 is not
     representable (no record is).
+- **onCrack** (`bench/results/oncrack-r2-post.md`, unit R2.2):
+  - A post into a room that isn't a direct one marks unread only the memberships that aren't unread yet
+    (`reference/app/models/room.rb`, `unread_memberships`, rewrites every disconnected member's `unread_at` and
+    `updated_at` with each post). So after two posts a member who read neither has `unread_at` at the first post's
+    time where Rails stores the second's. Rails reads the column only for being set (`Membership#unread?`, the `unread`
+    scope), so a rollback to Rails shows the same state; direct rooms keep Rails' rewrite, because the sidebar's
+    `cache membership` fragment is keyed by the row. `CAMPFIRE_POST_UNREAD_SKIP=off` writes as Rails does. Tested by
+    `PostPathTests` ("a post marks unread who wasn't, keeps who was, ...", "a post into a direct room still rewrites ...").
+  - A post's search-index row and unread marks (`after_create_commit`) commit in the post's own transaction, after it
+    (`CAMPFIRE_POST_ON_COMMIT=off` commits them after, as Rails does). A failing statement of them still reaches the
+    caller after the post committed. Tested by `GroupCommitTests` ("on-commit work commits with its write ...").
 
 ## License
 

@@ -946,15 +946,16 @@ type Database
     /// group of one, answers and WAL check as the writer thread's, and the task complete when it returns.
     member private _.WriteInline(f: Tx -> 'T) : Task<Result<'T, DbError>> =
         Interlocked.Increment(&stats.Inline) |> ignore
-        let mutable outcome = Unchecked.defaultof<Result<Result<'T, DbError>, exn>>
-        let job = WriteJob<'T>(f, fun result -> outcome <- result)
+        let mutable outcome: Result<Result<'T, DbError>, exn> option = None
+        let job = WriteJob<'T>(f, fun result -> outcome <- Some result)
         try
             processInline (ResizeArray [ job :> WriteJob ])
         finally
             writeQueue.ReleaseInline()
         match outcome with
-        | Ok result -> Task.FromResult result
-        | Error e -> Task.FromException<Result<'T, DbError>> e
+        | Some(Ok result) -> Task.FromResult result
+        | Some(Error e) -> Task.FromException<Result<'T, DbError>> e
+        | None -> Task.FromResult(Error WriterGone)
 
     member private _.WriteQueued(f: Tx -> 'T) : Task<Result<'T, DbError>> =
         task {
