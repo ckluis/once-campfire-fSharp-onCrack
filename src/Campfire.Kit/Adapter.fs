@@ -223,11 +223,14 @@ module Adapter =
         }
 
     /// A single-buffer body as one gzip member: from the cache when it repeats (it was digested for
-    /// its ETag), compressed afresh when it has no digest.
-    let private gzipSingle (body: ReadOnlyMemory<byte>) (digest: BodyDigest voption) (mtime: uint32) : ReadOnlyMemory<byte> =
+    /// its ETag), compressed afresh when it has no digest. onCrack (unit R2.2): the answer to anything but a GET or
+    /// a HEAD (a post's) is never the same twice, so it skips the cache, which kept every post's answer, and is
+    /// gzipped once (`Deflater.gzipOnce`).
+    let private gzipSingle (http: HttpContext) (body: ReadOnlyMemory<byte>) (digest: BodyDigest voption) (mtime: uint32) : ReadOnlyMemory<byte> =
         match digest with
-        | ValueSome digest -> Deflater.gzipDigested body digest mtime
-        | ValueNone -> ReadOnlyMemory<byte>(Deflater.gzipMember body.Span mtime)
+        | ValueSome digest when HttpMethods.IsGet http.Request.Method || HttpMethods.IsHead http.Request.Method ->
+            Deflater.gzipDigested body digest mtime
+        | _ -> ReadOnlyMemory<byte>(Deflater.gzipOnce body.Span mtime)
 
     /// onCrack: a gzipped buffer or frozen page goes out with its `Content-Length` (the member is made, or fetched from the
     /// cache, before the headers) rather than chunked: one send per response, not a send and then the terminating chunk.
@@ -255,8 +258,8 @@ module Adapter =
                 parts.WriteGzip(http.Response.BodyWriter, mtime)
                 let! _ = http.Response.BodyWriter.FlushAsync()
                 ()
-            | Body.Bytes bytes -> do! output.WriteAsync(gzipSingle bytes response.BodyDigest mtime)
-            | Body.Pooled pooled -> do! output.WriteAsync(gzipSingle pooled.Memory response.BodyDigest mtime)
+            | Body.Bytes bytes -> do! output.WriteAsync(gzipSingle http bytes response.BodyDigest mtime)
+            | Body.Pooled pooled -> do! output.WriteAsync(gzipSingle http pooled.Memory response.BodyDigest mtime)
             | Body.File file ->
                 let writer = new Deflater.GzipWriter(output, mtime)
                 do! writeFile http file writer
@@ -338,8 +341,8 @@ module Adapter =
                         if lengthKnown && not head then
                             match response.Body with
                             | Body.Parts parts -> ready <- parts.GzipIfReady mtime
-                            | Body.Bytes bytes -> ready <- gzipSingle bytes response.BodyDigest mtime
-                            | Body.Pooled pooled -> ready <- gzipSingle pooled.Memory response.BodyDigest mtime
+                            | Body.Bytes bytes -> ready <- gzipSingle http bytes response.BodyDigest mtime
+                            | Body.Pooled pooled -> ready <- gzipSingle http pooled.Memory response.BodyDigest mtime
                             | _ -> ()
                             if not ready.IsEmpty then response.Headers.Insert(Hdr.ContentLength, string ready.Length)
                     | NotAcceptable ->

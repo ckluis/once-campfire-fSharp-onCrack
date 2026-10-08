@@ -237,3 +237,14 @@ let ``whole members inflate to their bodies at every size, compressible or not``
             let whole = Deflater.gzipMember (ReadOnlySpan<byte> body) 7u
             Assert.Equal<byte[]>(body, gunzip whole)
             Assert.Equal(uint32 size, BitConverter.ToUInt32(whole, whole.Length - 4))
+
+[<Fact>]
+let ``a body gzipped once inflates to itself with the same header and trailer`` () =
+    let random = Random 11
+    for size in [ 1; 9653; 120_000 ] do
+        let body = Array.init size (fun i -> if i % 7 = 0 then byte (random.Next 256) else byte ("<div class=\"message\">"[i % 21]))
+        let once = Deflater.gzipOnce (ReadOnlySpan<byte> body) 5u
+        let kept = Deflater.gzipMember (ReadOnlySpan<byte> body) 5u
+        Assert.Equal<byte[]>(body, gunzip once)
+        Assert.Equal<byte[]>(kept[0..9], once[0..9])
+        Assert.Equal<byte[]>(kept[kept.Length - 8 ..], once[once.Length - 8 ..])

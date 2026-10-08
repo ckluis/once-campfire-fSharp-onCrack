@@ -261,13 +261,27 @@ module Deflater =
         [<ThreadStatic; DefaultValue>]
         static val mutable private compressor: nativeint
 
+        [<ThreadStatic; DefaultValue>]
+        static val mutable private fastCompressor: nativeint
+
+        /// `CAMPFIRE_GZIP_ONCE_LEVEL` (1-12, default 1): libdeflate's level for a body gzipped once and not kept (`gzipOnce`).
+        static member val OnceLevel =
+            match Int32.TryParse(Environment.GetEnvironmentVariable "CAMPFIRE_GZIP_ONCE_LEVEL") with
+            | true, level when level >= 1 && level <= 12 -> level
+            | _ -> 1
+
         static member Available : bool = not (isNull allocCompressor || isNull compress || isNull bound)
 
         /// `body` deflated (raw, final block) after `headerLength` bytes of room, with `trailerLength` more at the end;
         /// the length written, or none when the bound was wrong.
-        static member Deflate(body: ReadOnlySpan<byte>, headerLength: int, trailerLength: int) : struct (byte[] * int) =
-            if LibDeflate.compressor = 0n then LibDeflate.compressor <- allocCompressor.Invoke 6
-            let c = LibDeflate.compressor
+        static member Deflate(body: ReadOnlySpan<byte>, headerLength: int, trailerLength: int, fast: bool) : struct (byte[] * int) =
+            let c =
+                if fast then
+                    if LibDeflate.fastCompressor = 0n then LibDeflate.fastCompressor <- allocCompressor.Invoke LibDeflate.OnceLevel
+                    LibDeflate.fastCompressor
+                else
+                    if LibDeflate.compressor = 0n then LibDeflate.compressor <- allocCompressor.Invoke 6
+                    LibDeflate.compressor
             let room = int (bound.Invoke(c, unativeint body.Length))
             let out = Array.zeroCreate<byte> (headerLength + room + trailerLength)
             use input = fixed body
@@ -283,9 +297,9 @@ module Deflater =
 
     /// What `GzipStream` with `sync: true` sends for a single-buffer body, in one piece: a header,
     /// the body deflated and flushed, and the CRC and size. onCrack: deflated by libdeflate where it is (`LibDeflate`).
-    let gzipMember (body: ReadOnlySpan<byte>) (mtime: uint32) : byte[] =
+    let private gzipWith (fast: bool) (body: ReadOnlySpan<byte>) (mtime: uint32) : byte[] =
         if body.Length > 0 && LibDeflate.Available then
-            let struct (out, written) = LibDeflate.Deflate(body, 10, 8)
+            let struct (out, written) = LibDeflate.Deflate(body, 10, 8, fast)
             if written > 0 then
                 let total = 10 + written + 8
                 header(mtime).CopyTo(out, 0)
@@ -295,6 +309,14 @@ module Deflater =
                 zlibMember body mtime
         else
             zlibMember body mtime
+
+    /// A body gzipped to be kept (a frozen page, a digested body): at zlib's default level, 6.
+    let gzipMember (body: ReadOnlySpan<byte>) (mtime: uint32) : byte[] = gzipWith false body mtime
+
+    /// onCrack (unit R2.2): a body gzipped for one response and not kept (a post's answer, anything without an ETag
+    /// digest), at libdeflate's level 1: on a post's 9.7 KB answer 12 us against 24-27 us at level 6, for 2,088 bytes
+    /// against 1,984 (`CAMPFIRE_GZIP_ONCE_LEVEL`). zlib's default level where libdeflate isn't.
+    let gzipOnce (body: ReadOnlySpan<byte>) (mtime: uint32) : byte[] = gzipWith true body mtime
 
     /// Gzips a body as it arrives, writing each piece to `output` and flushing it (`GzipStream` with
     /// `sync: true`).
