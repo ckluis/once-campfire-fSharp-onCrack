@@ -21,8 +21,9 @@ The workloads (`scale` lanes take the measured concurrency c; the others keep th
                  32) into one of their rooms, drawn uniformly. A post into an open room moves the version of a room 500+ people read,
                  and the sidebar of every one of them.
   search_spread  c connections, each request a search (/searches?q=...) by a user and a query drawn independently and uniformly from
-                 every signed-in user and SEARCH_QUERIES (default 200) words of the seed's messages. Read-only, but users x queries
-                 is far more pages than a 64 MB cache holds.
+                 every signed-in user who is a member of a room (524: Rails' search page raises for a user with none, Lonely Lou,
+                 at searches/index.html.erb:63, room_path(nil)) and SEARCH_QUERIES (default 200) words of the seed's messages.
+                 Read-only, but users x queries is far more pages than a 64 MB cache holds.
 
 The seed is the crowd seed (parity/.seed/crowd: the default seed plus 520 members of the three open rooms), so there are 525 people to
 sign in; bench/run starts the realistic workloads' container on it. The Broken room (its message's author is missing) is left out of the
@@ -128,7 +129,7 @@ def spec(workload, prepared):
     elif workload == "search_spread":
         qs = queries(seed_dir, int(os.environ.get("SEARCH_QUERIES", "200")))
         lanes = [{"name": "reads", "conc": 16, "scale": True, "pick": "random", "seed": 17,
-                  "cross": {"users": list(range(len(who))), "paths": [f"/searches?q={q}" for q in qs]}}]
+                  "cross": {"users": [i for i, u in enumerate(who) if u["rooms"]], "paths": [f"/searches?q={q}" for q in qs]}}]
     else:
         raise SystemExit(f"unknown workload {workload}; one of {', '.join(WORKLOADS)}")
     return {"name": workload, "seed": p["seed"], "users": users, "lanes": lanes}
