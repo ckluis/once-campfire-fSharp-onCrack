@@ -44,6 +44,22 @@ Reps: oncrack 1. Cells: median [min–max].
 | search_spread c=16 reads req/s | 25,340 |
 | search_spread c=16 reads p50 ms | 0.61 |
 | search_spread c=16 reads p99 ms | 1.55 |
+| mixed c=16 req/s (all lanes) | 42,407 |
+| mixed c=16 CPU µs/req (all lanes) | 86.3 |
+| mixed c=16 posts req/s | 1,073 |
+| mixed c=16 posts p50 ms | 0.86 |
+| mixed c=16 posts p99 ms | 2.41 |
+| mixed c=16 reads req/s | 41,333 |
+| mixed c=16 reads p50 ms | 0.24 |
+| mixed c=16 reads p99 ms | 1.16 |
+| spread_mixed c=16 req/s (all lanes) | 13,285 |
+| spread_mixed c=16 CPU µs/req (all lanes) | 291 |
+| spread_mixed c=16 posts req/s | 339 |
+| spread_mixed c=16 posts p50 ms | 2.61 |
+| spread_mixed c=16 posts p99 ms | 7.46 |
+| spread_mixed c=16 reads req/s | 12,946 |
+| spread_mixed c=16 reads p50 ms | 1.12 |
+| spread_mixed c=16 reads p99 ms | 4.25 |
 
 Realistic workloads (bench/lib/realistic.py), seed `crowd`; lanes, their connections (c is the measured concurrency) and targets:
 
@@ -64,7 +80,7 @@ Sign-in of the seed's people before the workloads, per rep: onCrack 31.2 s.
 
 | App | Rep | Before | After |
 |---|---|---|---|
-| onCrack | 1 | 1.39 3.23 2.90 | 5.35 4.12 3.26 |
+| onCrack | 1 | 1.39 3.23 2.90 | 4.19 3.61 3.68 |
 
 ### Host CPU probe (a fixed spin timed on every pinned CPU, against the quietest this VM has shown; bench/lib/hostprobe.py)
 
@@ -72,7 +88,7 @@ The VM's load average cannot see another program on the Mac taking the cores its
 
 | App | Rep | Before the run | After the run | Windows probed above 1.10 | Highest after a window |
 |---|---|---|---|---|---|
-| onCrack | 1 | 1.06 | 1.07 | 0/2 | 1.07 |
+| onCrack | 1 | 1.06 | 1.06 | 0/4 | 1.07 |
 
 ### Responses by status class, every HTTP run of every rep
 
@@ -80,6 +96,8 @@ The VM's load average cannot see another program on the Mac taking the cores its
 |---|---|---|---|---|---|---|
 | onCrack | spread | 1,019,252 | 0 | 0 | 0 | 0 |
 | onCrack | search_spread | 202,741 | 0 | 0 | 0 | 0 |
+| onCrack | mixed | 339,271 | 0 | 0 | 0 | 0 |
+| onCrack | spread_mixed | 106,300 | 0 | 0 | 0 | 0 |
 
 ### Warm-up before each measured run (the app runs the route at the measured concurrency until its throughput is flat; bench/lib/warmup.py)
 
@@ -89,11 +107,18 @@ The VM's load average cannot see another program on the Mac taking the cores its
 |---|---|---|---|---|---|
 | onCrack | spread | 16 | 30.0 | 1/1 | 0.99 |
 | onCrack | search_spread | 16 | 30.0 | 1/1 | 1.00 |
+| onCrack | mixed | 16 | 30.0 | 1/1 | 0.97 |
+| onCrack | spread_mixed | 16 | 30.0 | 1/1 | 0.99 |
 
 ### Rows written by `post_message` and the realistic workloads that post (messages counted in the app's SQLite file around each run: the write room's, or every room's for a realistic workload)
 
 | App | Rep | Phase | Posts answered below 400 | Rows written | Match |
 |---|---|---|---|---|---|
+| onCrack | 1 | mixed warm-up c=16 | 31,753 | 31,753 | yes |
+| onCrack | 1 | mixed run c=16 | 8,588 | 8,588 | yes |
+| onCrack | 1 | spread_mixed warm-up c=16 | 9,995 | 9,995 | yes |
+| onCrack | 1 | spread_mixed run c=16 | 2,715 | 2,715 | yes |
+| onCrack | 1 | **all** | 53,051 | 53,051 | yes |
 
 ### Response bytes, one request per route (gzip: wire / decoded; identity: bytes) and the average over the c=16 run
 
