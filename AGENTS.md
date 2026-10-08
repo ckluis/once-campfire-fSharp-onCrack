@@ -20,6 +20,7 @@ re-baselines stay full-length; the inner loop gets faster by removing setup, not
   run on every seed is the round verifier's job.
 - **In-process harness for logic questions** (is the hit path cheaper, did the post pipeline shrink): host the app in a
   test server, drive requests directly, report CPU and allocation per request, seconds per run.
+Disk: run `bin/clean-parity` with `bin/clean-docker` at every gate (old parity reports reached 5 GB in round 2).
 If one of these tools doesn't exist yet, building it is part of your unit. Record the loop time before and after.
 
 **onCrack's gates and scoring** (unit C0): `bin/pixel-parity` is the one-command "the UI is identical" check (the parity harness's
@@ -67,6 +68,20 @@ lanes (`loadgen http --mix-spec`). `bench/quick compare` prints them against the
 64 MB budget onCrack is 0.95x the port on `spread` (the cache thrashes; 512 MB gives 127k). Run them as a part of their own: `bench/run`
 refuses to mix them with the classic routes. Load generator headroom (same file): not tool-bound at 4 cores, but it costs 19-23 us a request,
 so its 4-core ceiling is about 170-210k req/s.
+
+**The post path** (unit R2.2, `bench/results/oncrack-r2-post.md`): `bench/post-micro` is its tier 1, the whole app in process over a
+parity seed copy, N connections posting, windows alternating `Campfire.Db.PostPath`'s switches (each also an environment variable read at
+start-up), CPU and allocation per post, slow answers and WAL restarts; about 40 s for two variants at two concurrencies (macOS: direction
+only). Outside direct rooms a post marks unread only memberships not yet unread (`CAMPFIRE_POST_UNREAD_SKIP`; `unread_at` is read only for
+being set, direct rooms keep Rails' rewrite for the sidebar fragment keyed by `updated_at`). `Tx.OnCommit` runs a post's index row and unread
+marks in its own transaction, after every write of the group, with no savepoint (a savepoint makes FTS5 flush a segment per post;
+`CAMPFIRE_POST_ON_COMMIT`); `Tx.AfterCommitEffect` is for non-database after-commit work. `Database.Write` runs a write on its caller's
+thread when the writer is idle, nothing is queued and `WriteLoad` (requests in flight that may write, counted in the app's dispatch) is one
+(`CAMPFIRE_WRITE_INLINE`; tests that hold the writer must do so from a thread of their own); such a write never runs the WAL restart.
+Whole bodies gzip with libdeflate (`CAMPFIRE_GZIP_LIBDEFLATE`), and the answer to anything but a GET or HEAD is gzipped once at level 1,
+outside the gzip cache (`CAMPFIRE_GZIP_ONCE_LEVEL`). `POST_RATE` paces the posts lane of `mixed`/`spread_mixed` (compare builds reading under
+the same writes; a paced run is not comparable with the stored baseline and stays out of the climb log). Open: sustained c=16 posting
+stalls 0.8-2.5 s every 20-30 s on the writer's WAL RESTART (`WARN campfire_db: WAL restart took N ms`).
 
 # once-campfire-fsharp
 
