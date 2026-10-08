@@ -348,6 +348,12 @@ let ``closes idle and slow connections`` () =
         do! stream.WriteAsync(Encoding.ASCII.GetBytes "GET /private HTTP/1.1\r\nHost: x\r\n\r\n")
         let! n = stream.ReadAsync(Memory<byte> buffer)
         Assert.True(n > 0 && Encoding.ASCII.GetString(buffer, 0, n).StartsWith "HTTP/1.1 200")
+        // A chunked answer's terminating chunk may follow in a segment of its own (the response is written from the event thread
+        // now); the idle timer starts once the whole answer is in.
+        let mutable text = Encoding.ASCII.GetString(buffer, 0, n)
+        while text.Contains "Transfer-Encoding: chunked" && not (text.EndsWith "0\r\n\r\n") do
+            let! more = stream.ReadAsync(Memory<byte> buffer)
+            text <- text + Encoding.ASCII.GetString(buffer, 0, more)
         let started = Diagnostics.Stopwatch.StartNew()
         use cts = new CancellationTokenSource(TimeSpan.FromSeconds 6.0)
         let! n =
