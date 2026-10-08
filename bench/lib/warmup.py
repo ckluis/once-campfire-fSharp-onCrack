@@ -48,6 +48,13 @@ def main():
         out["errors"] += r["errors"]
         for k, v in r["statuses"].items():
             out["statuses"][k] = out["statuses"].get(k, 0) + v
+        # A realistic workload's lanes (loadgen http --mix-spec): each lane's counters summed too (bench/run checks a posts lane's rows).
+        for name, lane in r.get("lanes", {}).items():
+            o = out.setdefault("lanes", {}).setdefault(name, {"ok": 0, "statuses": {}, "errors": 0})
+            o["ok"] += lane["ok"]
+            o["errors"] += lane["errors"]
+            for k, v in lane["statuses"].items():
+                o["statuses"][k] = o["statuses"].get(k, 0) + v
         rps.append(r["rps"])
         elapsed += r["secs"]
         if elapsed >= lo and settled(rps):

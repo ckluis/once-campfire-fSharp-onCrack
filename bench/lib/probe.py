@@ -5,7 +5,7 @@
 
 Per route and encoding: the status, Content-Encoding, Content-Type, the bytes on the wire (the body as
 sent) and the bytes decoded (what the client gets after gunzip). A smaller response is not a fair win,
-so bench/report puts these side by side for every app. Routes whose path is POST are skipped.
+so bench/report puts these side by side for every app. Routes whose path is POST or MIX (a realistic workload) are skipped.
 """
 import gzip, http.client, json, sys
 from urllib.parse import urlsplit
@@ -15,7 +15,7 @@ u = urlsplit(base)
 out = []
 for spec in specs:
     name, path = spec.split("|", 1)
-    if path == "POST":
+    if path in ("POST", "MIX"):
         continue
     row = {"route": name, "path": path}
     for enc in ("gzip", "identity"):

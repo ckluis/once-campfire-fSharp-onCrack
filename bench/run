@@ -66,6 +66,11 @@
 #
 # Knobs (env): SERVER_CPUS=8-11 LOADGEN_CPUS=12-15 HTTP_SECS=8 HTTP_CONCS="1 16 64" WARMUP_SECS=30 WARMUP_MAX_SECS=90 IDLE_SECS=10
 #   HTTP_ROUTES="room_show messages_page sidebar search avatar static_css up post_message" (a subset, in this order)
+#   or the realistic workloads, "mixed spread spread_mixed search_spread" (unit R2.0; bench/lib/realistic.py says what each is), run at
+#   REAL_CONCS (default 16) connections reading, on the crowd seed: a part runs either classic routes or realistic ones, never both,
+#   because they need different seeds (BENCH_SEED overrides the choice). Each rep signs the crowd seed's 525 people in first
+#   (REAL_USERS caps them) and a realistic result carries `lanes` (reads and posts, each its own req/s, statuses and latency); the
+#   rows check of a workload that posts counts every message in the database against its posts lane's answers.
 #   CABLE_CLIENTS="100 500 1000" CABLE_TPUT_SECS=15 CABLE_POSTERS=4 UPLOAD_REPS=5 PORT=4390
 # The apps run with --network host: PORT and PORT+1 (and 6379, for the reference's Redis) must be
 # free on the host. NETWORK=bridge measures as the preliminary run did instead: the container on
@@ -82,7 +87,18 @@ set -euo pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 BENCH=$ROOT/bench
-SEED=$ROOT/parity/.seed/default
+REALISTIC_ROUTES="mixed spread spread_mixed search_spread"
+is_realistic() { [[ " $REALISTIC_ROUTES " = *" $1 "* ]]; }
+SEED_NAME=${BENCH_SEED:-}
+if [ -z "$SEED_NAME" ]; then
+  _real=0 _classic=0
+  for _r in ${HTTP_ROUTES:-room_show}; do if is_realistic "$_r"; then _real=1; else _classic=1; fi; done
+  if [ "$_real" = 1 ] && [ "$_classic" = 1 ]; then
+    echo "HTTP_ROUTES mixes realistic workloads ($REALISTIC_ROUTES) with classic routes: run them in separate parts (they need different seeds)" >&2; exit 2
+  fi
+  SEED_NAME=default; [ "$_real" = 1 ] && SEED_NAME=crowd
+fi
+SEED=$ROOT/parity/.seed/$SEED_NAME
 LABELS=$SEED/labels.json
 ENV_FILE=$ROOT/parity/.env.reference
 
@@ -94,6 +110,8 @@ SERVER_CPUS=${SERVER_CPUS:-8-11}
 LOADGEN_CPUS=${LOADGEN_CPUS:-12-15}
 HTTP_SECS=${HTTP_SECS:-8}
 HTTP_CONCS=${HTTP_CONCS:-1 16 64}
+REAL_CONCS=${REAL_CONCS:-16}
+REAL_USERS=${REAL_USERS:-0}
 HTTP_ROUTES=${HTTP_ROUTES:-room_show messages_page sidebar search avatar static_css up post_message}
 WARMUP_SECS=${WARMUP_SECS:-30}
 WARMUP_MAX_SECS=${WARMUP_MAX_SECS:-90}
@@ -314,12 +332,16 @@ wait_for_quiet() {
   log "host probe before run: $HOST_PROBE (waited ${waited}s)"
 }
 
-# Messages in the write room, counted in the running app's SQLite file (WAL mode: a reader sees every commit).
+# Messages in the write room (or, with a second argument `all`, in every room: the realistic workloads post into many), counted in
+# the running app's SQLite file (WAL mode: a reader sees every commit).
 room_rows() {
-  python3 - "$WORK/$1/db/production.sqlite3" "$WRITE_ROOM" <<'PY'
+  python3 - "$WORK/$1/db/production.sqlite3" "$WRITE_ROOM" "${2:-room}" <<'PY'
 import sqlite3, sys
 db = sqlite3.connect(sys.argv[1], timeout=30)
-print(db.execute("SELECT count(*) FROM messages WHERE room_id = ?", (int(sys.argv[2]),)).fetchone()[0])
+if sys.argv[3] == "all":
+    print(db.execute("SELECT count(*) FROM messages").fetchone()[0])
+else:
+    print(db.execute("SELECT count(*) FROM messages WHERE room_id = ?", (int(sys.argv[2]),)).fetchone()[0])
 PY
 }
 
@@ -352,6 +374,10 @@ run_rep() {
     "static_css|$css"
     "up|/up"
     "post_message|POST"
+    "mixed|MIX"
+    "spread|MIX"
+    "spread_mixed|MIX"
+    "search_spread|MIX"
   )
   local wanted=() known
   for known in "${routes[@]}"; do [[ " $HTTP_ROUTES " = *" ${known%%|*} "* ]] && wanted+=("$known"); done
@@ -363,30 +389,50 @@ run_rep() {
   if suite http; then
     probe_json=$(python3 "$BENCH/lib/probe.py" "$BASE" "$cookie" "${routes[@]}")
   fi
+  # The realistic workloads: sign the seed's people in (each from its own X-Forwarded-For address) and write each workload's spec.
+  local real_dir=$WORK/$app-realistic real_json='null'
+  if printf '%s\n' "${routes[@]}" | grep -q '|MIX$'; then
+    rm -rf "$real_dir"
+    local t_real; t_real=$(date +%s.%N)
+    python3 "$BENCH/lib/realistic.py" prepare --base "$BASE" --seed-dir "$SEED" --loadgen "$LOADGEN" --loadgen-cpus "$LOADGEN_CPUS" \
+      --out "$real_dir" --users "$REAL_USERS" >&2
+    real_json=$(python3 "$BENCH/lib/realistic.py" describe --prepared "$real_dir")
+    real_json=$(python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print(json.dumps({"seed": sys.argv[2], "sign_in_secs": round(float(sys.argv[3]), 1), "workloads": d}))' \
+      "$real_json" "$SEED_NAME" "$(python3 -c "import time; print(time.time() - $t_real)")")
+    log "$app rep $rep: realistic workloads prepared: $real_json"
+  fi
   for r in "${routes[@]}"; do
     name=${r%%|*}; path=${r#*|}
-    if [ "$path" = POST ]; then args=(--post-room "$WRITE_ROOM" --csrf "$csrf"); else args=(--path "$path"); fi
+    local concs=$HTTP_CONCS writes=0 scope=room
+    if [ "$path" = POST ]; then args=(--post-room "$WRITE_ROOM" --csrf "$csrf"); writes=1
+    elif [ "$path" = MIX ]; then
+      python3 "$BENCH/lib/realistic.py" spec "$name" --prepared "$real_dir" --out "$real_dir/$name.json"
+      args=(--mix-spec "$real_dir/$name.json"); concs=$REAL_CONCS; scope=all
+      python3 -c 'import json,sys; sys.exit(0 if any(l["name"] == "posts" for l in json.load(open(sys.argv[1]))["lanes"]) else 1)' "$real_dir/$name.json" && writes=1
+    else args=(--path "$path"); fi
     args+=("${enc[@]}")
-    # Rows written, for the route that writes: the messages of the write room in the app's own SQLite file
-    # before and after each warm-up and each run, against the answers below 400 the load generator saw.
+    # Rows written, for a route that writes: the messages of the write room (or of every room, for a realistic workload) in the
+    # app's own SQLite file before and after each warm-up and each run, against the answers below 400 the load generator saw (a
+    # realistic workload's posts lane's).
     local before=0 after=0 wres res probe_after
-    for c in $HTTP_CONCS; do
-      [ "$path" = POST ] && before=$(room_rows "$app")
+    local rowpy='import json,sys; a=json.loads(sys.argv[1]); w=json.loads(sys.argv[2]); p=w.get("lanes",{}).get("posts",w); a.append({"route":sys.argv[6],"phase":sys.argv[7],"conc":int(sys.argv[5]),"ok":p["ok"],"statuses":p["statuses"],"rows":int(sys.argv[3])-int(sys.argv[4])}); print(json.dumps(a))'
+    for c in $concs; do
+      [ "$writes" = 1 ] && before=$(room_rows "$app" "$scope")
       wres=$(warm_up "$cookie" "$c" "${args[@]}")
-      if [ "$path" = POST ]; then
-        after=$(room_rows "$app")
-        rows_json=$(python3 -c 'import json,sys; a=json.loads(sys.argv[1]); w=json.loads(sys.argv[2]); a.append({"phase":"warm-up","conc":int(sys.argv[5]),"ok":w["ok"],"statuses":w["statuses"],"rows":int(sys.argv[3])-int(sys.argv[4])}); print(json.dumps(a))' "$rows_json" "$wres" "$after" "$before" "$c")
+      if [ "$writes" = 1 ]; then
+        after=$(room_rows "$app" "$scope")
+        rows_json=$(python3 -c "$rowpy" "$rows_json" "$wres" "$after" "$before" "$c" "$name" warm-up)
         before=$after
       fi
       res=$(lgc "$cg" http --base "$BASE" --cookie "$cookie" "${args[@]}" --conc "$c" --duration "$HTTP_SECS")
       probe_after=$(host_probe)
-      if [ "$path" = POST ]; then
-        after=$(room_rows "$app")
-        rows_json=$(python3 -c 'import json,sys; a=json.loads(sys.argv[1]); w=json.loads(sys.argv[2]); a.append({"phase":"run","conc":w["conc"],"ok":w["ok"],"statuses":w["statuses"],"rows":int(sys.argv[3])-int(sys.argv[4])}); print(json.dumps(a))' "$rows_json" "$res" "$after" "$before")
+      if [ "$writes" = 1 ]; then
+        after=$(room_rows "$app" "$scope")
+        rows_json=$(python3 -c "$rowpy" "$rows_json" "$res" "$after" "$before" "$c" "$name" run)
       fi
       res=$(python3 -c 'import json,sys; r=json.loads(sys.argv[1]); r["route"]=sys.argv[2]; r["warmup"]=json.loads(sys.argv[3])["warmup"]; r["host_probe_after"]=json.loads(sys.argv[4]); print(json.dumps(r))' "$res" "$name" "$wres" "$probe_after")
       http_json=$(python3 -c 'import json,sys; a=json.loads(sys.argv[1]); a.append(json.loads(sys.argv[2])); print(json.dumps(a))' "$http_json" "$res")
-      log "$app rep $rep: $name c=$c $(python3 -c 'import json,sys; r=json.loads(sys.argv[1]); w=r["warmup"]; print(r["rps"], "rps p50", r["latency"].get("p50_ms"), "p99", r["latency"].get("p99_ms"), r["statuses"], "err", r["errors"], "cpu", r["cost"].get("server_cpu_us_per_req"), "us/req; warm-up", w["secs"], "s", w["reason"], "tail", w["tail_rps"], "host", r["host_probe_after"]["ratio"])' "$res")"
+      log "$app rep $rep: $name c=$c $(python3 -c 'import json,sys; r=json.loads(sys.argv[1]); w=r["warmup"]; print(r["rps"], "rps p50", r["latency"].get("p50_ms"), "p99", r["latency"].get("p99_ms"), r["statuses"], "err", r["errors"], "cpu", r["cost"].get("server_cpu_us_per_req"), "us/req; warm-up", w["secs"], "s", w["reason"], "tail", w["tail_rps"], "host", r["host_probe_after"]["ratio"], " ".join("%s %s/s p50 %s p99 %s" % (k, l["rps"], l["latency"].get("p50_ms"), l["latency"].get("p99_ms")) for k, l in r.get("lanes", {}).items()))' "$res")"
     done
   done
 
@@ -415,15 +461,18 @@ run_rep() {
   local peak; peak=$(cat "$OUT/.$app-$rep.mem")
   local cg_peak; cg_peak=$(( $(cat "$cg/memory.peak" 2>/dev/null || echo 0) / 1048576 ))
   kill "$SAMPLER" 2>/dev/null || true; SAMPLER=""
-  python3 - "$f" "$app" "$rep" "$cold_ms" "$idle_cur" "$idle_anon" "$peak" "$cg_peak" "$http_json" "$cable_json" "$upload_json" "$load_start" "$(cat /proc/loadavg)" "$rows_json" "$probe_json" "$probe_start" "$(host_probe)" <<'PY'
+  python3 - "$f" "$app" "$rep" "$cold_ms" "$idle_cur" "$idle_anon" "$peak" "$cg_peak" "$http_json" "$cable_json" "$upload_json" "$load_start" "$(cat /proc/loadavg)" "$rows_json" "$probe_json" "$probe_start" "$(host_probe)" "$real_json" "$SEED_NAME" <<'PY'
 import json, os, sys
-f, app, rep, cold, idle_cur, idle_anon, peak, cg_peak, http, cable, upload, load0, load, rows, probe, host0, host1 = sys.argv[1:]
+f, app, rep, cold, idle_cur, idle_anon, peak, cg_peak, http, cable, upload, load0, load, rows, probe, host0, host1, real, seed = sys.argv[1:]
 result = {
   "app": app, "rep": int(rep), "cold_start_ms": int(cold),
   "memory": {"idle_current_mb": int(idle_cur), "idle_anon_mb": int(idle_anon), **json.loads(peak), "cgroup_peak_mb": int(cg_peak)},
   "http": json.loads(http), "cable": json.loads(cable), "upload": json.loads(upload), "loadavg_start": load0, "loadavg_end": load,
   "post_rows": json.loads(rows), "probe": json.loads(probe), "host_probe_start": json.loads(host0), "host_probe_end": json.loads(host1),
+  "seed": seed,
 }
+if json.loads(real):
+    result["realistic"] = json.loads(real)
 # MERGE_PART=1 (bench/quick --part): this run measured some of the routes of a rep that an earlier part of the same unit started;
 # its routes join that file's (a route already there is replaced), the rest of the earlier part stays.
 if os.environ.get("MERGE_PART") == "1" and os.path.exists(f):
@@ -431,7 +480,11 @@ if os.environ.get("MERGE_PART") == "1" and os.path.exists(f):
     redone = {h["route"] for h in result["http"]}
     result["http"] = [h for h in old["http"] if h["route"] not in redone] + result["http"]
     result["probe"] = [x for x in old["probe"] if x["route"] not in redone] + result["probe"]
-    result["post_rows"] = old["post_rows"] + result["post_rows"] if "post_message" not in redone else result["post_rows"]
+    # A part's post rows replace those of the routes it redid and keep the rest (rows of before R2.0 carry no route: post_message's).
+    result["post_rows"] = [p for p in old["post_rows"] if p.get("route", "post_message") not in redone] + result["post_rows"]
+    if "realistic" not in result and "realistic" in old:
+        result["realistic"] = old["realistic"]
+    result["seeds"] = sorted({old.get("seed", "default"), *old.get("seeds", []), seed})
     for k in ("peak_current_mb", "peak_anon_mb", "cgroup_peak_mb"):
         result["memory"][k] = max(old["memory"].get(k, 0), result["memory"].get(k, 0))
     result["parts"] = old.get("parts", 1) + 1
@@ -443,7 +496,7 @@ PY
   # The last request log lines the app wrote (a sample, that logging is on and what it says; the driver keeps only 2 x LOG_MAX_SIZE).
   docker logs --tail 12 "$CONTAINER" > "$OUT/$app-$rep-logtail.txt" 2>&1 || true
   docker rm -f "$CONTAINER" >/dev/null
-  rm -rf "$WORK/$app"
+  rm -rf "$WORK/$app" "$WORK/$app-realistic"
   log "$app rep $rep: done -> $f"
 }
 
@@ -462,6 +515,7 @@ write_env() {
   echo "repo HEAD: $(git -C "$ROOT" rev-parse --short HEAD) (dirty: $(git -C "$ROOT" status --porcelain -- src rust Cargo.toml Cargo.lock | wc -l) files under src/ and rust/)"
   echo "work dir (seed copies): $WORK ($(findmnt -T "$WORK" -n -o FSTYPE))"
   echo "loadgen: $LOADGEN ($(stat -c %y "$LOADGEN" | cut -d. -f1)), built with $RUST_BUILD_IMAGE"
+  echo "seed: $SEED_NAME (realistic workloads: crowd; classic: default); realistic concs ${REAL_CONCS}, MIX_POSTERS ${MIX_POSTERS:-1}, SPREAD_POSTERS ${SPREAD_POSTERS:-1}, POSTING_USERS ${POSTING_USERS:-32}, SEARCH_QUERIES ${SEARCH_QUERIES:-200}, REAL_USERS ${REAL_USERS} (0: all)"
   echo "schedule: apps ${APPS}, reps ${REPS}; suites: ${SUITES}; http secs ${HTTP_SECS}, concs ${HTTP_CONCS}, routes ${SCHEDULE_ROUTES:-$HTTP_ROUTES}, warm-up ${WARMUP_SECS}s at each route and concentration, idle ${IDLE_SECS}s"
   echo "log retention: ${LOG_MAX_FILE} x ${LOG_MAX_SIZE} (json-file)"
 }

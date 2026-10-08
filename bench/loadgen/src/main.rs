@@ -12,8 +12,15 @@
 //!   loadgen fetch  --base URL --cookie C --path P --out FILE     -> saves an uncompressed body
 //!   loadgen gzip   --file F [--iters 200]                         -> CPU per compression, by backend/level
 //!
+//!   loadgen http   --base URL --mix-spec FILE --conc N --duration S  -> per-lane latency/throughput (below)
+//!
 //! `http` also takes `--gzip 0` (`Accept-Encoding: identity`), `--requests N` (stop after N requests,
-//! for allocation counting) and `--trace FILE` (each request's start, latency and status). `cable` prints `PHASE <name> <unix ms>` lines on stderr so memory
+//! for allocation counting) and `--trace FILE` (each request's start, latency and status). With `--mix-spec FILE` it runs a
+//! realistic workload instead of one URL (bench/lib/realistic.py writes the spec): lanes of connections, each request a target
+//! drawn from the lane's list (users' cookies by index, GET paths or posts into rooms), every lane at once; `--conc N` sets the
+//! connections of the lanes marked `scale`. It prints the same totals as one URL does plus `lanes`, each lane's own. `login` takes
+//! `--forwarded-for IP` (sent as `X-Forwarded-For`, so signing many users in from loopback is not one client to the apps' sign-in
+//! rate limit). `cable` prints `PHASE <name> <unix ms>` lines on stderr so memory
 //! samples can be attributed to its phases.
 //!
 //! Every command takes `--user-agent UA`, sent as the `User-Agent` of each request it makes,
@@ -170,18 +177,14 @@ fn unescape(s: &str) -> String {
 async fn login(a: &Args) -> Res<Value> {
     let addr = host_port(&a.get("base"));
     let mut jar = Vec::new();
-    let r = one_shot(&addr, "GET", "/session/new", &[], Bytes::new()).await?;
+    let xff: Vec<(&str, String)> = a.opt("forwarded-for").map(|ip| vec![("x-forwarded-for", ip)]).unwrap_or_default();
+    let r = one_shot(&addr, "GET", "/session/new", &xff, Bytes::new()).await?;
     merge_cookies(&mut jar, &r.headers);
     let token = csrf_from(&String::from_utf8_lossy(&r.body)).unwrap_or_default();
     let body = form(&[("email_address", &a.get("email")), ("password", &a.get("password")), ("authenticity_token", &token)]);
-    let r = one_shot(
-        &addr,
-        "POST",
-        "/session",
-        &[("cookie", cookie_header(&jar)), ("content-type", "application/x-www-form-urlencoded".into()), same_origin()],
-        body,
-    )
-    .await?;
+    let mut headers = vec![("cookie", cookie_header(&jar)), ("content-type", "application/x-www-form-urlencoded".into()), same_origin()];
+    headers.extend(xff.iter().cloned());
+    let r = one_shot(&addr, "POST", "/session", &headers, body).await?;
     merge_cookies(&mut jar, &r.headers);
     if r.status != 302 || !jar.iter().any(|(k, _)| k == "session_token") {
         return Err(format!("login failed: {}", r.status).into());
@@ -259,6 +262,9 @@ fn message_request(cookie: &str, csrf: &str, body_text: &str) -> (Vec<(&'static 
 }
 
 async fn http_load(a: &Args) -> Res<Value> {
+    if let Some(spec) = a.opt("mix-spec") {
+        return mix_load(a, &spec).await;
+    }
     let addr = host_port(&a.get("base"));
     let cookie = a.opt("cookie").unwrap_or_default();
     let path = a.opt("path").unwrap_or_else(|| "/".into());
@@ -369,6 +375,245 @@ async fn http_load(a: &Args) -> Res<Value> {
         "errors": errors.load(Ordering::Relaxed),
         "avg_bytes": if !h.is_empty() { bytes_total.load(Ordering::Relaxed) / h.len() } else { 0 },
         "latency": summary(&h),
+    }))
+}
+
+// ---------------------------------------------------------------------------------------------
+// Realistic workloads: several lanes at once, each request a target drawn from a list
+
+/// One request a lane can make: a GET of `path`, or a message posted into `room`, as user `u` of the spec.
+struct MixTarget {
+    user: usize,
+    path: Option<String>,
+    room: Option<u64>,
+}
+
+struct MixLane {
+    name: String,
+    conc: usize,
+    /// `random` (uniform, a fixed seed per connection) or `cycle` (each connection walks the list from its own offset).
+    pick: String,
+    seed: u64,
+    targets: Vec<MixTarget>,
+    /// Instead of `targets`: every (user, path) pair of `users` x `paths`, drawn independently.
+    cross: Option<(Vec<usize>, Vec<String>)>,
+}
+
+struct MixUser {
+    cookie: String,
+    csrf: String,
+}
+
+struct LaneStats {
+    hist: Mutex<Histogram<u64>>,
+    statuses: Mutex<HashMap<u16, u64>>,
+    errors: AtomicU64,
+    bytes: AtomicU64,
+}
+
+/// xorshift64*: a per-connection stream of indices with no dependency, reproducible from the spec's seed.
+fn next_rand(state: &mut u64) -> u64 {
+    let mut x = *state;
+    x ^= x >> 12;
+    x ^= x << 25;
+    x ^= x >> 27;
+    *state = x;
+    x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+}
+
+fn parse_spec(v: &Value, scale_conc: Option<usize>) -> Res<(Vec<MixUser>, Vec<MixLane>)> {
+    let users = v["users"]
+        .as_array()
+        .ok_or("spec: users")?
+        .iter()
+        .map(|u| MixUser { cookie: u["cookie"].as_str().unwrap_or("").to_string(), csrf: u["csrf"].as_str().unwrap_or("").to_string() })
+        .collect::<Vec<_>>();
+    let mut lanes = Vec::new();
+    for l in v["lanes"].as_array().ok_or("spec: lanes")? {
+        let mut conc = l["conc"].as_u64().unwrap_or(1) as usize;
+        if l["scale"].as_bool().unwrap_or(false) {
+            conc = scale_conc.unwrap_or(conc);
+        }
+        let targets = l["targets"]
+            .as_array()
+            .map(|ts| {
+                ts.iter()
+                    .map(|t| MixTarget {
+                        user: t["u"].as_u64().unwrap_or(0) as usize,
+                        path: t["path"].as_str().map(str::to_string),
+                        room: t["room"].as_u64(),
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let cross = l["cross"].as_object().map(|c| {
+            let us = c["users"].as_array().map(|a| a.iter().filter_map(|x| x.as_u64().map(|x| x as usize)).collect()).unwrap_or_default();
+            let ps = c["paths"].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default();
+            (us, ps)
+        });
+        let n = cross.as_ref().map(|(u, p): &(Vec<usize>, Vec<String>)| u.len() * p.len()).unwrap_or(targets.len());
+        if n == 0 {
+            return Err(format!("spec: lane {} has no targets", l["name"]).into());
+        }
+        for t in &targets {
+            if t.user >= users.len() || (t.path.is_none() && t.room.is_none()) {
+                return Err(format!("spec: lane {}: bad target", l["name"]).into());
+            }
+        }
+        lanes.push(MixLane {
+            name: l["name"].as_str().unwrap_or("lane").to_string(),
+            conc,
+            pick: l["pick"].as_str().unwrap_or("random").to_string(),
+            seed: l["seed"].as_u64().unwrap_or(1),
+            targets,
+            cross,
+        });
+    }
+    Ok((users, lanes))
+}
+
+async fn mix_load(a: &Args, spec_path: &str) -> Res<Value> {
+    let addr = host_port(&a.get("base"));
+    let spec: Value = serde_json::from_slice(&std::fs::read(spec_path)?)?;
+    let scale = a.opt("conc").and_then(|c| c.parse().ok());
+    let (users, lanes) = parse_spec(&spec, scale)?;
+    let users = Arc::new(users);
+    let gzip = a.num("gzip", 1u8) != 0;
+    let accept_encoding = if gzip { "gzip" } else { "identity" };
+    let duration = Duration::from_secs_f64(a.num("duration", 10.0));
+    let start = Instant::now();
+    let deadline = start + duration;
+    let mut tasks = Vec::new();
+    let mut stats = Vec::new();
+    for (li, lane) in lanes.into_iter().enumerate() {
+        let lane = Arc::new(lane);
+        let st = Arc::new(LaneStats {
+            hist: Mutex::new(hist()),
+            statuses: Mutex::new(HashMap::new()),
+            errors: AtomicU64::new(0),
+            bytes: AtomicU64::new(0),
+        });
+        stats.push((lane.clone(), st.clone()));
+        for k in 0..lane.conc {
+            let (lane, st, users, addr) = (lane.clone(), st.clone(), users.clone(), addr.clone());
+            tasks.push(tokio::spawn(async move {
+                let mut h = hist();
+                let mut local = HashMap::<u16, u64>::new();
+                let mut conn: Option<SendRequest<Full<Bytes>>> = None;
+                let mut rng = lane.seed.wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ ((li as u64) << 32 | k as u64) | 1;
+                let n = lane.cross.as_ref().map(|(u, p)| u.len() * p.len()).unwrap_or(lane.targets.len());
+                let mut cursor = k * n / lane.conc.max(1);
+                let mut i = 0u64;
+                while Instant::now() < deadline {
+                    if conn.is_none() {
+                        match connect(&addr).await {
+                            Ok(c) => conn = Some(c),
+                            Err(_) => {
+                                st.errors.fetch_add(1, Ordering::Relaxed);
+                                tokio::time::sleep(Duration::from_millis(10)).await;
+                                continue;
+                            }
+                        }
+                    }
+                    let idx = if lane.pick == "cycle" {
+                        cursor = (cursor + 1) % n;
+                        cursor
+                    } else {
+                        (next_rand(&mut rng) % n as u64) as usize
+                    };
+                    let (user, path, room) = match &lane.cross {
+                        Some((us, ps)) => (us[idx % us.len()], Some(ps[(idx / us.len()) % ps.len()].as_str()), None),
+                        None => {
+                            let t = &lane.targets[idx];
+                            (t.user, t.path.as_deref(), t.room)
+                        }
+                    };
+                    let u = &users[user];
+                    let (method, p, headers, body) = match (room, path) {
+                        (Some(room), _) => {
+                            i += 1;
+                            let (mut h, b) = message_request(&u.cookie, &u.csrf, &format!("bench {} {k} {i}", lane.name));
+                            h.push(("accept-encoding", accept_encoding.into()));
+                            ("POST", format!("/rooms/{room}/messages"), h, b)
+                        }
+                        (None, Some(path)) => {
+                            ("GET", path.to_string(), vec![("cookie", u.cookie.clone()), ("accept-encoding", accept_encoding.into())], Bytes::new())
+                        }
+                        (None, None) => unreachable!(),
+                    };
+                    let t0 = Instant::now();
+                    match send(conn.as_mut().unwrap(), &addr, method, &p, &headers, body).await {
+                        Ok(r) => {
+                            h.record(t0.elapsed().as_micros() as u64).ok();
+                            *local.entry(r.status).or_default() += 1;
+                            st.bytes.fetch_add(r.body.len() as u64, Ordering::Relaxed);
+                            if r.headers.get("connection").map(|v| v == "close").unwrap_or(false) {
+                                conn = None;
+                            }
+                        }
+                        Err(_) => {
+                            st.errors.fetch_add(1, Ordering::Relaxed);
+                            conn = None;
+                        }
+                    }
+                }
+                st.hist.lock().unwrap().add(&h).unwrap();
+                let mut s = st.statuses.lock().unwrap();
+                for (k, v) in local {
+                    *s.entry(k).or_default() += v;
+                }
+            }));
+        }
+    }
+    for t in tasks {
+        t.await?;
+    }
+    let elapsed = start.elapsed().as_secs_f64();
+    let mut all = hist();
+    let mut all_statuses = HashMap::<u16, u64>::new();
+    let (mut all_errors, mut all_bytes) = (0u64, 0u64);
+    let mut lanes_json = serde_json::Map::new();
+    let mut scaled = 0;
+    for (lane, st) in &stats {
+        let h = st.hist.lock().unwrap();
+        let s = st.statuses.lock().unwrap();
+        all.add(&*h).unwrap();
+        for (k, v) in s.iter() {
+            *all_statuses.entry(*k).or_default() += v;
+        }
+        let (errors, bytes) = (st.errors.load(Ordering::Relaxed), st.bytes.load(Ordering::Relaxed));
+        all_errors += errors;
+        all_bytes += bytes;
+        if scale == Some(lane.conc) {
+            scaled = lane.conc;
+        }
+        lanes_json.insert(
+            lane.name.clone(),
+            json!({
+                "conc": lane.conc,
+                "targets": lane.cross.as_ref().map(|(u, p)| u.len() * p.len()).unwrap_or(lane.targets.len()),
+                "pick": lane.pick,
+                "rps": ((h.len() as f64 / elapsed) * 10.0).round() / 10.0,
+                "ok": s.iter().filter(|(k, _)| **k < 400).map(|(_, v)| v).sum::<u64>(),
+                "statuses": s.iter().map(|(k, v)| (k.to_string(), json!(v))).collect::<serde_json::Map<_, _>>(),
+                "errors": errors,
+                "avg_bytes": if !h.is_empty() { bytes / h.len() } else { 0 },
+                "latency": summary(&h),
+            }),
+        );
+    }
+    Ok(json!({
+        "path": format!("mix {}", spec["name"].as_str().unwrap_or(spec_path)),
+        "conc": if scaled > 0 { scaled } else { stats.iter().map(|(l, _)| l.conc).sum() },
+        "gzip": gzip,
+        "secs": (elapsed * 100.0).round() / 100.0,
+        "rps": ((all.len() as f64 / elapsed) * 10.0).round() / 10.0,
+        "ok": all_statuses.iter().filter(|(k, _)| **k < 400).map(|(_, v)| v).sum::<u64>(),
+        "statuses": all_statuses.iter().map(|(k, v)| (k.to_string(), json!(v))).collect::<serde_json::Map<_, _>>(),
+        "errors": all_errors,
+        "avg_bytes": if !all.is_empty() { all_bytes / all.len() } else { 0 },
+        "latency": summary(&all),
+        "lanes": lanes_json,
     }))
 }
 
