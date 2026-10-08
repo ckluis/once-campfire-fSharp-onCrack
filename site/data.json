@@ -2577,5 +2577,68 @@
       "phase7c": 7,
       "after": 0
     }
+  },
+  "oncrack": {
+    "meta": {
+      "description": "onCrack: the same Campfire, pixel for pixel, on a server free to do less work. Measured in one session against Rails, the Rust port and the F# port it was forked from; every number links to its source.",
+      "repo_url": null,
+      "branch": "crack",
+      "port_page": "https://ckluis.github.io/once-campfire-fSharp/",
+      "port_repo": "https://github.com/ckluis/once-campfire-fSharp",
+      "_note": "site/build.py reads \"oncrack\"; the rest of this file is the F# port's story (site/collect_tokens.py), not drawn here. Set repo_url once onCrack has a public repository and file links go to its GitHub view."
+    },
+    "same_pixels": {
+      "state": "rooms/show/busy/last_page",
+      "cell": "chromium-desktop-light",
+      "viewport": "1440×900",
+      "image": "site/assets/same-pixels/room.webp",
+      "page": "All Talk, the busy room, signed in as David: the page the room_show benchmark requests",
+      "identical": true,
+      "pixels_sha256": "3c57af02305d5b101bceeb80de3c274ac56437f8b302ad981be260f2eb60ca23",
+      "round1_layers_equal": [
+        "pixels",
+        "server",
+        "live",
+        "aria",
+        "network",
+        "cable"
+      ],
+      "port_ref": "side-by-side (71dacd5)",
+      "checked": "2026-10-08T05:12:21Z",
+      "apps": [
+        {
+          "key": "rails",
+          "name": "Rails",
+          "capture_sha256": "ac7420e6d0a8941463402fbeddc90f4972c50c0a7c4f935e637345164c13d0b8",
+          "thumb": "site/assets/same-pixels/rails.webp",
+          "harness_verdict": "pass",
+          "source": "parity/out/pixel-parity-round1-final/C/default/report.json (reference side)"
+        },
+        {
+          "key": "rust",
+          "name": "Rust",
+          "capture_sha256": "ac7420e6d0a8941463402fbeddc90f4972c50c0a7c4f935e637345164c13d0b8",
+          "thumb": "site/assets/same-pixels/rust.webp",
+          "harness_verdict": "pass",
+          "source": "the port's check, parity/out/p6-r-default (candidate side), recorded in the port's site/data.json at 71dacd5"
+        },
+        {
+          "key": "fsharp",
+          "name": "F# port",
+          "capture_sha256": "ac7420e6d0a8941463402fbeddc90f4972c50c0a7c4f935e637345164c13d0b8",
+          "thumb": "site/assets/same-pixels/fsharp.webp",
+          "harness_verdict": "pass",
+          "source": "the port's check, parity/out/p6-f-default (candidate side), recorded in the port's site/data.json at 71dacd5"
+        },
+        {
+          "key": "oncrack",
+          "name": "onCrack",
+          "capture_sha256": "ac7420e6d0a8941463402fbeddc90f4972c50c0a7c4f935e637345164c13d0b8",
+          "thumb": "site/assets/same-pixels/oncrack.webp",
+          "harness_verdict": "pass",
+          "source": "parity/out/pixel-parity-round1-final/C/default/report.json (candidate side)"
+        }
+      ]
+    }
   }
 }
