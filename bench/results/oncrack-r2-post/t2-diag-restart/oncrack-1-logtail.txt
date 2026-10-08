@@ -1,0 +1,8 @@
+2026-10-08T16:28:50.503964Z info: thruster[0] Server started http=:4390
+WARN campfire_db: WAL checkpoint couldn't finish (PASSIVE)
+WARN campfire_db: WAL restart took 104 ms
+WARN campfire_db: WAL restart took 100 ms
+WARN campfire_db: WAL restart took 2525 ms
+WARN campfire_db: WAL restart took 807 ms
+WARN campfire_db: WAL restart took 928 ms
+WARN campfire_db: WAL restart took 852 ms
