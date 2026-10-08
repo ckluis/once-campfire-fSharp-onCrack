@@ -113,7 +113,7 @@ window. Two runs per app, in opposite orders: [`review/mixed.jsonl`](oncrack-rou
 
 | | Rust | F# port | onCrack | onCrack / Rust | onCrack / port |
 |---|---|---|---|---|---|
-| room page reads/s, c=16 | 18,810 / 18,428 | 24,307 / 24,438 | 43,212 / 42,291 | 2.32x | 1.75x |
+| room page reads/s, c=16 | 18,810 / 18,428 | 24,307 / 24,438 | 43,212 / 42,291 | 2.30x | 1.75x |
 | posts/s into that room, c=1 | 692 / 665 | 774 / 787 | 1,099 / 1,115 | 1.63x | 1.42x |
 | read p50 / p99 ms (first run) | 0.82 / 1.78 | 0.67 / 1.59 | 0.19 / 1.12 | | |
 | CPU µs per request (reads and posts) | 177 / 180 | 148 / 148 | 85 / 86 | 0.48x | 0.58x |

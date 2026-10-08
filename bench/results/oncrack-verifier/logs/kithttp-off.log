@@ -1,0 +1,9 @@
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.06
+plain: 1500 requests, 0 differ; statuses {200: 376, 201: 27, 204: 30, 302: 91, 303: 19, 304: 41, 400: 146, 404: 604, 406: 97, 422: 3, 500: 66}
+ssl: 1500 requests, 0 differ; statuses {200: 371, 201: 27, 204: 30, 302: 91, 303: 19, 304: 40, 400: 146, 404: 627, 406: 74, 422: 9, 500: 66}
+EXIT=0

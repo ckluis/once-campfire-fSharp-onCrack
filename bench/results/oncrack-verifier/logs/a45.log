@@ -1,0 +1,33 @@
+xUnit.net v3 In-Process Runner v3.2.0+9e422989c1 (64-bit .NET 10.0.12)
+  Discovering: Attack.Tests
+  Discovered:  Attack.Tests
+  Starting:    Attack.Tests
+A4: 200 checks, 400 failures; writer 217 writes in 148 groups, largest 5
+A4   kind 'after wombatx#n#q replied': 200
+A4   kind 'stored # times': 200
+A4   search after wombatx3n18q replied
+A4   search after wombatx6n15q replied
+A4   search after wombatx8n14q replied
+A4   search after wombatx1n24q replied
+A4   stored sample: wombatx7n1q
+A4   stored sample: wombatx5n1q
+    Campfire.Attack.Tests.A4 cross-user read after write under concurrent posting [FAIL]
+      Assert.Empty() Failure: Collection was not empty
+      Collection: ["search after wombatx3n18q replied", "search after wombatx6n15q replied", "search after wombatx8n14q replied", "search after wombatx1n24q replied", "search after wombatx8n24q replied", ···]
+      Stack Trace:
+        AttackTests.fs(259,0): at Campfire.Attack.Tests.A4 cross-user read after write under concurrent posting@211.MoveNext()
+        AttackTests.fs(259,0): at Campfire.Attack.Tests.A4 cross-user read after write under concurrent posting@211.MoveNext()
+        --- End of stack trace from previous location ---
+A5 sample frame: "\u003cturbo-stream action=\"append\" target=\"messages_rooms_closed_486777696\"\u003e\u003ctemplate\u003e\n  \u003cdiv id=\"message_3e9e4f70-738e-4c25-8897-78f804ae4183\" class=\"message \" data-controller=\"reply\" data-user-id=\"127326141\" data-message-id=\"933434638\" data-message-timestamp=\"1791402713542\" data-message-updated-at=\"1791402713542\" data-sort-value=\"1791402713542\" data-messages-target=\"message\" data-search-results-target=\"message\" data-refresh-room-target=\"message\" data-reply-composer-outlet=\"#composer\"\u003e\n    \u003ch2 class=\"message__day-separator\"\u003e\
+A5: group commit : 320 frames, 0 message ids, 0 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 73 groups, largest 14
+    Campfire.Attack.Tests.A5 broadcasts of concurrent posts go out in commit order [FAIL]
+      Assert.Equal() Failure: Values differ
+      Expected: 320
+      Actual:   0
+      Stack Trace:
+        AttackTests.fs(304,0): at Campfire.Attack.Tests.A5 broadcasts of concurrent posts go out in commit order@265.MoveNext()
+        AttackTests.fs(304,0): at Campfire.Attack.Tests.A5 broadcasts of concurrent posts go out in commit order@265.MoveNext()
+        --- End of stack trace from previous location ---
+  Finished:    Attack.Tests (ID = '70a08f1d87bbf649f694aae4a91c85c65d8ca83b512d3256f6bc52bb9b97416d')
+=== TEST EXECUTION SUMMARY ===
+   Attack.Tests  Total: 2, Errors: 0, Failed: 2, Skipped: 0, Not Run: 0, Time: 5.829s

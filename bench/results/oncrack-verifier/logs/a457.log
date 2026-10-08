@@ -1,0 +1,32 @@
+xUnit.net v3 In-Process Runner v3.2.0+9e422989c1 (64-bit .NET 10.0.12)
+  Discovering: Attack.Tests
+  Discovered:  Attack.Tests
+  Starting:    Attack.Tests
+A4: 200 checks, 400 failures; writer 217 writes in 159 groups, largest 7
+A4   wombatx8n25q stored 0 times
+A4   wombatx8n24q stored 0 times
+A4   wombatx8n23q stored 0 times
+A4   wombatx8n22q stored 0 times
+A4   wombatx8n21q stored 0 times
+A4   wombatx8n20q stored 0 times
+A4   wombatx8n19q stored 0 times
+A4   wombatx8n18q stored 0 times
+    Campfire.Attack.Tests.A4 cross-user read after write under concurrent posting [FAIL]
+      Assert.Empty() Failure: Collection was not empty
+      Collection: ["wombatx8n25q stored 0 times", "wombatx8n24q stored 0 times", "wombatx8n23q stored 0 times", "wombatx8n22q stored 0 times", "wombatx8n21q stored 0 times", ···]
+      Stack Trace:
+        AttackTests.fs(255,0): at Campfire.Attack.Tests.A4 cross-user read after write under concurrent posting@211.MoveNext()
+        AttackTests.fs(255,0): at Campfire.Attack.Tests.A4 cross-user read after write under concurrent posting@211.MoveNext()
+        --- End of stack trace from previous location ---
+A5: group commit : 320 frames, 0 message ids, 0 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 333 writes / 71 groups, largest 15
+    Campfire.Attack.Tests.A5 broadcasts of concurrent posts go out in commit order [FAIL]
+      Assert.Equal() Failure: Values differ
+      Expected: 320
+      Actual:   0
+      Stack Trace:
+        AttackTests.fs(299,0): at Campfire.Attack.Tests.A5 broadcasts of concurrent posts go out in commit order@261.MoveNext()
+        AttackTests.fs(299,0): at Campfire.Attack.Tests.A5 broadcasts of concurrent posts go out in commit order@261.MoveNext()
+        --- End of stack trace from previous location ---
+  Finished:    Attack.Tests (ID = '70a08f1d87bbf649f694aae4a91c85c65d8ca83b512d3256f6bc52bb9b97416d')
+=== TEST EXECUTION SUMMARY ===
+   Attack.Tests  Total: 3, Errors: 0, Failed: 2, Skipped: 0, Not Run: 0, Time: 10.441s

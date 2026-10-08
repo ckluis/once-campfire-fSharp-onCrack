@@ -1,0 +1,6 @@
+rep 1 A5: group commit on: 320 frames, 320 message ids, 92 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 72 groups, largest 15
+rep 1 A5: group commit off: 320 frames, 320 message ids, 49 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 337 groups, largest 1
+rep 2 A5: group commit on: 320 frames, 320 message ids, 93 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 95 groups, largest 14
+rep 2 A5: group commit off: 320 frames, 320 message ids, 38 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 337 groups, largest 1
+rep 3 A5: group commit on: 320 frames, 320 message ids, 95 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 84 groups, largest 14
+rep 3 A5: group commit off: 320 frames, 320 message ids, 33 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 337 groups, largest 1

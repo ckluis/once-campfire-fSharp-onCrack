@@ -1,0 +1,32 @@
+xUnit.net v3 In-Process Runner v3.2.0+9e422989c1 (64-bit .NET 10.0.12)
+  Discovering: Attack.Tests
+  Discovered:  Attack.Tests
+  Starting:    Attack.Tests
+A1: 75 stale of 1500 checks; cache hits 23901, misses 6651, stored 6081
+A1   after rename to 'David 41': meta 'David 40', template 'David 40'
+A1     next request: meta 'David 40'
+A1   after rename to 'David 45': meta 'David 44', template 'David 44'
+A1     next request: meta 'David 44'
+A1   after rename to 'David 59': meta 'David 58', template 'David 58'
+A1     next request: meta 'David 58'
+    Campfire.Attack.Tests.A1 a page stored with the user read before its counters were taken [FAIL]
+      75 of 1500 pages after a committed rename showed an older name: after rename to 'David 41': meta 'David 40', template 'David 40'   next request: meta 'David 40' after rename to 'David 45': meta 'David 44', template 'David 44'   next request: meta 'David 44' after rename to 'David 59': meta 'David 58', template 'David 58'   next request: meta 'David 58'
+      Stack Trace:
+        AttackTests.fs(82,0): at Campfire.Attack.Tests.A1 a page stored with the user read before its counters were taken@42.MoveNext()
+        AttackTests.fs(82,0): at Campfire.Attack.Tests.A1 a page stored with the user read before its counters were taken@42.MoveNext()
+        --- End of stack trace from previous location ---
+A1b: 50 stale sidebars of 1500
+A1b   after 'Davo 47x' the sidebar says 'Davo 46x'
+A1b   after 'Davo 94x' the sidebar says 'Davo 93x'
+A1b   after 'Davo 110x' the sidebar says 'Davo 109x'
+A1b   after 'Davo 138x' the sidebar says 'Davo 137x'
+A1b   after 'Davo 220x' the sidebar says 'Davo 218x'
+    Campfire.Attack.Tests.A1b sidebar stored with the user read before its counters were taken [FAIL]
+      after 'Davo 47x' the sidebar says 'Davo 46x' | after 'Davo 94x' the sidebar says 'Davo 93x' | after 'Davo 110x' the sidebar says 'Davo 109x' | after 'Davo 138x' the sidebar says 'Davo 137x' | after 'Davo 220x' the sidebar says 'Davo 218x'
+      Stack Trace:
+        AttackTests.fs(116,0): at Campfire.Attack.Tests.A1b sidebar stored with the user read before its counters were taken@88.MoveNext()
+        AttackTests.fs(116,0): at Campfire.Attack.Tests.A1b sidebar stored with the user read before its counters were taken@88.MoveNext()
+        --- End of stack trace from previous location ---
+  Finished:    Attack.Tests (ID = '70a08f1d87bbf649f694aae4a91c85c65d8ca83b512d3256f6bc52bb9b97416d')
+=== TEST EXECUTION SUMMARY ===
+   Attack.Tests  Total: 2, Errors: 0, Failed: 2, Skipped: 0, Not Run: 0, Time: 15.730s

@@ -1,0 +1,8 @@
+xUnit.net v3 In-Process Runner v3.2.0+9e422989c1 (64-bit .NET 10.0.12)
+  Discovering: Attack.Tests
+  Discovered:  Attack.Tests
+  Starting:    Attack.Tests
+A8: page 416018 bytes; 4000 distinct keys, stored 4001; managed heap 8.1 MB -> 20.5 MB (would be 1587 MB unbounded)
+  Finished:    Attack.Tests (ID = '70a08f1d87bbf649f694aae4a91c85c65d8ca83b512d3256f6bc52bb9b97416d')
+=== TEST EXECUTION SUMMARY ===
+   Attack.Tests  Total: 1, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 1.416s
