@@ -219,6 +219,12 @@ specific to this port are listed below, each citing the reference file it depart
   - A post's search-index row and unread marks (`after_create_commit`) commit in the post's own transaction, after it
     (`CAMPFIRE_POST_ON_COMMIT=off` commits them after, as Rails does). A failing statement of them still reaches the
     caller after the post committed. Tested by `GroupCommitTests` ("on-commit work commits with its write ...").
+- **onCrack** (`bench/results/oncrack-r2-front.md`, unit R2.3):
+  - A page the front server replays (`FastStore`) carries an `X-Runtime` measured from when the front server took the request
+    (Rails' `Rack::Runtime` times its own stack), and its session's activity refresh (`reference/app/controllers/concerns/authentication.rb`,
+    `resume_session`, at most hourly) happens on the first request after it falls due, which a replay never answers: replays stop a
+    second before it is due. The body, status and every other header are the app's answer to the same request bytes. Tested by
+    `FastPathTests`. `CAMPFIRE_FAST_PATH=off` answers every request through the app.
 
 ## License
 

@@ -83,6 +83,19 @@ outside the gzip cache (`CAMPFIRE_GZIP_ONCE_LEVEL`). `POST_RATE` paces the posts
 the same writes; a paced run is not comparable with the stored baseline and stays out of the climb log). Open: sustained c=16 posting
 stalls 0.8-2.5 s every 20-30 s on the writer's WAL RESTART (`WARN campfire_db: WAL restart took N ms`).
 
+**The front server's fast path** (unit R2.3, `bench/results/oncrack-r2-front.md`): a read cache hit authenticated by its session cookie
+offers its answer (`Campfire.Kit.FastCandidate`, set in `ReadCache.offerFast`); the front server (`FastStore` in `Front/Handler.fs`)
+keeps the finished response under every byte of the request the app can read (all headers but `X-Request-Start`, `X-Request-Id`,
+`X-Forwarded-For`) and replays it before the proxy headers, routing, the kit and the cookie jar, while the page's counters and the
+sessions counter are unchanged and until the session's activity refresh is due or a read cookie expires (`CookieJar.VerifiedUntil`,
+`ExpiryWatch`). `X-Request-Id`, `X-Runtime` and a permanent cookie's expiry are made per replay. `CAMPFIRE_FAST_PATH=off`,
+`CAMPFIRE_FAST_PATH_MB` (32). `CAMPFIRE_INLINE` (`replays` by default, `all`, `off`) reads requests on the socket's event thread
+(Kestrel inline scheduling plus the runtime's inline socket completions, set in `Program.main`) and answers replays there; anything
+else hops to the pool before the app. `FastPathTests` are its attack tests (each guard has a mutation that fails one); the in-process
+host `Support.startFronted` serves an app behind the front server, and `CAMPFIRE_TEST_FRONT=1` runs the whole App suite that way (the
+read cache tests then count replays as hits; the avatar removal test fails behind the front because Thruster's public cache keeps the
+avatar, as it does in front of Rails). Open: `spread_mixed` reads and posts are 12% and 10% below the pool with `replays`.
+
 # once-campfire-fsharp
 
 Campfire in F#. It is a port that has to be indistinguishable in use from the Rails app in
