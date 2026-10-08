@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# onCrack R2.4: who wakes whom at one connection. Runs the app (as bench/paths does), warms up a route (a path, or POST), then records every
+# futex wake (and optionally sched_yield with YIELD=1) with its call chain for SECS seconds and prints the most common managed stacks per request.
+#   colima ssh -- bash -c "cd $PWD && bench/c1-wakes [--mounted DIR] [--env 'K=V ...'] [--secs 5] POST|/up|/rooms/@ROOM@"
+set -euo pipefail
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+export SERVER_CPUS=${SERVER_CPUS:-0-3} LOADGEN_CPUS=${LOADGEN_CPUS:-4-7}
+export WORK=${WORK:-/var/tmp/campfire-bench-work}
+SECS=5 ENVX="" MOUNT=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --secs) SECS=$2; shift 2 ;; --env) ENVX=$2; shift 2 ;; --mounted) MOUNT=$2; shift 2 ;; *) break ;;
+  esac
+done
+P=$1; set --
+[ -z "$MOUNT" ] || export ONCRACK_MOUNT=$MOUNT
+export ONCRACK_EXTRA_ENV="${ENVX:+$ENVX }DOTNET_PerfMapEnabled=1 DOTNET_EnableWriteXorExecute=0"
+BENCH_RUN_LIB=1 source "$ROOT/bench/run"
+DIAG_DIR=/var/tmp/c1-wakes-diag; mkdir -p "$DIAG_DIR"; find "$DIAG_DIR" -mindepth 1 -delete; chmod 1777 "$DIAG_DIR"
+DOCKER_EXTRA_ARGS=(-v "$DIAG_DIR:/tmp")
+sudo sysctl -w kernel.perf_event_paranoid=-1 kernel.kptr_restrict=0 >/dev/null
+wait_for_quiet
+start_app oncrack >/dev/null
+CG=$(cgroup_dir); PID=$(docker inspect -f '{{.State.Pid}}' "$CONTAINER")
+sleep 5
+COOKIE=$(lg login --base "$BASE" --email "$EMAIL" --password "$PASSWORD" | python3 -c 'import json,sys; print(json.load(sys.stdin)["cookie"])')
+CSRF=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["csrf"] or "")' "$(lg scrape --base "$BASE" --cookie "$COOKIE" --room "$ROOM")")
+P=${P//@ROOM@/$ROOM}
+if [ "$P" = POST ]; then PA=(--post-room "$WRITE_ROOM" --csrf "$CSRF"); else PA=(--path "$P"); fi
+WARMUP_SECS=12 WARMUP_MAX_SECS=12 warm_up "$COOKIE" 1 "${PA[@]}" >/dev/null
+lg http --base "$BASE" --cookie "$COOKIE" "${PA[@]}" --conc 1 --duration $((SECS + 4)) > "$DIAG_DIR/lg.json" &
+LGPID=$!
+sleep 2
+EV="syscalls:sys_enter_futex"
+sudo perf record -e "$EV" -g -p "$PID" -o "$DIAG_DIR/w.data" -- sleep "$SECS" >/dev/null 2>&1 || sudo perf record -e raw_syscalls:sys_enter --filter 'id == 98' -g -p "$PID" -o "$DIAG_DIR/w.data" -- sleep "$SECS" >/dev/null 2>&1
+wait "$LGPID"
+sudo cp "$DIAG_DIR/perf-1.map" "/tmp/perf-$PID.map"
+docker rm -f "$CONTAINER" >/dev/null; rm -rf "${WORK:?}/oncrack"
+sudo perf script -i "$DIAG_DIR/w.data" -F comm,tid,ip,sym,trace --no-inline 2>/dev/null > "$DIAG_DIR/w.script" || true
+sudo rm -f "/tmp/perf-$PID.map"
+python3 "$ROOT/bench/lib/wakes.py" "$DIAG_DIR/w.script" "$DIAG_DIR/lg.json" "$SECS"

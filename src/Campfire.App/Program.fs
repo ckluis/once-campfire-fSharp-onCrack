@@ -39,4 +39,10 @@ let main argv =
     if Campfire.Kit.FrontInline.mode <> Campfire.Kit.FrontInline.Off
        && isNull (Environment.GetEnvironmentVariable "DOTNET_SYSTEM_NET_SOCKETS_INLINE_COMPLETIONS") then
         Environment.SetEnvironmentVariable("DOTNET_SYSTEM_NET_SOCKETS_INLINE_COMPLETIONS", "1")
+    // onCrack (R2.4): idle thread pool workers do not spin. The default of 70 normalized spins kept a worker running for about 100 us after
+    // every hand-off, which at one connection was half of a post's CPU (345 -> 263 us, same req/s) and with replays answered on the event
+    // threads costs nothing at 16 or 64 (bench/results/oncrack-r2-c1.md). Read by the runtime when the pool first starts, so it is set
+    // before anything uses the pool; a value given to the container (DOTNET_ThreadPool_UnfairSemaphoreSpinLimit, in hex) wins.
+    if isNull (Environment.GetEnvironmentVariable "DOTNET_ThreadPool_UnfairSemaphoreSpinLimit") then
+        Environment.SetEnvironmentVariable("DOTNET_ThreadPool_UnfairSemaphoreSpinLimit", "0")
     Boot.run argv

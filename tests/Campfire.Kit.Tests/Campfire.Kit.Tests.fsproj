@@ -20,6 +20,7 @@
     <Compile Include="SpliceTests.fs" />
     <Compile Include="ServerTests.fs" />
     <Compile Include="LoggingTests.fs" />
+    <Compile Include="EventThreadWatchTests.fs" />
     <Compile Include="FrontHarness.fs" />
     <Compile Include="FrontConfigTests.fs" />
     <Compile Include="FrontCacheTests.fs" />

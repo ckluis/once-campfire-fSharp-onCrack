@@ -157,6 +157,43 @@ module FrontInline =
         | v when v.Equals("all", StringComparison.OrdinalIgnoreCase) -> All
         | _ -> Off
 
+/// onCrack (R2.4): what an event thread has been serving. An app request that arrives on a thread that has served only its own connection
+/// for `CAMPFIRE_INLINE_SOLO_MS` (200) runs right there instead of hopping to the thread pool: nobody else's request waits behind it, and at
+/// one connection the hop (a wake-up, a worker that spins afterwards) was most of the CPU of a request that isn't a replay. The first request
+/// of a connection, and every request after the thread has served another connection within the window, still hops. `off` (or a negative
+/// number) restores R2.3's behavior; 0 runs every app request on the event thread (a stress setting for tests).
+[<Sealed; AbstractClass>]
+type EventThreadWatch private () =
+    [<ThreadStatic; DefaultValue>]
+    static val mutable private conn: obj | null
+
+    [<ThreadStatic; DefaultValue>]
+    static val mutable private otherAt: int64
+
+    static member val SoloMs: int64 =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_INLINE_SOLO_MS" with
+        | null -> 200L
+        | v when v.Equals("off", StringComparison.OrdinalIgnoreCase) -> -1L
+        | v ->
+            match Int64.TryParse v with
+            | true, n -> n
+            | _ -> 200L
+
+    /// Whether the calling thread has served only `connection` for `window` ms up to `now` (`Environment.TickCount64`); a negative window
+    /// is never.
+    static member SoloFor(connection: obj, now: int64, window: int64) : bool =
+        if window < 0L then
+            false
+        else
+            if not (Object.ReferenceEquals(EventThreadWatch.conn, connection)) then
+                EventThreadWatch.conn <- connection
+                EventThreadWatch.otherAt <- now
+            now - EventThreadWatch.otherAt >= window
+
+    /// `SoloFor` with `CAMPFIRE_INLINE_SOLO_MS`.
+    static member Solo(connection: obj, now: int64) : bool =
+        EventThreadWatch.SoloFor(connection, now, EventThreadWatch.SoloMs)
+
 /// The settings of a front handler that don't change, and the cache it fills.
 [<Sealed>]
 type FrontServices(config: FrontConfig, logger: ILogger, lines: RequestLines | null) =
@@ -1146,7 +1183,11 @@ type FrontHandler(services: FrontServices, app: RequestDelegate) =
         ctx.Response.OnStarting(starting, (response :> obj))
         match found with
         | null when not (isNull fastEntry) -> this.Complete(response, response.FastHit(nonNull fastEntry, started))
-        | null when FrontInline.mode = FrontInline.Replays -> this.OnPool(response)
+        | null when FrontInline.mode = FrontInline.Replays ->
+            if EventThreadWatch.Solo(ctx.Connection.Id, now) && not (headers.ContainsKey "Upgrade") then
+                this.Complete(response, this.Proxy ctx)
+            else
+                this.OnPool(response)
         | null -> this.Complete(response, this.Proxy ctx)
         | cached ->
             let ifNoneMatch = FrontHeaders.first headers "If-None-Match"
