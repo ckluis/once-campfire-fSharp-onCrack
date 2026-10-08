@@ -16,7 +16,10 @@ open System.IO
 open System.IO.Compression
 open System.Runtime.InteropServices
 open System.Threading.Tasks
+open Microsoft.FSharp.NativeInterop
 open Campfire.Kit
+
+#nowarn "9"
 
 /// What `Rack::Deflater` decided for a response.
 type Deflated =
@@ -197,9 +200,8 @@ module Deflater =
         BinaryPrimitives.WriteUInt32LittleEndian(Span<byte>(t, 4, 4), size)
         t
 
-    /// What `GzipStream` with `sync: true` sends for a single-buffer body, in one piece: a header,
-    /// the body deflated and flushed, and the CRC and size.
-    let gzipMember (body: ReadOnlySpan<byte>) (mtime: uint32) : byte[] =
+    /// What `GzipStream` with `sync: true` sends for a single-buffer body (zlib through the runtime).
+    let private zlibMember (body: ReadOnlySpan<byte>) (mtime: uint32) : byte[] =
         use output = new MemoryStream(body.Length / 3 + 64)
         output.Write(header mtime)
         if body.Length = 0 then
@@ -212,6 +214,87 @@ module Deflater =
             deflate.Dispose()
         output.Write(trailer (crc32Update 0u body) (uint32 body.Length))
         output.ToArray()
+
+    /// onCrack (unit R2.2): a whole body deflated by libdeflate (the runtime image has it, for libvips), with a compressor
+    /// kept per thread: zlib's `deflateInit2` allocates and clears its 256 KB of state for every response, and with the
+    /// compression itself that was 30 us of a post's 217 us at c=16. The bytes differ from zlib's (libdeflate parses
+    /// differently at the same level, 6, zlib's default and `Rack::Deflater`'s); they inflate to the same body. Off with
+    /// `CAMPFIRE_GZIP_LIBDEFLATE=off`, or where the library isn't found.
+    [<Sealed; AbstractClass>]
+    type private LibDeflate private () =
+        static let library: nativeint =
+            match Environment.GetEnvironmentVariable "CAMPFIRE_GZIP_LIBDEFLATE" with
+            | "off" | "0" | "false" -> 0n
+            | _ ->
+                let names =
+                    if OperatingSystem.IsMacOS() then [ "/opt/homebrew/lib/libdeflate.0.dylib"; "libdeflate.0.dylib" ]
+                    else [ "libdeflate.so.0" ]
+                names
+                |> List.tryPick (fun name ->
+                    match NativeLibrary.TryLoad name with
+                    | true, handle -> Some handle
+                    | _ -> None)
+                |> Option.defaultValue 0n
+
+        static let export (name: string) : nativeint =
+            if library = 0n then 0n
+            else
+                match NativeLibrary.TryGetExport(library, name) with
+                | true, address -> address
+                | _ -> 0n
+
+        static let allocCompressor =
+            match export "libdeflate_alloc_compressor" with
+            | 0n -> null
+            | f -> Marshal.GetDelegateForFunctionPointer<AllocCompressor> f
+
+        static let compress =
+            match export "libdeflate_deflate_compress" with
+            | 0n -> null
+            | f -> Marshal.GetDelegateForFunctionPointer<DeflateCompress> f
+
+        static let bound =
+            match export "libdeflate_deflate_compress_bound" with
+            | 0n -> null
+            | f -> Marshal.GetDelegateForFunctionPointer<CompressBound> f
+
+        [<ThreadStatic; DefaultValue>]
+        static val mutable private compressor: nativeint
+
+        static member Available : bool = not (isNull allocCompressor || isNull compress || isNull bound)
+
+        /// `body` deflated (raw, final block) after `headerLength` bytes of room, with `trailerLength` more at the end;
+        /// the length written, or none when the bound was wrong.
+        static member Deflate(body: ReadOnlySpan<byte>, headerLength: int, trailerLength: int) : struct (byte[] * int) =
+            if LibDeflate.compressor = 0n then LibDeflate.compressor <- allocCompressor.Invoke 6
+            let c = LibDeflate.compressor
+            let room = int (bound.Invoke(c, unativeint body.Length))
+            let out = Array.zeroCreate<byte> (headerLength + room + trailerLength)
+            use input = fixed body
+            use output = fixed &out[headerLength]
+            let written = int (compress.Invoke(c, NativePtr.toNativeInt input, unativeint body.Length, NativePtr.toNativeInt output, unativeint room))
+            struct (out, written)
+
+    and private AllocCompressor = delegate of int -> nativeint
+
+    and private DeflateCompress = delegate of nativeint * nativeint * unativeint * nativeint * unativeint -> unativeint
+
+    and private CompressBound = delegate of nativeint * unativeint -> unativeint
+
+    /// What `GzipStream` with `sync: true` sends for a single-buffer body, in one piece: a header,
+    /// the body deflated and flushed, and the CRC and size. onCrack: deflated by libdeflate where it is (`LibDeflate`).
+    let gzipMember (body: ReadOnlySpan<byte>) (mtime: uint32) : byte[] =
+        if body.Length > 0 && LibDeflate.Available then
+            let struct (out, written) = LibDeflate.Deflate(body, 10, 8)
+            if written > 0 then
+                let total = 10 + written + 8
+                header(mtime).CopyTo(out, 0)
+                trailer (crc32Update 0u body) (uint32 body.Length) |> fun t -> t.CopyTo(out, 10 + written)
+                if total = out.Length then out else out[0 .. total - 1]
+            else
+                zlibMember body mtime
+        else
+            zlibMember body mtime
 
     /// Gzips a body as it arrives, writing each piece to `output` and flushing it (`GzipStream` with
     /// `sync: true`).

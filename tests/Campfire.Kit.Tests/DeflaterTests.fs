@@ -79,9 +79,13 @@ let ``gzip round trip and empty bodies`` () =
         Assert.Equal<byte[]>([| 0x1fuy; 0x8buy; 8uy; 0uy; 0uy; 0uy; 0uy; 0uy; 0uy; 3uy |], bytes[0..9])
     let stamped = streamed [ Encoding.UTF8.GetBytes "x" ] 0x01020304u
     Assert.Equal<byte[]>([| 4uy; 3uy; 2uy; 1uy |], stamped[4..7])
-    // One member, whole, is what the same single chunk streams as.
+    // One member, whole, has the streamed member's header and inflates to the same body (onCrack: libdeflate, where
+    // the system has it, deflates it differently from zlib).
     let whole = Deflater.gzipMember (ReadOnlySpan<byte>(Encoding.UTF8.GetBytes "hello world")) 0u
-    Assert.Equal<byte[]>(streamed [ Encoding.UTF8.GetBytes "hello world" ] 0u, whole)
+    Assert.Equal<byte[]>((streamed [ Encoding.UTF8.GetBytes "hello world" ] 0u)[0..9], whole[0..9])
+    Assert.Equal<byte[]>(Encoding.UTF8.GetBytes "hello world", gunzip whole)
+    let stampedWhole = Deflater.gzipMember (ReadOnlySpan<byte>(Encoding.UTF8.GetBytes "x")) 0x01020304u
+    Assert.Equal<byte[]>([| 4uy; 3uy; 2uy; 1uy |], stampedWhole[4..7])
 
 let private digestOf (body: byte[]) : BodyDigest =
     let hash = SHA256.HashData body
@@ -100,14 +104,14 @@ let ``digested bodies are gzipped once`` () =
     let body = Encoding.UTF8.GetBytes(String.replicate 300 "<a href=\"/rooms/1\">Room</a>")
     let digest = digestOf body
     let first = Deflater.gzipDigested (ReadOnlyMemory body) digest 0u
-    Assert.Equal<byte[]>(streamed [ body ] 0u, first.ToArray())
+    Assert.Equal<byte[]>(body, gunzip (first.ToArray()))
     let kept = (Deflater.keptGzip digest 0u).Value
     let again = Deflater.gzipDigested (ReadOnlyMemory body) digest 0u
     Assert.True(sameBuffer kept again, "not gzipped again")
 
     let other = Encoding.UTF8.GetBytes(String.replicate 300 "<a href=\"/rooms/2\">Room</a>")
     let gzip = Deflater.gzipDigested (ReadOnlyMemory other) (digestOf other) 0u
-    Assert.Equal<byte[]>(streamed [ other ] 0u, gzip.ToArray())
+    Assert.Equal<byte[]>(other, gunzip (gzip.ToArray()))
 
 [<Fact>]
 let ``gzip round trip of a page larger than the window`` () =
@@ -219,3 +223,17 @@ let ``apply gzips adds vary and answers 406 when nothing is acceptable`` () =
     Assert.Equal(406, replacement.Status)
     Assert.Equal("An acceptable encoding for the requested resource /x?y=1 could not be found.", bodyText replacement)
     Assert.Equal("text/plain", replacement.GetHeader "content-type")
+
+[<Fact>]
+let ``whole members inflate to their bodies at every size, compressible or not`` () =
+    // onCrack (unit R2.2): `gzipMember` deflates with libdeflate where the system has it, into a buffer sized by its
+    // bound; random bytes (which deflate to more than they are) and repeats, across block and window sizes.
+    let random = Random 7
+    for size in [ 1; 2; 17; 1000; 4096; 65_543; 300_001 ] do
+        let noise = Array.zeroCreate<byte> size
+        random.NextBytes noise
+        let repeats = Array.init size (fun i -> byte ("<li>Room</li>"[i % 13]))
+        for body in [ noise; repeats ] do
+            let whole = Deflater.gzipMember (ReadOnlySpan<byte> body) 7u
+            Assert.Equal<byte[]>(body, gunzip whole)
+            Assert.Equal(uint32 size, BitConverter.ToUInt32(whole, whole.Length - 4))
