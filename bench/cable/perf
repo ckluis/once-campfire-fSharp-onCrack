@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# Where the CPU of a cable fan-out goes, in the app (unit R2.1). Run inside colima, like bench/run:
+#
+#   bench/cable/perf [--app oncrack|rust|fsharp] [--clients 1000] [--secs 10] [--out DIR] [--top 60] [--loadgen]
+#
+# --loadgen profiles the load generator instead of the app (what a delivery costs the client side).
+#
+# Starts the app the way bench/run does (same image, environment, pinning, seed copy; ONCRACK_MOUNT for a tier 2 build), signs in,
+# connects --clients Action Cable clients with the chatter.js subscriptions (bench/loadgen cable), and while the four posters
+# hold the fan-out saturated, records `perf record -g` of the app for --secs. Prints the top symbols by self time and by
+# inclusive time, and the shares of a few layers (Kestrel's transport and pipes, the thread pool, the cable, the GC, the
+# kernel's TCP send). perf costs a few percent; the numbers are shares, not the unprofiled CPU per delivery (bench/run's
+# cable suite has that, as server CPU per delivery).
+set -euo pipefail
+ARGS=("$@")
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+set --
+export SERVER_CPUS=${SERVER_CPUS:-0-3} LOADGEN_CPUS=${LOADGEN_CPUS:-4-7}
+export WORK=${WORK:-/var/tmp/campfire-bench-work}
+BENCH_RUN_LIB=1 source "$ROOT/bench/run"
+set -- "${ARGS[@]}"
+APP=oncrack CLIENTS=1000 SECS=10 OUT="" TOP=60 TARGET=app
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --app) APP=$2; shift 2 ;;
+    --clients) CLIENTS=$2; shift 2 ;;
+    --secs) SECS=$2; shift 2 ;;
+    --out) OUT=$2; shift 2 ;;
+    --top) TOP=$2; shift 2 ;;
+    --loadgen) TARGET=loadgen; shift ;;
+    *) echo "unknown option $1" >&2; exit 2 ;;
+  esac
+done
+OUT=${OUT:-$BENCH/results/cable-perf-$(date +%Y%m%d-%H%M%S)}
+DIAG=${DIAG_DIR:-/var/tmp/diag}
+mkdir -p "$OUT" "$DIAG"; find "$DIAG" -mindepth 1 -delete; chmod 1777 "$DIAG"
+sudo sysctl -w kernel.perf_event_paranoid=-1 kernel.kptr_restrict=0 >/dev/null
+DOCKER_EXTRA_ARGS=(-v "$DIAG:/tmp")
+case "$APP" in
+  oncrack) ONCRACK_EXTRA_ENV="${ONCRACK_EXTRA_ENV:+$ONCRACK_EXTRA_ENV }DOTNET_PerfMapEnabled=1 DOTNET_EnableWriteXorExecute=0" ;;
+  fsharp) FSHARP_EXTRA_ENV="DOTNET_PerfMapEnabled=1 DOTNET_EnableWriteXorExecute=0" ;;
+esac
+wait_for_quiet
+start_app "$APP" >/dev/null
+PID=$(docker inspect -f '{{.State.Pid}}' "$CONTAINER")
+sleep 3
+cookie=$(lg login --base "$BASE" --email "$EMAIL" --password "$PASSWORD" | python3 -c 'import json,sys; print(json.load(sys.stdin)["cookie"])')
+scrape=$(lg scrape --base "$BASE" --cookie "$cookie" --room "$ROOM")
+csrf=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["csrf"] or "")' "$scrape")
+streams=$(python3 -c 'import json,sys; print(",".join(json.loads(sys.argv[1])["streams"]))' "$scrape")
+# A short run first (the JIT), then the measured one: the posters run SECS + 12 s, perf records SECS from 8 s in.
+lg cable --base "$BASE" --cookie "$cookie" --room "$ROOM" --csrf "$csrf" --streams "$streams" --clients "$CLIENTS" --tput-secs 10 --posters 4 \
+  > "$OUT/warm.json" 2>/dev/null
+lg cable --base "$BASE" --cookie "$cookie" --room "$ROOM" --csrf "$csrf" --streams "$streams" --clients "$CLIENTS" --tput-secs $((SECS + 12)) \
+  --posters 4 > "$OUT/run.json" 2> "$OUT/run.stderr" &
+lgpid=$!
+# Wait for the saturated phase.
+for _ in $(seq 1 600); do grep -q 'PHASE saturated ' "$OUT/run.stderr" 2>/dev/null && break; sleep 0.1; done
+sleep 4
+# Syscalls of the app over 3 s (sends per delivery: how well writes batch), then the profile.
+sudo perf stat -x, -e 'syscalls:sys_enter_sendto,syscalls:sys_enter_sendmsg,syscalls:sys_enter_write,syscalls:sys_enter_writev,syscalls:sys_enter_futex,syscalls:sys_enter_epoll_pwait,context-switches' \
+  -p "$PID" -o "$OUT/syscalls-$APP-$CLIENTS.csv" -- sleep 3 >/dev/null 2>&1 || true
+sudo chown "$(id -u)" "$OUT/syscalls-$APP-$CLIENTS.csv" 2>/dev/null || true
+PERF_PID=$PID
+[ "$TARGET" = loadgen ] && PERF_PID=$(pgrep -n -f "loadgen cable")
+sudo perf record -F 999 -g -p "$PERF_PID" -o "$DIAG/perf.data" -- sleep "$SECS" >/dev/null 2>&1
+wait "$lgpid"
+log "$APP $CLIENTS clients: $(python3 -c 'import json,sys; t=json.load(open(sys.argv[1]))["throughput"]; print(t["delivered_msgs_per_sec"], "msgs/s delivered to all,", t["posts_per_sec"], "posts/s")' "$OUT/run.json")"
+case "$APP" in oncrack|fsharp) sudo cp "$DIAG/perf-1.map" "/tmp/perf-$PID.map" 2>/dev/null || true ;; esac
+docker rm -f "$CONTAINER" >/dev/null; rm -rf "${WORK:?}/${APP:?}"
+sudo perf script -i "$DIAG/perf.data" -F comm,tid,ip,sym,dso --no-inline 2>/dev/null > "$DIAG/perf.script"
+sudo rm -f "/tmp/perf-$PID.map"
+PERF_TXT=$OUT/perf-$APP-$CLIENTS.txt; [ "$TARGET" = loadgen ] && PERF_TXT=$OUT/perf-loadgen-$APP-$CLIENTS.txt
+python3 - "$DIAG/perf.script" "$TOP" > "$PERF_TXT" <<'PY'
+import collections, re, sys
+path, top = sys.argv[1], int(sys.argv[2])
+self_t, incl, comm_t = collections.Counter(), collections.Counter(), collections.Counter()
+n = 0
+LAYERS = [
+    ("cable: Campfire.Cable", re.compile(r"Campfire\.Cable")),
+    ("Kestrel transport (sockets, IOQueue, SocketSender)", re.compile(r"Sockets\.Internal|SocketSender|SocketConnection|IOQueue|SocketAsyncEngine|SocketAsyncContext")),
+    ("Kestrel pipes and upgraded stream", re.compile(r"System\.IO\.Pipelines|Http1UpgradeMessageBody|HttpUpgradeStream|Http1OutputProducer|ConcurrentPipeWriter|TimingPipeFlusher")),
+    ("thread pool dispatch", re.compile(r"ThreadPoolWorkQueue|PortableThreadPool|WorkerThread|LowLevelLifoSemaphore|ThreadPool\.")),
+    ("posting (app: messages#create, render, db)", re.compile(r"Campfire\.(App|Views|Db|Kit|RichText)|SQLite|sqlite3")),
+    ("GC", re.compile(r"WKS::|SVR::|gc_heap|GCHeap|RhpNew|JIT_New|Alloc")),
+    ("kernel TCP send", re.compile(r"tcp_sendmsg|tcp_write_xmit|__tcp_transmit|sock_sendmsg|__sys_sendto|sendmsg")),
+    ("kernel TCP recv/epoll", re.compile(r"tcp_recvmsg|sock_recvmsg|ep_poll|epoll_wait|__sys_recvfrom")),
+    ("futex/scheduler", re.compile(r"futex|schedule|try_to_wake_up")),
+]
+layer_t = collections.Counter()
+stack = []
+def flush():
+    global n
+    if not stack:
+        return
+    n += 1
+    self_t[stack[0]] += 1
+    seen = set()
+    for s in stack:
+        if s not in seen:
+            incl[s] += 1
+            seen.add(s)
+    joined = "\n".join(stack)
+    for name, rx in LAYERS:
+        if rx.search(joined):
+            layer_t[name] += 1
+for line in open(path, errors="replace"):
+    line = line.rstrip("\n")
+    if not line.strip():
+        flush(); stack = []; continue
+    if not line.startswith((" ", "\t")):
+        flush(); stack = []
+        comm_t[line.split()[0]] += 1
+        continue
+    parts = line.strip().split(None, 1)
+    sym = parts[1] if len(parts) > 1 else parts[0]
+    sym = re.sub(r"\s*\(.*\)$", "", sym)
+    sym = re.sub(r"\[Optimized\]|\[OptimizedTier1\]|\[Tier1\]|\[Tier0\]|\[PreJIT\]|\[QuickJitted\]|\+0x[0-9a-f]+", "", sym).strip()
+    stack.append(sym[:160])
+flush()
+print(f"samples {n}\n\nthreads (comm):")
+for k, v in comm_t.most_common(15):
+    print(f"  {100*v/n:5.1f}%  {k}")
+print("\nlayers (inclusive; a sample can be in several):")
+for name, _ in LAYERS:
+    print(f"  {100*layer_t[name]/n:5.1f}%  {name}")
+print("\nself:")
+for k, v in self_t.most_common(top):
+    print(f"  {100*v/n:5.1f}%  {k}")
+print("\ninclusive:")
+for k, v in incl.most_common(top):
+    print(f"  {100*v/n:5.1f}%  {k}")
+PY
+sudo rm -f "$DIAG/perf.data" "$DIAG/perf.script"
+python3 - "$OUT/run.json" "$OUT/syscalls-$APP-$CLIENTS.csv" <<'PY'
+import json, sys
+t = json.load(open(sys.argv[1]))["throughput"]
+rate = t["frames_per_sec"]
+print(f"syscalls over 3 s of the saturated phase, per delivered marked frame ({rate:,.0f}/s):")
+for line in open(sys.argv[2]):
+    f = line.strip().split(",")
+    if len(f) > 2 and f[0].replace(".", "").isdigit():
+        print(f"  {f[2]:40s} {float(f[0]) / 3:12,.0f}/s  {float(f[0]) / 3 / rate:6.3f} per delivery")
+PY
+head -40 "$PERF_TXT"
+echo "-> $PERF_TXT"

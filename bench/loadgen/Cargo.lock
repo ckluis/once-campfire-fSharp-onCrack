@@ -306,6 +306,7 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-util",
+ "memchr",
  "miniz_oxide",
  "regex",
  "serde_json",

@@ -22,6 +22,8 @@ from datetime import datetime, timezone
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 STORED = os.path.join(ROOT, "bench/results/phase7-final")   # Rust and the F# port, measured in one session
+# Cable fan-out (bench/run's cable suite): Rails, Rust, the F# port and onCrack measured in one session (round 1's final re-baseline).
+STORED_CABLE = os.path.join(ROOT, "bench/results/oncrack-round1-final")
 # The realistic workloads (bench/lib/realistic.py, unit R2.0): Rails, Rust, the F# port and onCrack measured in one session.
 STORED_REAL = os.path.join(ROOT, "bench/results/oncrack-r2-bench")
 REALISTIC = ["mixed", "spread", "spread_mixed", "search_spread"]
@@ -69,9 +71,74 @@ def fmt(x, d=0):
     return "-" if x is None else f"{x:,.{d}f}"
 
 
+def cable_cells(runs):
+    """{clients: {"msgs": [..], "cpu_us": [..], "pss_idle": [..], "pss_sat": [..], "lg_cores": [..], "srv_cores": [..], "runs": [..]}}:
+    delivered messages/s (each to every client), the server's CPU per delivery (client x message) over the saturated phase
+    (posting and draining, the cgroup's cpu.stat sampled by bench/lib/procmem.py), and the app process's peak Pss idle and saturated."""
+    out = {}
+    for r in runs:
+        for c in r.get("cable", []):
+            d = out.setdefault(c["clients"], {"msgs": [], "cpu_us": [], "pss_idle": [], "pss_sat": [], "lg_cores": [], "srv_cores": [], "runs": []})
+            t = c["throughput"]
+            d["msgs"].append(t["delivered_msgs_per_sec"])
+            d["runs"].append(c)
+            pm = c.get("process_memory") or {}
+            app_pss = lambda ph: max((v["peak_pss_mb"] for k, v in pm.get(ph, {}).get("roles", {}).items() if k in ("campfire", "puma")), default=None)
+            if app_pss("connected") is not None:
+                d["pss_idle"].append(app_pss("connected"))
+            if app_pss("saturated") is not None:
+                d["pss_sat"].append(max(x for x in (app_pss("saturated"), app_pss("saturated_posted")) if x is not None))
+            sat = [pm.get(ph, {}) for ph in ("saturated", "saturated_posted")]
+            if all("server_cpu_ms" in w for w in sat):
+                deliveries = t["posted"] * c["ready"]
+                cpu = sum(w["server_cpu_ms"] for w in sat)
+                win = sum(w["window_ms"] for w in sat)
+                if deliveries:
+                    d["cpu_us"].append(cpu * 1000 / deliveries)
+                if win:
+                    d["srv_cores"].append(cpu / win)
+            if all("loadgen_cpu_ms" in w for w in sat):
+                lwin = sum(w["loadgen_window_ms"] for w in sat)
+                if lwin:
+                    d["lg_cores"].append(sum(w["loadgen_cpu_ms"] for w in sat) / lwin)
+    return out
+
+
+def cable_table(directory):
+    mine = cable_cells(load(directory, APP))
+    if not mine:
+        return False
+    stored = {a: cable_cells(load(STORED_CABLE, a)) for a in ("rust", "fsharp", "oncrack")}
+    print(f"\nCable fan-out against the same-session baseline of {os.path.relpath(STORED_CABLE, ROOT)} (medians; delivered = each message to every client)\n")
+    print("| clients | onCrack msgs/s | onCrack stored | F# port | Rust | **/ F# port** | **/ Rust** | server CPU us/delivery | server cores | loadgen cores | Pss idle MB | Pss saturated MB | stored Pss sat (onCrack / port / Rust) |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    for n in sorted(mine):
+        m = mine[n]
+        ref = {a: stored[a].get(n, {}) for a in stored}
+        mr = med(m["msgs"])
+        ratio = lambda b: f"**{mr / b:.2f}x**" if b else "-"
+        sp = lambda a: fmt(med(ref[a].get("pss_sat", [])))
+        print(f"| {n} | {fmt(mr)}{spread(m['msgs'])} | {fmt(med(ref['oncrack'].get('msgs', [])))} | {fmt(med(ref['fsharp'].get('msgs', [])))} | "
+              f"{fmt(med(ref['rust'].get('msgs', [])))} | {ratio(med(ref['fsharp'].get('msgs', [])))} | {ratio(med(ref['rust'].get('msgs', [])))} | "
+              f"{fmt(med(m['cpu_us']), 2)} | {fmt(med(m['srv_cores']), 2)} | {fmt(med(m['lg_cores']), 2)} | {fmt(med(m['pss_idle']))} | {fmt(med(m['pss_sat']))} | "
+              f"{sp('oncrack')} / {sp('fsharp')} / {sp('rust')} |")
+    bad = 0
+    for n, m in mine.items():
+        for c in m["runs"]:
+            if c["ready"] != c["clients"] or c.get("failed"):
+                print(f"  FAIL cable {n}: ready {c['ready']} failed {c.get('failed')}")
+                bad += 1
+            t = c["throughput"]
+            if t["complete"] != t["posted"]:
+                print(f"  note cable {n}: {t['posted'] - t['complete']} of {t['posted']} posts not delivered to every client")
+    return True
+
+
 def compare(directory):
     mine = cells(load(directory, APP))
     if not mine:
+        if cable_table(directory):
+            return 0
         sys.exit(f"no {APP}-N.json in {directory}")
     rust = cells(load(STORED, "rust"))
     port = cells(load(STORED, "fsharp"))
@@ -90,6 +157,7 @@ def compare(directory):
             print(f"| {LABEL[w]} | {c} | {fmt(mr)}{spread(m['rps'])} | {fmt(sr)} | **{mr / sr:.3f}x** | {fmt(rr)} | **{mr / rr:.3f}x** | "
                   f"{fmt(med(m['cpu']), 1)}{spread(m['cpu']) if len(m['cpu']) > 1 else ''} | {fmt(med(s['cpu']), 1) if s else '-'} | {fmt(med(r['cpu']), 1) if r else '-'} |")
     real_table(mine)
+    cable_table(directory)
     # validity: statuses, errors, response bytes, rows written, warm-up, host noise
     print("\nChecks:")
     bad = 0
@@ -168,9 +236,15 @@ def source_commit(build):
 
 def log(args):
     mine = cells(load(args.dir, APP))
-    if not mine:
+    cable = cable_cells(load(args.dir, APP))
+    if not mine and not cable:
         sys.exit(f"no {APP}-N.json in {args.dir}")
     workloads = {}
+    for n, m in cable.items():
+        # Cable fan-out: "rps" is messages/s delivered to every client, "cpu_us" the server's CPU per delivery (client x message).
+        workloads.setdefault("cable", {})[f"n{n}"] = {"rps": round(med(m["msgs"]), 1), "cpu_us": round(med(m["cpu_us"]), 3) if m["cpu_us"] else None,
+                                                      "reps": len(m["msgs"]), "pss_saturated_mb": round(med(m["pss_sat"]), 1) if m["pss_sat"] else None,
+                                                      "pss_idle_mb": round(med(m["pss_idle"]), 1) if m["pss_idle"] else None}
     for (w, c), m in mine.items():
         workloads.setdefault(w, {})[f"c{c}"] = {"rps": round(med(m["rps"]), 1), "cpu_us": round(med(m["cpu"]), 1) if m["cpu"] else None, "reps": len(m["rps"]),
                                                 **{f"{lane}_rps": round(med(v), 1) for lane, v in m["lanes"].items()}}

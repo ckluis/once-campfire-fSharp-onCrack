@@ -9,7 +9,9 @@ server included), `puma` (the Rails app: Puma's master and workers, which also s
 `thrust` (Thruster), `redis` (the reference's cable pub/sub and Resque queue), `jobs` (resque-pool
 and its workers), `other`. Each sample sums, per role, Pss (proportional set size, so pages the
 forked Puma workers share with their master count once) and RssAnon (anonymous resident memory,
-counted in every process that maps it), both from /proc/PID/smaps_rollup, in MB.
+counted in every process that maps it), both from /proc/PID/smaps_rollup, in MB. Each sample also carries the cgroup's
+CPU so far (cpu.stat usage_usec), and `phases` gives each window's server CPU (`server_cpu_ms`) and, when the load
+generator's PHASE lines carry its own CPU (a third number, ms), the load generator's (`loadgen_cpu_ms`).
 """
 import json, os, re, sys, time
 
@@ -56,17 +58,26 @@ def sample(cgroup, path):
                 r["pss_mb"] += m.get("Pss", 0)
                 r["anon_mb"] += m.get("Anonymous", 0)
                 r["procs"] += 1
-            out.write(json.dumps({"t": int(time.time() * 1000), "roles": roles}) + "\n")
+            cpu = None
+            try:
+                for line in open(f"{cgroup}/cpu.stat"):
+                    if line.startswith("usage_usec "):
+                        cpu = int(line.split()[1])
+            except OSError:
+                pass
+            out.write(json.dumps({"t": int(time.time() * 1000), "roles": roles, "cpu_us": cpu}) + "\n")
             out.flush()
             time.sleep(0.25)
 
 
 def phases(path, stderr_path):
     samples = [json.loads(l) for l in open(path) if l.strip()]
-    marks = [(m.group(1), int(m.group(2))) for m in re.finditer(r"PHASE (\w+) (\d+)", open(stderr_path).read())]
+    found = list(re.finditer(r"PHASE (\w+) (\d+)(?: (\d+))?", open(stderr_path).read()))
+    marks = [(m.group(1), int(m.group(2))) for m in found]
+    lg_cpu = {m.group(1): int(m.group(3)) for m in found if m.group(3)}
     bounds = marks + [("after", 10**15)]
     result = {}
-    for (name, t0), (_, t1) in zip(bounds, bounds[1:]):
+    for (name, t0), (nxt, t1) in zip(bounds, bounds[1:]):
         window = [s for s in samples if s["t"] < t0][-1:] + [s for s in samples if t0 <= s["t"] < t1]
         if not window:
             continue
@@ -79,6 +90,15 @@ def phases(path, stderr_path):
                 cur["procs"] = v["procs"]
         total = max(sum(v["pss_mb"] for v in s["roles"].values()) for s in window)
         result[name] = {"roles": roles, "peak_total_pss_mb": round(total, 1)}
+        # Server CPU over the window: the last sample at or before its end against the last one before its start.
+        before = [s for s in samples if s["t"] <= t0 and s.get("cpu_us") is not None][-1:]
+        upto = [s for s in samples if s["t"] <= t1 and s.get("cpu_us") is not None][-1:]
+        if before and upto and t1 < 10**15:
+            result[name]["server_cpu_ms"] = round((upto[0]["cpu_us"] - before[0]["cpu_us"]) / 1000, 1)
+            result[name]["window_ms"] = upto[0]["t"] - before[0]["t"]
+        if name in lg_cpu and nxt in lg_cpu:
+            result[name]["loadgen_cpu_ms"] = lg_cpu[nxt] - lg_cpu[name]
+            result[name]["loadgen_window_ms"] = t1 - t0
     return result
 
 

@@ -629,20 +629,26 @@ struct Delivery {
     wire_bytes: AtomicU64,
 }
 
-fn markers(text: &str) -> Vec<u64> {
-    let mut out = Vec::new();
-    let mut rest = text;
-    while let Some(i) = rest.find("bmk") {
-        rest = &rest[i + 3..];
-        let digits: String = rest.chars().take_while(|c| c.is_ascii_digit()).collect();
-        if !digits.is_empty()
-            && rest[digits.len()..].starts_with('z')
-            && let Ok(n) = digits.parse()
+/// The `bmk<digits>z` markers in a frame's text. Every client reads every frame, so this is the load generator's hot loop on a
+/// fan-out: one SIMD substring search (memchr's memmem) instead of `str::find`, and nothing allocated for a frame without one.
+fn markers(text: &str, out: &mut Vec<u64>) {
+    out.clear();
+    let bytes = text.as_bytes();
+    for at in memchr::memmem::find_iter(bytes, b"bmk") {
+        let digits = &bytes[at + 3..];
+        let n = digits.iter().take_while(|b| b.is_ascii_digit()).count();
+        if n > 0 && digits.get(n) == Some(&b'z')
+            && let Ok(v) = std::str::from_utf8(&digits[..n]).unwrap_or("").parse()
         {
-            out.push(n);
+            out.push(v);
         }
     }
-    out
+}
+
+/// `LOADGEN_DEBUG`, read once (it was read per frame).
+fn debug_on() -> bool {
+    static DEBUG: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *DEBUG.get_or_init(|| std::env::var_os("LOADGEN_DEBUG").is_some())
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -664,7 +670,7 @@ async fn cable_client(
     if let Some(user_agent) = user_agent() {
         h.insert("user-agent", user_agent.parse()?);
     }
-    let debug = std::env::var_os("LOADGEN_DEBUG").is_some();
+    let debug = debug_on();
     if debug {
         eprintln!("connecting {:?}", req.headers());
     }
@@ -706,20 +712,23 @@ async fn cable_client(
     Ok(())
 }
 
-/// A frame's text: counts subscription confirmations and records each marked message's arrival.
+/// A frame's text: counts subscription confirmations and records each marked message's arrival. Confirmations are looked for
+/// only until every subscription has one, so later frames are searched once, for markers.
 fn on_text(text: &str, subscriptions: usize, confirms: &mut usize, seen: &mut HashSet<u64>, confirmed: &AtomicUsize, delivery: &Delivery) {
     let now = Instant::now();
-    if std::env::var_os("LOADGEN_DEBUG").is_some() {
+    if debug_on() {
         eprintln!("<< {}", &text[..text.len().min(300)]);
     }
-    if text.contains("confirm_subscription") {
+    if *confirms < subscriptions && text.contains("confirm_subscription") {
         *confirms += 1;
         if *confirms == subscriptions {
             confirmed.fetch_add(1, Ordering::Relaxed);
         }
         return;
     }
-    for seq in markers(text) {
+    let mut found = Vec::new();
+    markers(text, &mut found);
+    for seq in found {
         if !seen.insert(seq) {
             continue;
         }
@@ -893,7 +902,20 @@ async fn wait_drain(delivery: &Delivery, seqs: &[u64], clients: usize, timeout: 
 
 fn phase(name: &str) {
     let ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
-    eprintln!("PHASE {name} {ms}");
+    // The load generator's own CPU so far (user + system, ms, from /proc/self/stat), so that a phase's cost can be
+    // split between the server and the client side (bench/lib/procmem.py): a fan-out the clients cannot read faster
+    // is not the server's limit.
+    let cpu_ms = std::fs::read_to_string("/proc/self/stat")
+        .ok()
+        .and_then(|s| {
+            let rest = &s[s.rfind(')')? + 2..];
+            let f: Vec<&str> = rest.split_whitespace().collect();
+            let ticks = f.get(11)?.parse::<u64>().ok()? + f.get(12)?.parse::<u64>().ok()?;
+            Some(ticks * 10)
+        })
+        .map(|ms| format!(" {ms}"))
+        .unwrap_or_default();
+    eprintln!("PHASE {name} {ms}{cpu_ms}");
 }
 
 fn fanout_stats(delivery: &Delivery, seqs: &[u64], clients: usize) -> (Histogram<u64>, usize, Option<Instant>) {
