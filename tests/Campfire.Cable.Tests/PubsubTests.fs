@@ -134,3 +134,112 @@ let ``concurrent broadcasts and subscribers lose nothing`` () =
         for s in 0 .. senders - 1 do
             let own = seen |> Seq.filter (fun t -> t.StartsWith $"{s}:") |> Seq.map (fun t -> int (t.Substring(t.IndexOf ':' + 1))) |> Seq.toArray
             Assert.Equal<int[]>([| 0 .. each - 1 |], own)
+
+// onCrack (unit R2.1): `WakeBatch` holds the wakes a thread's broadcasts make until its scope ends.
+
+[<Fact>]
+let ``wakes held in a batch are set when it ends, each once, after every frame is in`` () =
+    let hub = Hub(8)
+    let wake = Wake()
+    let room = hub.Subscribe("room", null, wake)
+    let unread = hub.Subscribe("unread", null, wake)
+    let other = Wake()
+    let bystander = hub.Subscribe("room", null, other)
+    let parked = wake.WaitAsync()
+    let parkedOther = other.WaitAsync()
+    WakeBatch.Begin()
+    hub.Broadcast("room", "append") |> ignore
+    hub.Broadcast("unread", "ping") |> ignore
+    hub.Broadcast("room", "append 2") |> ignore
+    Assert.False(parked.IsCompleted, "woken inside the batch")
+    Assert.False(parkedOther.IsCompleted, "woken inside the batch")
+    WakeBatch.End()
+    Assert.True(parked.IsCompleted)
+    Assert.True(parkedOther.IsCompleted)
+    // One Set each: the next wait parks.
+    Assert.False(wake.WaitAsync().IsCompleted)
+    Assert.Equal(Ok "append", recv room)
+    Assert.Equal(Ok "append 2", recv room)
+    Assert.Equal(Ok "ping", recv unread)
+    Assert.Equal(Ok "append", recv bystander)
+
+[<Fact>]
+let ``nested batches wake at the outermost end, and a throwing one still wakes`` () =
+    let hub = Hub(8)
+    let wake = Wake()
+    let sub = hub.Subscribe("room", null, wake)
+    let parked = wake.WaitAsync()
+    WakeBatch.Begin()
+    WakeBatch.Begin()
+    hub.Broadcast("room", "1") |> ignore
+    WakeBatch.End()
+    Assert.False(parked.IsCompleted)
+    WakeBatch.End()
+    Assert.True(parked.IsCompleted)
+    Assert.Equal(Ok "1", recv sub)
+    let parked = wake.WaitAsync()
+    Assert.Throws<InvalidOperationException>(fun () ->
+        WakeBatch.Run(fun () ->
+            hub.Broadcast("room", "2") |> ignore
+            raise (InvalidOperationException "boom")))
+    |> ignore
+    Assert.True(parked.IsCompleted)
+    Assert.Equal(Ok "2", recv sub)
+    // Outside any batch, a broadcast wakes at once again.
+    let parked = wake.WaitAsync()
+    hub.Broadcast("room", "3") |> ignore
+    Assert.True(parked.IsCompleted)
+
+[<Fact>]
+let ``a flush sets what is held and holds what comes after`` () =
+    let hub = Hub(8)
+    let wake = Wake()
+    let sub = hub.Subscribe("room", null, wake)
+    let parked = wake.WaitAsync()
+    WakeBatch.Begin()
+    hub.Broadcast("room", "1") |> ignore
+    WakeBatch.Flush()
+    Assert.True(parked.IsCompleted)
+    Assert.Equal(Ok "1", recv sub)
+    let parked = wake.WaitAsync()
+    hub.Broadcast("room", "2") |> ignore
+    Assert.False(parked.IsCompleted, "a broadcast after the flush is held again")
+    WakeBatch.End()
+    Assert.True(parked.IsCompleted)
+    Assert.Equal(Ok "2", recv sub)
+
+[<Fact>]
+let ``batches on many threads at once lose no wake`` () =
+    task {
+        let hub = Hub(4096)
+        let publishers, perPublisher, readers = 8, 400, 16
+        let total = publishers * perPublisher
+        let subs = [| for _ in 1..readers -> let w = Wake() in w, hub.Subscribe("room", null, w) |]
+        let readerTasks =
+            [| for (wake, sub) in subs ->
+                   task {
+                       let mutable got = 0
+                       while got < total do
+                           let! _ = wake.WaitAsync()
+                           let mutable reading = true
+                           while reading do
+                               match recv sub with
+                               | Ok _ -> got <- got + 1
+                               | Error RecvStatus.Empty -> reading <- false
+                               | Error status -> failwith $"{status}"
+                       return got
+                   } |]
+        let publisherTasks =
+            [| for p in 1..publishers ->
+                   Threading.Tasks.Task.Run(fun () ->
+                       for i in 1..perPublisher do
+                           // Scopes of one to three broadcasts, some flushed part way.
+                           WakeBatch.Begin()
+                           hub.Broadcast("room", $"{p}-{i}") |> ignore
+                           if i % 3 = 0 then WakeBatch.Flush()
+                           WakeBatch.End()) |]
+        do! Threading.Tasks.Task.WhenAll publisherTasks
+        let! counts = Threading.Tasks.Task.WhenAll(readerTasks).WaitAsync(TimeSpan.FromSeconds 20.0)
+        for count in counts do
+            Assert.Equal(total, count)
+    }

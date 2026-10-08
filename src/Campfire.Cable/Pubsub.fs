@@ -56,12 +56,92 @@ type Wake() =
                 Volatile.Write(&state, 0)
                 ValueTask<bool>(true)
 
+    /// `WakeBatch`'s mark: the token of the last scope that held this wake back.
+    member val internal HeldIn = 0L with get, set
+
     interface IValueTaskSource<bool> with
         member _.GetResult(token: int16) = core.GetResult token
         member _.GetStatus(token: int16) = core.GetStatus token
 
         member _.OnCompleted(continuation, state, token, flags) =
             core.OnCompleted(continuation, state, token, flags)
+
+/// onCrack (unit R2.1): wakes held back while one thread publishes several broadcasts, then set once each. A post makes two
+/// (its append to the room, then the unread ping to every member), and `BroadcastOrder` publishes every post waiting in line
+/// one after another; with the wakes held until the last of them is in its ring, a connection reads them all in one turn and
+/// sends them in one write, instead of waking on the first and sending again for each later one. Frames are in their rings
+/// before anyone is woken either way, so what a connection reads, and in which order, is the same; only fewer, later wakes.
+[<Sealed; AbstractClass>]
+type WakeBatch private () =
+    [<ThreadStatic; DefaultValue>]
+    static val mutable private depth: int
+
+    [<ThreadStatic; DefaultValue>]
+    static val mutable private held: System.Collections.Generic.List<Wake> | null
+
+    /// The outermost scope's token: unique across threads, so a wake's one mark field says which scope holds it.
+    [<ThreadStatic; DefaultValue>]
+    static val mutable private token: int64
+
+    static let mutable tokens = 0L
+
+    /// Holds this thread's wakes until the matching `End`. Scopes nest; the outermost `End` sets them.
+    static member Begin() : unit =
+        if WakeBatch.depth = 0 then
+            WakeBatch.token <- Interlocked.Increment(&tokens)
+            if isNull WakeBatch.held then WakeBatch.held <- System.Collections.Generic.List<Wake>()
+        WakeBatch.depth <- WakeBatch.depth + 1
+
+    static member End() : unit =
+        WakeBatch.depth <- WakeBatch.depth - 1
+        if WakeBatch.depth = 0 then WakeBatch.SetHeld true
+
+    /// Ends the scope like `End`, but at the outermost end hands what it held to `into` (marked with `token`, each wake once)
+    /// instead of setting it: the caller sets them later (`BroadcastOrder` holds a busy line's wakes until it is idle).
+    static member EndInto(into: System.Collections.Generic.List<Wake>, token: int64) : unit =
+        WakeBatch.depth <- WakeBatch.depth - 1
+        if WakeBatch.depth = 0 then
+            match WakeBatch.held with
+            | null -> ()
+            | held ->
+                for i in 0 .. held.Count - 1 do
+                    let wake = held[i]
+                    if wake.HeldIn <> token then
+                        wake.HeldIn <- token
+                        into.Add wake
+                held.Clear()
+
+    /// A token no scope has: for a holder of wakes outside `WakeBatch`'s scopes (`EndInto`).
+    static member NewToken() : int64 = Interlocked.Increment(&tokens)
+
+    /// Sets what is held now, staying in the scope: a scope that publishes without end (a drainer that keeps finding work)
+    /// calls it every few broadcasts, so nobody waits on the scope's end.
+    static member Flush() : unit =
+        if WakeBatch.depth > 0 then
+            WakeBatch.SetHeld false
+            WakeBatch.token <- Interlocked.Increment(&tokens)
+
+    /// Sets and clears what is held; `release` (the scope is over) drops a list that grew large.
+    static member private SetHeld(release: bool) : unit =
+        match WakeBatch.held with
+        | null -> ()
+        | held ->
+            for i in 0 .. held.Count - 1 do
+                held[i].Set()
+            held.Clear()
+            if release && held.Capacity > 65536 then WakeBatch.held <- null
+
+    /// The thread's scope, for a loop over many wakes: its token and list, or null outside a scope (one look for them all).
+    static member internal Current: struct (int64 * System.Collections.Generic.List<Wake> | null) =
+        if WakeBatch.depth = 0 then struct (0L, null) else struct (WakeBatch.token, WakeBatch.held)
+
+    /// Runs `publish` with the wakes it makes held until it returns.
+    static member Run(publish: unit -> unit) : unit =
+        WakeBatch.Begin()
+        try
+            publish ()
+        finally
+            WakeBatch.End()
 
 /// What reading a subscriber found.
 type RecvStatus =
@@ -107,9 +187,16 @@ type internal Group(identifier: string | null, capacity: int) =
         lock slots (fun () ->
             Volatile.Write(&slots[int (tail % int64 slots.Length)], frame)
             Volatile.Write(&tail, tail + 1L)
-            for i in 0 .. count - 1 do
-                let receiver: Subscriber = receivers[i]
-                receiver.Wake.Set()
+            match WakeBatch.Current with
+            | struct (_, null) ->
+                for i in 0 .. count - 1 do
+                    receivers[i].Wake.Set()
+            | struct (token, held) ->
+                for i in 0 .. count - 1 do
+                    let wake = receivers[i].Wake
+                    if wake.HeldIn <> token then
+                        wake.HeldIn <- token
+                        held.Add wake
             count)
 
     /// A subscriber that will see what is published from now on.

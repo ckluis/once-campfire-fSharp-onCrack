@@ -20,7 +20,13 @@ type Config =
       /// buffers beyond the socket.
       MaxWriteBatch: int
       /// How long to wait for the client's close frame after we close.
-      CloseTimeout: TimeSpan }
+      CloseTimeout: TimeSpan
+      /// onCrack (unit R2.1): a connection on plain TCP writes to its socket itself once its probe is answered
+      /// (`Connection.run`), instead of through Kestrel's upgraded stream. `CAMPFIRE_CABLE_DIRECT=off` turns it off.
+      DirectWrites: bool
+      /// onCrack (unit R2.1): Turbo Stream broadcasts leave `<`, `>` and `&` unescaped in their JSON (`JsonStringWriter`'s
+      /// compact mode): the same string once parsed, a third fewer bytes. `CAMPFIRE_CABLE_COMPACT_JSON=off` escapes them as Rails.
+      CompactJson: bool }
 
 module Config =
     let defaults: Config =
@@ -30,7 +36,9 @@ module Config =
           AssumeSsl = true
           StreamCapacity = 256
           MaxWriteBatch = 64
-          CloseTimeout = TimeSpan.FromSeconds 5.0 }
+          CloseTimeout = TimeSpan.FromSeconds 5.0
+          DirectWrites = true
+          CompactJson = true }
 
 /// What the connection's `connect` sees of the upgrade request: its path and query, and its headers
 /// (`Headers["Cookie"]` has one value per Cookie header line). Kestrel's headers are only good while the

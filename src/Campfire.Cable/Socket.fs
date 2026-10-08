@@ -210,7 +210,8 @@ type Incoming =
     | Text of string
     | Binary
     | Ping of byte[]
-    | Pong
+    /// A pong, with its payload (onCrack: the connection's probe is answered by a pong echoing it).
+    | Pong of byte[]
     /// A close frame, with its status code if it had one.
     | Close of code: uint16 option
 
@@ -409,7 +410,7 @@ type Reader(io: Stream, deflate: bool) =
                     match opcode with
                     | OpClose -> result <- ValueSome(Close(closeCode payload payloadLength))
                     | OpPing -> result <- ValueSome(Ping(payload.AsSpan(0, payloadLength).ToArray()))
-                    | OpPong -> result <- ValueSome Pong
+                    | OpPong -> result <- ValueSome(Pong(payload.AsSpan(0, payloadLength).ToArray()))
                     | OpText
                     | OpBinary ->
                         // The payload buffer becomes the message's, and is returned with it.
@@ -468,9 +469,75 @@ let private writeHeader (dest: Span<byte>) (opcode: byte) (compressed: bool) (le
 /// Writes server frames: unmasked, each as its header plus its (shared) payload, a batch to one
 /// write. A write that hasn't completed after `timeout` fails: `abort` is called to cut the
 /// connection and the write raises `TimeoutException`.
+///
+/// onCrack: `direct` is the connection's own socket, when writing to it is safe (plain TCP, Kestrel's socket transport). Once
+/// `Detach` is called, writes go to it with one send each, instead of through Kestrel's upgraded stream, its output pipe and
+/// its transport's send loop: no copy into the pipe's per-connection blocks, no hop to the transport's I/O thread, and the
+/// kernel copies from a buffer the sending thread has just written (unit R2.1). The caller detaches only once nothing it wrote
+/// through the stream can still be in Kestrel's pipe (`Connection.run`'s probe), so the bytes stay in order.
 [<Sealed>]
-type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit) =
-    new(io: Stream, deflate: bool) = Writer(io, deflate, WriteTimeout, ignore)
+type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, direct: Net.Sockets.Socket | null) =
+    let mutable detached = false
+
+    new(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit) = Writer(io, deflate, timeout, abort, null)
+    new(io: Stream, deflate: bool) = Writer(io, deflate, WriteTimeout, ignore, null)
+
+    /// Whether writes can go to the socket itself (after `Detach`).
+    member _.CanDetach = not (isNull direct)
+
+    /// Whether writes go to the socket itself now.
+    member _.Detached = detached
+
+    /// From now on, writes go to the socket itself. Only once every byte written through the stream has left Kestrel's pipe.
+    member _.Detach() : unit = if not (isNull direct) then detached <- true
+
+    /// The rest of a send to the socket that didn't complete in place (the socket's buffer was full): waits for it, sending
+    /// what is left, and cuts the connection after the timeout.
+    member private _.FinishSend(first: Task<int>, bytes: ReadOnlyMemory<byte>, pooled: byte[] | null) : Task =
+        task {
+            let socket = nonNull direct
+            use gave = new CancellationTokenSource()
+            let expiry = Task.Delay(timeout, gave.Token)
+            // `pending` is the send of `rest`'s start.
+            let mutable rest = bytes
+            let mutable pending: Task<int> | null = first
+            while not (isNull pending) do
+                let! winner = Task.WhenAny(nonNull pending, expiry)
+                if not (obj.ReferenceEquals(winner, pending)) then
+                    // The stalled send still holds its buffer, so that one isn't returned to the pool.
+                    abort ()
+                    raise (TimeoutException "a socket write timed out")
+                let! n = nonNull pending
+                if n <= 0 then raise (IOException "the socket took no bytes")
+                rest <- rest.Slice n
+                pending <- if rest.IsEmpty then null else socket.SendAsync(rest, Net.Sockets.SocketFlags.None).AsTask()
+            gave.Cancel()
+            match pooled with
+            | null -> ()
+            | pooled -> ArrayPool<byte>.Shared.Return pooled
+        }
+
+    /// Writes `bytes` to the socket itself: one send, which completes in place when the socket's buffer takes it all.
+    member private this.Send(bytes: ReadOnlyMemory<byte>, pooled: byte[] | null) : ValueTask =
+        let socket = nonNull direct
+        let send =
+            try
+                socket.SendAsync(bytes, Net.Sockets.SocketFlags.None)
+            with _ ->
+                (match pooled with
+                 | null -> ()
+                 | pooled -> ArrayPool<byte>.Shared.Return pooled)
+                reraise ()
+        if send.IsCompletedSuccessfully && send.Result = bytes.Length then
+            match pooled with
+            | null -> ()
+            | pooled -> ArrayPool<byte>.Shared.Return pooled
+            ValueTask()
+        elif send.IsCompletedSuccessfully then
+            let rest = bytes.Slice send.Result
+            ValueTask(this.FinishSend(socket.SendAsync(rest, Net.Sockets.SocketFlags.None).AsTask(), rest, pooled))
+        else
+            ValueTask(this.FinishSend(send.AsTask(), bytes, pooled))
 
     /// A write that didn't complete in place: waits for it, and cuts it after the timeout.
     member private _.Finish(write: ValueTask, pooled: byte[] | null) : Task =
@@ -493,6 +560,9 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit) =
     /// Writes `bytes` (all of `pooled`'s used part, when it is given, which goes back to the pool
     /// afterwards). A write the socket takes at once completes without a task.
     member private this.Write(bytes: ReadOnlyMemory<byte>, pooled: byte[] | null) : ValueTask =
+        if detached then this.Send(bytes, pooled) else this.WriteStream(bytes, pooled)
+
+    member private this.WriteStream(bytes: ReadOnlyMemory<byte>, pooled: byte[] | null) : ValueTask =
         let write =
             try
                 io.WriteAsync bytes
@@ -542,6 +612,9 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit) =
         this.Write(ReadOnlyMemory(buffer, 0, used + payload.Length), null).AsTask()
 
     member this.Pong(payload: byte[]) : Task = this.Control(OpPong, payload)
+
+    /// A ping with `payload`, which a client answers with a pong echoing it (RFC 6455 section 5.5.2).
+    member this.Ping(payload: byte[]) : Task = this.Control(OpPing, payload)
 
     /// A close frame with `code` and no reason.
     member this.Close(code: uint16) : Task = this.Control(OpClose, [| byte (code >>> 8); byte code |])

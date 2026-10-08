@@ -45,6 +45,10 @@ let private MaxIdentifierBytes = 4096
 [<Literal>]
 let private IncomingCapacity = 16
 
+/// onCrack (unit R2.1): how long a connection holds its writes waiting for the pong that answers its probe before it gives up
+/// writing to the socket itself and stays on Kestrel's stream. A browser answers a ping as soon as it reads it.
+let private ProbeTimeout = TimeSpan.FromSeconds 2.0
+
 type private Received = Result<Incoming, ReadError>
 
 let private tryRead (reader: Channels.ChannelReader<'T>) : 'T voption =
@@ -332,7 +336,14 @@ let private rejectUnauthorized (server: Server<'U>) (sink: Writer) (incoming: Ch
 
 /// Runs one WebSocket connection on the upgraded `stream` until it ends. `abort` cuts the underlying
 /// connection (a write that times out calls it).
-let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectRequest) (abort: unit -> unit) : Task =
+///
+/// onCrack (unit R2.1): `direct` is the connection's socket when the caller may write to it itself (plain TCP, Kestrel's socket
+/// transport; null otherwise). Everything is written through `stream` until the connection knows nothing it wrote there is still
+/// in Kestrel's output pipe: right after the welcome it sends a ping with a random payload (the probe), holds every later write,
+/// and when the pong echoing that payload arrives, the client has read every byte up to the probe, so the pipe is empty and the
+/// writes go to the socket from then on (`Writer.Detach`). A write it has to make through the stream meanwhile (a pong to the
+/// client's own ping) is followed by a fresh probe. No answer within `ProbeTimeout`, or a close, and it stays on the stream.
+let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectRequest) (abort: unit -> unit) (direct: Net.Sockets.Socket | null) : Task =
     task {
         let config = server.Config
         let logger = server.Logger
@@ -340,7 +351,7 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
         let wake = Wake()
         let channel = Channels.Channel.CreateBounded<Received>(Channels.BoundedChannelOptions(IncomingCapacity, SingleReader = true, SingleWriter = true))
         let incoming = channel.Reader
-        let sink = Writer(stream, deflate, WriteTimeout, abort)
+        let sink = Writer(stream, deflate, WriteTimeout, abort, direct)
         let readerTask = readLoop (Reader(stream, deflate)) channel.Writer wake stop.Token
 
         // handle_open: connect, subscribe to the internal channel, welcome, then process whatever
@@ -378,15 +389,29 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
             let readers = List<Subscriber>()
             let beacon = server.Register wake
             let mutable closing: Closing voption = ValueNone
+            // The payload of the probe whose pong would let the writes go to the socket (null: not probing).
+            let mutable probe: byte[] | null = null
+            let mutable probeDeadline = 0L
+            let sendProbe () : Task =
+                let payload = Security.Cryptography.RandomNumberGenerator.GetBytes 8
+                probe <- payload
+                sink.Ping payload
             try
                 try
                     let mutable running = true
                     try
                         do! sink.Send [| Frame.OfString(Protocol.welcome ()) |]
+                        if sink.CanDetach then
+                            do! sendProbe ()
+                            probeDeadline <- Diagnostics.Stopwatch.GetTimestamp() + int64 (ProbeTimeout.TotalSeconds * float Diagnostics.Stopwatch.Frequency)
+                            Task.Delay(ProbeTimeout).ContinueWith(fun (_: Task) -> wake.Set()) |> ignore
                     with _ ->
                         running <- false
                     while running do
                         let! _ = wake.WaitAsync()
+                        if not (isNull probe) && Diagnostics.Stopwatch.GetTimestamp() >= probeDeadline then
+                            // No answer in time: stay on the stream, and send what was held.
+                            probe <- null
 
                         // One command, or why the socket stopped; the rest wait for another turn.
                         match tryRead incoming with
@@ -398,7 +423,18 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                             | Ok(Ping payload) ->
                                 let! ponged = attempt (sink.Pong payload)
                                 if not ponged then running <- false
-                            | Ok Pong -> ()
+                                // That pong went through the stream after the probe: the probe has to be the last thing there.
+                                elif not (isNull probe) then
+                                    let! probed = attempt (sendProbe ())
+                                    if not probed then running <- false
+                            | Ok(Pong payload) ->
+                                match probe with
+                                | null -> ()
+                                | expected ->
+                                    if ReadOnlySpan<byte>(payload).SequenceEqual(ReadOnlySpan<byte>(expected)) then
+                                        probe <- null
+                                        sink.Detach()
+                                        server.NoteDetached()
                             // Complete the closing handshake (RFC 6455 section 5.5.1) before letting the socket go.
                             | Ok(Close code) ->
                                 let! _ = attempt (sink.CloseReply code)
@@ -409,11 +445,13 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                             | Error(Io _) -> running <- false
                         | ValueNone -> if incoming.Completion.IsCompleted then running <- false
 
-                        if running && closing.IsNone then
+                        // While the probe is out, writes are held (bounded: no more is read from the streams once a batch is held).
+                        let holding = not (isNull probe)
+                        if running && closing.IsNone && not (holding && pending.Count >= config.MaxWriteBatch) then
                             // Whatever is ready goes out in the same write.
                             match drain readers pending config.MaxWriteBatch with
                             | Drained.Lagged -> closing <- ValueSome lagged
-                            | Drained.Full -> wake.Set()
+                            | Drained.Full -> if not holding then wake.Set()
                             | _ -> ()
 
                             // The internal channel carries raw payloads.
@@ -433,13 +471,15 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                                 closing <- ValueSome { Reason = Some ServerRestart; Reconnect = Value.Bool true }
 
                         if running then
+                            // A close goes out through the stream, after what was held.
+                            if closing.IsSome then probe <- null
                             // The streams a command started are read from now that its own frames are queued
                             // ahead of them.
                             if connection.Started.Count > 0 then
                                 readers.AddRange connection.Started
                                 connection.Started.Clear()
                                 wake.Set()
-                            if pending.Count > 0 then
+                            if pending.Count > 0 && isNull probe then
                                 try
                                     do! sink.Send pending
                                 with _ ->

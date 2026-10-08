@@ -96,7 +96,7 @@ let testVerifier (signed: string) : string option =
     else
         None
 
-let testConfig: Config = { Config.defaults with AssumeSsl = false }
+let testConfig: Config = { Config.defaults with AssumeSsl = false; CompactJson = false }
 
 /// A self-signed certificate for 127.0.0.1, for the tests that serve TLS.
 let selfSigned () : System.Security.Cryptography.X509Certificates.X509Certificate2 =
@@ -268,6 +268,10 @@ type Client(tcp: TcpClient, stream: Stream, protocol: string option, extensions:
     let mutable pendingNext: Task<Got> = Unchecked.defaultof<_>
     let deflate = extensions.IsSome
 
+    /// Whether the client answers the server's WebSocket pings with pongs (a WebSocket library does).
+    member val AnswerPings = true with get, set
+    /// WebSocket pings (not Action Cable's JSON pings) read so far.
+    member val Pings = 0 with get, set
     member _.Protocol = protocol
     member _.Extensions = extensions
     member _.Stream = stream
@@ -379,7 +383,11 @@ type Client(tcp: TcpClient, stream: Stream, protocol: string option, extensions:
                                             None
                                     )
                                 )
-                        | 0x9uy
+                        // A WebSocket library answers a ping with a pong echoing it (RFC 6455 section 5.5.2), as browsers do; onCrack's
+                        // connections wait for that pong before writing to their sockets themselves (`Connection.run`).
+                        | 0x9uy ->
+                            this.Pings <- this.Pings + 1
+                            if this.AnswerPings then do! this.SendBytes(clientFrame 0xAuy true false payload)
                         | 0xauy -> ()
                         | other -> failwith $"unexpected opcode {other}"
                     return result.Value

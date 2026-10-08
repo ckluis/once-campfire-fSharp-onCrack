@@ -86,7 +86,7 @@ let private connectAll (server: Server<string>) (connections: int) (compressed: 
         let confirm = wireSize (Protocol.confirmation identifier).Length
         let sockets = [| for _ in 1..connections -> new QuietSocket(subscribeScript identifier compressed) |]
         let request = { Uri = "/cable"; Headers = HeaderDictionary() }
-        let runs = [| for socket in sockets -> Connection.run server socket compressed request ignore |]
+        let runs = [| for socket in sockets -> Connection.run server socket compressed request ignore null |]
         let mutable waited = 0
         while sockets |> Array.exists (fun s -> s.Written < int64 (welcome + confirm)) && waited < 400 do
             do! Task.Delay 25
@@ -103,7 +103,7 @@ let private benchChannel () : Channel<string> =
                 Channel.ok }
 
 let private benchServer () : Server<string> =
-    Server.builder Config.defaults (fun _ -> Task.FromResult(Some "bench")) id
+    Server.builder { Config.defaults with CompactJson = false } (fun _ -> Task.FromResult(Some "bench")) id
     |> ServerBuilder.channel "BenchChannel" benchChannel
     |> ServerBuilder.build
 

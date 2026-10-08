@@ -189,7 +189,7 @@ let private startOurs (recording: Recording) (dir: string) : Task<Database * Cab
         let secrets = Secrets.create (parityEnv "SECRET_KEY_BASE" |> Option.defaultWith (fun () -> failwith "parity/.env.reference has no SECRET_KEY_BASE"))
         let deps: Deps = { Db = db; Secrets = secrets; Clock = clock }
         // The reference runs with DISABLE_SSL, so without assume_ssl.
-        let server = Registry.server deps { Campfire.Cable.Config.defaults with AssumeSsl = false } NullLogger.Instance
+        let server = Registry.server deps { Campfire.Cable.Config.defaults with AssumeSsl = false; CompactJson = false } NullLogger.Instance
         sink.Server <- server
         let! host, authority = serveCable server
         return db, server, Broadcasts server, host, authority

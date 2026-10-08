@@ -48,7 +48,7 @@ type private Recorder() =
     member val Sent = Collections.Generic.List<string * string>()
 
     interface IServer with
-        member _.Config = Config.defaults
+        member _.Config = { Config.defaults with CompactJson = false }
         member _.Hub = Hub(1)
         member _.Logger = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance
         member this.Broadcast(b, v) = this.Sent.Add((b, Json.encode v)); 1

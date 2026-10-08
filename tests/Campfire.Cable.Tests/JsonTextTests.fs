@@ -47,3 +47,41 @@ let ``pieces and UTF-8 input write the same text`` () =
 let ``a long text grows the buffer`` () =
     let text = String.replicate 100000 "<&>"
     Assert.Equal(Json.encode (Value.String text), Encoding.UTF8.GetString(JsonText.encodeString text))
+
+// onCrack (unit R2.1): the compact writer leaves `<`, `>` and `&` alone; the JSON it writes must parse to the same string.
+
+[<Fact>]
+let ``compact strings parse to the same text, with only what JSON requires escaped`` () =
+    for sample in samples @ [ String.replicate 50 "</script><!-- & -->"; "    line separators" ] do
+        use compact = new JsonStringWriter(8, true)
+        compact.Begin()
+        compact.Append sample
+        compact.End()
+        let text = Encoding.UTF8.GetString compact.Span
+        Assert.Equal(Some(Value.String sample), Json.parse (compact.Span.ToArray()))
+        Assert.DoesNotContain("\\u003c", text)
+        Assert.DoesNotContain("\\u003e", text)
+        Assert.DoesNotContain("\\u0026", text)
+        // Quotes, backslashes and control characters still are, as JSON requires.
+        Assert.Equal(sample.Contains '"', text.Contains "\\\"")
+        for c in text.Substring(1, text.Length - 2) do
+            Assert.True(c >= ' ', $"unescaped control character {int c}")
+        // And through the UTF-8 path, the same bytes.
+        use utf8 = new JsonStringWriter(8, true)
+        utf8.Begin()
+        utf8.AppendUtf8(ReadOnlySpan(Encoding.UTF8.GetBytes sample))
+        utf8.End()
+        Assert.Equal(text, Encoding.UTF8.GetString utf8.Span)
+
+[<Fact>]
+let ``a compact Turbo Stream frame is smaller and decodes to the Rails frame's value`` () =
+    let html = String.replicate 20 """<div class="message" data-id="1"><a href="/rooms/1?x=1&y=2">Hi & bye</a></div>"""
+    let encode (compact: bool) =
+        use w = new JsonStringWriter(64, compact)
+        w.Begin()
+        w.Append html
+        w.End()
+        w.ToArray()
+    let rails, compact = encode false, encode true
+    Assert.Equal(Json.parse rails, Json.parse compact)
+    Assert.True(float compact.Length < 0.8 * float rails.Length, $"{compact.Length} vs {rails.Length}")

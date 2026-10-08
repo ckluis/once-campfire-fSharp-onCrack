@@ -68,9 +68,20 @@ let call (server: Server<'U>) (ctx: HttpContext) : Task =
             | Some protocol -> ctx.Response.Headers["Sec-WebSocket-Protocol"] <- protocol
             | None -> ()
             let connect = { Uri = request.GetEncodedPathAndQuery(); Headers = headers }
+            // onCrack (unit R2.1): the socket, when the connection may write to it itself: Kestrel's socket transport and no TLS
+            // (with TLS the socket carries records, which only Kestrel's stream writes). `Config.DirectWrites` off keeps the stream.
+            let direct: Net.Sockets.Socket | null =
+                if not server.Config.DirectWrites || request.IsHttps || not (isNull (ctx.Features.Get<ITlsConnectionFeature>())) then
+                    null
+                else
+                    match ctx.Features.Get<Microsoft.AspNetCore.Connections.Features.IConnectionSocketFeature>() with
+                    | null -> null
+                    | feature ->
+                        let socket = feature.Socket
+                        if not (isNull (box socket)) && socket.SocketType = Net.Sockets.SocketType.Stream then socket else null
             let! stream = upgrade.UpgradeAsync()
             try
-                do! Connection.run server stream handshake.Deflate connect ctx.Abort
+                do! Connection.run server stream handshake.Deflate connect ctx.Abort direct
             with e ->
                 server.Logger.LogError(e, "Cable connection failed")
         | _ -> do! pageNotFound ctx

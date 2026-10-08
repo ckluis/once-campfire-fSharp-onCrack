@@ -10,8 +10,12 @@ open System.Buffers
 open System.Text
 
 /// A JSON string being written as UTF-8 into a pooled buffer. Dispose it to return the buffer.
+///
+/// onCrack (unit R2.1): `compact` leaves `<`, `>` and `&` as they are. Active Support escapes them so that JSON can sit inside a
+/// `<script>` of an HTML page; a Cable frame is never in one, and `JSON.parse` gives the same string either way. A Turbo Stream's
+/// markup is full of them, so a message's frame is about a third smaller (`Config.CompactJson`, `CAMPFIRE_CABLE_COMPACT_JSON=off`).
 [<Sealed; AllowNullLiteral>]
-type JsonStringWriter(initialCapacity: int) =
+type JsonStringWriter(initialCapacity: int, compact: bool) =
     static let escapes =
         let specials = Array.init 32 char |> Array.append [| '"'; '\\'; '<'; '>'; '&' |]
         SearchValues.Create(ReadOnlySpan specials)
@@ -20,12 +24,24 @@ type JsonStringWriter(initialCapacity: int) =
         let specials = Array.init 32 byte |> Array.append [| byte '"'; byte '\\'; byte '<'; byte '>'; byte '&' |]
         SearchValues.Create(ReadOnlySpan specials)
 
+    static let compactEscapes =
+        let specials = Array.init 32 char |> Array.append [| '"'; '\\' |]
+        SearchValues.Create(ReadOnlySpan specials)
+
+    static let compactEscapeBytes =
+        let specials = Array.init 32 byte |> Array.append [| byte '"'; byte '\\' |]
+        SearchValues.Create(ReadOnlySpan specials)
+
+    let escapes = if compact then compactEscapes else escapes
+    let escapeBytes = if compact then compactEscapeBytes else escapeBytes
+
     static let hex = "0123456789abcdef"
 
     let mutable buffer: byte[] = ArrayPool<byte>.Shared.Rent(max initialCapacity 64)
     let mutable length = 0
 
-    new() = new JsonStringWriter(1024)
+    new(initialCapacity: int) = new JsonStringWriter(initialCapacity, false)
+    new() = new JsonStringWriter(1024, false)
 
     member private _.Ensure(extra: int) =
         if buffer.Length - length < extra then

@@ -194,7 +194,7 @@ let broadcastActionTo
     match streamName streamables with
     | None -> 0
     | Some name ->
-        use json = new JsonStringWriter(256)
+        use json = new JsonStringWriter(256, server.Config.CompactJson)
         json.Begin()
         let sink =
             { new TagSink with

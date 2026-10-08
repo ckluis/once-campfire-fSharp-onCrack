@@ -186,7 +186,13 @@ module Boot =
             let storage =
                 Storage.create (DiskService.create config.Storage.Files "local") (RailsCompat.appVerifier secrets "ActiveStorage")
 
-            let cableConfig = { Campfire.Cable.Config.defaults with AssumeSsl = not config.DisableSsl }
+            let cableConfig =
+                { Campfire.Cable.Config.defaults with
+                    AssumeSsl = not config.DisableSsl
+                    // onCrack (unit R2.1): Cable connections write to their sockets themselves; `CAMPFIRE_CABLE_DIRECT=off` keeps Kestrel's stream.
+                    DirectWrites = not (String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_DIRECT", "off", StringComparison.OrdinalIgnoreCase))
+                    // onCrack (unit R2.1): Turbo Stream frames without Active Support's `<`, `>`, `&` escapes; `CAMPFIRE_CABLE_COMPACT_JSON=off` keeps them.
+                    CompactJson = not (String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_COMPACT_JSON", "off", StringComparison.OrdinalIgnoreCase)) }
             let deps: Deps = { Db = db; Secrets = secrets; Clock = clock }
             let cable = Registry.server deps cableConfig (loggers.CreateLogger "campfire.cable")
 

@@ -383,7 +383,7 @@ let start () : Task<TestApp> =
         | Error error -> failwith (DbError.display error)
 
         let deps: Deps = { Db = db; Secrets = secrets; Clock = clock }
-        let server = Registry.server deps { Campfire.Cable.Config.defaults with AssumeSsl = false } NullLogger.Instance
+        let server = Registry.server deps { Campfire.Cable.Config.defaults with AssumeSsl = false; CompactJson = false } NullLogger.Instance
         sink.Server <- server
 
         let! app, authority = serveCable server

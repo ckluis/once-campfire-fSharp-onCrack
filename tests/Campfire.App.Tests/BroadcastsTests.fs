@@ -274,3 +274,87 @@ let ``a ticket takes one place, publishes once, and gives it up only if unpublis
     let unplaced = BroadcastTicket(order)
     unplaced.Publish(fun () -> published.Enqueue "unplaced")
     Assert.Equal<string list>([ "second"; "unplaced" ], List.ofSeq published)
+
+// --- onCrack (unit R2.1): the line holds its subscribers' wakes while later places are being rendered ----------------
+
+/// A subscriber of `stream` on its own wake, and what it has read so far.
+let private listener (hub: Hub) (stream: string) =
+    let wake = Wake()
+    let sub = hub.Subscribe(stream, null, wake)
+    let read () =
+        let got = System.Collections.Generic.List<string>()
+        let mutable frame = Unchecked.defaultof<Socket.Frame>
+        while sub.TryRecv(&frame) = RecvStatus.Got do
+            got.Add frame.Text
+        List.ofSeq got
+    wake, read
+
+[<Fact>]
+let ``a held line wakes its subscribers once the last place in flight publishes`` () =
+    let hub = Hub(64)
+    let wake, read = listener hub "room"
+    let order = BroadcastOrder(60_000, 10_000_000)
+    let a, b = order.Reserve(), order.Reserve()
+    let parked = wake.WaitAsync()
+    order.Complete(a, fun () -> hub.Broadcast("room", "a") |> ignore)
+    // `b` is still being rendered: the frame is in the ring, the wake waits for `b`.
+    Assert.False(parked.IsCompleted, "woken while a later place was in flight")
+    order.Complete(b, fun () -> hub.Broadcast("room", "b") |> ignore)
+    Assert.True(parked.IsCompleted)
+    Assert.Equal<string list>([ "a"; "b" ], read ())
+    // An idle line (nothing reserved after) wakes at once.
+    let parked = wake.WaitAsync()
+    let c = order.Reserve()
+    order.Complete(c, fun () -> hub.Broadcast("room", "c") |> ignore)
+    Assert.True(parked.IsCompleted)
+    Assert.Equal<string list>([ "c" ], read ())
+
+[<Fact>]
+let ``a held line wakes within its limit when a place in flight never publishes`` () =
+    task {
+        let hub = Hub(64)
+        let wake, read = listener hub "room"
+        let order = BroadcastOrder(60_000, 2_000)
+        let a, _never = order.Reserve(), order.Reserve()
+        let parked = wake.WaitAsync()
+        let started = System.Diagnostics.Stopwatch.StartNew()
+        order.Complete(a, fun () -> hub.Broadcast("room", "a") |> ignore)
+        let! _ = parked.AsTask().WaitAsync(System.TimeSpan.FromSeconds 2.0)
+        Assert.True(started.ElapsedMilliseconds < 500L, $"woken after {started.ElapsedMilliseconds} ms")
+        Assert.Equal<string list>([ "a" ], read ())
+    }
+
+[<Fact>]
+let ``a line with the hold off wakes as each turn ends`` () =
+    let hub = Hub(64)
+    let wake, read = listener hub "room"
+    let order = BroadcastOrder(60_000, 0)
+    let a, _b = order.Reserve(), order.Reserve()
+    let parked = wake.WaitAsync()
+    order.Complete(a, fun () -> hub.Broadcast("room", "a") |> ignore)
+    Assert.True(parked.IsCompleted)
+    Assert.Equal<string list>([ "a" ], read ())
+
+[<Fact>]
+let ``held lines on many threads lose no wake and keep commit order`` () =
+    task {
+        let hub = Hub(8192)
+        let order = BroadcastOrder(60_000, 1_000)
+        let readers = [| for _ in 1..8 -> listener hub "room" |]
+        let total = 3000
+        let places = [| for _ in 1..total -> order.Reserve() |]
+        let consumers =
+            [| for (wake, read) in readers ->
+                   task {
+                       let got = System.Collections.Generic.List<string>()
+                       while got.Count < total do
+                           let! _ = wake.WaitAsync().AsTask().WaitAsync(System.TimeSpan.FromSeconds 10.0)
+                           got.AddRange(read ())
+                       return List.ofSeq got
+                   } |]
+        let shuffled = places |> Array.sortBy (fun p -> (p * 7919L) % 3001L)
+        System.Threading.Tasks.Parallel.ForEach(shuffled, (fun (p: int64) -> order.Complete(p, fun () -> hub.Broadcast("room", string p) |> ignore))) |> ignore
+        let! seen = Task.WhenAll consumers
+        for got in seen do
+            Assert.Equal<string list>([ for p in places -> string p ], got)
+    }

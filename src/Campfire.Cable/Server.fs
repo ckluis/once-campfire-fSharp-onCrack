@@ -48,6 +48,7 @@ type Server<'U>
     let mutable heartbeat = Frame.OfString(Protocol.ping (ServerNames.unixNow ()))
     let mutable beat = 0L
     let mutable restarts = 0L
+    let mutable detached = 0L
 
     /// The server-wide heartbeat timer's loop, so every connection pings in step.
     let heartbeatLoop () : Task =
@@ -72,6 +73,10 @@ type Server<'U>
 
     member _.Config: Config = config
     member _.Hub: Hub = hub
+
+    /// onCrack (unit R2.1): connections that went on to write to their sockets themselves (`Connection.run`), since the start.
+    member _.DirectConnections: int64 = Volatile.Read(&detached)
+    member internal _.NoteDetached() : unit = Interlocked.Increment(&detached) |> ignore
     member _.Logger: ILogger = logger
 
     member internal _.Authenticate(request: ConnectRequest) : Task<'U option> = authenticate request

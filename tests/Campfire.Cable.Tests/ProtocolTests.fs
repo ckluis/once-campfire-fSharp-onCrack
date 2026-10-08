@@ -477,7 +477,8 @@ let ``a broadcast is compressed once for every client that negotiated compressio
 
 [<Fact>]
 let ``a client's ping is answered with a pong`` () =
-    withServer testConfig (fun app ->
+    // Raw bytes after the welcome: onCrack's probe (DirectTests) would come first, so this one runs without it.
+    withServer { testConfig with DirectWrites = false } (fun app ->
         task {
             let! client = connect app 1UL
             do! expectText Welcome client

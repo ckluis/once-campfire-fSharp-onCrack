@@ -75,9 +75,20 @@ module BroadcastNames =
 ///
 /// A place nobody fills (a request that died between its commit and its broadcast; every path gives its place up in a
 /// `finally`) holds the line for at most `stallMs`, then is skipped.
+///
+/// onCrack (unit R2.1): the line also holds the wakes of what it publishes while later places are still being rendered, and
+/// sets them once the line is empty (every reserved place published) or `holdUs` after it began holding, whichever comes
+/// first. Each subscriber then reads the posts in flight together and sends them in one write. The frames are in their rings
+/// at once; only the wakes wait, at most `holdUs` (`CAMPFIRE_CABLE_HOLD_US`, 1000 by default; 0 sets them when each turn ends).
 [<Sealed>]
-type BroadcastOrder(stallMs: int) =
+type BroadcastOrder(stallMs: int, holdUs: int) =
     let gate = obj ()
+    let holdTicks = int64 holdUs * System.Diagnostics.Stopwatch.Frequency / 1_000_000L
+    // Wakes held for the line (under `gate`), marked with `heldToken`; `heldSince` is when the first was held (0: none).
+    let mutable held = System.Collections.Generic.List<Wake>()
+    let mutable heldToken = WakeBatch.NewToken()
+    let mutable heldSince = 0L
+    let mutable holdTimer: System.Threading.Timer | null = null
     let waiting = System.Collections.Generic.Dictionary<int64, unit -> unit>()
     let mutable reserved = 0L
     let mutable next = 0L
@@ -87,7 +98,42 @@ type BroadcastOrder(stallMs: int) =
     let mutable timer: System.Threading.Timer | null = null
     let mutable skipped = 0L
 
-    new() = BroadcastOrder(1000)
+    new(stallMs: int) = BroadcastOrder(stallMs, 0)
+
+    new() =
+        let hold =
+            match System.Int32.TryParse(System.Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_HOLD_US") with
+            | true, us when us >= 0 -> us
+            | _ -> 1000
+        BroadcastOrder(1000, hold)
+
+    /// Takes every held wake, if the line is empty or they have been held `holdUs`, or `force`; under `gate`.
+    member private _.TakeHeld(force: bool) : Wake[] | null =
+        if held.Count = 0 then
+            null
+        else
+            let now = System.Diagnostics.Stopwatch.GetTimestamp()
+            let idle = next = System.Threading.Volatile.Read(&reserved) && waiting.Count = 0
+            if force || idle || holdTicks = 0L || now - heldSince >= holdTicks then
+                let taken = held.ToArray()
+                held.Clear()
+                heldToken <- WakeBatch.NewToken()
+                heldSince <- 0L
+                taken
+            else
+                null
+
+    /// Sets wakes taken from the line, outside `gate`.
+    static member private SetAll(wakes: Wake[] | null) : unit =
+        match wakes with
+        | null -> ()
+        | wakes ->
+            for wake in wakes do
+                wake.Set()
+
+    /// The hold's time limit passed: set whatever is still held.
+    member private this.HoldExpired() : unit =
+        BroadcastOrder.SetAll(lock gate (fun () -> this.TakeHeld true))
 
     /// A place in line: on the writer thread, after the commit (an after-commit hook), so places follow commit order.
     member _.Reserve() : int64 = System.Threading.Interlocked.Increment(&reserved) - 1L
@@ -111,7 +157,30 @@ type BroadcastOrder(stallMs: int) =
     member this.Skip(place: int64) : unit = this.Complete(place, ignore)
 
     member private this.Drain() : unit =
+        // onCrack (unit R2.1): what this turn publishes wakes its subscribers once, after the last of it, and while later
+        // places are still being rendered the line holds those wakes (up to `holdUs`) for their posts to join.
+        WakeBatch.Begin()
+        try
+            this.DrainHeld()
+        finally
+            let toSet =
+                lock gate (fun () ->
+                    let before = held.Count
+                    WakeBatch.EndInto(held, heldToken)
+                    if before = 0 && held.Count > 0 then heldSince <- System.Diagnostics.Stopwatch.GetTimestamp()
+                    let taken = this.TakeHeld false
+                    if isNull taken && held.Count > 0 then
+                        // Held for a busy line: whatever happens next, they are set within `holdUs`.
+                        let due = max 1 ((holdUs + 999) / 1000)
+                        match holdTimer with
+                        | null -> holdTimer <- new System.Threading.Timer((fun _ -> this.HoldExpired()), null, due, System.Threading.Timeout.Infinite)
+                        | t -> t.Change(due, System.Threading.Timeout.Infinite) |> ignore
+                    taken)
+            BroadcastOrder.SetAll toSet
+
+    member private this.DrainHeld() : unit =
         let mutable running = true
+        let mutable published = 0
         while running do
             let publish =
                 lock gate (fun () ->
@@ -136,6 +205,11 @@ type BroadcastOrder(stallMs: int) =
                     publish ()
                 with e ->
                     eprintfn "ERROR campfire: broadcast failed: %s" e.Message
+                // A drainer that keeps finding posts in line wakes their subscribers every few posts, not only at its end.
+                published <- published + 1
+                if published % 8 = 0 then
+                    WakeBatch.Flush()
+                    BroadcastOrder.SetAll(lock gate (fun () -> this.TakeHeld true))
 
     member private this.Expire() : unit =
         let drain =
@@ -214,8 +288,10 @@ type Broadcasts(server: Cable) =
         let html = partials.Message message
         let members = Membership.forRoom conn room.Id |> List.map (fun membership -> membership.UserId)
         fun () ->
-            this.ToUtf8(Broadcasts.RoomMessages room, Append, BroadcastNames.roomDomId room BroadcastNames.Messages, html, [])
-            this.UnreadRoomTo(room, members)
+            // The append and the unread pings wake their subscribers together (`WakeBatch`).
+            WakeBatch.Run(fun () ->
+                this.ToUtf8(Broadcasts.RoomMessages room, Append, BroadcastNames.roomDomId room BroadcastNames.Messages, html, [])
+                this.UnreadRoomTo(room, members))
 
     /// onCrack: the posts' broadcasts in commit order (`BroadcastOrder`).
     member val Order = BroadcastOrder()
