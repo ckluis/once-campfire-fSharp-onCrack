@@ -1,0 +1,2 @@
+/users/me/sidebar                                  c=16     120272 rps  server  14.4 us/req 1.74 cores  loadgen  13.1 us/req 1.57 
+/users/me/sidebar                                  c=64     203410 rps  server  11.8 us/req 2.40 cores  loadgen  12.7 us/req 2.58 

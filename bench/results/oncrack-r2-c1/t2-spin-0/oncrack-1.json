@@ -1,0 +1,212 @@
+{
+ "app": "oncrack",
+ "rep": 1,
+ "cold_start_ms": 226,
+ "memory": {
+  "idle_current_mb": 28,
+  "idle_anon_mb": 15,
+  "peak_current_mb": 852,
+  "peak_anon_mb": 324,
+  "cgroup_peak_mb": 868
+ },
+ "http": [
+  {
+   "avg_bytes": 2098,
+   "conc": 16,
+   "errors": 0,
+   "gzip": true,
+   "latency": {
+    "max_ms": 36.735,
+    "mean_ms": 1.0,
+    "n": 159427,
+    "p50_ms": 0.85,
+    "p90_ms": 1.235,
+    "p99_ms": 4.719
+   },
+   "ok": 159427,
+   "path": "POST /rooms/201306877/messages",
+   "rps": 15941.8,
+   "secs": 10.0,
+   "statuses": {
+    "200": 159427
+   },
+   "cost": {
+    "wall_s": 10.0,
+    "server_usage_us": 27759985,
+    "server_user_us": 22576867,
+    "server_system_us": 5183118,
+    "loadgen_user_us": 2391378,
+    "loadgen_system_us": 2353453,
+    "n": 159427,
+    "server_cpu_us_per_req": 174.1,
+    "server_user_us_per_req": 141.6,
+    "server_system_us_per_req": 32.5,
+    "loadgen_cpu_us_per_req": 29.8,
+    "server_cores_busy": 2.78,
+    "loadgen_cores_busy": 0.47
+   },
+   "route": "post_message",
+   "warmup": {
+    "secs": 30.0,
+    "windows_rps": [
+     7636.4,
+     9680.7,
+     13276.2,
+     16400.7,
+     16333.9,
+     16392.5,
+     16320.5,
+     16404.4,
+     16382.3,
+     16140.6,
+     16343.6,
+     16001.5,
+     15899.2,
+     15829.8,
+     15685.6
+    ],
+    "reason": "fixed",
+    "window_secs": 2.0,
+    "settled": false,
+    "tail_rps": 15804.9
+   },
+   "host_probe_after": {
+    "spin_ms": 57.97,
+    "spin_ms_max_cpu": 62.2,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 55.57,
+    "ratio": 1.043
+   }
+  },
+  {
+   "avg_bytes": 2097,
+   "conc": 64,
+   "errors": 0,
+   "gzip": true,
+   "latency": {
+    "max_ms": 34.879,
+    "mean_ms": 3.32,
+    "n": 192255,
+    "p50_ms": 3.003,
+    "p90_ms": 4.399,
+    "p99_ms": 10.295
+   },
+   "ok": 192255,
+   "path": "POST /rooms/201306877/messages",
+   "rps": 19218.0,
+   "secs": 10.0,
+   "statuses": {
+    "200": 192255
+   },
+   "cost": {
+    "wall_s": 10.01,
+    "server_usage_us": 29903144,
+    "server_user_us": 25144057,
+    "server_system_us": 4759087,
+    "loadgen_user_us": 3444118,
+    "loadgen_system_us": 3409593,
+    "n": 192255,
+    "server_cpu_us_per_req": 155.5,
+    "server_user_us_per_req": 130.8,
+    "server_system_us_per_req": 24.8,
+    "loadgen_cpu_us_per_req": 35.6,
+    "server_cores_busy": 2.99,
+    "loadgen_cores_busy": 0.68
+   },
+   "route": "post_message",
+   "warmup": {
+    "secs": 30.0,
+    "windows_rps": [
+     17047.8,
+     17856.8,
+     18017.8,
+     17713.0,
+     17616.0,
+     17590.6,
+     17587.7,
+     18279.5,
+     19662.4,
+     19571.7,
+     19272.8,
+     19548.4,
+     19204.3,
+     19539.5,
+     19346.2
+    ],
+    "reason": "settled",
+    "window_secs": 2.0,
+    "settled": true,
+    "tail_rps": 19363.3
+   },
+   "host_probe_after": {
+    "spin_ms": 59.63,
+    "spin_ms_max_cpu": 63.78,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 55.57,
+    "ratio": 1.073
+   }
+  }
+ ],
+ "cable": [],
+ "upload": {},
+ "loadavg_start": "1.35 1.52 1.75 1/196 891529",
+ "loadavg_end": "3.78 2.22 1.97 1/242 894512",
+ "post_rows": [
+  {
+   "route": "post_message",
+   "phase": "warm-up",
+   "conc": 16,
+   "ok": 449693,
+   "statuses": {
+    "200": 449693
+   },
+   "rows": 449693
+  },
+  {
+   "route": "post_message",
+   "phase": "run",
+   "conc": 16,
+   "ok": 159427,
+   "statuses": {
+    "200": 159427
+   },
+   "rows": 159427
+  },
+  {
+   "route": "post_message",
+   "phase": "warm-up",
+   "conc": 64,
+   "ok": 556594,
+   "statuses": {
+    "200": 556594
+   },
+   "rows": 556594
+  },
+  {
+   "route": "post_message",
+   "phase": "run",
+   "conc": 64,
+   "ok": 192255,
+   "statuses": {
+    "200": 192255
+   },
+   "rows": 192255
+  }
+ ],
+ "probe": [],
+ "host_probe_start": {
+  "spin_ms": 59.74,
+  "spin_ms_max_cpu": 62.04,
+  "cpus": "0-3,4-7",
+  "baseline_ms": 55.57,
+  "ratio": 1.075
+ },
+ "host_probe_end": {
+  "spin_ms": 57.2,
+  "spin_ms_max_cpu": 60.14,
+  "cpus": "0-3,4-7",
+  "baseline_ms": 55.57,
+  "ratio": 1.029
+ },
+ "seed": "default"
+}

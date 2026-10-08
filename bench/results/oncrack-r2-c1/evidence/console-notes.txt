@@ -1,0 +1,40 @@
+Console output of runs that wrote no result directory (bench/paths prints its table and keeps nothing else). Copied verbatim from the session,
+in the order they were made; every line is bench/paths or bench/quick output. Commit of the mounted build: 82168d8 plus the uncommitted
+CheapPaths change unless noted; JIT unless noted. DOTNET_ThreadPool_UnfairSemaphoreSpinLimit is read as hex (46 = 70 = the runtime default).
+
+== /up at c=1, R2.3 build (e29ee2b, pool hop, default spin), PERFSTAT=1
+/rooms/486777696   c=1  25142 rps  server  20.4 us/req 0.51 cores
+/users/me/sidebar  c=1  27025 rps  server  18.0 us/req 0.49 cores
+/up                c=1  18451 rps  server 110.2 us/req 2.03 cores   (13.9M syscalls in 8 s)
+
+== /up at c=1 with CAMPFIRE_INLINE=all, then spin 0 only (e29ee2b + solo code, before the commit)
+CAMPFIRE_INLINE=all                                 /up c=1  23959 rps  server  23.0 us/req 0.55 cores
+DOTNET_ThreadPool_UnfairSemaphoreSpinLimit=0        /up c=1  16897 rps  server  41.6 us/req 0.70 cores
+
+== POST at c=1, thread CPU (THREADS=1), spin sweep on the solo build (hex values: 10 = 16, 25 = 37)
+default (70): TP Worker 167.1 us, Sockets 161.2, total 345.5; POST c=1 5148 rps 345.4 us/req 1.78 cores
+spin 0:       TP Worker  72.7 us, Sockets 158.6, total 246.6; POST c=1 5242 rps 246.2 us/req 1.29 cores
+spin 10:      TP Worker  92.5 us, Sockets 156.0, total 263.8; POST c=1 5336 rps 263.9 us/req 1.41 cores
+spin 25:      TP Worker 124.2 us, Sockets 159.6, total 299.1; POST c=1 5225 rps 299.3 us/req 1.56 cores
+
+== Pinning (SERVER_CPUS), shipped build, c=1
+0-3: /rooms/ROOM 26282 rps (18.8 us, 0.49 cores)  /up 24867 (21.8, 0.54)  POST 5338 (239.8, 1.28)
+0-1: /rooms/ROOM 26249 rps (18.8 us, 0.49 cores)  /up 24603 (22.2, 0.55)  POST 5204 (213.6, 1.11)
+0:   /rooms/ROOM 20101 rps (32.8 us, 0.66 cores)  /up 24906 (21.7, 0.54)  POST 3286 (290.6, 0.95)
+
+== Native AOT (AOT=1 bin/publish-mounted), before CheapPaths: DOTNET_ThreadPool_UnfairSemaphoreSpinLimit=100 (what the AOT boot script set) / 0 / 0 with solo off
+100:  room c=1 24905 (21.0 us) c=16 166994 (19.0) | /up c=1 23741 (27.1) c=16 159482 (23.9) | POST c=1 5041 (404.1, 2.04 cores) c=16 15142 (197.2)
+0:    room c=1 24534 (21.5) c=16 168152 (18.6)    | /up c=1 22723 (25.9) c=16 112107 (22.2) | POST c=1 5181 (247.0, 1.28 cores) c=16 16089 (178.7)
+0, solo off: room c=1 24584 (21.6) c=16 170736 (18.5) | /up c=1 16589 (41.9) c=16 114992 (21.8) | POST c=1 4771 (263.9) c=16 15984 (181.1)
+AOT with CheapPaths (46deb83): spin 100: /up c=1 22630 (25.9) c=16 176198 (19.2) POST c=1 5003 (405.3, 2.03) c=16 14452 (203.8)
+                               default (spin 0 from Program.main? no: the mounted AOT dir has no .native-aot, so Program.main's 0): /up c=1 22862 (25.4) c=16 177136 (19.3) POST c=1 5027 (255.1, 1.28) c=16 15784 (181.5)
+
+== /up at 1, 16, 64 on the JIT build, before CheapPaths: spin 70 / spin 0 / spin 0 + CAMPFIRE_INLINE=all
+70:      c=1 24460 (24.1) c=16 181792 (20.5, 3.72 cores) c=64 197356 (18.9)
+0:       c=1 24506 (22.3) c=16 123787 (19.2, 2.37 cores) c=64 198311 (17.3)
+0 + all: c=1 24741 (21.8) c=16 190063 (17.2)               c=64 238848 (15.1)
+With CheapPaths (shipped), /up: c=1 24758 (21.6) c=16 189313 (17.4) c=64 235913 (15.2); /up.json c=1 24147 c=16 183847 c=64 236449
+
+== spread A/B, tier 2 mounted, one rep per window, 25 s warm-up (hex spin)
+46: 91163 (38.9 us)   0: 87199 (38.1)   46: 92092 (38.6)   0: 85870 (38.2)   (the first pair's directories were overwritten by the second)
+0x8: 85942 (38.9)   0x14: 88177 (39.0)    POST c=1 at 0x8: 5307 rps 251.0 us 1.33 cores; at 0x14: 5284 rps 270.7 us 1.43 cores

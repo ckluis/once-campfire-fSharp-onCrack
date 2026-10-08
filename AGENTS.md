@@ -96,6 +96,16 @@ host `Support.startFronted` serves an app behind the front server, and `CAMPFIRE
 read cache tests then count replays as hits; the avatar removal test fails behind the front because Thruster's public cache keeps the
 avatar, as it does in front of Rails). Open: `spread_mixed` reads and posts are 12% and 10% below the pool with `replays`.
 
+**One connection** (unit R2.4, `bench/results/oncrack-r2-c1.md`): a request that is not a replay used to hop to the thread pool, and the
+pool's workers then spun for about 100 us. Now (a) a request that arrives on an event thread that has served only its own connection for
+`CAMPFIRE_INLINE_SOLO_MS` (200; `off` restores R2.3, 0 runs every app request in place, which the App suite is run with as a stress test:
+`CAMPFIRE_TEST_FRONT=1 CAMPFIRE_INLINE_SOLO_MS=0`) runs the app right there (`EventThreadWatch` in `Front/Handler.fs`; never an Upgrade),
+(b) paths in `Campfire.Kit.CheapPaths` (`/up`) always do, and (c) idle pool workers do not spin: `Program.main` sets
+`DOTNET_ThreadPool_UnfairSemaphoreSpinLimit=0` unless given (and only while `CAMPFIRE_INLINE` is on; the AOT image no longer sets a longer one).
+A post at one connection costs 242 us of CPU (was 393), `/up` 22 (was 110). Tools: `bench/paths` takes `POST` and `THREADS=1` (CPU per request by
+thread name), `bench/c1-wakes` lists the futex calls per request by call chain. The pool still wakes three times per post (the push job's
+channel, `WebPushPool.DeliverLater`'s `Task.Run`, a worker waking a worker); each is asynchronous work Rails does too.
+
 # once-campfire-fsharp
 
 Campfire in F#. It is a port that has to be indistinguishable in use from the Rails app in
