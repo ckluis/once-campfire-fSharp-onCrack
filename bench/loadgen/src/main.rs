@@ -394,6 +394,8 @@ struct MixLane {
     /// `random` (uniform, a fixed seed per connection) or `cycle` (each connection walks the list from its own offset).
     pick: String,
     seed: u64,
+    /// Requests per second for the whole lane, spread over its connections (0: each sends as fast as answered).
+    rate: f64,
     targets: Vec<MixTarget>,
     /// Instead of `targets`: every (user, path) pair of `users` x `paths`, drawn independently.
     cross: Option<(Vec<usize>, Vec<String>)>,
@@ -465,6 +467,7 @@ fn parse_spec(v: &Value, scale_conc: Option<usize>) -> Res<(Vec<MixUser>, Vec<Mi
             conc,
             pick: l["pick"].as_str().unwrap_or("random").to_string(),
             seed: l["seed"].as_u64().unwrap_or(1),
+            rate: l["rate"].as_f64().unwrap_or(0.0),
             targets,
             cross,
         });
@@ -504,7 +507,18 @@ async fn mix_load(a: &Args, spec_path: &str) -> Res<Value> {
                 let n = lane.cross.as_ref().map(|(u, p)| u.len() * p.len()).unwrap_or(lane.targets.len());
                 let mut cursor = k * n / lane.conc.max(1);
                 let mut i = 0u64;
+                // A paced lane: connection k sends at start + (k / conc + j) * interval, j = 0, 1, ... (a request that comes
+                // back late is followed at once, so the lane keeps its rate while the server keeps up).
+                let interval = if lane.rate > 0.0 { Some(Duration::from_secs_f64(lane.conc as f64 / lane.rate)) } else { None };
+                let mut due = start + interval.map(|d| d.mul_f64(k as f64 / lane.conc.max(1) as f64)).unwrap_or_default();
                 while Instant::now() < deadline {
+                    if let Some(d) = interval {
+                        tokio::time::sleep_until(due.into()).await;
+                        due += d;
+                        if Instant::now() >= deadline {
+                            break;
+                        }
+                    }
                     if conn.is_none() {
                         match connect(&addr).await {
                             Ok(c) => conn = Some(c),

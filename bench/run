@@ -515,7 +515,7 @@ write_env() {
   echo "repo HEAD: $(git -C "$ROOT" rev-parse --short HEAD) (dirty: $(git -C "$ROOT" status --porcelain -- src rust Cargo.toml Cargo.lock | wc -l) files under src/ and rust/)"
   echo "work dir (seed copies): $WORK ($(findmnt -T "$WORK" -n -o FSTYPE))"
   echo "loadgen: $LOADGEN ($(stat -c %y "$LOADGEN" | cut -d. -f1)), built with $RUST_BUILD_IMAGE"
-  echo "seed: $SEED_NAME (realistic workloads: crowd; classic: default); realistic concs ${REAL_CONCS}, MIX_POSTERS ${MIX_POSTERS:-1}, SPREAD_POSTERS ${SPREAD_POSTERS:-1}, POSTING_USERS ${POSTING_USERS:-32}, SEARCH_QUERIES ${SEARCH_QUERIES:-200}, REAL_USERS ${REAL_USERS} (0: all)"
+  echo "seed: $SEED_NAME (realistic workloads: crowd; classic: default); realistic concs ${REAL_CONCS}, MIX_POSTERS ${MIX_POSTERS:-1}, SPREAD_POSTERS ${SPREAD_POSTERS:-1}, POST_RATE ${POST_RATE:-0}, POSTING_USERS ${POSTING_USERS:-32}, SEARCH_QUERIES ${SEARCH_QUERIES:-200}, REAL_USERS ${REAL_USERS} (0: all)"
   echo "schedule: apps ${APPS}, reps ${REPS}; suites: ${SUITES}; http secs ${HTTP_SECS}, concs ${HTTP_CONCS}, routes ${SCHEDULE_ROUTES:-$HTTP_ROUTES}, warm-up ${WARMUP_SECS}s at each route and concentration, idle ${IDLE_SECS}s"
   echo "log retention: ${LOG_MAX_FILE} x ${LOG_MAX_SIZE} (json-file)"
 }

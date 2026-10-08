@@ -20,6 +20,8 @@ The workloads (`scale` lanes take the measured concurrency c; the others keep th
   spread_mixed   spread, plus SPREAD_POSTERS connections (default 1) posting, each post by one of the first POSTING_USERS users (default
                  32) into one of their rooms, drawn uniformly. A post into an open room moves the version of a room 500+ people read,
                  and the sidebar of every one of them.
+                 POST_RATE (posts/s, default 0: as fast as answered) paces the posts lane of mixed and spread_mixed (unit R2.2), so
+                 two builds can be compared reading at the same rate of writes; a paced run is not comparable with the stored baseline.
   search_spread  c connections, each request a search (/searches?q=...) by a user and a query drawn independently and uniformly from
                  every signed-in user who is a member of a room (524: Rails' search page raises for a user with none, Lonely Lou,
                  at searches/index.html.erb:63, room_path(nil)) and SEARCH_QUERIES (default 200) words of the seed's messages.
@@ -120,12 +122,14 @@ def spec(workload, prepared):
     posts = [{"u": i, "room": r} for i, u in enumerate(who[:posting]) for r in u["rooms"]]
     if workload == "mixed":
         lanes = [{"name": "reads", "conc": 16, "scale": True, "pick": "cycle", "targets": [{"u": david, "path": f"/rooms/{room}"}]},
-                 {"name": "posts", "conc": int(os.environ.get("MIX_POSTERS", "1")), "pick": "cycle", "targets": [{"u": david, "room": room}]}]
+                 {"name": "posts", "conc": int(os.environ.get("MIX_POSTERS", "1")), "pick": "cycle", "targets": [{"u": david, "room": room}],
+                  "rate": float(os.environ.get("POST_RATE", "0"))}]
     elif workload == "spread":
         lanes = [{"name": "reads", "conc": 16, "scale": True, "pick": "random", "seed": 11, "targets": reads}]
     elif workload == "spread_mixed":
         lanes = [{"name": "reads", "conc": 16, "scale": True, "pick": "random", "seed": 11, "targets": reads},
-                 {"name": "posts", "conc": int(os.environ.get("SPREAD_POSTERS", "1")), "pick": "random", "seed": 13, "targets": posts}]
+                 {"name": "posts", "conc": int(os.environ.get("SPREAD_POSTERS", "1")), "pick": "random", "seed": 13, "targets": posts,
+                  "rate": float(os.environ.get("POST_RATE", "0"))}]
     elif workload == "search_spread":
         qs = queries(seed_dir, int(os.environ.get("SEARCH_QUERIES", "200")))
         lanes = [{"name": "reads", "conc": 16, "scale": True, "pick": "random", "seed": 17,
