@@ -53,3 +53,20 @@ type PostPath private () =
         | "inline_writes" -> PostPath.InlineWrites <- on; true
         | "plain_text_early" -> PostPath.PlainTextEarly <- on; true
         | _ -> false
+
+/// onCrack (unit R2.2): requests in flight that may write (any method but GET and HEAD), counted by the app's dispatch.
+/// `Database.Write` runs a write on its caller's thread only while it is the one such request: under concurrent writers a
+/// write that holds the writer connection on a request's thread made the writes queued behind it wait for the writer thread
+/// to wake (c=16 posts: 15.6k against 9.8k a second, with 1.8 of 4 cores idle).
+[<Sealed>]
+type WriteLoad private () =
+    [<DefaultValue>]
+    val mutable private inFlight: int
+
+    static member val private Counter = WriteLoad()
+
+    static member Enter() : unit = System.Threading.Interlocked.Increment(&WriteLoad.Counter.inFlight) |> ignore
+
+    static member Leave() : unit = System.Threading.Interlocked.Decrement(&WriteLoad.Counter.inFlight) |> ignore
+
+    static member InFlight : int = System.Threading.Volatile.Read(&WriteLoad.Counter.inFlight)

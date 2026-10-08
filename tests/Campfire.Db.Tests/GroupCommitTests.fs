@@ -276,3 +276,78 @@ let ``posts in one group leave the database exactly as posts run one by one`` ()
     Assert.Equal<Event list>(alone.Sink.Take(), group.Sink.Take())
     Assert.Equal(1, alone.Db.WriterStats.Largest)
     Assert.Equal(24, group.Db.WriterStats.Largest)
+
+// --- onCrack unit R2.2: on-commit work and writes on the caller's thread ------------------------------------------
+
+[<Fact>]
+let ``on-commit work commits with its write, and a statement of it that fails rolls back alone and reaches its caller`` () =
+    use t = new TestDb(false)
+    scratch t
+    let alone =
+        await (
+            t.Db.Write(fun tx ->
+                insert tx "a"
+                tx.OnCommit(fun tx ->
+                    insert tx "a-hook"
+                    insert tx "a"))
+        )
+    // Rails: the save committed, its after_commit's first statement autocommitted, the second raised to the caller.
+    Assert.True(Result.isError alone, "the hook's error reaches the caller")
+    Assert.Equal<string list>([ "a"; "a-hook" ], values t)
+    let results =
+        asOneGroup
+            t.Db
+            [ fun tx ->
+                  insert tx "x1"
+                  tx.OnCommit(fun tx -> insert tx "x1-hook")
+              fun tx ->
+                  insert tx "x2"
+                  tx.OnCommit(fun tx -> insert tx "x1")
+              fun tx ->
+                  insert tx "x3"
+                  tx.OnCommit(fun tx -> insert tx "x3-hook") ]
+    Assert.True(Result.isOk results[0] && Result.isError results[1] && Result.isOk results[2], $"{results}")
+    // Every write of the group, then their on-commit work in their order, one commit.
+    Assert.Equal<string list>([ "a"; "a-hook"; "x1"; "x2"; "x3"; "x1-hook"; "x3-hook" ], values t)
+
+[<Fact>]
+let ``writes on their callers' threads never share the writer connection and commit once each, in each caller's order`` () =
+    use t = new TestDb(false)
+    scratch t
+    let mutable inside = 0
+    let callers = 16
+    let each = 50
+    let tasks =
+        [ for k in 1..callers ->
+              Task.Run<unit>(fun () ->
+                  task {
+                      for i in 1..each do
+                          let! result =
+                              t.Db.Write(fun tx ->
+                                  if Interlocked.Increment(&inside) <> 1 then failwith "two writes on the writer connection at once"
+                                  try
+                                      insert tx $"{k}-{i}"
+                                  finally
+                                      Interlocked.Decrement(&inside) |> ignore)
+                          unwrap result
+                  }) ]
+    Task.WaitAll(tasks |> List.map (fun t -> t :> Task) |> Array.ofList, TimeSpan.FromSeconds 60.0) |> ignore
+    for task in tasks do
+        Assert.True(task.IsCompletedSuccessfully, $"{task.Exception}")
+    let written = values t
+    Assert.Equal(callers * each, written.Length)
+    for k in 1..callers do
+        let mine = written |> List.filter (fun v -> v.StartsWith($"{k}-")) |> List.map (fun v -> int (v.Substring(v.IndexOf '-' + 1)))
+        Assert.Equal<int list>([ 1..each ], mine)
+    Assert.True(t.Db.WriterStats.Inline > 0L, "some writes ran on their callers' threads")
+    // With another writing request in flight, writes go through the writer thread.
+    let inlineBefore = t.Db.WriterStats.Inline
+    WriteLoad.Enter()
+    WriteLoad.Enter()
+    try
+        for i in 1..20 do
+            await (t.Db.Write(fun tx -> insert tx $"queued-{i}")) |> unwrap
+    finally
+        WriteLoad.Leave()
+        WriteLoad.Leave()
+    Assert.Equal(inlineBefore, t.Db.WriterStats.Inline)

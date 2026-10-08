@@ -115,7 +115,18 @@ module Boot =
 
     /// The Rails route table, with the app's fragment cache current while the action runs.
     let dispatchWithFragmentCache (c: Ctx) : Task<Result<Response, Error>> =
-        FragmentCache.scoped c.App.FragmentCache (fun () -> RouteTable.dispatch c)
+        match c.Request.Method with
+        | "GET"
+        | "HEAD" -> FragmentCache.scoped c.App.FragmentCache (fun () -> RouteTable.dispatch c)
+        | _ ->
+            // onCrack (unit R2.2): requests that may write, for `Database.Write`'s choice of thread (`WriteLoad`).
+            WriteLoad.Enter()
+            task {
+                try
+                    return! FragmentCache.scoped c.App.FragmentCache (fun () -> RouteTable.dispatch c)
+                finally
+                    WriteLoad.Leave()
+            }
 
     /// The HTTP pipeline: public files, then `/cable`, then the Rails route table. `Rack::Deflater`
     /// (config.ru) is around the whole app, kit's pre-routing middleware inside it.

@@ -729,6 +729,10 @@ type WriterStats() =
     [<DefaultValue>]
     val mutable Largest: int
 
+    /// onCrack (unit R2.2): writes run on their caller's thread (`InlineWrites`), counted in `Groups` and `Writes` too.
+    [<DefaultValue>]
+    val mutable Inline: int64
+
     /// On the writer thread, per group taken.
     member internal this.Record(size: int) : unit =
         Interlocked.Increment(&this.Groups) |> ignore
@@ -795,7 +799,7 @@ type Database
 
             // A group's run, its answers and the WAL's check: on the writer thread, or (one write that found the
             // writer idle) on its caller's thread.
-            let processGroup (jobs: ResizeArray<WriteJob>) : unit =
+            let processGroup (jobs: ResizeArray<WriteJob>) (onWriter: bool) : unit =
                 stats.Record jobs.Count
                 // A write that raises must not take the writer down with it: `Writer` hands the
                 // closure's exception to its caller and rolls back; this is the backstop for
@@ -826,9 +830,13 @@ type Database
                 if committed then
                     match (try Checkpoint.walPages conn with _ -> 0) with
                     | 0 -> ()
-                    | pages when pages >= Pragmas.WalLimitPages -> cp.RestartWal conn
+                    | pages when pages >= Pragmas.WalLimitPages ->
+                        // RESTART waits for the readers; a request's thread must not (onCrack, unit R2.2): an empty
+                        // write sends the writer thread round, which checks the WAL after it.
+                        if onWriter then cp.RestartWal conn
+                        else queue.Enqueue(WriteJob<unit>(ignore, ignore)) |> ignore
                     | pages -> cp.WalGrewTo pages
-            processInline <- processGroup
+            processInline <- fun jobs -> processGroup jobs false
 
             let thread =
                 Thread(
@@ -841,7 +849,7 @@ type Database
                                 running <- false
                             else
                                 try
-                                    processGroup jobs
+                                    processGroup jobs true
                                 finally
                                     queue.Finished()),
                     Name = "campfire-db-writer",
@@ -908,7 +916,7 @@ type Database
     /// Runs `f` as one immediate transaction on the writer thread (onCrack: or as part of one, with the
     /// writes queued beside it; see `Writer`).
     member this.Write(f: Tx -> 'T) : Task<Result<'T, DbError>> =
-        if inlineWrites && PostPath.InlineWrites && writeQueue.TryTakeInline() then
+        if inlineWrites && PostPath.InlineWrites && WriteLoad.InFlight <= 1 && writeQueue.TryTakeInline() then
             this.WriteInline f
         else
             this.WriteQueued f
@@ -916,6 +924,7 @@ type Database
     /// onCrack (unit R2.2): `Write` on the calling thread, the writer connection taken by `TryTakeInline`: the same
     /// group of one, answers and WAL check as the writer thread's, and the task complete when it returns.
     member private _.WriteInline(f: Tx -> 'T) : Task<Result<'T, DbError>> =
+        Interlocked.Increment(&stats.Inline) |> ignore
         let mutable outcome = Unchecked.defaultof<Result<Result<'T, DbError>, exn>>
         let job = WriteJob<'T>(f, fun result -> outcome <- result)
         try
