@@ -96,6 +96,12 @@ async def client(port, deflate, tracker, ready, started):
         elif length == 127:
             length = int.from_bytes(await reader.readexactly(8), "big")
         payload = await reader.readexactly(length)
+        if b0 & 0x0F == 9:
+            # A ping: answer with a pong echoing it, as a WebSocket library (and a browser) does. onCrack's connections
+            # wait for that pong before writing to their sockets themselves (unit R2.1).
+            mask = os.urandom(4)
+            writer.write(bytes([0x8A, 0x80 | len(payload)]) + mask + bytes(b ^ mask[i % 4] for i, b in enumerate(payload)))
+            continue
         if b0 & 0x0F != 1:
             continue
         if b0 & 0x40:
@@ -110,6 +116,35 @@ async def client(port, deflate, tracker, ready, started):
             tracker.delivered(int(payload[start:end]))
 
 
+async def sse_client(port, tracker, ready, started):
+    """`--transport sse` (unit R2.1's prototype): GET /sse and read its chunked event stream, one `data:` line per message."""
+    reader, writer = await asyncio.open_connection("127.0.0.1", port)
+    writer.write(f"GET /sse HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nAccept: text/event-stream\r\nCookie: bench=1\r\n\r\n".encode())
+    head = await reader.readuntil(b"\r\n\r\n")
+    assert head.startswith(b"HTTP/1.1 200"), head
+    started.append(1)
+    marker = b'data-seq=\\"'
+    pending = b""
+    readied = False
+    while True:
+        size_line = await reader.readuntil(b"\r\n")
+        size = int(size_line.strip(), 16)
+        chunk = await reader.readexactly(size + 2)
+        pending += chunk[:-2]
+        while b"\n\n" in pending:
+            event, pending = pending.split(b"\n\n", 1)
+            if event.startswith(b": ready"):
+                if not readied:
+                    readied = True
+                    ready.append(1)
+                continue
+            at = event.find(marker)
+            if at >= 0:
+                start = at + len(marker)
+                end = event.index(b"\\", start)
+                tracker.delivered(int(event[start:end]))
+
+
 def post(port, seq, size, count):
     url = f"http://127.0.0.1:{port}/broadcast?seq={seq}&bytes={size}&count={count}"
     with urllib.request.urlopen(urllib.request.Request(url, method="POST", data=b"")) as response:
@@ -122,6 +157,7 @@ async def main():
     parser.add_argument("pid", type=int)
     parser.add_argument("--clients", type=int, default=1000)
     parser.add_argument("--deflate", type=int, default=0)
+    parser.add_argument("--transport", choices=["ws", "sse"], default="ws", help="sse: the F# server's /sse prototype (unit R2.1)")
     parser.add_argument("--bytes", type=int, default=600)
     parser.add_argument("--rounds", type=int, default=30)
     parser.add_argument("--burst", type=int, default=100)
@@ -134,7 +170,10 @@ async def main():
     rss_before = rss_mb(args.pid)
     tasks = []
     for i in range(args.clients):
-        tasks.append(asyncio.create_task(client(args.port, args.deflate, tracker, ready, started)))
+        if args.transport == "sse":
+            tasks.append(asyncio.create_task(sse_client(args.port, tracker, ready, started)))
+        else:
+            tasks.append(asyncio.create_task(client(args.port, args.deflate, tracker, ready, started)))
         if i % 50 == 49:
             await asyncio.sleep(0.05)
     deadline = time.time() + 60
@@ -195,6 +234,7 @@ async def main():
             {
                 "clients": args.clients,
                 "deflate": bool(args.deflate),
+                "transport": args.transport,
                 "bytes": args.bytes,
                 "rss_mb_before": round(rss_before, 1),
                 "rss_mb_idle": round(rss_idle, 1),

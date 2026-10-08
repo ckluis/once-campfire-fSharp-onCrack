@@ -7,11 +7,15 @@
 //                                  broadcasts C Turbo Stream appends of about B bytes of HTML, numbered from N
 //                                  as data-seq, to "bench"; answers with how many subscribers got the last one
 //   GET /gc                        bytes allocated and collections so far (F# only)
+//   GET /sse                       onCrack's server-sent-events prototype (unit R2.1): the same broadcasts as an event
+//                                  stream, one `data:` line each (the Turbo Stream as its JSON string), through Kestrel's
+//                                  response (F# only; driver.py --transport sse)
 //
 //   CableBench PORT
 module CableBench
 
 open System
+open System.Buffers
 open System.Net
 open System.Text
 open System.Threading.Tasks
@@ -62,6 +66,43 @@ let main argv =
             for i in 0 .. count - 1 do
                 received <- Turbo.broadcastAppendTo server [ "bench" ] "messages" (html (seq + i) bytes)
             ctx.Response.WriteAsync(string received))
+    )
+    |> ignore
+    let ready = Encoding.ASCII.GetBytes ": ready\n\n"
+    let dataPrefix = Encoding.ASCII.GetBytes "data: "
+    let eventEnd = Encoding.ASCII.GetBytes "\n\n"
+    app.MapGet(
+        "/sse",
+        RequestDelegate(fun ctx ->
+            task {
+                ctx.Response.ContentType <- "text/event-stream"
+                ctx.Response.Headers.CacheControl <- "no-cache"
+                let wake = Wake()
+                use subscriber = server.Hub.Subscribe("bench", null, wake)
+                use _ = ctx.RequestAborted.Register(fun () -> wake.Set())
+                let body = ctx.Response.BodyWriter
+                body.Write(ReadOnlySpan ready)
+                let! _ = body.FlushAsync()
+                let mutable running = true
+                while running && not ctx.RequestAborted.IsCancellationRequested do
+                    let! _ = wake.WaitAsync()
+                    let mutable frame = Unchecked.defaultof<Socket.Frame>
+                    let mutable any = false
+                    let mutable reading = true
+                    while reading do
+                        match subscriber.TryRecv(&frame) with
+                        | RecvStatus.Got ->
+                            body.Write(ReadOnlySpan dataPrefix)
+                            body.Write(ReadOnlySpan frame.Bytes)
+                            body.Write(ReadOnlySpan eventEnd)
+                            any <- true
+                        | RecvStatus.Lagged -> running <- false; reading <- false
+                        | _ -> reading <- false
+                    if any then
+                        let! flushed = body.FlushAsync()
+                        if flushed.IsCompleted || flushed.IsCanceled then running <- false
+            }
+            :> Task)
     )
     |> ignore
     app.MapGet(

@@ -5,7 +5,9 @@
 # per idle client, latency of one broadcast to every client, and the server's CPU time per delivered message in a
 # burst. It needs python3, the .NET SDK and (for the Rust side) cargo via mise.
 #
-#   bench/cable/run [fsharp|rust|both] [--clients 1000] [--bytes 600] [--rounds 60] [--burst 200] [--reps 1] [--tuned]
+#   bench/cable/run [fsharp|rust|both] [--clients 1000] [--bytes 600] [--rounds 60] [--burst 200] [--reps 1] [--tuned] [--sse]
+#
+# --sse also drives the F# server's server-sent-events prototype (GET /sse, driver.py --transport sse; unit R2.1).
 #
 # --tuned runs the F# server with the thread pool's workers not spinning (DOTNET_ThreadPool_UnfairSemaphoreSpinLimit=0), which a
 # fan-out wave of short continuations otherwise spends a good part of its CPU on, and with Kestrel's socket transport running its
@@ -20,7 +22,7 @@ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 OUT=$ROOT/target/cable-bench
 which=${1:-both}
 [ $# -gt 0 ] && shift
-CLIENTS=1000 BYTES=600 ROUNDS=60 BURST=200 REPS=1 TUNED=0 PORT=${PORT:-4410}
+CLIENTS=1000 BYTES=600 ROUNDS=60 BURST=200 REPS=1 TUNED=0 SSE=0 PORT=${PORT:-4410}
 while [ $# -gt 0 ]; do
   case $1 in
     --clients) CLIENTS=$2; shift 2 ;;
@@ -29,6 +31,7 @@ while [ $# -gt 0 ]; do
     --burst) BURST=$2; shift 2 ;;
     --reps) REPS=$2; shift 2 ;;
     --tuned) TUNED=1; shift ;;
+    --sse) SSE=1; shift ;;
     *) echo "unknown option $1"; exit 2 ;;
   esac
 done
@@ -58,6 +61,14 @@ run_one() {
         --rounds "$ROUNDS" --burst "$BURST"
     done
   done
+  # onCrack's server-sent-events prototype (unit R2.1): the F# server only.
+  if [ "$name" = fsharp ] && [ "$SSE" = 1 ]; then
+    for rep in $(seq 1 "$REPS"); do
+      printf '%-8s sse        ' "$name"
+      python3 "$ROOT/bench/cable/driver.py" "$PORT" "$pid" --clients "$CLIENTS" --transport sse --bytes "$BYTES" \
+        --rounds "$ROUNDS" --burst "$BURST"
+    done
+  fi
   kill "$pid" 2>/dev/null || true
   wait "$pid" 2>/dev/null || true
 }
