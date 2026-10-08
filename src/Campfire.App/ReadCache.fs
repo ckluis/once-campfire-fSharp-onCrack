@@ -66,6 +66,12 @@ module Deps =
 type UserReadAt(dep: Dep) =
     member _.Dep = dep
 
+/// The sessions counter's value the signed-in session was read under (`ReadCache.session`): the front server's fast path replays a
+/// page only while it is unchanged, so a session destroyed (sign-out, a ban, a deactivation) stops the replay at once.
+[<Sealed; AllowNullLiteral>]
+type SessionReadAt(dep: Dep) =
+    member _.Dep = dep
+
 /// What a cache miss's render left behind for the cache to keep: set while the request runs, read when
 /// it returns.
 [<Sealed; AllowNullLiteral>]
@@ -188,6 +194,19 @@ module ReadCache =
                 | link -> c.SetHeader("link", link)
                 Ok(c.RenderParts(entry.Status, entry.Template, entry.Page))
 
+    /// onCrack (R2.3): offers a hit to the front server's fast path (`Campfire.Kit.FastCandidate`). Only for a request authenticated
+    /// by its session cookie, whose session and user were read through the cache's counters: the replay is valid while the page's
+    /// counters (the user's and global among them) and the sessions counter keep their values, and until the session's next
+    /// activity refresh is due (a second early), which is a write the replay would skip.
+    let private offerFast (c: Ctx) (deps: Dep[]) : unit =
+        if FastCandidate.enabled && Current.authenticatedBy c = BySession then
+            match c.Current<SessionReadAt>(), c.Current<CurrentSessionSlot>() with
+            | ValueSome at, ValueSome(CurrentSessionSlot session) ->
+                let all = Array.append deps [| at.Dep |]
+                let refreshDue = session.LastActiveAt.ToDateTimeOffset().UtcTicks + Campfire.Db.Session.activityRefreshRate.Ticks - TimeSpan.TicksPerSecond
+                c.FastCandidate <- FastCandidate(Func<bool>(fun () -> Deps.valid all), refreshDue, c.Clock)
+            | _ -> ()
+
     /// A page through the cache. `missDeps` takes the counters the page depends on, before any of its
     /// queries; `onHit` does what the action does besides rendering (a cookie); `render` is the action.
     let page
@@ -208,7 +227,11 @@ module ReadCache =
             | ValueSome entry ->
                 Interlocked.Increment(&store.Hits) |> ignore
                 onHit ()
-                Task.FromResult(serve c entry)
+                let served = serve c entry
+                match served with
+                | Ok response when response.Status = 200 -> offerFast c entry.Deps
+                | _ -> ()
+                Task.FromResult served
             | ValueNone ->
                 Interlocked.Increment(&store.Misses) |> ignore
                 task {
@@ -318,7 +341,7 @@ module ReadCache =
     let session (c: Ctx) (token: string) (load: unit -> Task<Result<Campfire.Db.Session option, Error>>) : Task<Result<Campfire.Db.Session option, Error>> =
         match versions c with
         | null -> load ()
-        | v -> through (storeOf v).Sessions token v.Sessions ignore load
+        | v -> through (storeOf v).Sessions token v.Sessions (fun dep -> c.SetCurrent(SessionReadAt dep)) load
 
     /// `User.find_by(id:)`, through the cache (users are global). The request remembers the global counter's
     /// value the user is as of (`UserReadAt`), which the pages it renders depend on.

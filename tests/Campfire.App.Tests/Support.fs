@@ -176,8 +176,11 @@ type private CountingBody(inner: IHttpResponseBodyFeature, counter: BodyWrites) 
         member _.SendFileAsync(path, offset, count, cancellationToken) = inner.SendFileAsync(path, offset, count, cancellationToken)
         member _.CompleteAsync() = inner.CompleteAsync()
 
-type Host(host: WebApplication, port: int, writes: BodyWrites) =
+type Host(host: WebApplication, port: int, writes: BodyWrites, front: FrontServices | null) =
     member _.Port = port
+
+    /// The front server's services when the pipeline is served behind it (`startFronted`), else null.
+    member _.Front = front
 
     /// How many writes the app's handlers have made to response bodies.
     member _.BodyWrites: BodyWrites = writes
@@ -236,8 +239,43 @@ let startPipeline (pipeline: IApplicationBuilder -> unit) : Task<Host> =
         pipeline app
         do! app.StartAsync()
         let addresses = (nonNull (app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>())).Addresses
-        return new Host(app, Uri(Seq.head addresses).Port, writes)
+        return new Host(app, Uri(Seq.head addresses).Port, writes, null)
     }
+
+/// Serve `pipeline` behind the front server's handler (Thruster's chain and onCrack's fast path), as `Front.serve` does, on a
+/// free loopback port. The body writes counted are the front's.
+let startFronted (pipeline: IApplicationBuilder -> unit) : Task<Host> =
+    task {
+        let builder = WebApplication.CreateSlimBuilder()
+        builder.WebHost.ConfigureKestrel(fun (options: KestrelServerOptions) ->
+            Adapter.configureKestrel options
+            options.Listen(IPAddress.Loopback, 0))
+        |> ignore
+        builder.Logging.ClearProviders() |> ignore
+        let app = builder.Build()
+        let writes = BodyWrites()
+        app.Use(
+            Func<HttpContext, RequestDelegate, Task>(fun http next ->
+                match http.Features.Get<IHttpResponseBodyFeature>() with
+                | null -> ()
+                | inner -> http.Features.Set<IHttpResponseBodyFeature>(CountingBody(inner, writes))
+                next.Invoke http)
+        )
+        |> ignore
+        let branch = (app :> IApplicationBuilder).New()
+        pipeline branch
+        let appDelegate = branch.Build()
+        let services = FrontServices(FrontConfig.fromLookup (fun _ -> null), Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance)
+        let handler = FrontHandler(services, appDelegate)
+        app.Run(RequestDelegate(fun ctx -> handler.Invoke ctx))
+        do! app.StartAsync()
+        let addresses = (nonNull (app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>())).Addresses
+        return new Host(app, Uri(Seq.head addresses).Port, writes, services)
+    }
+
+/// `CAMPFIRE_TEST_FRONT=1` serves every booted app behind the front server (`startFronted`), so the whole suite runs through the
+/// fast path as well.
+let private frontAll = Environment.GetEnvironmentVariable "CAMPFIRE_TEST_FRONT" = "1"
 
 /// Log lines written to a factory, formatted as the console would (without its timestamp).
 type CapturingLoggers() =
@@ -331,16 +369,19 @@ let configFor (root: string) (extra: (string * string) list) : AppConfig =
     | Ok config -> config
     | Error message -> failwith message
 
-let private start (config: AppConfig) (dir: string) : Task<Test> =
+let private startWith (fronted: bool) (config: AppConfig) (dir: string) : Task<Test> =
     task {
         let logs = new CapturingLoggers()
         let! booted = Boot.boot config logs
-        let! host = startPipeline booted.Pipeline
+        let! host = if fronted || frontAll then startFronted booted.Pipeline else startPipeline booted.Pipeline
         return new Test(booted, dir, host, logs)
     }
 
-/// An app booted over a private copy of seed `name`, or `None` (a skip) when the seed isn't built.
-let bootSeeded (name: string) : Task<Test> =
+let private start (config: AppConfig) (dir: string) : Task<Test> = startWith false config dir
+
+/// An app booted over a private copy of seed `name`, or `None` (a skip) when the seed isn't built; with `fronted`, behind
+/// the front server.
+let bootSeededWith (fronted: bool) (extra: (string * string) list) (name: string) : Task<Test> =
     task {
         match Repo.seed name with
         | None ->
@@ -354,11 +395,14 @@ let bootSeeded (name: string) : Task<Test> =
                 if File.Exists from then File.Copy(from, Path.Combine(dir, "db", file))
             let storage = Path.Combine(seed, "storage")
             if Directory.Exists storage then copyDir storage (Path.Combine(dir, "files"))
-            let! test = start (configFor dir []) dir
+            let! test = startWith fronted (configFor dir extra) dir
             let labels = Path.Combine(seed, "labels.json")
             if File.Exists labels then test.Labels <- Some((JsonDocument.Parse(File.ReadAllText labels)).RootElement.Clone())
             return test
     }
+
+/// An app booted over a private copy of seed `name`, or `None` (a skip) when the seed isn't built.
+let bootSeeded (name: string) : Task<Test> = bootSeededWith false [] name
 
 /// An app booted over an empty storage directory (a fresh install's database).
 let bootEmpty () : Task<Test> =

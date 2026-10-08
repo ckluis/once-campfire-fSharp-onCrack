@@ -356,6 +356,15 @@ module Adapter =
                 // expects to be as long as the response says: with no body written, it says nothing.
                 if head && not (isNull state.OriginalMethod) then response.Headers.Remove Hdr.ContentLength
                 copyHeaders http response
+                // onCrack (R2.3): the body a replayable answer sends, for the front server's fast path.
+                if FastCandidate.enabled && not head then
+                    match http.Features.Get<FastCandidate>() with
+                    | null -> ()
+                    | candidate ->
+                        match gzipMtime, response.Body with
+                        | ValueSome _, Body.Parts _ when not ready.IsEmpty -> candidate.Body <- ready
+                        | ValueNone, Body.Parts(:? FrozenPage as page) -> candidate.Body <- page.Plain()
+                        | _ -> ()
                 try
                     try
                         if head then
@@ -408,10 +417,46 @@ module Adapter =
             | _ -> ()
             Task.CompletedTask)
 
+    /// `SecureRandom.uuid`: a version 4 UUID, from a per-thread block of random bytes refilled 4 KB at a time (onCrack R2.3:
+    /// `Guid.NewGuid` made one `getrandom` system call per request).
+    [<Sealed; AbstractClass>]
+    type private Uuids =
+        [<ThreadStatic; DefaultValue>]
+        static val mutable private block: byte[] | null
+
+        [<ThreadStatic; DefaultValue>]
+        static val mutable private used: int
+
+        static member Next() : string =
+            let block =
+                match Uuids.block with
+                | null ->
+                    let created = Array.zeroCreate<byte> 4096
+                    Uuids.block <- created
+                    Uuids.used <- created.Length
+                    created
+                | block -> block
+            if Uuids.used + 16 > block.Length then
+                Security.Cryptography.RandomNumberGenerator.Fill(Span<byte> block)
+                Uuids.used <- 0
+            let bytes = Span<byte>(block, Uuids.used, 16)
+            Uuids.used <- Uuids.used + 16
+            // `Guid.NewGuid`'s version and variant bits (the version is the high nibble of the third group, little-endian).
+            bytes[7] <- (bytes[7] &&& 0x0Fuy) ||| 0x40uy
+            bytes[8] <- (bytes[8] &&& 0x3Fuy) ||| 0x80uy
+            let id = Guid(Span<byte>.op_Implicit bytes).ToString()
+            bytes.Clear()
+            id
+
+    let private uuidsOff =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_REQUEST_ID_BLOCK" with
+        | null -> false
+        | v -> v = "0" || v.Equals("off", StringComparison.OrdinalIgnoreCase) || v.Equals("false", StringComparison.OrdinalIgnoreCase)
+
     /// `ActionDispatch::RequestId#make_request_id`
-    let private makeRequestId (incoming: string | null) : string =
+    let internal makeRequestId (incoming: string | null) : string =
         if String.IsNullOrWhiteSpace incoming then
-            Guid.NewGuid().ToString()
+            if uuidsOff then Guid.NewGuid().ToString() else Uuids.Next()
         else
             let id = StringBuilder()
             let incoming = nonNull incoming
@@ -591,6 +636,15 @@ module Adapter =
                     ctx.Finish result
                 with e ->
                     ctx.Finish(Error(actionPanicked e))
+            // onCrack (R2.3): an answer the front server may replay, once the session and the cookie jar are committed: a 200 whose
+            // cookies it can write again, valid no longer than the cookies it read.
+            match ctx.FastCandidate with
+            | null -> ()
+            | candidate ->
+                if FastCandidate.enabled && response.Status = 200 && not head && ctx.Cookies.Replayable then
+                    candidate.NotAfterTicks <- min candidate.NotAfterTicks ctx.Cookies.VerifiedUntil
+                    candidate.PermanentExpiries <- ctx.Cookies.PermanentExpiries
+                    http.Features.Set<FastCandidate>(candidate)
             try
                 do! write kit http response head
             finally

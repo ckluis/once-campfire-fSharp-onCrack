@@ -88,6 +88,13 @@ module Front =
             let builder = WebApplication.CreateSlimBuilder [| "--hostBuilder:reloadConfigOnChange=false" |]
             builder.Services.AddSingleton<ILoggerFactory>(loggerFactory) |> ignore
             builder.Services.AddSingleton<IHostLifetime, NoLifetime>() |> ignore
+            // onCrack (R2.3): with `CAMPFIRE_INLINE` (`FrontInline`) each connection's requests are read on the socket's own event thread
+            // instead of being handed to the thread pool (Kestrel's `UnsafePreferInlineScheduling`, with the runtime's inline socket
+            // completions, `Program.main`); measured in oncrack-r2-front.md.
+            if FrontInline.mode <> FrontInline.Off then
+                builder.WebHost.UseSockets(fun (o: Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions) ->
+                    o.UnsafePreferInlineScheduling <- true)
+                |> ignore
             builder.WebHost.ConfigureKestrel(fun (options: KestrelServerOptions) ->
                 Adapter.configureKestrel options
                 FrontConn.configureLimits options timeouts
@@ -125,6 +132,8 @@ module Front =
                     let port = ctx.Connection.LocalPort
                     if upstream && port = config.TargetPort then
                         task {
+                            // Never the app on a socket's event thread unless CAMPFIRE_INLINE=all.
+                            if FrontInline.mode = FrontInline.Replays then do! Task.Yield()
                             let! within = FrontProxy.withinLimit ctx maxBody
                             if within then do! appDelegate.Invoke ctx else FrontProxy.tooLarge ctx
                         }

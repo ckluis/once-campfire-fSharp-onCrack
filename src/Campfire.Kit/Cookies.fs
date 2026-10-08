@@ -286,12 +286,29 @@ type CookieJar(secrets: Secrets, clock: SharedClock) =
 
     member this.Contains(name: string) : bool = not (isNull (this.Get name))
 
+    /// onCrack (R2.3): the earliest expiry (UTC ticks) of the signed and encrypted cookies this request read, `Int64.MaxValue` for
+    /// none: the front server's fast path replays a page that read them only until then.
+    member val VerifiedUntil = Int64.MaxValue with get, set
+
+    /// onCrack (R2.3): whether the `Set-Cookie` headers can be made again for a later request from the same request bytes: plain
+    /// values only (a signed or encrypted value carries its expiry and an encrypted one a random IV), and an expiry only a
+    /// permanent cookie's (20 years from when it is written, which the fast path works out again).
+    member val Replayable = true with get, set
+
+    member private this.Watched(read: unit -> 'T) : 'T =
+        ExpiryWatch.Start()
+        try
+            read ()
+        finally
+            let until = ExpiryWatch.Stop()
+            if until < this.VerifiedUntil then this.VerifiedUntil <- until
+
     /// `cookies.signed[name]`.
     member this.Signed(name: string) : string | null =
         match this.Get name with
         | null -> null
         | raw ->
-            match Cookies.verifySigned secrets name raw (clock.Now()) with
+            match this.Watched(fun () -> Cookies.verifySigned secrets name raw (clock.Now())) with
             | Some value -> value
             | None -> null
 
@@ -299,7 +316,7 @@ type CookieJar(secrets: Secrets, clock: SharedClock) =
     member this.Encrypted(name: string) : Value voption =
         match this.Get name with
         | null -> ValueNone
-        | raw -> Cookies.decrypt secrets name raw (clock.Now()) |> ValueOption.ofOption
+        | raw -> this.Watched(fun () -> Cookies.decrypt secrets name raw (clock.Now())) |> ValueOption.ofOption
 
     member private _.ResolveExpiry(cookie: Cookie) : Cookie =
         if cookie.Permanent then
@@ -318,12 +335,15 @@ type CookieJar(secrets: Secrets, clock: SharedClock) =
             deleteCookies.Remove name
 
     /// `cookies[name] = value` (or `cookies.permanent[name] = ...` with `Cookie.AsPermanent`).
-    member this.Set(name: string, cookie: Cookie) : unit = this.WriteValue(name, this.ResolveExpiry cookie)
+    member this.Set(name: string, cookie: Cookie) : unit =
+        if cookie.Expires.IsSome && not cookie.Permanent then this.Replayable <- false
+        this.WriteValue(name, this.ResolveExpiry cookie)
 
     member this.Set(name: string, value: string) : unit = this.Set(name, Cookie.New value)
 
     /// `cookies.signed[name] = value`.
     member this.SetSigned(name: string, cookie: Cookie) : Result<unit, Error> =
+        this.Replayable <- false
         let cookie = this.ResolveExpiry cookie
         let signed =
             { cookie with Value = Cookies.sign secrets name cookie.Value (ValueOption.toOption cookie.Expires) }
@@ -337,6 +357,7 @@ type CookieJar(secrets: Secrets, clock: SharedClock) =
 
     /// `cookies.encrypted[name] = value`; `cookie.Value` is ignored in favor of `value`.
     member this.SetEncrypted(name: string, value: Value, cookie: Cookie) : Result<unit, Error> =
+        this.Replayable <- false
         let cookie = this.ResolveExpiry cookie
         let encrypted =
             { cookie with Value = Cookies.encrypt secrets name value (ValueOption.toOption cookie.Expires) }
@@ -359,6 +380,14 @@ type CookieJar(secrets: Secrets, clock: SharedClock) =
 
     /// Whether the response needs any `Set-Cookie` at all.
     member _.HasChanges: bool = setCookies.Count > 0 || deleteCookies.Count > 0
+
+    /// onCrack (R2.3): the expiry, as written in `Set-Cookie`, of every permanent cookie set.
+    member _.PermanentExpiries: string[] =
+        [| for i in 0 .. setCookies.Count - 1 do
+               let cookie = setCookies.ValueAt i
+               match cookie.Expires with
+               | ValueSome expires when cookie.Permanent -> KitClock.httpdate expires
+               | _ -> () |]
 
     /// The `Set-Cookie` header values Rails would write, in order.
     member _.SetCookieHeaders(ssl: bool, host: string) : ResizeArray<string> =

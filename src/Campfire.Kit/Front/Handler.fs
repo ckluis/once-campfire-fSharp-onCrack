@@ -27,12 +27,146 @@ open Microsoft.AspNetCore.Http.Features
 open Microsoft.Extensions.Logging
 open Microsoft.Extensions.Primitives
 
+/// One header line of a replayed answer: as it went out, or made again for each request.
+[<Struct>]
+type FastHeader =
+    { Name: string
+      /// The value; for a permanent cookie, the line up to its expiry date.
+      Value: string
+      /// 0: as it went out, 1: `X-Request-Id`, 2: `X-Runtime`, 3: a permanent cookie (`Value`, the date, `Suffix`).
+      Kind: int
+      Suffix: string | null }
+
+/// An answer the fast path replays (onCrack R2.3; `FastPath.fs`).
+[<Sealed>]
+type FastEntry(candidate: FastCandidate, status: int, headers: FastHeader[]) =
+    member _.Status = status
+    member _.Headers = headers
+    member _.Body = candidate.Body
+    member _.Clock = candidate.Clock
+
+    /// Whether it may still be replayed: every counter it depends on unchanged, and its authentication not yet due again.
+    member _.Fresh() : bool =
+        candidate.Valid.Invoke() && candidate.Clock.Now().UtcTicks <= candidate.NotAfterTicks
+
+    member _.Cost(key: string) : int =
+        let mutable cost = key.Length * 2 + candidate.Body.Length + CacheCosts.EntryOverhead
+        for h in headers do
+            cost <- cost + (h.Name.Length + h.Value.Length + (match h.Suffix with null -> 0 | x -> x.Length)) * 2 + 16
+        cost
+
+/// The fast path's answers (onCrack R2.3), keyed by every byte of the request they answered that the app can read: the protocol, the
+/// scheme and port it came in on, the target, and every header but `X-Request-Start` (the front's own), `X-Request-Id` (made again)
+/// and `X-Forwarded-For` (no page reads the client's address on a GET; the log line still does). Bounded like the read cache, in two
+/// generations of half of `CAMPFIRE_FAST_PATH_MB` (32) each. The key is only built for targets the app has offered an answer for.
+[<Sealed>]
+type FastStore(budget: int) =
+    let gate = obj ()
+    let fresh () = Generations<string, FastEntry>(budget, (fun key entry -> entry.Cost key), StringComparer.Ordinal)
+    let mutable entries = fresh ()
+    let targets = ConcurrentDictionary<string, byte>(StringComparer.Ordinal)
+
+    [<ThreadStatic; DefaultValue>]
+    static val mutable private builder: Text.StringBuilder | null
+
+    [<DefaultValue>]
+    val mutable Hits: int64
+
+    [<DefaultValue>]
+    val mutable Stored: int64
+
+    static member val Enabled = FastCandidate.enabled
+
+    /// The store a front server keeps, or null with the fast path off.
+    static member FromEnvironment() : FastStore | null =
+        if not FastCandidate.enabled then
+            null
+        else
+            let mb =
+                match Environment.GetEnvironmentVariable "CAMPFIRE_FAST_PATH_MB" with
+                | null -> 32
+                | value ->
+                    match Int32.TryParse value with
+                    | true, mb when mb > 0 -> mb
+                    | _ -> 32
+            FastStore(mb * 1024 * 1024)
+
+    static member private Excluded(name: string) : bool =
+        name.Equals("X-Request-Start", StringComparison.OrdinalIgnoreCase)
+        || name.Equals("X-Request-Id", StringComparison.OrdinalIgnoreCase)
+        || name.Equals("X-Forwarded-For", StringComparison.OrdinalIgnoreCase)
+
+    /// The key of a request, as it arrived (before the front adds its own headers).
+    static member KeyOf(ctx: HttpContext, target: string) : string =
+        let key =
+            match FastStore.builder with
+            | null ->
+                let created = Text.StringBuilder(1024)
+                FastStore.builder <- created
+                created
+            | b -> b.Clear()
+        let request = ctx.Request
+        key.Append(request.Protocol).Append('\u0001').Append(if request.IsHttps then 's' else 'p').Append(ctx.Connection.LocalPort).Append('\u0001').Append(target) |> ignore
+        for header in request.Headers do
+            if not (FastStore.Excluded header.Key) then
+                for value in header.Value do
+                    key.Append('\u0002').Append(header.Key).Append('\u0003').Append(value) |> ignore
+        let made = key.ToString()
+        if key.Capacity > 16384 then FastStore.builder <- null
+        made
+
+    /// Whether the app has offered an answer for this target (so building its key may find one).
+    member _.Knows(target: string) : bool = targets.ContainsKey target
+
+    member _.Mark(target: string) : unit =
+        if targets.Count >= 100_000 then targets.Clear()
+        targets.TryAdd(target, 0uy) |> ignore
+
+    member this.Lookup(key: string) : FastEntry | null =
+        match lock gate (fun () -> entries.Get(key, id)) with
+        | ValueSome entry when entry.Fresh() ->
+            Interlocked.Increment(&this.Hits) |> ignore
+            entry
+        | _ -> null
+
+    member this.Keep(key: string, entry: FastEntry) : unit =
+        if entry.Fresh() then
+            lock gate (fun () -> entries.Insert(key, entry))
+            Interlocked.Increment(&this.Stored) |> ignore
+
+    member _.Clear() : unit = lock gate (fun () -> entries <- fresh ())
+
+/// onCrack (R2.3): where a front listener's requests run. `CAMPFIRE_INLINE=off`: on the thread pool, as Kestrel does by default.
+/// `replays` (the default): every request is read on its socket's event thread, a fast path replay (microseconds, nothing that blocks) is answered
+/// there, and anything else is handed to the thread pool before the app sees it. `all`: everything runs on the event thread, the app too.
+module FrontInline =
+    [<Literal>]
+    let Off = 0
+
+    [<Literal>]
+    let Replays = 1
+
+    [<Literal>]
+    let All = 2
+
+    /// `replays` by default (and only with the fast path on: without it there is nothing to answer on the event thread).
+    let mode: int =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_INLINE" with
+        | null -> if FastCandidate.enabled then Replays else Off
+        | v when v.Equals("replays", StringComparison.OrdinalIgnoreCase) -> Replays
+        | v when v.Equals("all", StringComparison.OrdinalIgnoreCase) -> All
+        | _ -> Off
+
 /// The settings of a front handler that don't change, and the cache it fills.
 [<Sealed>]
 type FrontServices(config: FrontConfig, logger: ILogger, lines: RequestLines | null) =
     let acceptEncodings = ConcurrentDictionary<string, Encoding>(StringComparer.Ordinal)
 
     member val Cache = MemoryCache(config.CacheSize, config.MaxCacheItemSize)
+
+    /// onCrack (R2.3): the fast path's answers, null with `CAMPFIRE_FAST_PATH=off`.
+    member val Fast: FastStore | null = FastStore.FromEnvironment() with get, set
+
     member _.Config = config
     member _.Logger = logger
     member val MaxCacheableBody = int (min (max config.MaxCacheItemSize 0L) (int64 Int32.MaxValue))
@@ -88,6 +222,49 @@ module internal FrontHeaders =
         elif (status >= 100 && status <= 199) || status = 204 then
             headers.Remove "Content-Length" |> ignore
             headers.Remove "Transfer-Encoding" |> ignore
+
+    /// Every header line as it goes out (onCrack R2.3, the fast path's copy), `X-Cache` included.
+    let snapshotAll (headers: IHeaderDictionary) : struct (string * string)[] =
+        let lines = ResizeArray<struct (string * string)>(headers.Count + 2)
+        for header in headers do
+            for value in header.Value do
+                match value with
+                | null -> ()
+                | value -> lines.Add(struct (header.Key, value))
+        lines.ToArray()
+
+    /// The fast path's header lines for a candidate's copy: `X-Request-Id` and `X-Runtime` made again for each replay, and each
+    /// permanent cookie's expiry worked out again; null when a cookie line isn't one it can make again.
+    let fastHeaders (lines: struct (string * string)[]) (permanent: string[]) : FastHeader[] | null =
+        let made = Array.zeroCreate<FastHeader> lines.Length
+        let mutable ok = true
+        let mutable templated = 0
+        for i in 0 .. lines.Length - 1 do
+            let struct (name, value) = lines[i]
+            let mutable kind = 0
+            let mutable text = value
+            let mutable suffix: string | null = null
+            if name.Equals("x-request-id", StringComparison.OrdinalIgnoreCase) then
+                kind <- 1
+            elif name.Equals("x-runtime", StringComparison.OrdinalIgnoreCase) then
+                kind <- 2
+            elif name.Equals("Set-Cookie", StringComparison.OrdinalIgnoreCase) then
+                let mutable found = false
+                for date in permanent do
+                    if not found then
+                        let marker = "; expires=" + date
+                        match value.IndexOf(marker, StringComparison.Ordinal) with
+                        | -1 -> ()
+                        | at ->
+                            found <- true
+                            kind <- 3
+                            text <- value.Substring(0, at + "; expires=".Length)
+                            suffix <- value.Substring(at + marker.Length)
+                            templated <- templated + 1
+                // A cookie line with an expiry the jar didn't call permanent is one this can't make again.
+                if not found && value.Contains("expires=", StringComparison.OrdinalIgnoreCase) && not (value.Contains("expires=Thu, 01 Jan 1970", StringComparison.Ordinal)) then ok <- false
+            made[i] <- { Name = name; Value = text; Kind = kind; Suffix = suffix }
+        if ok && templated = permanent.Length then made else null
 
     /// A copy of the headers, a line to each value.
     let snapshot (headers: IHeaderDictionary) : struct (string * string)[] =
@@ -173,6 +350,7 @@ type FrontResponse
     /// decide whether to compress, 3: compressing.
     let mutable mode = 0
     let mutable hit = false
+    let mutable fastHit = false
     let mutable logged = false
     let mutable bytesSent = 0L
     let mutable record: RecordState | null = null
@@ -183,13 +361,28 @@ type FrontResponse
 
     member _.Services = services
 
+    member _.Context = ctx
+
     /// The `X-Cache` value: `bypass` for a request the cache can't serve, `miss`, or `hit`.
     member val XCache: string = (if isNull cacheKey then "bypass" else "miss") with get, set
 
     member _.BytesSent = bytesSent
 
+    /// onCrack (R2.3): the fast path's key for this request (built before the front's own headers), or null when it wasn't built.
+    member val FastKey: string | null = null with get, set
+
+    /// The request target, which the fast path marks when the app offers an answer for it before a key was built.
+    member val FastTarget: string | null = null with get, set
+
     /// Called as the headers go out, after the app's own `OnStarting` callbacks.
     member this.Starting() : unit =
+        if fastHit then this.StartingReplay() else this.StartingApp()
+
+    /// A replay's headers are the copy's, final already.
+    member private this.StartingReplay() : unit =
+        FrontHeaders.suppressBodilessHeaders ctx.Response.StatusCode ctx.Response.Headers
+
+    member private this.StartingApp() : unit =
         this.Decide()
         let headers = ctx.Response.Headers
         let status = ctx.Response.StatusCode
@@ -214,6 +407,11 @@ type FrontResponse
         FrontHeaders.suppressBodilessHeaders status headers
         // An upgraded connection's request never ends, so it's logged as it starts.
         if status = 101 then this.Log()
+        // onCrack (R2.3): an answer the app offered to the fast path, as it goes out.
+        if not (isNull services.Fast) && status = 200 then
+            match ctx.Features.Get<FastCandidate>() with
+            | null -> ()
+            | candidate -> candidate.Headers <- FrontHeaders.snapshotAll headers
 
     /// What the app has set by now says whether to record the body for the cache and whether to hold
     /// its start to compress it.
@@ -424,9 +622,59 @@ type FrontResponse
             this.Log()
         }
 
+    /// onCrack (R2.3): keeps an answer the app offered to the fast path, when it went out exactly as the candidate says: a 200,
+    /// straight to the connection, the candidate's body and nothing else.
+    member private this.KeepFast() : unit =
+        match services.Fast with
+        | null -> ()
+        | store ->
+            match ctx.Features.Get<FastCandidate>() with
+            | null -> ()
+            | candidate ->
+                match this.FastKey with
+                | null ->
+                    match this.FastTarget with
+                    | null -> ()
+                    | target -> store.Mark target
+                | key ->
+                    match candidate.Headers with
+                    | null -> ()
+                    | lines ->
+                        if ctx.Response.StatusCode = 200
+                           && mode = 1
+                           && isNull record
+                           && isNull compress
+                           && not candidate.Body.IsEmpty
+                           && bytesSent = int64 candidate.Body.Length then
+                            match FrontHeaders.fastHeaders lines candidate.PermanentExpiries with
+                            | null -> ()
+                            | headers -> store.Keep(key, FastEntry(candidate, 200, headers))
+
+    /// onCrack (R2.3): replays a kept answer without calling the app: its header lines, with `X-Request-Id`, `X-Runtime` and permanent
+    /// cookies' expiry made for this request, then its body.
+    member this.FastHit(entry: FastEntry, started: int64) : Task =
+        fastHit <- true
+        mode <- 1
+        let response = ctx.Response
+        response.StatusCode <- entry.Status
+        let headers = response.Headers
+        let mutable expires: string | null = null
+        for h in entry.Headers do
+            match h.Kind with
+            | 0 -> headers.Append(h.Name, StringValues h.Value)
+            | 1 -> headers.Append(h.Name, StringValues(Adapter.makeRequestId (FrontHeaders.first ctx.Request.Headers "X-Request-Id")))
+            | 2 ->
+                let seconds = Stopwatch.GetElapsedTime(started).TotalSeconds
+                headers.Append(h.Name, StringValues(seconds.ToString("F6", Globalization.CultureInfo.InvariantCulture)))
+            | _ ->
+                if isNull expires then expires <- KitClock.httpdate (KitClock.yearsFrom (entry.Clock.Now()) 20)
+                headers.Append(h.Name, StringValues(String.Concat(h.Value, expires, h.Suffix)))
+        this.PassOn(entry.Body).AsTask()
+
     /// The app is done: what's held goes out, a compressed body ends, and a recorded one is stored
     /// (unless the app failed).
     member this.Finish(completed: bool) : Task =
+        if completed && not hit && not fastHit && not (isNull services.Fast) then this.KeepFast()
         this.Decide()
         if this.Settled completed then
             this.Log()
@@ -815,6 +1063,13 @@ type FrontHandler(services: FrontServices, app: RequestDelegate) =
                 | e -> Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(e).Throw()
             }
 
+    /// The app, on the thread pool: a request read on its socket's event thread that isn't a replay leaves it here.
+    member private this.OnPool(response: FrontResponse) : Task =
+        task {
+            do! Task.Yield()
+            do! this.Complete(response, this.Proxy response.Context)
+        }
+
     member this.Invoke(ctx: HttpContext) : Task =
         let started = Stopwatch.GetTimestamp()
         let request = ctx.Request
@@ -829,6 +1084,20 @@ type FrontHandler(services: FrontServices, app: RequestDelegate) =
         let rawTarget = FrontRequest.rawTarget ctx
         // Once, for the cache key and the log line.
         let struct (path, query, authority) = FrontCache.splitTarget rawTarget
+        // onCrack (R2.3): the fast path's key, from the request as it arrived, for a GET with no body that carries cookies and asks
+        // for a target the app has offered an answer for.
+        let fast = services.Fast
+        let mutable fastKey: string | null = null
+        let mutable fastTarget: string | null = null
+        if not (isNull fast) && String.Equals(meth, "GET", StringComparison.Ordinal) && headers.Cookie.Count > 0 && not (isNull rawTarget) then
+            let canHaveBody =
+                match ctx.Features.Get<IHttpRequestBodyDetectionFeature>() with
+                | null -> true
+                | feature -> feature.CanHaveBody
+            if not canHaveBody then
+                let target = nonNull rawTarget
+                fastTarget <- target
+                if (nonNull fast).Knows target then fastKey <- FastStore.KeyOf(ctx, target)
         FrontProxy.setRequestStart headers
         let eligible =
             FrontCache.shouldCacheRequest
@@ -862,6 +1131,12 @@ type FrontHandler(services: FrontServices, app: RequestDelegate) =
                 key,
                 now
             )
+        response.FastKey <- fastKey
+        response.FastTarget <- fastTarget
+        let fastEntry =
+            match found, fastKey with
+            | null, key when not (isNull key) -> (nonNull fast).Lookup(nonNull key)
+            | _ -> null
         if services.LogRequests then
             let capture = captureRequest ctx started path query
             match services.Lines with
@@ -870,6 +1145,8 @@ type FrontHandler(services: FrontServices, app: RequestDelegate) =
         ctx.Features.Set<IHttpResponseBodyFeature>(response)
         ctx.Response.OnStarting(starting, (response :> obj))
         match found with
+        | null when not (isNull fastEntry) -> this.Complete(response, response.FastHit(nonNull fastEntry, started))
+        | null when FrontInline.mode = FrontInline.Replays -> this.OnPool(response)
         | null -> this.Complete(response, this.Proxy ctx)
         | cached ->
             let ifNoneMatch = FrontHeaders.first headers "If-None-Match"

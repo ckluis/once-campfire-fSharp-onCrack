@@ -12,6 +12,7 @@
     <Compile Include="App.fs" />
     <Compile Include="Multipart.fs" />
     <Compile Include="Body.fs" />
+    <Compile Include="FastPath.fs" />
     <Compile Include="Ctx.fs" />
     <Compile Include="Generations.fs" />
     <Compile Include="Deflater.fs" />

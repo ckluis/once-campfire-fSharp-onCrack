@@ -212,6 +212,9 @@ type Ctx internal (kit: Kit, request: Request, pathParams: ParamMap, queryParams
             created
         | existing -> existing
 
+    /// onCrack (R2.3): set by an action whose answer the front server may replay (`FastPath.fs`).
+    member val FastCandidate: FastCandidate | null = null with get, set
+
     /// `response.cache_control`, applied to the final response.
     member val CacheControl: CacheControl = CacheControl.Empty with get, set
 

@@ -22,9 +22,15 @@ let private read (test: Test) (f: Conn -> 'T) : 'T = test.App.Db.ReadBlocking f 
 let private post (test: Test) (roomId: int64) (userId: int64) (body: string) : Message =
     write test (fun tx -> Message.create tx { NewMessage.create roomId userId with Body = Some $"<div>{body}</div>" })
 
+/// Pages answered from the cache: by the read cache, or (behind the front server, `CAMPFIRE_TEST_FRONT=1`) replayed by the fast path,
+/// which never asks the read cache.
 let private hits (test: Test) : int64 =
     let hits, _, _ = ReadCache.stats test.App.Db.Versions
-    hits
+    let replays =
+        match test.Host.Front with
+        | null -> 0L
+        | front -> match front.Fast with null -> 0L | fast -> Volatile.Read(&fast.Hits)
+    hits + replays
 
 /// Gets `path` until it comes from the cache, and checks it did (so the test isn't passing vacuously): the
 /// first visit to a room sets `last_room`, which is part of the key, so it can take two misses.

@@ -77,6 +77,29 @@ module internal Serializer =
         | Serializer.Null -> false
         | _ -> true
 
+/// onCrack (R2.3): the earliest `exp` the envelopes checked on this thread carried while watching, so a cookie jar knows until
+/// when a verified cookie stays valid (the front server's fast path replays a page only that long). Verification is synchronous,
+/// so a thread-static is enough: `Start`, verify, `Stop`.
+[<Sealed; AbstractClass>]
+type ExpiryWatch =
+    [<ThreadStatic; DefaultValue>]
+    static val mutable private watching: bool
+
+    [<ThreadStatic; DefaultValue>]
+    static val mutable private earliest: int64
+
+    static member Start() : unit =
+        ExpiryWatch.watching <- true
+        ExpiryWatch.earliest <- Int64.MaxValue
+
+    static member Note(exp: DateTimeOffset) : unit =
+        if ExpiryWatch.watching && exp.UtcTicks < ExpiryWatch.earliest then ExpiryWatch.earliest <- exp.UtcTicks
+
+    /// The earliest `exp` noted since `Start` (UTC ticks), `Int64.MaxValue` for none.
+    static member Stop() : int64 =
+        ExpiryWatch.watching <- false
+        ExpiryWatch.earliest
+
 module internal Metadata =
     /// `Time#iso8601(3)` in UTC: `2046-01-01T12:00:00.000Z` (fraction truncated, not rounded).
     let iso8601Millis (time: Timestamp) : string =
@@ -144,7 +167,9 @@ module internal Metadata =
                 | Some(Value.String exp) ->
                     match Timestamps.tryParse exp with
                     | None -> Error InvalidMessage
-                    | Some exp -> if now >= exp then Error Expired else Ok()
+                    | Some exp ->
+                        ExpiryWatch.Note exp
+                        if now >= exp then Error Expired else Ok()
                 | Some _ -> Error InvalidMessage
             expiry
             |> Result.bind (fun () ->
@@ -224,7 +249,9 @@ module internal Metadata =
             | exp ->
                 match Timestamps.tryParse exp with
                 | None -> Error InvalidMessage
-                | Some exp -> if now >= exp then Error Expired else Ok()
+                | Some exp ->
+                    ExpiryWatch.Note exp
+                    if now >= exp then Error Expired else Ok()
         expiry
         |> Result.bind (fun () ->
             let actual = match pur with null -> "" | pur -> pur

@@ -34,4 +34,9 @@ let transparentHugePagesDisabled () : bool = Native.prctl (PrGetThpDisable, 0UL,
 [<EntryPoint>]
 let main argv =
     disableTransparentHugePages ()
+    // onCrack (R2.3): with CAMPFIRE_INLINE (`Campfire.Kit.FrontInline`), socket completions run on the event threads too (the runtime
+    // reads this once, when the first socket is made), unless the variable was given.
+    if Campfire.Kit.FrontInline.mode <> Campfire.Kit.FrontInline.Off
+       && isNull (Environment.GetEnvironmentVariable "DOTNET_SYSTEM_NET_SOCKETS_INLINE_COMPLETIONS") then
+        Environment.SetEnvironmentVariable("DOTNET_SYSTEM_NET_SOCKETS_INLINE_COMPLETIONS", "1")
     Boot.run argv

@@ -69,6 +69,17 @@ type FrozenPage private (parts: PageParts | null, whole: ReadOnlyMemory<byte>) =
             gzip <- GzipMemo(mtime, copy)
             copy
 
+    /// The plain body in one piece (onCrack R2.3, the fast path's body): the page's own buffer, or the copy `WritePlain` keeps.
+    member this.Plain() : ReadOnlyMemory<byte> =
+        match parts with
+        | null -> whole
+        | _ ->
+            match plain with
+            | null ->
+                this.WritePlain(ArrayBufferWriter<byte>(length))
+                ReadOnlyMemory<byte>(nonNull plain)
+            | made -> ReadOnlyMemory<byte> made
+
     member this.WritePlain(writer: IBufferWriter<byte>) : unit =
         match parts with
         | null -> writer.Write whole.Span
