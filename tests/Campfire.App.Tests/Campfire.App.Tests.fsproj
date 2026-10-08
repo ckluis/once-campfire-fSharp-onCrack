@@ -30,6 +30,7 @@
     <Compile Include="MessagesTests.fs" />
     <Compile Include="SearchesTests.fs" />
     <Compile Include="ReadCacheTests.fs" />
+    <Compile Include="PostPathTests.fs" />
     <Compile Include="ChannelsSupport.fs" />
     <Compile Include="ChannelsTests.fs" />
     <Compile Include="BroadcastsTests.fs" />
