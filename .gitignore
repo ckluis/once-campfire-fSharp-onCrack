@@ -22,3 +22,4 @@ bench/*/bin/
 bench/*/obj/
 reference-tools/**/bin/
 reference-tools/**/obj/
+parity/core
