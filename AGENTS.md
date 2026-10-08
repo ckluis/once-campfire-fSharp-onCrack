@@ -7,6 +7,21 @@ implementation applies to the port this was forked from; where it conflicts with
 wins. The image is `campfire-oncrack:app` (`bench/run`'s `oncrack` app, `bench/quick`'s default and the parity candidate's default here);
 keep `campfire-fsharp:app` (the port) untouched for comparison.
 
+**Fast inner loop (Chris, 2026-10-08): incremental checks should take 1-3 minutes, not 10-20.** Tier 3 and the
+re-baselines stay full-length; the inner loop gets faster by removing setup, not by measuring less carefully:
+- **A/B in one warm process:** put a change behind a runtime switch (env var read per request, or an admin-only
+  toggle) and alternate old/new by window in the same container: no restart, no re-warm-up, and host drift cancels.
+- **AOT for direction:** the `NATIVE_AOT=true` build has no JIT warm-up, so it reaches steady state at once; use it to
+  see which way a change moves CPU per request, then confirm with the JIT image at tier 3.
+- **CPU per request is the inner-loop signal** (`bench/quick cpu`, 2-3 s windows), not req/s over 8 s x 3 reps.
+- **Reuse sign-ins:** snapshot the realistic workloads' 525 signed-in sessions into the seed copy once and reuse the
+  cookies instead of signing in every rep (25-31 s each).
+- **Targeted pixel parity:** `bin/pixel-parity --fast --only <states the change can affect>` while iterating; the full
+  run on every seed is the round verifier's job.
+- **In-process harness for logic questions** (is the hit path cheaper, did the post pipeline shrink): host the app in a
+  test server, drive requests directly, report CPU and allocation per request, seconds per run.
+If one of these tools doesn't exist yet, building it is part of your unit. Record the loop time before and after.
+
 **onCrack's gates and scoring** (unit C0): `bin/pixel-parity` is the one-command "the UI is identical" check (the parity harness's
 screenshot layer, per seed; see its header for the retry of cells the harness could not capture). `bench/quick` runs onCrack only and
 `bench/quick compare DIR` scores it against the stored Rust and F# port medians of `bench/results/phase7-final/`; `bench/quick log` appends to
