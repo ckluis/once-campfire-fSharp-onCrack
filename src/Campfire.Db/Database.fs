@@ -733,6 +733,24 @@ type WriterStats() =
     [<DefaultValue>]
     val mutable Inline: int64
 
+    /// Every database's restarts together (for the in-process harness, which has no handle on the app's database).
+    static member val All = WriterStats() with get
+
+    /// onCrack (unit R2.2): the writer's own WAL restarts (`WalLimitPages`), and the longest, in microseconds.
+    [<DefaultValue>]
+    val mutable Restarts: int64
+
+    [<DefaultValue>]
+    val mutable LongestRestartUs: int64
+
+    member internal this.Restarted(took: TimeSpan) : unit =
+        Interlocked.Increment(&this.Restarts) |> ignore
+        Interlocked.Increment(&WriterStats.All.Restarts) |> ignore
+        let us = int64 took.TotalMicroseconds
+        if us > Volatile.Read(&this.LongestRestartUs) then Volatile.Write(&this.LongestRestartUs, us)
+        if us > Volatile.Read(&WriterStats.All.LongestRestartUs) then Volatile.Write(&WriterStats.All.LongestRestartUs, us)
+        if took.TotalMilliseconds > 100.0 then Log.warn $"WAL restart took {int took.TotalMilliseconds} ms"
+
     /// On the writer thread, per group taken.
     member internal this.Record(size: int) : unit =
         Interlocked.Increment(&this.Groups) |> ignore
@@ -833,7 +851,10 @@ type Database
                     | pages when pages >= Pragmas.WalLimitPages ->
                         // RESTART waits for the readers; a request's thread must not (onCrack, unit R2.2): an empty
                         // write sends the writer thread round, which checks the WAL after it.
-                        if onWriter then cp.RestartWal conn
+                        if onWriter then
+                            let started = Diagnostics.Stopwatch.GetTimestamp()
+                            cp.RestartWal conn
+                            stats.Restarted(Diagnostics.Stopwatch.GetElapsedTime(started))
                         else queue.Enqueue(WriteJob<unit>(ignore, ignore)) |> ignore
                     | pages -> cp.WalGrewTo pages
             processInline <- fun jobs -> processGroup jobs false

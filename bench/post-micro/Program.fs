@@ -88,6 +88,13 @@ type Counts() =
     [<DefaultValue>]
     val mutable Bad: int64
 
+    /// Answers slower than 100 ms, and the slowest (microseconds).
+    [<DefaultValue>]
+    val mutable Slow: int64
+
+    [<DefaultValue>]
+    val mutable MaxUs: int64
+
 /// One keep-alive connection posting until `stop`; reads each response to its end (Content-Length or chunked).
 let poster (port: int) (room: int64) (who: Poster) (counts: Counts) (stop: CancellationToken) : Task =
     task {
@@ -97,6 +104,7 @@ let poster (port: int) (room: int64) (who: Poster) (counts: Counts) (stop: Cance
         let buf = Array.zeroCreate<byte> 65536
         let mutable have = 0
         while not stop.IsCancellationRequested do
+            let t0 = Stopwatch.GetTimestamp()
             do! s.WriteAsync(postRequest room who)
             // headers
             let mutable headEnd = -1
@@ -115,8 +123,17 @@ let poster (port: int) (room: int64) (who: Poster) (counts: Counts) (stop: Cance
                 let! n = s.ReadAsync(buf, have, buf.Length - have)
                 if n = 0 then failwith "connection closed"
                 have <- have + n
+            match Environment.GetEnvironmentVariable "POST_MICRO_DUMP" with
+            | null -> ()
+            | path when not (File.Exists path) -> File.WriteAllBytes(path, buf[headEnd + 4 .. total - 1])
+            | _ -> ()
             Buffer.BlockCopy(buf, total, buf, 0, have - total)
             have <- have - total
+            let us = (Stopwatch.GetTimestamp() - t0) * 1_000_000L / Stopwatch.Frequency
+            if us > 100_000L then Interlocked.Increment(&counts.Slow) |> ignore
+            let mutable seen = Volatile.Read(&counts.MaxUs)
+            while us > seen && Interlocked.CompareExchange(&counts.MaxUs, us, seen) <> seen do
+                seen <- Volatile.Read(&counts.MaxUs)
             if status >= 200 && status < 300 then Interlocked.Increment(&counts.Ok) |> ignore
             else
                 if Interlocked.Increment(&counts.Bad) <= 3L then eprintfn "status %d: %s" status (head.Split('\r')[0])
@@ -195,6 +212,9 @@ let main argv =
         stop.Cancel()
         (try Task.WaitAll(tasks, 5000) |> ignore with _ -> ())
         let n = float (ok1 - ok0)
+        let all = Campfire.Db.WriterStats.All
+        if all.Restarts > 0L then eprintfn "  %s c=%d: WAL restarts so far %d, longest %d ms" variant conc all.Restarts (all.LongestRestartUs / 1000L)
+        if counts.Slow > 0L then eprintfn "  %s c=%d: %d answers over 100 ms, slowest %d ms" variant conc counts.Slow (counts.MaxUs / 1000L)
         n / el, (c1 - c0).TotalMilliseconds * 1000.0 / n, float (a1 - a0) / n / 1024.0, counts.Bad
     // The copy grows by every post; it goes when the run ends.
     AppDomain.CurrentDomain.ProcessExit.Add(fun _ -> try Directory.Delete(dir, true) with _ -> ())
