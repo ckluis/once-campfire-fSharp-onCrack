@@ -199,29 +199,39 @@ module MessagesController =
                 | Some(Create upload) -> stageUpload app upload
                 | Some Invalid -> Task.FromResult(Error(invalidAttachment ()))
                 | _ -> Task.FromResult(Ok None)
-            let! (body: string option) =
+            // onCrack (unit R2.2, `PostPath.PlainTextEarly`): without an attachment, the search index's text
+            // (`plain_text_body`: the body's plain text, or "") is worked out in the read that canonicalizes the body, from
+            // the same stored body, so that the writer, which every post waits for, doesn't parse it.
+            let early = PostPath.PlainTextEarly && attachment.IsNone
+            let! (body: string option), (plainText: string voption) =
                 match attributes.Body with
                 | Some body ->
-                    task {
-                        match! canonicalizeBody app body (Some c.Request.Host) with
-                        | Ok body -> return Ok(Some body)
-                        | Error e -> return Error e
-                    }
-                | None -> Task.FromResult(Ok None)
+                    let requestHost = Some c.Request.Host
+                    app.Read(fun conn ->
+                        let canonical = canonicalBody conn app body requestHost
+                        let plain =
+                            if early then
+                                let text = app.Db.Env.RichText.ToPlainText(conn, canonical)
+                                ValueSome(if String.IsNullOrWhiteSpace text then "" else text)
+                            else
+                                ValueNone
+                        Some canonical, plain)
+                | None -> Task.FromResult(Ok(None, (if early then ValueSome "" else ValueNone)))
             let! (message: Message), (blob: Campfire.Storage.Blob option) =
                 app.Write(fun tx ->
                     let blob = attachment |> Option.map (saveStaged tx)
                     let message =
-                        Message.create
+                        Message.createWith
                             tx
                             { RoomId = roomId
                               CreatorId = user.Id
                               ClientMessageId = attributes.ClientMessageId
                               Body = body
                               AttachmentBlobId = blob |> Option.map (fun blob -> blob.Id) }
+                            plainText
                     match ticket with
                     | null -> ()
-                    | ticket -> tx.AfterCommit(fun _ -> ticket.Reserve())
+                    | ticket -> tx.AfterCommitEffect(fun () -> ticket.Reserve())
                     message, blob)
             // Without an attachment, `message` is the row as stored: nothing after the commit writes to it,
             // and Rails answers with the same record (`create!(attributes).tap(&:process_attachment)`,

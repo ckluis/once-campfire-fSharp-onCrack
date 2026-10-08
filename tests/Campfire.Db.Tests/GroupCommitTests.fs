@@ -22,10 +22,12 @@ let private await (task: Task<'T>) : 'T =
 let private holdWriter (db: Database) : ManualResetEventSlim * Task<Result<unit, DbError>> =
     let started = new ManualResetEventSlim(false)
     let release = new ManualResetEventSlim(false)
+    // On a thread of its own: a write that finds the writer idle runs on its caller's thread (`InlineWrites`).
     let blocker =
-        db.Write(fun _ ->
-            started.Set()
-            release.Wait())
+        Task.Run<Result<unit, DbError>>(fun () ->
+            db.Write(fun _ ->
+                started.Set()
+                release.Wait()))
     if not (started.Wait(TimeSpan.FromSeconds 10.0)) then failwith "the writer never started the blocking write"
     release, blocker
 

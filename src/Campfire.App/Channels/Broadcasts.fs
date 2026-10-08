@@ -286,7 +286,7 @@ type Broadcasts(server: Cable) =
     /// left to the function it returns (for `BroadcastOrder`).
     member this.MessageCreateLater(conn: Conn, room: Room, message: Message, partials: IPartials) : unit -> unit =
         let html = partials.Message message
-        let members = Membership.forRoom conn room.Id |> List.map (fun membership -> membership.UserId)
+        let members = Membership.userIdsForRoom conn room.Id
         fun () ->
             // The append and the unread pings wake their subscribers together (`WakeBatch`).
             WakeBatch.Run(fun () ->
@@ -298,14 +298,14 @@ type Broadcasts(server: Cable) =
 
     /// `broadcast_unread_room`: `{ roomId: }` to each member's `user_<id>_unreads`.
     member this.UnreadRoom(conn: Conn, room: Room) : unit =
-        this.UnreadRoomTo(room, Membership.forRoom conn room.Id |> List.map (fun membership -> membership.UserId))
+        this.UnreadRoomTo(room, Membership.userIdsForRoom conn room.Id)
 
     /// `broadcast_unread_room` to `members` (`room.memberships.pluck(:user_id)`, read by the caller).
     member _.UnreadRoomTo(room: Room, members: int64 list) : unit =
         // The same message to every member's stream: encoded once.
         let json = System.Text.Encoding.UTF8.GetBytes(Json.encode (Value.Object [ "roomId", Value.Int room.Id ]))
         for userId in members do
-            server.BroadcastEncoded(UnreadRooms.streamNameFor userId, System.ReadOnlySpan json) |> ignore
+            server.BroadcastEncoded(UnreadRooms.cachedStreamNameFor userId, System.ReadOnlySpan json) |> ignore
 
     /// `message.broadcast_remove`: MessagesController#destroy and `User#remove_banned_content`.
     member this.MessageRemove(room: Room, message: Message) : unit =

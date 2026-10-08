@@ -643,6 +643,10 @@ module Membership =
 
     let forRoom (conn: Conn) (roomId: int64) : Membership list = conn.QueryAll(forRoomSql, [| I roomId |], fromRow)
 
+    /// `room.memberships.pluck(:user_id)` (onCrack: the broadcast's unread pings read only the ids, not whole rows).
+    let userIdsForRoom (conn: Conn) (roomId: int64) : int64 list =
+        conn.QueryAll("""SELECT "memberships"."user_id" FROM "memberships" WHERE "memberships"."room_id" = ?""", [| I roomId |], fun r -> r.Int64 0)
+
     /// `room.memberships.find_by(user:)` / `user.memberships.find_by(room_id:)`
     let findByRoomAndUser (conn: Conn) (roomId: int64) (userId: int64) : Membership option =
         conn.QueryOne(findByRoomAndUserSql, [| I roomId; I userId |], fromRow)
@@ -1080,13 +1084,34 @@ module Room =
     let activeBots (conn: Conn) (room: Room) : User list =
         conn.QueryAll(usersJoin + " AND \"users\".\"status\" = 0 AND \"users\".\"role\" = 2", [| I room.Id |], User.fromRow)
 
+    [<Literal>]
+    let UnreadMembershipsSql =
+        """UPDATE "memberships" SET "unread_at" = ?, "updated_at" = ? WHERE "memberships"."room_id" = ? AND "memberships"."involvement" != ? AND ("memberships"."connected_at" IS NULL OR "memberships"."connected_at" < ?) AND "memberships"."user_id" != ?"""
+
+    /// onCrack (`PostPath.UnreadSkip`): only the rows that change state, unless the room is a direct one. Rails rewrites
+    /// every disconnected member's row with the newest message's time, but `unread_at` is only ever read for being set
+    /// (`Membership#unread?`, the `unread` scope), and `updated_at` only keys the direct rooms' sidebar fragment
+    /// (`cache membership`), so in a room with 500 members a post rewrote 500 rows (and their version marks) to change
+    /// what nobody reads. The uncorrelated subquery runs once per statement.
+    [<Literal>]
+    let UnreadMembershipsChangedSql =
+        """UPDATE "memberships" SET "unread_at" = ?, "updated_at" = ? WHERE "memberships"."room_id" = ? AND "memberships"."involvement" != ? AND ("memberships"."connected_at" IS NULL OR "memberships"."connected_at" < ?) AND "memberships"."user_id" != ?"""
+        + """ AND ("memberships"."unread_at" IS NULL OR (SELECT "rooms"."type" FROM "rooms" WHERE "rooms"."id" = ?) = 'Rooms::Direct')"""
+
     let private unreadMemberships (tx: Tx) (roomId: int64) (message: Message) : unit =
         let now = tx.Now()
-        tx.Conn.Execute(
-            """UPDATE "memberships" SET "unread_at" = ?, "updated_at" = ? WHERE "memberships"."room_id" = ? AND "memberships"."involvement" != ? AND ("memberships"."connected_at" IS NULL OR "memberships"."connected_at" < ?) AND "memberships"."user_id" != ?""",
-            [| T message.CreatedAt; T now; I roomId; S "invisible"; T(Membership.connectionCutoff now); I message.CreatorId |]
-        )
-        |> ignore
+        if PostPath.UnreadSkip then
+            tx.Conn.Execute(
+                UnreadMembershipsChangedSql,
+                [| T message.CreatedAt; T now; I roomId; S "invisible"; T(Membership.connectionCutoff now); I message.CreatorId; I roomId |]
+            )
+            |> ignore
+        else
+            tx.Conn.Execute(
+                UnreadMembershipsSql,
+                [| T message.CreatedAt; T now; I roomId; S "invisible"; T(Membership.connectionCutoff now); I message.CreatorId |]
+            )
+            |> ignore
 
     /// `room.receive(message)`, from the message's `after_create_commit`: marks members
     /// unread, then enqueues the push.
@@ -1398,9 +1423,14 @@ module Message =
         | null -> ()
         | marks -> marks.Mark(1, roomId)
 
-    let private createInIndex (tx: Tx) (message: Message) : unit =
+    /// `plainText`: the body's plain text when the caller worked it out before the write (onCrack, unit R2.2:
+    /// `createWith`), so that the writer doesn't parse the body.
+    let private createInIndex (tx: Tx) (message: Message) (plainText: string voption) : unit =
         markRoom tx message.RoomId
-        let body = plainTextBody tx.Conn tx.RichText message
+        let body =
+            match plainText with
+            | ValueSome text -> text
+            | ValueNone -> plainTextBody tx.Conn tx.RichText message
         tx.Conn.Execute("insert into message_search_index(rowid, body) values (?, ?)", [| I message.Id; S body |]) |> ignore
 
     let private updateInIndex (tx: Tx) (message: Message) : unit =
@@ -1420,7 +1450,11 @@ module Message =
     /// transaction: the message, its body (which touches the message), its attachment, and
     /// the room touch. After commit: the search index, then `room.receive` (unread
     /// memberships and the push job).
-    let create (tx: Tx) (attributes: NewMessage) : Message =
+    let rec create (tx: Tx) (attributes: NewMessage) : Message = createWith tx attributes ValueNone
+
+    /// `create`, given the plain text the search index takes for the message (`plain_text_body`), worked out by the
+    /// caller from the same stored body before the write (onCrack, unit R2.2).
+    and createWith (tx: Tx) (attributes: NewMessage) (plainText: string voption) : Message =
         let now = tx.Now()
         let clientMessageId = attributes.ClientMessageId |> Option.defaultWith Sql.uuid
         let id =
@@ -1452,8 +1486,8 @@ module Message =
         Room.touch tx message.RoomId
 
         let committed = message
-        tx.AfterCommit(fun tx ->
-            createInIndex tx committed
+        tx.OnCommit(fun tx ->
+            createInIndex tx committed plainText
             Room.receive tx committed.RoomId committed)
         message
 

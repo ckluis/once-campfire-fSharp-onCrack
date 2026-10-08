@@ -71,7 +71,8 @@ module internal Log =
 /// work runs, outside one), the environment, and the queued after-commit work.
 [<NoComparison; NoEquality>]
 type Tx internal (conn: Conn, env: Env, inTransaction: bool, deferred: ResizeArray<Event> option) =
-    let queue = ResizeArray<Choice<Tx -> unit, Event>>()
+    let queue = ResizeArray<AfterCommitItem>()
+    let onCommit = ResizeArray<Tx -> unit>(0)
 
     internal new(conn: Conn, env: Env, inTransaction: bool) = Tx(conn, env, inTransaction, None)
 
@@ -94,16 +95,16 @@ type Tx internal (conn: Conn, env: Env, inTransaction: bool, deferred: ResizeArr
     /// events wait for that transaction's commit (`deferred`), so a job they start reads what they follow.
     member _.EmitAfterCommit(event: Event) : unit =
         if inTransaction then
-            queue.Add(Choice2Of2 event)
+            queue.Add(AfterCommitItem.Emit event)
         else
             match deferred with
             | Some events -> events.Add event
             | None -> env.Sink.Emit event
 
     /// Queues database work to run after commit, in its own implicit transaction.
-    member _.AfterCommit(hook: Tx -> unit) : unit =
+    member this.AfterCommit(hook: Tx -> unit) : unit =
         if inTransaction then
-            queue.Add(Choice1Of2 hook)
+            queue.Add(AfterCommitItem.Hook hook)
         else
             let tx = Tx(conn, env, false, deferred)
             try
@@ -111,12 +112,60 @@ type Tx internal (conn: Conn, env: Env, inTransaction: bool, deferred: ResizeArr
             with e ->
                 Log.error $"after_commit hook failed: {e.Message}"
 
+    /// onCrack (unit R2.2): an effect outside the database (no SQL) once the transaction commits, in order with
+    /// the after-commit hooks and events; right away when already running after commit. A group whose after-commit
+    /// work is only effects and events runs it without opening a transaction for it.
+    member _.AfterCommitEffect(effect: unit -> unit) : unit =
+        if inTransaction then
+            queue.Add(AfterCommitItem.Effect effect)
+        else
+            try
+                effect ()
+            with e ->
+                Log.error $"after_commit hook failed: {e.Message}"
+
+    /// onCrack (unit R2.2): database work that Rails runs in an `after_commit` callback, run here at the end of the
+    /// write's own transaction instead (after the write's statements; in a group, after every write of the group, in
+    /// their order), so that the write and its after-commit work commit once (`PostPath.OnCommit`; otherwise, and
+    /// outside a transaction, it is `AfterCommit`). A statement of it that fails rolls back alone, as Rails' autocommitted
+    /// one would, and its error reaches the caller after the write committed, as Rails raises it from the save that
+    /// committed. Its events and after-commit work still wait for the commit. Only for hooks that do database work
+    /// alone: they may run again if their group's transaction breaks.
+    member this.OnCommit(hook: Tx -> unit) : unit =
+        if inTransaction && PostPath.OnCommit then
+            onCommit.Add hook
+        else
+            this.AfterCommit hook
+
     member _.InTransaction : bool = inTransaction
 
-    member internal _.TakeAfterCommit() : Choice<Tx -> unit, Event> list =
+    /// Runs the `OnCommit` hooks (and any they add) in the transaction, before its commit; `failed` hears each one's
+    /// error. No savepoint: a statement that fails rolls back alone, as an autocommitted one would (and a savepoint makes
+    /// the FTS5 index flush its pending rows into a segment of their own, one per post). An error that took the
+    /// transaction with it is raised: the write fails (its group runs again write by write).
+    member internal this.RunOnCommit(failed: exn -> unit) : unit =
+        let mutable i = 0
+        while i < onCommit.Count do
+            let hook = onCommit[i]
+            i <- i + 1
+            try
+                hook this
+            with e ->
+                if conn.IsAutocommit then reraise ()
+                Log.error $"after_commit hook failed: {e.Message}"
+                failed e
+        onCommit.Clear()
+
+    member internal _.TakeAfterCommit() : AfterCommitItem list =
         let items = List.ofSeq queue
         queue.Clear()
         items
+
+/// What a write leaves to run after its commit.
+and [<NoComparison; NoEquality>] internal AfterCommitItem =
+    | Hook of (Tx -> unit)
+    | Effect of (unit -> unit)
+    | Emit of Event
 
 module DbRun =
     /// What a read or write may raise on purpose, as a `Result`: the `DbError` it stands for. Any other
@@ -135,9 +184,11 @@ module DbRun =
     let runWrite (conn: Conn) (env: Env) (f: Tx -> 'T) : 'T =
         conn.Execute("BEGIN IMMEDIATE", [||]) |> ignore
         let tx = Tx(conn, env, true)
+        let mutable onCommitError: exn option = None
         let value =
             try
                 let value = f tx
+                tx.RunOnCommit(fun e -> if onCommitError.IsNone then onCommitError <- Some e)
                 conn.Execute("COMMIT", [||]) |> ignore
                 value
             with _ ->
@@ -149,11 +200,17 @@ module DbRun =
                 reraise ()
 
         let after = Tx(conn, env, false)
-        let mutable firstError: exn option = None
+        let mutable firstError: exn option = onCommitError
         for item in tx.TakeAfterCommit() do
             match item with
-            | Choice2Of2 event -> env.Sink.Emit event
-            | Choice1Of2 hook ->
+            | AfterCommitItem.Emit event -> env.Sink.Emit event
+            | AfterCommitItem.Effect effect ->
+                try
+                    effect ()
+                with e ->
+                    Log.error $"after_commit hook failed: {e.Message}"
+                    if firstError.IsNone then firstError <- Some e
+            | AfterCommitItem.Hook hook ->
                 try
                     hook after
                 with e ->
@@ -178,7 +235,10 @@ type Config =
       GroupMax: int
       /// onCrack: how long (microseconds) the writer waits for more writes to join a group that isn't full.
       /// 0 (the default) never waits: a group is what was already queued.
-      GroupWindowUs: int }
+      GroupWindowUs: int
+      /// onCrack (unit R2.2): a write that finds the writer idle and nothing queued runs on the calling thread
+      /// (`Database.Write`), with no hand-off to the writer thread and back (`PostPath.InlineWrites` too).
+      InlineWrites: bool }
 
 module Config =
     [<Literal>]
@@ -191,7 +251,8 @@ module Config =
           Prepare = true
           Environment = "production"
           GroupMax = DefaultGroupMax
-          GroupWindowUs = 0 }
+          GroupWindowUs = 0
+          InlineWrites = true }
 
 module internal Pragmas =
     /// Prepared statements each connection keeps. A page like the room show runs more than 16.
@@ -405,6 +466,8 @@ type internal WriteQueue(capacity: int) =
     let items = Queue<WriteJob>()
     let slots = new SemaphoreSlim(capacity, capacity)
     let mutable closed = false
+    /// Who has the writer connection: 0 nobody, 1 the writer thread, 2 a write running on its caller's thread.
+    let mutable owner = 0
 
     let enqueue (job: WriteJob) : bool =
         lock gate (fun () ->
@@ -437,9 +500,10 @@ type internal WriteQueue(capacity: int) =
     member _.TakeGroup(limit: int, windowUs: int) : ResizeArray<WriteJob> =
         let group = ResizeArray<WriteJob>()
         lock gate (fun () ->
-            while items.Count = 0 && not closed do
+            while owner <> 0 || (items.Count = 0 && not closed) do
                 Monitor.Wait gate |> ignore
             dequeueInto group limit
+            if group.Count > 0 then owner <- 1
             if windowUs > 0 && group.Count > 0 && group.Count < limit && not closed then
                 let deadline = Diagnostics.Stopwatch.GetTimestamp() + int64 windowUs * Diagnostics.Stopwatch.Frequency / 1_000_000L
                 let mutable waiting = true
@@ -452,6 +516,28 @@ type internal WriteQueue(capacity: int) =
                         dequeueInto group limit
                         if group.Count >= limit then waiting <- false)
         group
+
+    /// For the writer thread, once its group is answered.
+    member _.Finished() : unit =
+        lock gate (fun () ->
+            owner <- 0
+            Monitor.PulseAll gate)
+
+    /// onCrack (unit R2.2): the writer connection for a write on the calling thread, when nobody has it and no
+    /// write is queued (they go first, in order).
+    member _.TryTakeInline() : bool =
+        lock gate (fun () ->
+            if owner = 0 && items.Count = 0 && not closed then
+                owner <- 2
+                true
+            else
+                false)
+
+    /// Gives the connection back after a write on the calling thread, waking the writer thread for what queued meanwhile.
+    member _.ReleaseInline() : unit =
+        lock gate (fun () ->
+            owner <- 0
+            Monitor.PulseAll gate)
 
     member _.Close() : unit =
         lock gate (fun () ->
@@ -485,12 +571,18 @@ module internal Writer =
                 ()
 
     /// Runs after-commit items outside a transaction, as `DbRun.runWrite` does; events go out as they come.
-    let private afterCommitAlone (conn: Conn) (env: Env) (job: WriteJob) (items: Choice<Tx -> unit, Event> list) : unit =
+    let private afterCommitAlone (conn: Conn) (env: Env) (job: WriteJob) (items: AfterCommitItem list) : unit =
         let after = Tx(conn, env, false)
         for item in items do
             match item with
-            | Choice2Of2 event -> env.Sink.Emit event
-            | Choice1Of2 hook ->
+            | AfterCommitItem.Emit event -> env.Sink.Emit event
+            | AfterCommitItem.Effect effect ->
+                try
+                    effect ()
+                with e ->
+                    Log.error $"after_commit hook failed: {e.Message}"
+                    job.HookFailed e
+            | AfterCommitItem.Hook hook ->
                 try
                     hook after
                 with e ->
@@ -504,6 +596,7 @@ module internal Writer =
             try
                 exec conn "BEGIN IMMEDIATE"
                 job.Run tx
+                tx.RunOnCommit job.HookFailed
                 exec conn "COMMIT"
                 true
             with e ->
@@ -515,7 +608,7 @@ module internal Writer =
 
     /// The group's after-commit work in one transaction; its events once that commits. False (and nothing of
     /// it committed) when the transaction broke, for the caller to run it the way `runAlone` does.
-    let private afterCommitGrouped (conn: Conn) (env: Env) (work: (WriteJob * Choice<Tx -> unit, Event> list) list) : bool =
+    let private afterCommitGrouped (conn: Conn) (env: Env) (work: (WriteJob * AfterCommitItem list) list) : bool =
         let events = ResizeArray<Event>()
         let failures = ResizeArray<WriteJob * exn>()
         let after = Tx(conn, env, false, Some events)
@@ -527,8 +620,14 @@ module internal Writer =
                     for item in items do
                         if intact then
                             match item with
-                            | Choice2Of2 event -> events.Add event
-                            | Choice1Of2 hook ->
+                            | AfterCommitItem.Emit event -> events.Add event
+                            // Effects run in the transaction's place in line; they touch no table.
+                            | AfterCommitItem.Effect effect ->
+                                try
+                                    effect ()
+                                with e ->
+                                    failures.Add((job, e))
+                            | AfterCommitItem.Hook hook ->
                                 try
                                     hook after
                                 with e ->
@@ -557,7 +656,8 @@ module internal Writer =
         if jobs.Count = 1 then
             runAlone conn env jobs[0]
         else
-            let work = ResizeArray<WriteJob * Choice<Tx -> unit, Event> list>()
+            let work = ResizeArray<WriteJob * AfterCommitItem list>()
+            let committing = ResizeArray<WriteJob * Tx>()
             let grouped =
                 try
                     exec conn "BEGIN IMMEDIATE"
@@ -570,7 +670,7 @@ module internal Writer =
                         try
                             job.Run tx
                             exec conn "RELEASE campfire_write"
-                            work.Add((job, tx.TakeAfterCommit()))
+                            committing.Add((job, tx))
                         with e ->
                             if conn.IsAutocommit then
                                 intact <- false
@@ -582,6 +682,14 @@ module internal Writer =
                                 with _ ->
                                     intact <- false
                         i <- i + 1
+                    // The writes' `OnCommit` work, in their order, after every write of the group (as the after-commit
+                    // work of a group runs), in the group's transaction.
+                    let mutable k = 0
+                    while intact && k < committing.Count do
+                        let job, tx = committing[k]
+                        tx.RunOnCommit job.HookFailed
+                        work.Add((job, tx.TakeAfterCommit()))
+                        k <- k + 1
                     if intact then
                         exec conn "COMMIT"
                         true
@@ -598,10 +706,15 @@ module internal Writer =
                 any
             else
                 let work = List.ofSeq work
-                if work |> List.exists (fun (_, items) -> not items.IsEmpty) then
+                let hooks = work |> List.exists (fun (_, items) -> items |> List.exists (function AfterCommitItem.Hook _ -> true | _ -> false))
+                if hooks then
                     if not (afterCommitGrouped conn env work) then
                         for job, items in work do
                             afterCommitAlone conn env job items
+                else
+                    // Only effects and events: nothing to commit, so no transaction for them (onCrack, unit R2.2).
+                    for job, items in work do
+                        afterCommitAlone conn env job items
                 not work.IsEmpty
 
 /// onCrack: what the writer has done, for tests and diagnostics.
@@ -636,7 +749,9 @@ type Database
         writerThread: Thread,
         writer: Conn,
         versions: Versions,
-        stats: WriterStats
+        stats: WriterStats,
+        inlineWrites: bool,
+        processInline: ResizeArray<WriteJob> -> unit
     ) =
     // Not a `Monitor`, which the thread already holding it could enter again: a `ReadBlocking` inside
     // another gets a connection of its own.
@@ -666,6 +781,7 @@ type Database
         let readers = ReadQueue()
         let mutable checkpoints: Checkpoints option = None
         let mutable writerThread: Thread option = None
+        let mutable processInline: ResizeArray<WriteJob> -> unit = ignore
         try
             if config.Prepare then Schema.prepare conn config.Environment env.Clock |> ignore
             let cp = Checkpoints config.Path
@@ -677,6 +793,43 @@ type Database
             // onCrack: every change the writer makes marks the read cache's versions (`Versions.fs`).
             Versions.install conn versions
 
+            // A group's run, its answers and the WAL's check: on the writer thread, or (one write that found the
+            // writer idle) on its caller's thread.
+            let processGroup (jobs: ResizeArray<WriteJob>) : unit =
+                stats.Record jobs.Count
+                // A write that raises must not take the writer down with it: `Writer` hands the
+                // closure's exception to its caller and rolls back; this is the backstop for
+                // anything else.
+                let committed =
+                    try
+                        try
+                            Writer.runGroup conn env jobs
+                        with e ->
+                            if not conn.IsAutocommit then
+                                try
+                                    conn.ExecuteBatch "ROLLBACK TRANSACTION"
+                                with _ ->
+                                    ()
+                            for job in jobs do
+                                if not job.Succeeded then job.Failed e
+                            false
+                    finally
+                        // The group's transactions and after-commit work are over (or rolled back):
+                        // the versions it marked become even, past every stored value, before any
+                        // caller hears back, so a read right after its own write finds them even.
+                        versions.Release()
+                for job in jobs do
+                    try
+                        job.Reply()
+                    with e ->
+                        Log.error $"write reply failed: {e.Message}"
+                if committed then
+                    match (try Checkpoint.walPages conn with _ -> 0) with
+                    | 0 -> ()
+                    | pages when pages >= Pragmas.WalLimitPages -> cp.RestartWal conn
+                    | pages -> cp.WalGrewTo pages
+            processInline <- processGroup
+
             let thread =
                 Thread(
                     (fun () ->
@@ -687,38 +840,10 @@ type Database
                             if jobs.Count = 0 then
                                 running <- false
                             else
-                                stats.Record jobs.Count
-                                // A write that raises must not take the writer down with it: `Writer` hands the
-                                // closure's exception to its caller and rolls back; this is the backstop for
-                                // anything else.
-                                let committed =
-                                    try
-                                        try
-                                            Writer.runGroup conn env jobs
-                                        with e ->
-                                            if not conn.IsAutocommit then
-                                                try
-                                                    conn.ExecuteBatch "ROLLBACK TRANSACTION"
-                                                with _ ->
-                                                    ()
-                                            for job in jobs do
-                                                if not job.Succeeded then job.Failed e
-                                            false
-                                    finally
-                                        // The group's transactions and after-commit work are over (or rolled back):
-                                        // the versions it marked become even, past every stored value, before any
-                                        // caller hears back, so a read right after its own write finds them even.
-                                        versions.Release()
-                                for job in jobs do
-                                    try
-                                        job.Reply()
-                                    with e ->
-                                        Log.error $"write reply failed: {e.Message}"
-                                if committed then
-                                    match (try Checkpoint.walPages conn with _ -> 0) with
-                                    | 0 -> ()
-                                    | pages when pages >= Pragmas.WalLimitPages -> cp.RestartWal conn
-                                    | pages -> cp.WalGrewTo pages),
+                                try
+                                    processGroup jobs
+                                finally
+                                    queue.Finished()),
                     Name = "campfire-db-writer",
                     IsBackground = true
                 )
@@ -749,7 +874,7 @@ type Database
                 thread.Start()
                 readerThreads.Add thread
                 started thread
-            new Database(env, config.Path, queue, readers, List.ofSeq readerThreads, cp, thread, conn, versions, stats)
+            new Database(env, config.Path, queue, readers, List.ofSeq readerThreads, cp, thread, conn, versions, stats, config.InlineWrites, processInline)
         with _ ->
             // Rust's `?` drops what was built: the queue's sender, which ends the writer thread and
             // with it the writer connection and the checkpointer, and the readers' connections.
@@ -782,7 +907,26 @@ type Database
 
     /// Runs `f` as one immediate transaction on the writer thread (onCrack: or as part of one, with the
     /// writes queued beside it; see `Writer`).
-    member _.Write(f: Tx -> 'T) : Task<Result<'T, DbError>> =
+    member this.Write(f: Tx -> 'T) : Task<Result<'T, DbError>> =
+        if inlineWrites && PostPath.InlineWrites && writeQueue.TryTakeInline() then
+            this.WriteInline f
+        else
+            this.WriteQueued f
+
+    /// onCrack (unit R2.2): `Write` on the calling thread, the writer connection taken by `TryTakeInline`: the same
+    /// group of one, answers and WAL check as the writer thread's, and the task complete when it returns.
+    member private _.WriteInline(f: Tx -> 'T) : Task<Result<'T, DbError>> =
+        let mutable outcome = Unchecked.defaultof<Result<Result<'T, DbError>, exn>>
+        let job = WriteJob<'T>(f, fun result -> outcome <- result)
+        try
+            processInline (ResizeArray [ job :> WriteJob ])
+        finally
+            writeQueue.ReleaseInline()
+        match outcome with
+        | Ok result -> Task.FromResult result
+        | Error e -> Task.FromException<Result<'T, DbError>> e
+
+    member private _.WriteQueued(f: Tx -> 'T) : Task<Result<'T, DbError>> =
         task {
             let reply = TaskCompletionSource<Result<'T, DbError>>(TaskCreationOptions.RunContinuationsAsynchronously)
             let job =

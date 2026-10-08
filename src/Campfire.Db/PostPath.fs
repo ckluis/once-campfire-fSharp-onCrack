@@ -1,0 +1,55 @@
+// onCrack (unit R2.2): the post path's runtime switches. Each is read where it applies, so `bench/post-micro` can alternate
+// variants in one warm process; the server takes them from the environment once, at start-up (`fromEnv`). Every default is the
+// shipped behaviour; none of them weakens durability.
+namespace Campfire.Db
+
+open System
+
+[<AbstractClass; Sealed>]
+type PostPath private () =
+    static let env (name: string) (fallback: bool) =
+        match Environment.GetEnvironmentVariable name with
+        | null -> fallback
+        | v -> not (v.Equals("off", StringComparison.OrdinalIgnoreCase) || v = "0" || v.Equals("false", StringComparison.OrdinalIgnoreCase))
+
+    /// Sets the switches from `spec` (`name=on|off`, comma-separated) over their environment defaults; "" restores the defaults.
+    static member Apply(spec: string) : unit =
+        PostPath.Reset()
+        for part in spec.Split(',', StringSplitOptions.RemoveEmptyEntries ||| StringSplitOptions.TrimEntries) do
+            match part.Split('=', 2) with
+            | [| name; value |] ->
+                let on = not (value = "off" || value = "0" || value = "false")
+                if not (PostPath.Set(name, on)) then failwithf "unknown post path switch %s" name
+            | _ -> failwithf "bad post path switch %s" part
+
+    /// `CAMPFIRE_POST_UNREAD_SKIP`: a post into a room that isn't a direct one marks unread only the memberships that
+    /// aren't unread yet (`Room.receive`), instead of rewriting every member's row (`Membership.unread?` is all that
+    /// reads `unread_at`; a direct room's rows are still all rewritten, for the sidebar fragment keyed by them).
+    static member val UnreadSkip = env "CAMPFIRE_POST_UNREAD_SKIP" true with get, set
+
+    /// `CAMPFIRE_POST_ON_COMMIT`: a post's search-index row and unread marks (Rails' `after_create_commit`) commit with
+    /// the post, in a savepoint at the end of its transaction (`Tx.OnCommit`), instead of in a transaction of their own
+    /// after it: one commit per post (per group under load) instead of two or three.
+    static member val OnCommit = env "CAMPFIRE_POST_ON_COMMIT" true with get, set
+
+    /// `CAMPFIRE_WRITE_INLINE`: a write that finds the writer idle with nothing queued runs on the calling thread
+    /// (`Database.Write`), instead of a hand-off to the writer thread and another back to the thread pool.
+    static member val InlineWrites = env "CAMPFIRE_WRITE_INLINE" true with get, set
+
+    /// `CAMPFIRE_POST_PLAIN_TEXT_EARLY`: a post's search-index text is worked out before the write, in the read that
+    /// canonicalizes its body, not by the writer after it.
+    static member val PlainTextEarly = env "CAMPFIRE_POST_PLAIN_TEXT_EARLY" true with get, set
+
+    static member Reset() : unit =
+        PostPath.PlainTextEarly <- env "CAMPFIRE_POST_PLAIN_TEXT_EARLY" true
+        PostPath.InlineWrites <- env "CAMPFIRE_WRITE_INLINE" true
+        PostPath.UnreadSkip <- env "CAMPFIRE_POST_UNREAD_SKIP" true
+        PostPath.OnCommit <- env "CAMPFIRE_POST_ON_COMMIT" true
+
+    static member Set(name: string, on: bool) : bool =
+        match name with
+        | "unread_skip" -> PostPath.UnreadSkip <- on; true
+        | "on_commit" -> PostPath.OnCommit <- on; true
+        | "inline_writes" -> PostPath.InlineWrites <- on; true
+        | "plain_text_early" -> PostPath.PlainTextEarly <- on; true
+        | _ -> false
