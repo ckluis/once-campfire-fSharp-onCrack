@@ -50,3 +50,16 @@ let ``a negative window is never solo, zero always`` () =
         Assert.False(EventThreadWatch.SoloFor(a, 0L, -1L))
         Assert.False(EventThreadWatch.SoloFor(a, 9999L, -1L))
         Assert.True(EventThreadWatch.SoloFor(obj (), 0L, 0L)))
+
+[<Fact>]
+let ``cheap paths match the request path exactly`` () =
+    CheapPaths.register [ "/up"; "/up.json" ]
+    try
+        Assert.True(CheapPaths.contains "/up")
+        Assert.True(CheapPaths.contains "/up.json")
+        Assert.False(CheapPaths.contains "/up/")
+        Assert.False(CheapPaths.contains "/UP")
+        Assert.False(CheapPaths.contains "/rooms/1")
+        Assert.False(CheapPaths.contains "")
+    finally
+        CheapPaths.register []

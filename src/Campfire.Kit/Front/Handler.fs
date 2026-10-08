@@ -194,6 +194,18 @@ type EventThreadWatch private () =
     static member Solo(connection: obj, now: int64) : bool =
         EventThreadWatch.SoloFor(connection, now, EventThreadWatch.SoloMs)
 
+/// onCrack (R2.4): paths whose app work is CPU only and microseconds long (`/up`), which the app registers at start-up. Such a request runs on
+/// the event thread it arrived on whatever else that thread serves: nothing in it blocks, and the pool's hand-off costs more than the work
+/// (with the pool's workers no longer spinning, `/up` at 16 connections fell from 182k to 124k req/s through the hop).
+module CheapPaths =
+    let mutable private paths: System.Collections.Frozen.FrozenSet<string> = System.Collections.Frozen.FrozenSet.ToFrozenSet(Seq.empty<string>, StringComparer.Ordinal)
+
+    /// Replaces the registered paths (exact matches on the request path, before the query).
+    let register (registered: seq<string>) : unit =
+        paths <- System.Collections.Frozen.FrozenSet.ToFrozenSet(registered, StringComparer.Ordinal)
+
+    let contains (path: string) : bool = paths.Contains path
+
 /// The settings of a front handler that don't change, and the cache it fills.
 [<Sealed>]
 type FrontServices(config: FrontConfig, logger: ILogger, lines: RequestLines | null) =
@@ -1184,7 +1196,7 @@ type FrontHandler(services: FrontServices, app: RequestDelegate) =
         match found with
         | null when not (isNull fastEntry) -> this.Complete(response, response.FastHit(nonNull fastEntry, started))
         | null when FrontInline.mode = FrontInline.Replays ->
-            if EventThreadWatch.Solo(ctx.Connection.Id, now) && not (headers.ContainsKey "Upgrade") then
+            if CheapPaths.contains path || (EventThreadWatch.Solo(ctx.Connection.Id, now) && not (headers.ContainsKey "Upgrade")) then
                 this.Complete(response, this.Proxy ctx)
             else
                 this.OnPool(response)

@@ -45,4 +45,6 @@ let main argv =
     // before anything uses the pool; a value given to the container (DOTNET_ThreadPool_UnfairSemaphoreSpinLimit, in hex) wins.
     if isNull (Environment.GetEnvironmentVariable "DOTNET_ThreadPool_UnfairSemaphoreSpinLimit") then
         Environment.SetEnvironmentVariable("DOTNET_ThreadPool_UnfairSemaphoreSpinLimit", "0")
+    // The health check does no I/O and takes microseconds: the front server runs it on the event thread (`Campfire.Kit.CheapPaths`).
+    Campfire.Kit.CheapPaths.register [ "/up"; "/up.html"; "/up.json" ]
     Boot.run argv
