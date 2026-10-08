@@ -1,0 +1,728 @@
+{
+ "tier3": {
+  "100": {
+   "rust": {
+    "msgs_per_sec": 3367.7,
+    "msgs_per_sec_reps": [
+     3367.7,
+     3411.7,
+     3348.0
+    ],
+    "server_cpu_us_per_delivery": 8.127474267616785,
+    "server_cores": 2.789754291484349,
+    "loadgen_cores": 2.3660357238069847,
+    "pss_idle_mb": 37.9,
+    "pss_saturated_mb": 96.8,
+    "paced_all_p50_ms": 3.425,
+    "paced_all_p99_ms": 5.539,
+    "saturated_all_p50_ms": 1.342,
+    "saturated_post_p50_ms": 1.122
+   },
+   "fsharp": {
+    "msgs_per_sec": 2857.9,
+    "msgs_per_sec_reps": [
+     2857.9,
+     2802.5,
+     2930.4
+    ],
+    "server_cpu_us_per_delivery": 10.189536538147552,
+    "server_cores": 2.9505413714744018,
+    "loadgen_cores": 2.3275344931013797,
+    "pss_idle_mb": 110.5,
+    "pss_saturated_mb": 275.1,
+    "paced_all_p50_ms": 5.551,
+    "paced_all_p99_ms": 23.599,
+    "saturated_all_p50_ms": 1.455,
+    "saturated_post_p50_ms": 1.303
+   },
+   "oncrack": {
+    "msgs_per_sec": 4193.7,
+    "msgs_per_sec_reps": [
+     4209.7,
+     4130.6,
+     4193.7
+    ],
+    "server_cpu_us_per_delivery": 6.678738262260297,
+    "server_cores": 2.821386045889357,
+    "loadgen_cores": 2.479338842975207,
+    "pss_idle_mb": 112.2,
+    "pss_saturated_mb": 267.1,
+    "paced_all_p50_ms": 5.271,
+    "paced_all_p99_ms": 23.391,
+    "saturated_all_p50_ms": 1.249,
+    "saturated_post_p50_ms": 0.878
+   }
+  },
+  "500": {
+   "rust": {
+    "msgs_per_sec": 1188.7,
+    "msgs_per_sec_reps": [
+     1188.7,
+     1218.6,
+     1166.9
+    ],
+    "server_cpu_us_per_delivery": 5.700700790491674,
+    "server_cores": 3.3610101672679566,
+    "loadgen_cores": 3.748750416527824,
+    "pss_idle_mb": 102.6,
+    "pss_saturated_mb": 104.0,
+    "paced_all_p50_ms": 8.007,
+    "paced_all_p99_ms": 10.791,
+    "saturated_all_p50_ms": 8.015,
+    "saturated_post_p50_ms": 3.143
+   },
+   "fsharp": {
+    "msgs_per_sec": 805.9,
+    "msgs_per_sec_reps": [
+     805.9,
+     731.8,
+     824.0
+    ],
+    "server_cpu_us_per_delivery": 9.27082851000496,
+    "server_cores": 3.73738,
+    "loadgen_cores": 3.308230589803399,
+    "pss_idle_mb": 274.7,
+    "pss_saturated_mb": 535.0,
+    "paced_all_p50_ms": 10.159,
+    "paced_all_p99_ms": 18.095,
+    "saturated_all_p50_ms": 9.415,
+    "saturated_post_p50_ms": 4.655
+   },
+   "oncrack": {
+    "msgs_per_sec": 1350.5,
+    "msgs_per_sec_reps": [
+     1337.0,
+     1365.3,
+     1350.5
+    ],
+    "server_cpu_us_per_delivery": 4.813335307472116,
+    "server_cores": 3.2349367256344,
+    "loadgen_cores": 3.6642899980009327,
+    "pss_idle_mb": 263.5,
+    "pss_saturated_mb": 276.8,
+    "paced_all_p50_ms": 7.167,
+    "paced_all_p99_ms": 9.711,
+    "saturated_all_p50_ms": 5.895,
+    "saturated_post_p50_ms": 2.777
+   }
+  },
+  "1000": {
+   "rust": {
+    "msgs_per_sec": 751.8,
+    "msgs_per_sec_reps": [
+     751.8,
+     690.8,
+     789.7
+    ],
+    "server_cpu_us_per_delivery": 4.779895445684919,
+    "server_cores": 3.5989445034519383,
+    "loadgen_cores": 3.857645574663037,
+    "pss_idle_mb": 109.9,
+    "pss_saturated_mb": 109.6,
+    "paced_all_p50_ms": 13.303,
+    "paced_all_p99_ms": 19.087,
+    "saturated_all_p50_ms": 19.439,
+    "saturated_post_p50_ms": 4.683
+   },
+   "fsharp": {
+    "msgs_per_sec": 390.4,
+    "msgs_per_sec_reps": [
+     391.1,
+     369.9,
+     390.4
+    ],
+    "server_cpu_us_per_delivery": 9.8654121253406,
+    "server_cores": 3.8386058623222277,
+    "loadgen_cores": 3.213384676669765,
+    "pss_idle_mb": 535.2,
+    "pss_saturated_mb": 632.8,
+    "paced_all_p50_ms": 16.071,
+    "paced_all_p99_ms": 20.847,
+    "saturated_all_p50_ms": 23.055,
+    "saturated_post_p50_ms": 9.575
+   },
+   "oncrack": {
+    "msgs_per_sec": 746.9,
+    "msgs_per_sec_reps": [
+     747.0,
+     734.0,
+     746.9
+    ],
+    "server_cpu_us_per_delivery": 4.616558122936926,
+    "server_cores": 3.4474045445458783,
+    "loadgen_cores": 3.843283582089552,
+    "pss_idle_mb": 278.2,
+    "pss_saturated_mb": 293.9,
+    "paced_all_p50_ms": 11.071,
+    "paced_all_p99_ms": 14.735,
+    "saturated_all_p50_ms": 13.303,
+    "saturated_post_p50_ms": 5.015
+   }
+  }
+ },
+ "tier2": [
+  {
+   "run": "t2-base-0",
+   "app": "oncrack",
+   "label": "round 1's image (control; harness with CPU per delivery, old cable client)",
+   "100": {
+    "msgs_per_sec": 2864.0,
+    "server_cpu_us_per_delivery": 10.463690531607858,
+    "server_cores": 3.010527020692426,
+    "loadgen_cores": 2.726303159578723,
+    "pss_saturated_mb": 309.2
+   },
+   "500": {
+    "msgs_per_sec": 767.4,
+    "server_cpu_us_per_delivery": 9.72104897533866,
+    "server_cores": 3.676923076923077,
+    "loadgen_cores": 3.6261036978025625,
+    "pss_saturated_mb": 520.7
+   },
+   "1000": {
+    "msgs_per_sec": 376.0,
+    "server_cpu_us_per_delivery": 10.215768958185684,
+    "server_cores": 3.7997759325161464,
+    "loadgen_cores": 3.623950979086186,
+    "pss_saturated_mb": 726.1
+   }
+  },
+  {
+   "run": "t2-rust-0",
+   "app": "rust",
+   "label": "Rust (control, old cable client)",
+   "100": {
+    "msgs_per_sec": 3306.0,
+    "server_cpu_us_per_delivery": 8.40609372479432,
+    "server_cores": 2.807239057239057,
+    "loadgen_cores": 2.927414517096581,
+    "pss_saturated_mb": 96.6
+   },
+   "500": {
+    "msgs_per_sec": 1050.7,
+    "server_cpu_us_per_delivery": 6.313181933519411,
+    "server_cores": 3.270704614171158,
+    "loadgen_cores": 3.879781420765027,
+    "pss_saturated_mb": 102.9
+   },
+   "1000": {
+    "msgs_per_sec": 588.2,
+    "server_cpu_us_per_delivery": 5.820939977349943,
+    "server_cores": 3.421802809400173,
+    "loadgen_cores": 3.943979822116023,
+    "pss_saturated_mb": 108.8
+   }
+  },
+  {
+   "run": "t2-direct-1",
+   "app": "oncrack",
+   "label": "+ direct socket writes after the probe (old cable client)",
+   "100": {
+    "msgs_per_sec": 3465.3,
+    "server_cpu_us_per_delivery": 7.855471981224631,
+    "server_cores": 2.7360201005025124,
+    "loadgen_cores": 2.906751982936746,
+    "pss_saturated_mb": 266.7
+   },
+   "500": {
+    "msgs_per_sec": 1013.5,
+    "server_cpu_us_per_delivery": 6.246774935893221,
+    "server_cores": 3.1473928311137613,
+    "loadgen_cores": 3.794796920626493,
+    "pss_saturated_mb": 284.4
+   },
+   "1000": {
+    "msgs_per_sec": 549.6,
+    "server_cpu_us_per_delivery": 6.088327272727272,
+    "server_cores": 3.3579823505816284,
+    "loadgen_cores": 3.8996881841703708,
+    "pss_saturated_mb": 295.4
+   }
+  },
+  {
+   "run": "t2-rust-lg2",
+   "app": "rust",
+   "label": "Rust, cheaper cable client",
+   "100": {
+    "msgs_per_sec": 3576.5,
+    "server_cpu_us_per_delivery": 7.811787072243346,
+    "server_cores": 2.7741461477362988,
+    "loadgen_cores": 2.4162057706403677,
+    "pss_saturated_mb": 97.5
+   },
+   "500": {
+    "msgs_per_sec": 1310.9,
+    "server_cpu_us_per_delivery": 5.284138281647178,
+    "server_cores": 3.4176969617256345,
+    "loadgen_cores": 3.744355909694555,
+    "pss_saturated_mb": 104.5
+   },
+   "1000": {
+    "msgs_per_sec": 802.5,
+    "server_cpu_us_per_delivery": 4.469099211290992,
+    "server_cores": 3.5937178716870286,
+    "loadgen_cores": 3.8647375058073936,
+    "pss_saturated_mb": 109.2
+   }
+  },
+  {
+   "run": "t2-direct-lg2",
+   "app": "oncrack",
+   "label": "direct writes, cheaper cable client",
+   "100": {
+    "msgs_per_sec": 3789.3,
+    "server_cpu_us_per_delivery": 7.251218267860598,
+    "server_cores": 2.713323678493845,
+    "loadgen_cores": 2.5508231686995932,
+    "pss_saturated_mb": 265.8
+   },
+   "500": {
+    "msgs_per_sec": 1223.5,
+    "server_cpu_us_per_delivery": 5.297303774715399,
+    "server_cores": 3.2190255527604923,
+    "loadgen_cores": 3.666533386645342,
+    "pss_saturated_mb": 281.2
+   },
+   "1000": {
+    "msgs_per_sec": 674.0,
+    "server_cpu_us_per_delivery": 5.159837848526794,
+    "server_cores": 3.4758625283069136,
+    "loadgen_cores": 3.847736625514403,
+    "pss_saturated_mb": 294.8
+   }
+  },
+  {
+   "run": "t2-batch-1",
+   "app": "oncrack",
+   "label": "+ WakeBatch (a post's broadcasts wake once)",
+   "100": {
+    "msgs_per_sec": 3823.0,
+    "server_cpu_us_per_delivery": 7.208613775065388,
+    "server_cores": 2.7654960198006555,
+    "loadgen_cores": 2.566648893628366,
+    "pss_saturated_mb": 268.7
+   },
+   "500": {
+    "msgs_per_sec": 1236.4,
+    "server_cpu_us_per_delivery": 5.211384217335058,
+    "server_cores": 3.199682287529786,
+    "loadgen_cores": 3.669865387178462,
+    "pss_saturated_mb": 290.0
+   },
+   "1000": {
+    "msgs_per_sec": 685.2,
+    "server_cpu_us_per_delivery": 4.97781019058732,
+    "server_cores": 3.3537604821802938,
+    "loadgen_cores": 3.8287989382879895,
+    "pss_saturated_mb": 307.2
+   }
+  },
+  {
+   "run": "t2-yield1",
+   "app": "oncrack",
+   "label": "rejected: + one yield before draining",
+   "100": {
+    "msgs_per_sec": 3822.6,
+    "server_cpu_us_per_delivery": 7.327253069196429,
+    "server_cores": 2.8103404454551537,
+    "loadgen_cores": 2.5601546357395186,
+    "pss_saturated_mb": 267.4
+   },
+   "500": {
+    "msgs_per_sec": 1175.0,
+    "server_cpu_us_per_delivery": 5.482743362831858,
+    "server_cores": 3.2049940310385994,
+    "loadgen_cores": 3.6070381231671553,
+    "pss_saturated_mb": 281.1
+   },
+   "1000": {
+    "msgs_per_sec": 643.8,
+    "server_cpu_us_per_delivery": 5.3523804595321876,
+    "server_cores": 3.4042985978539924,
+    "loadgen_cores": 3.804796802131912,
+    "pss_saturated_mb": 304.9
+   }
+  },
+  {
+   "run": "t2-hold1000",
+   "app": "oncrack",
+   "label": "+ the line holds wakes up to 1 ms (no yield)",
+   "100": {
+    "msgs_per_sec": 4131.3,
+    "server_cpu_us_per_delivery": 6.818778842740504,
+    "server_cores": 2.826290797217763,
+    "loadgen_cores": 2.5274945010997802,
+    "pss_saturated_mb": 279.3
+   },
+   "500": {
+    "msgs_per_sec": 1317.4,
+    "server_cpu_us_per_delivery": 4.950490741677628,
+    "server_cores": 3.2371112875479686,
+    "loadgen_cores": 3.678528588564574,
+    "pss_saturated_mb": 278.8
+   },
+   "1000": {
+    "msgs_per_sec": 727.0,
+    "server_cpu_us_per_delivery": 4.719657258064516,
+    "server_cores": 3.3822092335982137,
+    "loadgen_cores": 3.8538405169542336,
+    "pss_saturated_mb": 296.1
+   }
+  },
+  {
+   "run": "t2-compact",
+   "app": "oncrack",
+   "label": "+ compact Turbo Stream JSON",
+   "100": {
+    "msgs_per_sec": 4308.2,
+    "server_cpu_us_per_delivery": 6.617236577440817,
+    "server_cores": 2.814742661576938,
+    "loadgen_cores": 2.491501699660068,
+    "pss_saturated_mb": 267.4
+   },
+   "500": {
+    "msgs_per_sec": 1390.2,
+    "server_cpu_us_per_delivery": 4.646713648784697,
+    "server_cores": 3.2073395102581075,
+    "loadgen_cores": 3.6518725842996136,
+    "pss_saturated_mb": 292.1
+   },
+   "1000": {
+    "msgs_per_sec": 777.7,
+    "server_cpu_us_per_delivery": 4.378586118251928,
+    "server_cores": 3.405404865044985,
+    "loadgen_cores": 3.8318067171113768,
+    "pss_saturated_mb": 298.1
+   }
+  }
+ ],
+ "post": [
+  {
+   "run": "t3-post",
+   "label": "R2.1 image",
+   "conc": 1,
+   "rps": 3339.5,
+   "cpu_us": 592.1,
+   "warmup_secs": 30.0,
+   "warmup": "settled",
+   "warmup_windows_rps": [
+    1750.9,
+    2257.1,
+    3154.5,
+    3395.2,
+    3371.0,
+    3382.2,
+    3347.6,
+    3346.1,
+    3325.5,
+    3361.6,
+    3366.4,
+    3343.1,
+    3318.9,
+    3350.0,
+    3297.8
+   ]
+  },
+  {
+   "run": "t3-post",
+   "label": "R2.1 image",
+   "conc": 16,
+   "rps": 10057.1,
+   "cpu_us": 231.8,
+   "warmup_secs": 90.8,
+   "warmup": "reached the maximum",
+   "warmup_windows_rps": [
+    12954.9,
+    12768.1,
+    13120.6,
+    13096.5,
+    12624.4,
+    13029.6,
+    13090.1,
+    13011.3,
+    10936.5,
+    6260.3,
+    13123.8,
+    8329.9,
+    8877.8,
+    13230.6,
+    9805.0,
+    13284.3,
+    8628.7,
+    8539.8,
+    13252.4,
+    9635.4,
+    9717.4,
+    12346.0,
+    9355.7,
+    13177.5,
+    9012.1,
+    9697.9,
+    13143.4,
+    7035.2,
+    13300.0,
+    9286.0,
+    9329.0,
+    12915.8,
+    8735.6,
+    12887.3,
+    9832.7,
+    9289.1,
+    11479.8,
+    9253.2,
+    12801.4,
+    8413.5,
+    10157.2,
+    13270.2,
+    9414.9,
+    13170.3
+   ]
+  },
+  {
+   "run": "t3-post-control",
+   "label": "the F# port (control)",
+   "conc": 1,
+   "rps": 3007.3,
+   "cpu_us": 644.9,
+   "warmup_secs": 30.0,
+   "warmup": "settled",
+   "warmup_windows_rps": [
+    1611.2,
+    1889.9,
+    2532.2,
+    3006.3,
+    3006.1,
+    3002.3,
+    3005.5,
+    2989.6,
+    2989.6,
+    2987.1,
+    3005.0,
+    3000.1,
+    2989.5,
+    2995.1,
+    3026.0
+   ]
+  },
+  {
+   "run": "t3-post-control",
+   "label": "the F# port (control)",
+   "conc": 16,
+   "rps": 8688.6,
+   "cpu_us": 356.1,
+   "warmup_secs": 30.0,
+   "warmup": "settled",
+   "warmup_windows_rps": [
+    8970.7,
+    8934.2,
+    9039.6,
+    8835.0,
+    8890.7,
+    8775.4,
+    8233.0,
+    8887.3,
+    8616.9,
+    8929.7,
+    8913.8,
+    8335.6,
+    8722.0,
+    8849.4,
+    8994.6
+   ]
+  },
+  {
+   "run": "t2-post-base",
+   "label": "round 1's source, mounted",
+   "conc": 16,
+   "rps": 13151.1,
+   "cpu_us": 232.2,
+   "warmup_secs": 30.0,
+   "warmup": "settled",
+   "warmup_windows_rps": [
+    7137.5,
+    8781.2,
+    10631.0,
+    13441.3,
+    13281.0,
+    13522.0,
+    13511.4,
+    13497.0,
+    13530.3,
+    13340.9,
+    13499.3,
+    13404.3,
+    13198.3,
+    13290.1,
+    13291.3
+   ]
+  },
+  {
+   "run": "t2-post-new",
+   "label": "R2.1 image",
+   "conc": 16,
+   "rps": 10268.6,
+   "cpu_us": 232.2,
+   "warmup_secs": 90.5,
+   "warmup": "reached the maximum",
+   "warmup_windows_rps": [
+    7192.7,
+    8548.2,
+    9613.5,
+    12789.9,
+    13492.3,
+    13588.3,
+    13540.8,
+    13627.7,
+    13581.0,
+    13607.3,
+    13419.8,
+    13482.9,
+    13533.9,
+    13209.1,
+    12243.0,
+    12943.9,
+    12980.1,
+    12919.7,
+    13066.9,
+    12795.1,
+    12910.4,
+    13179.4,
+    12826.0,
+    13174.9,
+    12771.0,
+    12970.5,
+    12995.0,
+    12957.5,
+    12994.8,
+    12900.0,
+    13163.7,
+    12981.3,
+    9339.7,
+    11486.2,
+    9226.1,
+    13050.7,
+    8119.5,
+    12487.4,
+    7936.7,
+    13529.0,
+    8132.9,
+    6908.7,
+    13383.3,
+    9229.5,
+    12904.6
+   ]
+  },
+  {
+   "run": "t2-post-base90",
+   "label": "round 1's source, 90 s warm-up",
+   "conc": 16,
+   "rps": 10972.3,
+   "cpu_us": 231.4,
+   "warmup_secs": 90.2,
+   "warmup": "fixed",
+   "warmup_windows_rps": [
+    6982.0,
+    8577.4,
+    9844.1,
+    12974.9,
+    13408.4,
+    13481.4,
+    13451.4,
+    13396.2,
+    13537.6,
+    13548.9,
+    13247.5,
+    13258.1,
+    13221.5,
+    13110.0,
+    13440.0,
+    13327.8,
+    13224.2,
+    13210.5,
+    12907.4,
+    13206.3,
+    13190.3,
+    13038.4,
+    13241.6,
+    13086.6,
+    13116.4,
+    12846.1,
+    13501.8,
+    13235.7,
+    13059.0,
+    13178.4,
+    13151.1,
+    13155.3,
+    13165.4,
+    13179.8,
+    13030.5,
+    13105.2,
+    12863.0,
+    6010.9,
+    10771.0,
+    9802.3,
+    13060.5,
+    9141.0,
+    9324.4,
+    13053.0,
+    9385.0
+   ]
+  },
+  {
+   "run": "t2-post-new90",
+   "label": "R2.1 image, 90 s warm-up",
+   "conc": 16,
+   "rps": 11044.4,
+   "cpu_us": 230.7,
+   "warmup_secs": 90.4,
+   "warmup": "fixed",
+   "warmup_windows_rps": [
+    7200.8,
+    8543.4,
+    10275.6,
+    12933.6,
+    13510.8,
+    13488.4,
+    13521.1,
+    13490.8,
+    13557.2,
+    13524.8,
+    13408.5,
+    13545.3,
+    13379.6,
+    13274.0,
+    13373.9,
+    13531.2,
+    13255.7,
+    13344.2,
+    13326.2,
+    13100.5,
+    13098.3,
+    13463.1,
+    13196.2,
+    13059.6,
+    13171.1,
+    12913.6,
+    13265.4,
+    13365.3,
+    13123.0,
+    13156.5,
+    13388.4,
+    12928.8,
+    13152.1,
+    12967.9,
+    13130.9,
+    13243.2,
+    7778.8,
+    13061.3,
+    8979.5,
+    13376.8,
+    5282.1,
+    13173.6,
+    9984.7,
+    9380.4,
+    13468.3
+   ]
+  }
+ ]
+}

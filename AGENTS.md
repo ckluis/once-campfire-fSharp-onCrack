@@ -47,6 +47,17 @@ the round trip at c=16. `CAMPFIRE_GZIP_LENGTH=off` restores chunking; `bin/kit-d
 **Native AOT** (unit C4, `bench/results/oncrack-c4.md`): `docker build --build-arg NATIVE_AOT=true` makes `campfire-oncrack:aot` (cold start ~95 ms, idle 22 MB, 36% smaller image; c=1 +14%,
 c=16 -10% against the default; no HTTP/2-over-cleartext). An opt-in: the default image stays JIT + ReadyToRun. `bench/boot` measures cold start and idle memory; tier 2 AOT builds are `AOT=1 bin/publish-mounted DIR`.
 
+**Cable fan-out** (unit R2.1, `bench/results/oncrack-r2-cable.md`): on plain TCP a Cable connection writes to its socket itself, not through
+Kestrel's upgraded stream. After the welcome it pings with a random payload (the probe) and holds its writes until the pong echoing it proves
+Kestrel's pipe is empty (`Connection.run`, `Writer.Detach`; `CAMPFIRE_CABLE_DIRECT=off`). `WakeBatch` wakes a post's subscribers once for both
+of its broadcasts, and `BroadcastOrder` holds the wakes while later posts in line are still rendering, up to `CAMPFIRE_CABLE_HOLD_US` (1000).
+Turbo Stream frames leave `<`, `>` and `&` unescaped (`Config.CompactJson`, `CAMPFIRE_CABLE_COMPACT_JSON=off`; the Rails-golden tests run with
+it off). Any WebSocket client in a test or a bench must answer pings, as a library does, or the connection waits 2 s and stays on the stream.
+The cable suite reports the server's CPU per delivery and both sides' cores busy (`bench/lib/procmem.py`). At 1,000 clients the load generator is
+the limit (3.85 of 4 cores), so compare servers there by CPU per delivery. `bench/cable/perf` profiles a saturated fan-out (`--loadgen` for the
+client side). A tier 2 cable loop is about 2.5 minutes: `bin/publish-mounted`, then `bench/run` with `SUITES=cable`. The SSE prototype
+(`bench/cable/run --sse`) is measured and left off.
+
 **Realistic workloads** (unit R2.0, `bench/results/oncrack-r2-bench.md`): the five classic workloads are a 100%-hit benchmark for the read
 cache (one URL, one user, no writes). `bench/quick --real` runs `mixed` (16 connections read a room while one posts into it), `spread` (2,112
 pages of the crowd seed's 525 users), `spread_mixed` (spread plus one connection posting into rooms of 526 members) and `search_spread`

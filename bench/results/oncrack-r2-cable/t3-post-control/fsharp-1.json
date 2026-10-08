@@ -1,0 +1,212 @@
+{
+ "app": "fsharp",
+ "rep": 1,
+ "cold_start_ms": 224,
+ "memory": {
+  "idle_current_mb": 27,
+  "idle_anon_mb": 15,
+  "peak_current_mb": 418,
+  "peak_anon_mb": 213,
+  "cgroup_peak_mb": 419
+ },
+ "http": [
+  {
+   "avg_bytes": 1993,
+   "conc": 1,
+   "errors": 0,
+   "gzip": true,
+   "latency": {
+    "max_ms": 6.795,
+    "mean_ms": 0.33,
+    "n": 24059,
+    "p50_ms": 0.312,
+    "p90_ms": 0.377,
+    "p99_ms": 0.586
+   },
+   "ok": 24059,
+   "path": "POST /rooms/201306877/messages",
+   "rps": 3007.3,
+   "secs": 8.0,
+   "statuses": {
+    "200": 24059
+   },
+   "cost": {
+    "wall_s": 8.0,
+    "server_usage_us": 15514904,
+    "server_user_us": 10951195,
+    "server_system_us": 4563709,
+    "loadgen_user_us": 364248,
+    "loadgen_system_us": 353721,
+    "n": 24059,
+    "server_cpu_us_per_req": 644.9,
+    "server_user_us_per_req": 455.2,
+    "server_system_us_per_req": 189.7,
+    "loadgen_cpu_us_per_req": 29.8,
+    "server_cores_busy": 1.94,
+    "loadgen_cores_busy": 0.09
+   },
+   "route": "post_message",
+   "warmup": {
+    "secs": 30.0,
+    "windows_rps": [
+     1611.2,
+     1889.9,
+     2532.2,
+     3006.3,
+     3006.1,
+     3002.3,
+     3005.5,
+     2989.6,
+     2989.6,
+     2987.1,
+     3005.0,
+     3000.1,
+     2989.5,
+     2995.1,
+     3026.0
+    ],
+    "reason": "settled",
+    "window_secs": 2.0,
+    "settled": true,
+    "tail_rps": 3003.5
+   },
+   "host_probe_after": {
+    "spin_ms": 58.6,
+    "spin_ms_max_cpu": 62.0,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 55.57,
+    "ratio": 1.054
+   }
+  },
+  {
+   "avg_bytes": 1993,
+   "conc": 16,
+   "errors": 0,
+   "gzip": true,
+   "latency": {
+    "max_ms": 127.167,
+    "mean_ms": 1.84,
+    "n": 69527,
+    "p50_ms": 1.558,
+    "p90_ms": 2.533,
+    "p99_ms": 6.111
+   },
+   "ok": 69527,
+   "path": "POST /rooms/201306877/messages",
+   "rps": 8688.6,
+   "secs": 8.0,
+   "statuses": {
+    "200": 69527
+   },
+   "cost": {
+    "wall_s": 8.0,
+    "server_usage_us": 24755315,
+    "server_user_us": 17000034,
+    "server_system_us": 7755281,
+    "loadgen_user_us": 1522009,
+    "loadgen_system_us": 1824741,
+    "n": 69527,
+    "server_cpu_us_per_req": 356.1,
+    "server_user_us_per_req": 244.5,
+    "server_system_us_per_req": 111.5,
+    "loadgen_cpu_us_per_req": 48.1,
+    "server_cores_busy": 3.09,
+    "loadgen_cores_busy": 0.42
+   },
+   "route": "post_message",
+   "warmup": {
+    "secs": 30.0,
+    "windows_rps": [
+     8970.7,
+     8934.2,
+     9039.6,
+     8835.0,
+     8890.7,
+     8775.4,
+     8233.0,
+     8887.3,
+     8616.9,
+     8929.7,
+     8913.8,
+     8335.6,
+     8722.0,
+     8849.4,
+     8994.6
+    ],
+    "reason": "settled",
+    "window_secs": 2.0,
+    "settled": true,
+    "tail_rps": 8855.3
+   },
+   "host_probe_after": {
+    "spin_ms": 57.85,
+    "spin_ms_max_cpu": 59.71,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 55.57,
+    "ratio": 1.041
+   }
+  }
+ ],
+ "cable": [],
+ "upload": {},
+ "loadavg_start": "1.27 2.30 2.53 1/197 252405",
+ "loadavg_end": "4.12 2.84 2.69 1/239 255254",
+ "post_rows": [
+  {
+   "route": "post_message",
+   "phase": "warm-up",
+   "conc": 1,
+   "ok": 84085,
+   "statuses": {
+    "200": 84085
+   },
+   "rows": 84085
+  },
+  {
+   "route": "post_message",
+   "phase": "run",
+   "conc": 1,
+   "ok": 24059,
+   "statuses": {
+    "200": 24059
+   },
+   "rows": 24059
+  },
+  {
+   "route": "post_message",
+   "phase": "warm-up",
+   "conc": 16,
+   "ok": 264140,
+   "statuses": {
+    "200": 264140
+   },
+   "rows": 264140
+  },
+  {
+   "route": "post_message",
+   "phase": "run",
+   "conc": 16,
+   "ok": 69527,
+   "statuses": {
+    "200": 69527
+   },
+   "rows": 69527
+  }
+ ],
+ "probe": [],
+ "host_probe_start": {
+  "spin_ms": 59.01,
+  "spin_ms_max_cpu": 60.64,
+  "cpus": "0-3,4-7",
+  "baseline_ms": 55.57,
+  "ratio": 1.062
+ },
+ "host_probe_end": {
+  "spin_ms": 58.75,
+  "spin_ms_max_cpu": 60.36,
+  "cpus": "0-3,4-7",
+  "baseline_ms": 55.57,
+  "ratio": 1.057
+ },
+ "seed": "default"
+}
