@@ -32,6 +32,16 @@ the round trip at c=16. `CAMPFIRE_GZIP_LENGTH=off` restores chunking; `bin/kit-d
 **Native AOT** (unit C4, `bench/results/oncrack-c4.md`): `docker build --build-arg NATIVE_AOT=true` makes `campfire-oncrack:aot` (cold start ~95 ms, idle 22 MB, 36% smaller image; c=1 +14%,
 c=16 -10% against the default; no HTTP/2-over-cleartext). An opt-in: the default image stays JIT + ReadyToRun. `bench/boot` measures cold start and idle memory; tier 2 AOT builds are `AOT=1 bin/publish-mounted DIR`.
 
+**Realistic workloads** (unit R2.0, `bench/results/oncrack-r2-bench.md`): the five classic workloads are a 100%-hit benchmark for the read
+cache (one URL, one user, no writes). `bench/quick --real` runs `mixed` (16 connections read a room while one posts into it), `spread` (2,112
+pages of the crowd seed's 525 users), `spread_mixed` (spread plus one connection posting into rooms of 526 members) and `search_spread`
+(524 users x 200 queries), on the crowd seed, at c=16 readers; `bench/lib/realistic.py` signs the people in and writes the load generator's
+lanes (`loadgen http --mix-spec`). `bench/quick compare` prints them against the same-session baseline in `bench/results/oncrack-r2-bench/`
+(Rails, Rust, the port and onCrack). Run any change to the read cache, the write path or search on them as well as on the five. At the default
+64 MB budget onCrack is 0.95x the port on `spread` (the cache thrashes; 512 MB gives 127k). Run them as a part of their own: `bench/run`
+refuses to mix them with the classic routes. Load generator headroom (same file): not tool-bound at 4 cores, but it costs 19-23 us a request,
+so its 4-core ceiling is about 170-210k req/s.
+
 # once-campfire-fsharp
 
 Campfire in F#. It is a port that has to be indistinguishable in use from the Rails app in
