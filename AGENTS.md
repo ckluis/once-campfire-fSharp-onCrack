@@ -26,8 +26,9 @@ If one of these tools doesn't exist yet, building it is part of your unit. Recor
 **onCrack's gates and scoring** (unit C0): `bin/pixel-parity` is the one-command "the UI is identical" check (the parity harness's
 screenshot layer, per seed; see its header for the retry of cells the harness could not capture). `bench/quick` runs onCrack only and
 `bench/quick compare DIR` scores it against the stored Rust and F# port medians of `bench/results/phase7-final/`; `bench/quick log` appends to
-`bench/results/oncrack-log.jsonl` (the port's own `phase7-log.jsonl` is history) and rebuilds `index.html`, whose hero is the climb chart
-(`bench/progress/climb.py`: onCrack over Rust, starting from the port's final result; the port's dots are in a panel). `bench/run --apps
+`bench/results/oncrack-log.jsonl` (the port's own `phase7-log.jsonl` is history) and rebuilds `index.html`. Its hero is the current-upstream
+comparison (`site/build.py`'s `hero`, from `bench/results/oncrack-r2-final/upstream-*`); the climb chart (`bench/progress/climb.py`: onCrack over the pinned
+Rust `ccece30`, starting from the port's final result) is the panel "The climb against pinned Rust", and the port's dots are in another. `bench/run --apps
 reference,rust,fsharp,oncrack` measures all four in one session (`fsharp` is the port). Tier 3 of an unchanged image must land within noise of
 the port: `bench/results/oncrack-c0.md`.
 
@@ -116,6 +117,16 @@ and the fast path 64 MB (`CAMPFIRE_READ_CACHE_MB`, `CAMPFIRE_FAST_PATH_MB`); (b)
 arenas (`MALLOC_ARENA_MAX=2` in the Dockerfile; `CAMPFIRE_VIPS_CACHE_MB`, `CAMPFIRE_VIPS_CONCURRENCY`); (c) no GC setting helped (gen0 size, DATAS,
 conserve memory, heap count, hard limit, concurrent, workstation: all measured, none kept; they move a read-only phase and cost a write one).
 `CAMPFIRE_PREWARM=off` turns off the start-up thread that warms the route table, SQLite and the host builder.
+
+**Upstream's method** (round 2 final, `bench/results/oncrack-r2-final.md`): the comparison that counts is Basecamp's
+`once-campfire-verification` harness (`bin/benchmark`, its seed, loadgen and contracts) against current upstream Rust and C, not the pinned
+`ccece30`. Its checkout is `~/Desktop/projects/once-campfire-verification` (branch `oncrack-adapter`: the `oncrack`/`fsharp` apps and the
+Rails 90b3300 search order for them, never pushed); the upstream checkouts and build scripts are in `~/Desktop/projects/upstream-campfire/`
+(`scripts/env.sh`, `run.sh`, `build-c.sh`). Run it in colima from a tmpfs copy (`/mnt/cfv`), with the seed group-writable (the VM user is uid
+501, the containers 1000), and point the harness's workspace at a clean worktree of onCrack: it refuses a checkout that changes between rounds.
+`bench/results/oncrack-r2-final/table.py` prints its tables in upstream's form, `review.py` re-runs room page, mixed and post by hand with the
+server's CPU. onCrack's lead there is its caches (with `CAMPFIRE_RESPONSE_CACHE_MB=0` it is the port, 0.79x Rust); a hit keeps its authorization
+decision under the commit counter where upstream re-reads the session and membership, so say so beside every multiple.
 
 **Commits by other connections** (round 2 verifier, `bench/results/oncrack-r2-verifier.md`): the version counters' triggers live in the
 writer's connection, so nothing else's commits (a Rails console or rollback, a second container, the sqlite3 shell) moved them. Now `Versions`

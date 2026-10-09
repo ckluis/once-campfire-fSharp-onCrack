@@ -257,6 +257,35 @@ def param(v, label, rel, how):
     return V(v, label, [rel], how)
 
 
+# ---- round 2's final review: once-campfire-verification's own harness, current upstream Rust and C (bench/results/oncrack-r2-final)
+R2 = 'bench/results/oncrack-r2-final'
+UPN, UPM = R2 + '/upstream-normal', R2 + '/upstream-mixed'
+UPAPPS = ['rails', 'rust', 'c', 'fsharp', 'oncrack']
+UPREV = {'rails': '0aa339d', 'rust': 'f9dca47', 'c': 'cd0cbe4'}
+UPBASE = {'rails': 'Rails', 'rust': 'Rust', 'c': 'C', 'fsharp': 'F# port', 'oncrack': 'onCrack'}
+UPREADS = ['room_show', 'messages_page', 'sidebar', 'search']
+
+
+def upname(a, link=True):
+    """An app's name with its measured upstream revision marked as a commit (not a number)."""
+    return UPBASE[a] + ((' ' + lit(UPREV[a], 'commit')) if a in UPREV and link else '')
+
+
+def up(app, route, d=UPN, stat='median'):
+    """bin/benchmark's requests/sec for one app and route at c=16: the median (or min, max) of its rounds."""
+    files = sorted(os.path.relpath(f, REPO) for f in glob.glob(os.path.join(REPO, d, app + '-[0-9].json')))
+    if not files:
+        raise SystemExit('build: no %s rounds in %s' % (app, d))
+    key = 'mixed_http' if d == UPM else 'http'
+    vals = [x['rps'] for f in files for x in jload(f)[key] if x['route'] == route and x['conc'] == 16]
+    if len(vals) != len(files):
+        raise SystemExit('build: %s %s: %d samples in %d rounds' % (app, route, len(vals), len(files)))
+    v = {'median': statistics.median, 'min': min, 'max': max}[stat](vals)
+    prof = 'mixed profile, 10 posts/s writer' if d == UPM else 'normal profile'
+    return V(v, '%s, %s, c=16, req/s, %s of %d rounds (verification harness, %s)' % (UPBASE[app] + (' ' + UPREV[app] if app in UPREV else ''), RNAME[route], stat, len(vals), prof),
+             files, '%s of %s (%s[route=%s, conc=16].rps)' % (stat, ', '.join(g(float(x)) for x in vals), key, route))
+
+
 # ================================================================ the facts
 
 def facts():
@@ -271,6 +300,35 @@ def facts():
         F['geo_port_rust', c] = geo([F['w']['fsharp', r, c, 'rps'].over(F['w']['rust', r, c, 'rps']) for r, _ in ROUTES],
                                     'the F# port over Rust, geometric mean of the five workloads, c=%d, same session' % c)
     F['conc'] = {c: param(c, 'connections (concurrency)', R1 + '/env.txt', 'bench/run schedule in env.txt: "concs 1 16 64"') for c in (1, 16, 64)}
+    # current upstream, their harness (round 2's final review)
+    F['up'] = {(a, r, st): up(a, r, UPN, st) for a in UPAPPS for r, _ in ROUTES for st in ('median', 'min', 'max')}
+    F['upm'] = {(a, r, st): up(a, r, UPM, st) for a in UPAPPS for r in UPREADS for st in ('median', 'min', 'max')}
+    for b in ('rust', 'c', 'fsharp', 'rails'):
+        F['up_geo', b] = geo([F['up']['oncrack', r, 'median'].over(F['up'][b, r, 'median']) for r, _ in ROUTES],
+                             'onCrack over %s, geometric mean of the five workloads, c=16, verification harness, same session' % UPBASE[b])
+        F['upm_geo', b] = geo([F['upm']['oncrack', r, 'median'].over(F['upm'][b, r, 'median']) for r in UPREADS],
+                              'onCrack over %s, geometric mean of the four mixed-profile reads, c=16, verification harness, same session' % UPBASE[b])
+    F['up_c_rust'] = geo([F['up']['c', r, 'median'].over(F['up']['rust', r, 'median']) for r, _ in ROUTES], 'C over Rust, geometric mean of the five workloads, c=16, verification harness')
+    sm = jload(UPN + '/summary.json')['metadata']
+    F['up_conc'] = param(16, 'concurrent clients (verification harness)', UPN + '/summary.json', 'metadata.concurrencies "%s"' % sm['concurrencies'])
+    F['up_rounds'] = param(sm['rounds'], 'rounds per app (verification harness)', UPN + '/summary.json', 'metadata.rounds')
+    F['up_rate'] = param(jload(UPM + '/mixed-summary.json')['metadata']['mixed_writer']['maximum_writes_per_second'], 'mixed profile writer cap, posts/s', UPM + '/mixed-summary.json', 'metadata.mixed_writer.maximum_writes_per_second')
+    F['up_secs'] = param(sm['duration'], 'seconds per timed sample (verification harness)', UPN + '/summary.json', 'metadata.duration')
+    F['up_val'] = {}
+    for d, key in ((UPN, 'http'), (UPM, 'mixed_http')):
+        files = [os.path.relpath(f, REPO) for f in sorted(glob.glob(os.path.join(REPO, d, '*-[0-9].json')))]
+        F['up_val'][d, 'timed'] = V(sum(x['ok'] for f in files for x in jload(f)[key]), 'timed responses validated (%s)' % d.split('/')[-1], files, 'sum of ok over every timed sample')
+        F['up_val'][d, 'writes'] = V(sum(jload(f)['post_write_audit']['acknowledged'] for f in files), 'acknowledged writes audited against the database and FTS, warm-ups included (%s)' % d.split('/')[-1],
+                                     files, 'sum of post_write_audit.acknowledged (each verified)')
+        raws = [os.path.relpath(f, REPO) for f in glob.glob(os.path.join(REPO, d, 'raw', 'http-*.json'))]
+        F['up_val'][d, 'gen'] = V(max(jload(f)['generator_cpu_percent'] for f in raws), 'peak load generator CPU, %% (400%% available; %s)' % d.split('/')[-1], sorted(raws), 'max of generator_cpu_percent over every raw sample')
+        F['up_val'][d, 'bad'] = V(sum(jload(f)['errors'] + jload(f)['invalid_responses'] for f in raws), 'errors and invalid responses (%s)' % d.split('/')[-1], sorted(raws), 'sum over every raw sample')
+    K = jload(R2 + '/kloc.json')
+    for a in ('oncrack', 'fsharp'):
+        F['kloc', a] = V(K[a]['code'] / 1000, '%s backend KLOC (cloc 2.10, upstream rules)' % UPBASE[a], [R2 + '/kloc.json'], '%d code lines in %d F# files / 1000' % (K[a]['code'], K[a]['files']))
+    for a in ('rails', 'rust', 'c'):
+        F['kloc', a] = md(R2 + '/upstream-performance-review.md', r'\| %s \| \[`[0-9a-f]{7}`\]\([^)]*\) \| [\d,]+ \| [\d,]+ \| ([\d.]+) \|' % {'rails': 'Rails', 'rust': 'Rust', 'c': 'C'}[a],
+                          '%s backend KLOC as upstream published it' % UPBASE[a])
     F['nreps'] = param(3, 'reps per app', R1 + '/env.txt', 'bench/run schedule in env.txt: "reps 3"')
     # reads while writing
     for a in ('rust', 'fsharp', 'oncrack'):
@@ -459,34 +517,36 @@ def tbl(head, rows, caption=None, cls=''):
 # ================================================================ the page
 
 def hero(F, cl):
-    c16 = F['conc'][16]
+    c16 = F['up_conc']
     tiles = [
-        ('p-five', counter(F['geo_rust', 16], 2, '×'), 'Rust, all five workloads at %s connections' % L.n(c16, link=False)),
-        ('p-five', counter(F['geo_port', 16], 2, '×'), 'the F# port it was forked from, same runs'),
-        ('p-mix', counter(F['mix', 'oncrack', 'read'].over(F['mix', 'rust', 'read'], 'onCrack over Rust, room page reads/s while the room is written to'), 2, '×'),
-         'Rust when the room is being written to, not just read'),
+        ('p-upstream', counter(F['up_geo', 'rust'], 2, '×'), 'current upstream Rust, all five workloads, their harness'),
+        ('p-upstream', counter(F['up_geo', 'c'], 2, '×'), 'current upstream C, same session'),
+        ('p-upstream', counter(F['up_geo', 'fsharp'], 2, '×'), 'the F# port it was forked from, same session'),
         ('p-pixels', '<span class="num-big">%s<i class="sl">/</i>%s</span>' % (L.n(F['pp_total']['equal'], link=False), L.n(F['pp_total']['screenshots'], link=False)),
          'screenshots pixel-equal to Rails'),
     ]
     th = ''.join('<a class="ht" href="#%s">%s<span>%s</span></a>' % t for t in tiles)
-    climb_src = L.block('the climb chart: onCrack over the stored Rust medians, one dot per version', [
-        'bench/results/oncrack-log.jsonl', 'bench/results/phase7-final/rust-1.json', 'bench/results/phase7-final/fsharp-1.json', 'bench/progress/history.json', 'bench/progress/climb.py'],
-        'drawn by bench/progress/climb.py: each dot is the geometric mean over the five workloads at c=16 of onCrack req/s (the logged run) over the median of Rust\'s stored phase7-final reps; cards add the port and Rails from the same stored session')
-    pts = cl.get('points') or []
-    last_t = pts[-1]['time'].astimezone(EDT).strftime('%a %-d %b, %H:%M EDT') if pts else ''
+    rows = []
+    for r, rn in ROUTES:
+        rows.append([rn[0].upper() + rn[1:], '<b>%s</b>' % L.n(F['up']['oncrack', r, 'median']),
+                     L.x(F['up']['oncrack', r, 'median'].over(F['up']['rust', r, 'median'])), L.x(F['up']['oncrack', r, 'median'].over(F['up']['c', r, 'median']))] +
+                    [L.n(F['up'][a, r, 'median']) for a in ('rust', 'c', 'fsharp', 'rails')])
+    table = tbl([('Requests/sec, %s clients' % L.n(c16, link=False), False), ('onCrack', True), ('&divide; Rust', True), ('&divide; C', True)] +
+                [(upname(a), True) for a in ('rust', 'c', 'fsharp', 'rails')], rows)
     return ('<section class="hero" id="top" aria-labelledby="hero-h"><div class="glow" aria-hidden="true"></div><div class="wrap">'
             '<p class="kicker hero-in">Basecamp&#39;s ONCE Campfire &middot; the F# port, unchained</p>'
             '<h1 id="hero-h" class="hero-in">onCrack.</h1>'
-            '<p class="lede hero-in">The same Campfire, pixel for pixel, on a server that is free to do less work: it keeps finished pages until a write '
-            'changes what they show, and commits concurrent posts together. Measured in one session beside Rails, the Rust port and the F# port it was forked from. '
-            '<em>Every number on this page links to the file it came from.</em></p>'
+            '<p class="lede hero-in">The same Campfire, pixel for pixel, on a server that is free to do less work: it keeps finished pages until a commit '
+            'changes what they show, and commits concurrent posts together. Measured with Basecamp&#39;s own verification harness, in one session, beside current upstream Rails, Rust and C '
+            'and the F# port it was forked from. <em>Every number on this page links to the file it came from.</em></p>'
             '<div class="htiles hero-in">%s</div>'
-            '<figure class="climb hero-in" id="climb" aria-labelledby="climb-cap" %s>%s'
-            '<figcaption id="climb-cap"><span><b>The climb.</b> onCrack&#39;s throughput over Rust&#39;s, one dot per version (geometric mean of the five workloads, '
-            '16 connections), from the F# port&#39;s final result (the dotted line). <b>The line divides by Rust&#39;s stored medians</b> (<code>phase7-final</code>), so every dot '
-            'shares one denominator; the tiles above are the same-session numbers. Latest: %s.</span>%s</figcaption></figure>'
-            '<p class="btw" id="btw"><a href="#p-port-era">The port&#39;s own climb</a> <span>The dots that came before, kept off this line.</span></p>'
-            '</div></section>' % (th, climb_src, cl['chart'], e(last_t), details('p-climb', 'How to read it')))
+            '<figure class="climb hero-in" id="upstream" aria-labelledby="up-cap">%s'
+            '<figcaption id="up-cap"><span><b>Current upstream, their method.</b> <code>once-campfire-verification</code>&#39;s <code>bin/benchmark</code>: median of %s rounds of %s s at %s clients, '
+            'every response validated against the seed, every acknowledged post audited in the database and its search index; four server CPUs and four for the load generator, on this '
+            'project&#39;s VM, not their Ryzen. onCrack&#39;s and the port&#39;s search is checked against Rails <span data-lit="commit">90b3300</span>&#39;s order, which they render. '
+            '<b>onCrack authorizes a cache hit from a decision kept under the database&#39;s commit counter</b>, where upstream re-reads the session and membership on every hit.</span>%s</figcaption></figure>'
+            '<p class="btw" id="btw"><a href="#p-climb-chart">The climb against pinned Rust</a> <span>Every logged version over Rust <span data-lit="commit">ccece30</span>&#39;s stored medians, now in a panel.</span></p>'
+            '</div></section>' % (th, table, L.n(F['up_rounds']), L.n(F['up_secs']), L.n(c16), details('p-upstream', 'The details')))
 
 
 def same_software(F, sp):
@@ -515,7 +575,7 @@ def same_software(F, sp):
             '<figcaption>%s<span>One screenshot, because the four are one: the parity harness&#39;s captures of this page from Rails, Rust, the port and onCrack are byte-identical.</span>'
             '</figcaption></figure>' % (e(sp['image']), badge)) if same else ''
     return ('<section class="sbs" id="sbs" aria-labelledby="sbs-h"><div class="wrap sbs-grid">%s'
-            '<div class="sbs-copy reveal"><p class="kicker">Same pixels, four engines &middot; the room page</p>'
+            '<div class="sbs-copy reveal"><p class="kicker">Same pixels, four engines &middot; the room page &middot; round one, pinned Rust <span data-lit="commit">ccece30</span></p>'
             '<h2 id="sbs-h">Same software.</h2>'
             '<ol class="sbs-rows">%s</ol>'
             '<p class="sbs-warn"><b>onCrack&#39;s row is cache hits.</b> The benchmark asks for one page over and over and never writes, so onCrack serves it from a stored copy. '
@@ -537,7 +597,7 @@ def mix_beat(F):
     posts = F['mix', 'oncrack', 'post']
     posts_round = V(round(posts.v, -2), 'onCrack, posts a second into the read room, to the nearest hundred', posts.files, posts.how + ', rounded')
     return ('<section class="beat mix" id="mix" aria-labelledby="mix-h"><div class="wrap">'
-            '<p class="kicker reveal">The honest version</p><h2 id="mix-h" class="reveal">Cache hits, and the other end.</h2>'
+            '<p class="kicker reveal">The honest version &middot; round one, pinned Rust <span data-lit="commit">ccece30</span></p><h2 id="mix-h" class="reveal">Cache hits, and the other end.</h2>'
             '<p class="line reveal">A stored page is only as good as the writes that don&#39;t touch it. So the same room page was read at %s connections while one more connection '
             'posted into that very room as fast as each app would take it: about %s posts a second, each one invalidating the page.</p>'
             '<div class="mx-grid reveal">'
@@ -1050,6 +1110,50 @@ def p_ledger():
     return panel('p-ledger', 'Every number', 'The ledger', '<div data-ledger>%s</div>' % body, 'check')
 
 
+def p_upstream(F):
+    def rng(t, a, r):
+        return '%s <span class="rng">[%s&ndash;%s]</span>' % (L.n(t[a, r, 'median']), L.n(t[a, r, 'min']), L.n(t[a, r, 'max']))
+    head = [('Implementation', False)] + [(rn, True) for _, rn in ROUTES]
+    normal = tbl(head, [[upname(a)] + [rng(F['up'], a, r) for r, _ in ROUTES] for a in UPAPPS], 'Normal profile: median [observed min&ndash;max] requests/sec at %s clients' % L.n(F['up_conc']))
+    mixed = tbl([('Implementation', False)] + [(RNAME[r], True) for r in UPREADS], [[upname(a)] + [rng(F['upm'], a, r) for r in UPREADS] for a in UPAPPS],
+                'Mixed profile: reads/sec at %s clients while one writer posts up to %s messages/s into HQ (reads on Watercooler)' % (L.n(F['up_conc']), L.n(F['up_rate'])))
+    ratios = tbl([('onCrack over', False), ('Five workloads', True), ('Four mixed reads', True)],
+                 [[upname(b)] + [L.x(F['up_geo', b]), L.x(F['upm_geo', b])] for b in ('rust', 'c', 'fsharp', 'rails')], 'Geometric means, same session')
+    val = tbl([('Profile', False), ('Timed responses validated', True), ('Writes audited', True), ('Errors or invalid', True), ('Peak generator CPU, %', True)],
+              [[n, L.n(F['up_val'][d, 'timed']), L.n(F['up_val'][d, 'writes']), L.n(F['up_val'][d, 'bad']), L.n(F['up_val'][d, 'gen'], D1)] for d, n in ((UPN, 'Normal'), (UPM, 'Mixed'))])
+    kloc = tbl([('Implementation', False), ('Backend KLOC', True)], [[upname(a)] + [L.n(F['kloc', a], D1)] for a in ('rails', 'rust', 'c', 'fsharp', 'oncrack')],
+               '<code>cloc 2.10</code>, upstream&#39;s rules (backend language only; tests, templates in other languages, build tools excluded). Rails, Rust and C as upstream published them')
+    body = ''.join([
+        '<p class="lead">Round two closed by upstream&#39;s method: <code>once-campfire-verification</code>&#39;s harness, unchanged but for an adapter that names onCrack and the port, '
+        'their seed, their load generator and their two profiles, with current Rust and C built as their repositories describe. C over Rust here is %s; upstream measured it near the same ratio on a faster machine, so the '
+        'session ranks the engines as theirs does.</p>' % L.x(F['up_c_rust']),
+        normal, mixed, ratios, val, kloc,
+        '<h3>Read with care</h3><ul class="caveats">'
+        '<li><b>Not their machine.</b> Four of this VM&#39;s CPUs per side, not the Ryzen&#39;s; compare ratios, not absolute numbers, with their report.</li>'
+        '<li><b>A different freshness mechanism.</b> Upstream re-reads the session and membership on every cache hit. onCrack keeps the decision and drops it on any commit, by any connection (it watches SQLite&#39;s WAL index); '
+        'the round&#39;s verifier attacked that with foreign writers and it held. The cost of a hit is not the same work as theirs.</li>'
+        '<li><b>Search order.</b> onCrack and the port render Rails <span data-lit="commit">90b3300</span>, whose search lists matches by time; upstream now lists them by id. Their search is validated against the old order.</li>'
+        '<li><b>One viewer, one URL.</b> Their read workloads are a cache-hit benchmark; the appendix of the results file keeps this project&#39;s realistic workloads.</li></ul>',
+        srcline(UPN + '/', UPM + '/', R2 + '/kloc.json', R2 + '/upstream-performance-review.md', 'bench/results/oncrack-r2-final.md', lead='Sources'),
+    ])
+    return panel('p-upstream', 'Current upstream, their harness', 'onCrack against Rust, C, Rails and the port', body, 'upstream')
+
+
+def p_climb_chart(cl):
+    climb_src = L.block('the climb chart: onCrack over the stored Rust medians, one dot per version', [
+        'bench/results/oncrack-log.jsonl', 'bench/results/phase7-final/rust-1.json', 'bench/results/phase7-final/fsharp-1.json', 'bench/progress/history.json', 'bench/progress/climb.py'],
+        'drawn by bench/progress/climb.py: each dot is the geometric mean over the five workloads at c=16 of onCrack req/s (the logged run) over the median of Rust\'s stored phase7-final reps; cards add the port and Rails from the same stored session')
+    pts = cl.get('points') or []
+    last_t = pts[-1]['time'].astimezone(EDT).strftime('%a %-d %b, %H:%M EDT') if pts else ''
+    body = ('<figure class="climb" id="climb" aria-labelledby="climb-cap" %s>%s'
+            '<figcaption id="climb-cap"><span><b>The climb.</b> onCrack&#39;s throughput over the pinned Rust port&#39;s (<span data-lit="commit">ccece30</span>), one dot per version (geometric mean of the five workloads, '
+            '16 connections, this project&#39;s own harness), from the F# port&#39;s final result (the dotted line). <b>The line divides by Rust&#39;s stored medians</b> (<code>phase7-final</code>), so every dot '
+            'shares one denominator. It is history: the comparison that counts now is current upstream, at the top of the page. Latest: %s.</span>%s</figcaption></figure>'
+            '<p class="btw"><a href="#p-port-era">The port&#39;s own climb</a> <span>The dots that came before, kept off this line.</span></p>'
+            % (climb_src, cl['chart'], e(last_t), details('p-climb', 'How to read it')))
+    return panel('p-climb-chart', 'History', 'The climb against pinned Rust', body, 'btw')
+
+
 def p_climb(cl):
     pts = cl.get('points') or []
     rows = []
@@ -1065,8 +1169,8 @@ def p_climb(cl):
         '<p class="lead">The line is the geometric mean of onCrack&#39;s throughput over Rust&#39;s across the five benchmarked workloads (room page, messages page, sidebar, search, post a message) '
         'at %s connections. Dots are spaced evenly in the order they ran. A dot that measured only some workloads carries the rest from the last kept run; its card greys them.</p>' % L.n(FCTX['F']['conc'][16]),
         '<h3>Read with care</h3><ul class="caveats">'
-        '<li><b>The denominator is stored.</b> Every dot divides by Rust&#39;s medians from <code>phase7-final</code>, one earlier session, so the dots compare with each other. The headline numbers '
-        'at the top of the page are from round one&#39;s own session, where Rust was measured beside onCrack; the two agree closely (<a href="#p-five">the five workloads</a>).</li>'
+        '<li><b>The denominator is stored.</b> Every dot divides by the pinned Rust port&#39;s (<span data-lit="commit">ccece30</span>) medians from <code>phase7-final</code>, one earlier session, so the dots compare with each other. '
+        'Round one measured that Rust beside onCrack in one session and the two agree closely (<a href="#p-five">the five workloads</a>). The headline at the top of the page is current upstream, measured with upstream&#39;s harness.</li>'
         '<li><b>The first dot is not onCrack.</b> It is the F# port&#39;s final result, the starting point the fork is scored from.</li>'
         '<li><b>Most dots are provisional.</b> A %s dot is one rep of the workloads a change touches, on a build mounted into a container. The numbers that count are %s: '
         'a rebuilt image, three reps, all five workloads.</li>'
@@ -1074,7 +1178,7 @@ def p_climb(cl):
         tbl_,
         srcline('bench/results/oncrack-log.jsonl', 'bench/progress/history.json', 'bench/progress/climb.py', lead='Sources'),
     ])
-    return panel('p-climb', 'The climb', 'How to read the chart', body, 'climb')
+    return panel('p-climb', 'The climb', 'How to read the chart', body, 'btw')
 
 
 def p_rules():
@@ -1118,7 +1222,7 @@ def p_port_era():
 
 
 def more_row():
-    links = [('p-ledger', 'Every number'), ('p-repro', 'Reproduce it'), ('p-rules', 'The rules'), ('p-climb', 'Every run'), ('p-port-era', 'The port&#39;s climb')]
+    links = [('p-ledger', 'Every number'), ('p-repro', 'Reproduce it'), ('p-rules', 'The rules'), ('p-climb-chart', 'The climb against pinned Rust'), ('p-climb', 'Every run'), ('p-port-era', 'The port&#39;s climb')]
     return ('<section class="more-row" id="more" aria-label="Everything else"><div class="wrap reveal"><p class="kicker">Everything else</p>'
             '<p class="links">%s</p></div></section>' % ''.join(details(p, l) for p, l in links))
 
@@ -1397,7 +1501,7 @@ html:not(.js) .panel:target .sheet,.panel.open .sheet{transform:none}
 .tw th,.tw td{padding:9px 14px;border-bottom:1px solid var(--line-2);text-align:left;vertical-align:top}
 .tw thead th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;white-space:nowrap}
 .tw tbody th{font-weight:600}.tw tbody tr:last-child>*{border-bottom:0}.tw tr.dropped{color:var(--muted)}
-.tw .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tw .rng{color:var(--muted);font-size:12px}.tw .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tw.dense th,.tw.dense td{padding:6px 10px;font-size:13px}
 .ratio{min-width:160px}.rbar{display:inline-block;position:relative;width:90px;height:8px;border-radius:4px;background:var(--surface-2);vertical-align:middle;margin-right:10px}
 .rfill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--s1)}.rfill.ahead{background:var(--good)}
@@ -1744,10 +1848,10 @@ def build():
     cl = climb_chart.climb()
     sp = same_pixels_facts()
     nav = ''.join('<li><a href="%s">%s</a></li>' % h for h in
-                  [('#climb', 'Climb'), ('#sbs', 'Same software'), ('#mix', 'Reads &amp; writes'), ('#does', 'What it does'), ('#fanout', 'Fan-out'), ('#check', 'Check it')])
+                  [('#upstream', 'Upstream'), ('#sbs', 'Same software'), ('#mix', 'Reads &amp; writes'), ('#does', 'What it does'), ('#fanout', 'Fan-out'), ('#check', 'Check it')])
     main = ''.join([hero(F, cl), same_software(F, sp), mix_beat(F), does_beat(F), fanout(F), proof(F), cta(F), more_row()])
     panels = [p_five(F), p_sbs(F, sp), p_mix(F), p_does(F), p_correct(F), p_durability(F), p_pixels(F), p_ceiling(F), p_rust(F), p_fanout(F), p_repro(F),
-              p_climb(cl), p_rules(), p_port_era()]
+              p_upstream(F), p_climb_chart(cl), p_climb(cl), p_rules(), p_port_era()]
     panels.append(p_ledger())          # last: it lists every row the others issued
     main = main.replace('__NROWS__', str(len(L.rows)))
     body = ''.join([

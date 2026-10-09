@@ -1,0 +1,13 @@
+candidate: reference :4111 vs candidate :4112 (seed default, clock frozen at 2026-03-02T16:00:00Z)
+102 cells (54 on shared servers, 48 on fresh servers in 3 slots) × 2 targets, 4 workers
+[13/102] rooms/show/busy/scrolled_to_previous_page @ chromium-phone-light fail
+[14/102] rooms/show/busy/scrolled_to_previous_page @ chromium-desktop-light fail
+[24/102] rooms/show/busy/scrolled_to_next_page @ chromium-desktop-light fail
+[25/102] rooms/show/open @ chromium-phone-light pass
+[27/102] rooms/show/busy/scrolled_to_next_page @ chromium-phone-light fail
+[50/102] realtime/message_deleted @ chromium-desktop-light pass
+[75/102] rooms/opens/edit/member @ chromium-phone-light pass
+[100/102] rooms/directs/new @ chromium-desktop-light pass
+[102/102] realtime/presence_read @ chromium-phone-light pass
+102 cells: 98 pass (0 flaky), 4 fail, 0 allowed, 0 error in 431.8s
+report: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/parity/out/pixel-parity-r2-final/default-rr/default/report.html
