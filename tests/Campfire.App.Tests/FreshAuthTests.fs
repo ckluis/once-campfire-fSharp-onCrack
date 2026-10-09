@@ -7,6 +7,7 @@
 // `ForeignWriteTests`' (which run in both modes too).
 module Campfire.App.Tests.FreshAuthTests
 
+open System
 open System.Threading
 open System.Threading.Tasks
 open Xunit
@@ -174,3 +175,29 @@ let ``fresh authorization is on by default and off only when asked`` () =
     Assert.False(config (Some "off"))
     Assert.False(config (Some " OFF "))
     Assert.False(config (Some "false"))
+
+[<Fact>]
+let ``a replay's check never waits for the readers, and its connections are bounded`` () =
+    // On the readers, a replay that found them all taken went to the app, whose requests then held them longer: the fast path fell
+    // into the slow one for whole benchmark samples (bench/results/oncrack-r3-fresh-auth.md). The checks have connections of their own.
+    task {
+        use! test = bootSeeded "default"
+        let db = test.App.Db
+        let readers = test.App.Config.DbReaders
+        use started = new CountdownEvent(readers)
+        use release = new ManualResetEventSlim(false)
+        let held = [ for _ in 1..readers -> db.ReadOffloaded(fun _ -> started.Signal() |> ignore; release.Wait()) ]
+        Assert.True(started.Wait(TimeSpan.FromSeconds 10.0), "every reader is held")
+        match db.CheckNow(fun conn -> FreshAuth.membership conn ALL_TALK DAVID) with
+        | ValueSome(Ok allowed) -> Assert.True allowed
+        | other -> failwith $"the check did not run while every reader was taken: {other}"
+        release.Set()
+        for read in held do
+            let! _ = read
+            ()
+        let tasks = [ for _ in 1..64 -> Task.Run(fun () -> db.CheckNow(fun conn -> Thread.Sleep 2; FreshAuth.membership conn ALL_TALK DAVID)) ]
+        let! results = Task.WhenAll tasks
+        Assert.True(db.CheckersOpen <= Database.MaxCheckers, $"{db.CheckersOpen} check connections")
+        Assert.All(results, fun r -> Assert.True((match r with ValueSome(Ok true) | ValueNone -> true | _ -> false)))
+        Assert.Contains(ValueSome(Ok true), results)
+    }

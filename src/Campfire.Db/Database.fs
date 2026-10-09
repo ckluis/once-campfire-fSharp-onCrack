@@ -792,6 +792,9 @@ type Database
     let blockingGate = new SemaphoreSlim(1, 1)
     let mutable blockingReader: Conn option = None
     let mutable disposed = false
+    // onCrack R3.2: the connections `CheckNow` runs on, apart from the readers, and how many are open.
+    let checkers = System.Collections.Concurrent.ConcurrentBag<Conn>()
+    let mutable checkersOpen = 0
 
     /// Opens (and with `Config.Prepare` prepares) the database at `config.Path`, and starts its writer,
     /// checkpointer and reader threads.
@@ -1045,17 +1048,42 @@ type Database
                 reply.SetException e)
         reply.Task
 
-    /// onCrack R3.2: `f` on a reader connection right here when one is free and no read is queued, else nothing, never waiting. For
-    /// the front server's fast path, whose fresh authorization runs on a socket's event thread: a replay that finds no reader free
-    /// goes to the app instead, which waits for one as any request does.
-    member _.TryReadNow(f: Conn -> 'T) : Result<'T, DbError> voption =
-        match readers.TakeConnection() with
-        | None -> ValueNone
-        | Some conn ->
-            try
-                ValueSome(DbRun.attempt (fun () -> f conn))
-            finally
-                readers.GiveBack conn
+    /// onCrack R3.2: `f` on the calling thread, on a connection of the fresh authorization checks' own rather than a reader (which
+    /// the app's requests queue for): the one this thread gave back last when it is free (a `ConcurrentBag` hands a thread back its
+    /// own), else another, opened now, up to `Database.MaxCheckers` open; past that, or once the database is closed, nothing. It never
+    /// waits. The front server's fast path runs a replay's check here, on a socket's event thread. On the readers, a replay that found
+    /// them all taken went to the app, whose requests then held them longer, so more replays found them taken: under load the fast
+    /// path fell into the slow one for whole samples (`bench/results/oncrack-r3-fresh-auth.md`).
+    member _.CheckNow(f: Conn -> 'T) : Result<'T, DbError> voption =
+        if disposed then
+            ValueNone
+        else
+            let conn =
+                match checkers.TryTake() with
+                | true, conn -> ValueSome conn
+                | _ ->
+                    if Interlocked.Increment(&checkersOpen) <= Database.MaxCheckers then
+                        try
+                            ValueSome(Pragmas.openConnection path true)
+                        with _ ->
+                            Interlocked.Decrement(&checkersOpen) |> ignore
+                            ValueNone
+                    else
+                        Interlocked.Decrement(&checkersOpen) |> ignore
+                        ValueNone
+            match conn with
+            | ValueNone -> ValueNone
+            | ValueSome conn ->
+                try
+                    ValueSome(DbRun.attempt (fun () -> f conn))
+                finally
+                    checkers.Add conn
+
+    /// At most this many connections for `CheckNow` (a front server's event threads are as many as its cores).
+    static member MaxCheckers = 16
+
+    /// How many `CheckNow` connections are open, for tests.
+    member _.CheckersOpen : int = Volatile.Read(&checkersOpen)
 
     /// `Read` for synchronous callers (tests), on the calling thread, so that `f` may borrow. It
     /// keeps a reader connection for these reads, and opens another for one that finds it in use:
@@ -1090,5 +1118,8 @@ type Database
                     thread.Join()
                 readers.DisposeConnections()
                 blockingReader |> Option.iter (fun conn -> (conn :> IDisposable).Dispose())
+                let mutable checker = Unchecked.defaultof<Conn>
+                while checkers.TryTake(&checker) do
+                    (checker :> IDisposable).Dispose()
                 // After every connection: closing the WAL index's descriptor drops this process's locks on it.
                 versions.Unwatch()

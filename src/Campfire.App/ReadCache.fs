@@ -208,7 +208,7 @@ module ReadCache =
     /// activity refresh is due (a second early), which is a write the replay would skip.
     ///
     /// With fresh authorization (R3.2) a replay also runs `FreshAuth.replay` (the session, its user and, for a page about `room`, the
-    /// membership) on a reader free at that moment, and goes to the app when none is.
+    /// membership) on a connection of the checks' own (`Database.CheckNow`), and goes to the app when it cannot.
     let private offerFast (c: Ctx) (deps: Dep[]) (room: int64 voption) : unit =
         if FastCandidate.enabled && Current.authenticatedBy c = BySession then
             match c.Current<SessionReadAt>(), c.Current<CurrentSessionSlot>() with
@@ -225,7 +225,7 @@ module ReadCache =
                         Func<bool>(fun () ->
                             versions.Sync() |> ignore
                             Deps.valid all
-                            && match db.TryReadNow(fun conn -> FreshAuth.replay conn token sessionId userId room) with
+                            && match db.CheckNow(fun conn -> FreshAuth.replay conn token sessionId userId room) with
                                | ValueSome(Ok true) -> true
                                | _ -> false)
                     else
