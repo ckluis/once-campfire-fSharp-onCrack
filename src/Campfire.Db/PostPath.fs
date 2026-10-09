@@ -44,13 +44,14 @@ type PostPath private () =
     /// instead of always on a reader thread.
     static member val PushInline = env "CAMPFIRE_PUSH_INLINE" true with get, set
 
-    /// `CAMPFIRE_WAL_DEFER` (onCrack, unit R3.4): past the WAL's limit the writer restarts it only when that is cheap (no
-    /// checkpoint running, a short tail, the disk syncing quickly) and keeps writing otherwise, up to `Pragmas.WalCeilingPages`;
-    /// off, it waits for any running checkpoint and restarts at the limit (R2.2).
-    static member val WalDefer = env "CAMPFIRE_WAL_DEFER" true with get, set
+    /// `CAMPFIRE_WAL_DEFER` (onCrack, unit R3.4; off by default): past the WAL's limit the writer restarts it only when that is
+    /// cheap (no checkpoint running, a short tail, the disk syncing quickly) and keeps writing otherwise, up to
+    /// `Pragmas.WalCeilingPages`; off, it waits for any running checkpoint and restarts at the limit (R2.2). Measured, no gain
+    /// that held up at the 160 MB ceiling (`bench/results/oncrack-r3-wal.md`), so it stays an opt-in.
+    static member val WalDefer = env "CAMPFIRE_WAL_DEFER" false with get, set
 
     static member Reset() : unit =
-        PostPath.WalDefer <- env "CAMPFIRE_WAL_DEFER" true
+        PostPath.WalDefer <- env "CAMPFIRE_WAL_DEFER" false
         PostPath.PushInline <- env "CAMPFIRE_PUSH_INLINE" true
         PostPath.PlainTextEarly <- env "CAMPFIRE_POST_PLAIN_TEXT_EARLY" true
         PostPath.InlineWrites <- env "CAMPFIRE_WRITE_INLINE" true

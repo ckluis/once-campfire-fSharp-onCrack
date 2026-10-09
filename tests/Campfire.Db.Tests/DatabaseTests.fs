@@ -334,6 +334,12 @@ let private walFramesOf (path: string) : int =
     let struct (frames, _) = Checkpoint.walFrames conn
     frames
 
+/// `PostPath.WalDefer` (an opt-in) on until disposed; before the database opens, which sets the writer's `journal_size_limit` by it.
+let private deferOn () : IDisposable =
+    PostPath.WalDefer <- true
+    { new IDisposable with
+        member _.Dispose() = PostPath.Reset() }
+
 /// A thread that holds the checkpointer's lock, as a checkpoint stuck in its fsync does, until disposed.
 type private StuckCheckpoint(db: Database) =
     let held = new ManualResetEventSlim(false)
@@ -356,6 +362,7 @@ type private StuckCheckpoint(db: Database) =
 /// writer waiting on the checkpointer's fsync); it restarts the WAL at the first commit after the checkpoint is over.
 [<Fact>]
 let ``the writer carries on past the wal limit while a checkpoint runs`` () =
+    use _defer = deferOn ()
     use dir = new TempDir()
     let path = dir.File "test.sqlite3"
     use db = openWithReaders dir 1
@@ -383,6 +390,7 @@ let ``the writer carries on past the wal limit while a checkpoint runs`` () =
 /// Writes run in a task, counting the ones answered, while a checkpoint is stuck: they stop once `bound` frames are in the WAL,
 /// within a commit of it, and go on when the checkpoint is over.
 let private writesStopAt (bound: int) =
+    use _defer = deferOn ()
     use dir = new TempDir()
     let path = dir.File "test.sqlite3"
     use db = openWithReaders dir 1
@@ -418,6 +426,7 @@ let ``the writer waits for a running checkpoint at the wal ceiling`` () = writes
 /// the tail, and keeps writing; it restarts the WAL once checkpoints are quick again.
 [<Fact>]
 let ``after a slow checkpoint the writer leaves the restart for later`` () =
+    use _defer = deferOn ()
     use dir = new TempDir()
     let path = dir.File "test.sqlite3"
     use db = openWithReaders dir 1
@@ -467,7 +476,7 @@ let ``connections are configured as Rails configures them`` () =
         Assert.Equal(1L, pragma conn "foreign_keys")
         Assert.Equal(1L, pragma conn "synchronous") // NORMAL
         // onCrack (unit R3.4): the writer, the only connection that restarts the WAL, keeps it whole up to its ceiling.
-        Assert.Equal((if writer then Pragmas.WalFileLimitBytes else 67_108_864L), pragma conn "journal_size_limit")
+        Assert.Equal((if writer && PostPath.WalDefer then Pragmas.WalFileLimitBytes else 67_108_864L), pragma conn "journal_size_limit")
         Assert.Equal(2000L, pragma conn "cache_size")
         Assert.Equal(0L, pragma conn "mmap_size") // memory mapping is off
         Assert.Equal("wal", conn.QueryRow("PRAGMA journal_mode", [||], fun r -> r.Text 0))

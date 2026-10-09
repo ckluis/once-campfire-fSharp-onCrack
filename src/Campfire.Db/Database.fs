@@ -39,7 +39,7 @@
 //
 // onCrack (unit R3.4, `bench/results/oncrack-r3-wal.md`): that RESTART waited for a running
 // checkpoint and synced itself, and when the disk was slow to sync (0.3-1.4 s every few seconds at
-// c=16 in the VM) every write waited with it. With `PostPath.WalDefer` (the default) the writer
+// c=16 in the VM) every write waited with it. With `PostPath.WalDefer` (an opt-in, measured) the writer
 // restarts the WAL only when that is cheap: the checkpointer idle, at most `RestartTailPages` left
 // to copy, and the last checkpoint quick (`Checkpoints.Healthy`); otherwise it wakes the
 // checkpointer again and keeps writing, up to `WalCeilingPages` (~160 MB), where it waits as before.
@@ -291,18 +291,19 @@ module internal Pragmas =
     [<Literal>]
     let RestartTailPages = 1000
 
-    /// onCrack (unit R3.4): the WAL's size past which the writer waits for a running checkpoint and restarts the WAL,
-    /// whatever the tail or the disk: ~160 MB, 30,000 frames past the limit, about half a second of posting at c=16 in the
+    /// onCrack (unit R3.4), with `PostPath.WalDefer`: the WAL's size past which the writer waits for a running checkpoint and
+    /// restarts the WAL, whatever the tail or the disk (`CAMPFIRE_WAL_CEILING_PAGES`, 40,000 by default): ~160 MB, 30,000 frames past the limit, about half a second of posting at c=16 in the
     /// VM (55-70,000 frames a second), as long as most of the slow checkpoints the traces saw (`bench/results/oncrack-r3-wal.md`). The writer connection's `journal_size_limit` is above it
     /// (`WalFileLimitBytes`), so the file is never truncated after a restart (on a disk mounted with `discard`, the
     /// truncation's trim stalled the next fsyncs for seconds).
-    [<Literal>]
-    let WalCeilingPages = 40_000
+    let WalCeilingPages =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_WAL_CEILING_PAGES" with
+        | null | "" -> 40_000
+        | v -> max WalLimitPages (int v)
 
     /// onCrack (unit R3.4): the writer connection's `journal_size_limit` (192 MB) with `PostPath.WalDefer`: above
     /// `WalCeilingPages` frames of 4,120 bytes. Readers and the checkpointer never restart the WAL, so theirs is unused.
-    [<Literal>]
-    let WalFileLimitBytes = 201_326_592L
+    let WalFileLimitBytes = max 201_326_592L (int64 WalCeilingPages * 4120L * 6L / 5L)
 
     /// onCrack (unit R3.4): a checkpoint that ran longer than this (ms) says the disk is slow to sync just now; the writer
     /// does not restart the WAL (its RESTART syncs too) until one has run quicker.
