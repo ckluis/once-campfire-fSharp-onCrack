@@ -35,7 +35,7 @@ module SearchesController =
     /// The `query` `set_messages` searches for: none when it's blank.
     let private searchableQuery (q: string option) : string option = query q |> Option.filter isPresent
 
-    /// `set_messages`: `Current.user.reachable_messages.search(query).last(100)` when there's a query.
+    /// `set_messages`: `Message.search_reachable(Current.user, query)` when there's a query (Rails dbc7620: by message id).
     let private setMessages (c: Ctx) (q: string option) : Task<Result<Message list, Error>> =
         act {
             match searchableQuery q with

@@ -164,7 +164,7 @@ module ViewsB
 
     def search(user, q, session)
       query = q&.gsub(/[^[:word:]]/, " ")
-      messages = query.present? ? user.reachable_messages.search(query).last(100) : []
+      messages = query.present? ? user.reachable_messages.search(query).reorder("idx.rowid").last(100) : []
       {
         query: query.presence,
         q: q,

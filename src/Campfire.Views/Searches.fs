@@ -12,7 +12,7 @@ type IndexView =
       Query: string option
       /// `params[:q]` as submitted, the search field's value.
       Q: string option
-      /// `Current.user.reachable_messages.search(query).last(100)`.
+      /// `Message.search_reachable(Current.user, query)`: the newest 100 matches by message id, oldest first.
       Messages: MessageItem list
       /// `Current.user.searches.ordered.pluck(:query)`.
       RecentSearches: string list

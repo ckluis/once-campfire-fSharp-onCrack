@@ -1328,7 +1328,9 @@ module Message =
                 fromRow
             )
 
-    /// `Current.user.reachable_messages.search(query).last(100)`
+    /// `Message.search_reachable(Current.user, query)` (Rails dbc7620): the newest 100 matches the user can reach, newest
+    /// by message id, shown oldest first. Ordering by the index's rowid walks the full-text index newest first and
+    /// stops at the page; ordering by created_at (Rails 90b3300's `.ordered.last(100)`) sorted every match first.
     let searchReachable (conn: Conn) (userId: int64) (query: string) : Message list =
         let query = matchTerms query
         if query = "" then
@@ -1336,7 +1338,7 @@ module Message =
         else
             conn.QueryAll(
                 selectReachable
-                + " join message_search_index idx on messages.id = idx.rowid WHERE \"memberships\".\"user_id\" = ? AND (idx.body match ?) ORDER BY \"messages\".\"created_at\" DESC LIMIT 100",
+                + " join message_search_index idx on messages.id = idx.rowid WHERE \"memberships\".\"user_id\" = ? AND (idx.body match ?) ORDER BY idx.rowid DESC LIMIT 100",
                 [| I userId; S query |],
                 fromRow
             )

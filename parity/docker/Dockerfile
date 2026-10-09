@@ -9,6 +9,8 @@
 #   * a one-worker resque-pool.yml (the reference sizes it at half the CPU count, per instance)
 #   * config/initializers/parity_action_cable.rb: Action Cable handles each connection's commands
 #     in order (worker_pool_size = 1), as the Rust cable server does; see that file
+#   * config/initializers/parity_search_order.rb: search results in current upstream Rails's order (newest 100 by
+#     message id, Rails dbc7620) rather than 90b3300's created_at order; see that file
 #   * test/fixtures, which reference/.dockerignore keeps out of the app image; the seed builder
 #     loads them. Passed in as a named build context:
 #       docker build --build-context fixtures=reference/test/fixtures -f parity/docker/Dockerfile parity/docker
@@ -47,6 +49,7 @@ COPY --chmod=755 entrypoint /usr/local/bin/parity-entrypoint
 COPY --chmod=755 redis-server /usr/local/bin/redis-server
 COPY --chown=1000:1000 resque-pool.yml /rails/config/resque-pool.yml
 COPY --chown=1000:1000 parity_action_cable.rb /rails/config/initializers/parity_action_cable.rb
+COPY --chown=1000:1000 parity_search_order.rb /rails/config/initializers/parity_search_order.rb
 
 # Instances run as the host user (so seed copies stay writable on the host), which may not be
 # uid 1000: let any uid write the runtime scratch directories.

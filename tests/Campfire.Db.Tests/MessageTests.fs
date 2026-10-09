@@ -85,6 +85,37 @@ let ``search reachable only finds messages in the users rooms`` () =
     Assert.Equal<int64 list>([ message.Id ], found |> List.map (fun m -> m.Id))
     Assert.True(List.isEmpty (t.Read(fun c -> Message.searchReachable c (id "bender") "hovercraft")))
 
+/// Rails dbc7620: the reachable search lists matches by message id, not by time. The second message is created
+/// with a clock an hour behind the first's, so the two orders disagree.
+[<Fact>]
+let ``reachable search lists matches by message id`` () =
+    use t = new TestDb()
+    let first = create t "designers" "david" "lantern one" "l1"
+    t.Travel -3600L
+    let second = create t "designers" "david" "lantern two" "l2"
+    t.Travel 7200L
+    let third = create t "designers" "david" "lantern three" "l3"
+    Assert.True(second.CreatedAt < first.CreatedAt)
+    let found = t.Read(fun c -> Message.searchReachable c (id "kevin") "lantern") |> List.map (fun m -> m.Id)
+    Assert.Equal<int64 list>([ first.Id; second.Id; third.Id ], found)
+
+/// The page is the 100 newest matches by id, whatever their times, shown oldest first.
+[<Fact>]
+let ``reachable search keeps the 100 newest matches by id`` () =
+    use t = new TestDb()
+    // The lowest id carries the latest time: by time it would be the newest match, by id it is the 101st.
+    t.Travel 86400L
+    let oldestById = create t "designers" "david" "ember 0" "e0"
+    t.Travel -86400L
+    let ids =
+        [ 1..100 ]
+        |> List.map (fun n ->
+            t.Travel 1L
+            (create t "designers" "david" $"ember {n}" $"e{n}").Id)
+    let found = t.Read(fun c -> Message.searchReachable c (id "kevin") "ember") |> List.map (fun m -> m.Id)
+    Assert.Equal<int64 list>(ids, found)
+    Assert.DoesNotContain(oldestById.Id, found)
+
 [<Fact>]
 let ``creating a blank message with attachment uses filename as plain text body`` () =
     use t = new TestDb()
