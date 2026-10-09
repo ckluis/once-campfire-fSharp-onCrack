@@ -113,17 +113,18 @@ module Boot =
             | ValueSome response -> Adapter.write kit http response (request.Method = "HEAD")
             | ValueNone -> next.Invoke http)
 
-    /// The Rails route table, with the app's fragment cache current while the action runs.
+    /// The Rails route table, with the app's fragment cache current while the action runs: the store of the database's
+    /// epoch as the request starts, before authentication reads anything (`AppState.FragmentStoreNow`).
     let dispatchWithFragmentCache (c: Ctx) : Task<Result<Response, Error>> =
         match c.Request.Method with
         | "GET"
-        | "HEAD" -> FragmentCache.scoped c.App.FragmentCache (fun () -> RouteTable.dispatch c)
+        | "HEAD" -> FragmentCache.scoped (c.App.FragmentStoreNow()) (fun () -> RouteTable.dispatch c)
         | _ ->
             // onCrack (unit R2.2): requests that may write, for `Database.Write`'s choice of thread (`WriteLoad`).
             WriteLoad.Enter()
             task {
                 try
-                    return! FragmentCache.scoped c.App.FragmentCache (fun () -> RouteTable.dispatch c)
+                    return! FragmentCache.scoped (c.App.FragmentStoreNow()) (fun () -> RouteTable.dispatch c)
                 finally
                     WriteLoad.Leave()
             }
@@ -220,6 +221,8 @@ module Boot =
 
             let registry = CoreJobs.withCoreJobs ()
             IntegrationJobs.registerJobs registry
+            // A job takes its fragment store before its first read, as a request does.
+            registry.Scope <- fun run -> FragmentCache.scoped (app.FragmentStoreNow()) run
             let runner = JobRunner.start jobs cable app registry config.JobConcurrency
 
             let kit = Kit(kitConfig, secrets, clock, app, logger)

@@ -19,6 +19,9 @@
 //   before the writer's caller hears back; so a page is never served across a committed change, a
 //   writer reads its own write, and a page read during a write is never stored under values a later
 //   request can match.
+// - **Other connections' commits** (a Rails console, a second container, the sqlite3 shell) fire none of the writer's
+//   triggers: every lookup here (pages, sessions, users, and every fast path replay) calls `Versions.Sync` first, which
+//   moves every counter when the database's WAL index shows a commit the writer did not make (`Versions.fs`).
 // - **Per user**: the key starts with the signed-in user's id, so a page is never served to anyone else;
 //   then everything the page's render reads from the request: the route, the full URL (path and query),
 //   scheme, host and port, Turbo-Frame, Referer, User-Agent (the platform) and the `last_room` cookie.
@@ -207,7 +210,17 @@ module ReadCache =
             | ValueSome at, ValueSome(CurrentSessionSlot session) ->
                 let all = Array.append deps [| at.Dep |]
                 let refreshDue = session.LastActiveAt.ToDateTimeOffset().UtcTicks + Campfire.Db.Session.activityRefreshRate.Ticks - TimeSpan.TicksPerSecond
-                c.FastCandidate <- FastCandidate(Func<bool>(fun () -> Deps.valid all), refreshDue, c.Clock)
+                let versions = c.App.Db.Versions
+                // Every replay first accounts for other connections' commits (a session deleted or a membership removed
+                // by a Rails console moves every counter), then checks the counters.
+                c.FastCandidate <-
+                    FastCandidate(
+                        Func<bool>(fun () ->
+                            versions.Sync() |> ignore
+                            Deps.valid all),
+                        refreshDue,
+                        c.Clock
+                    )
             | _ -> ()
 
     /// A page through the cache. `missDeps` takes the counters the page depends on, before any of its
@@ -226,6 +239,8 @@ module ReadCache =
         else
             let key = requestKey c route userId
             let store = storeOf c.App.Db.Versions
+            // Commits by other connections first (`Versions.Sync`): one moves every counter.
+            c.App.Db.Versions.Sync() |> ignore
             match store.Lookup key with
             | ValueSome entry ->
                 Interlocked.Increment(&store.Hits) |> ignore
@@ -344,11 +359,15 @@ module ReadCache =
     let session (c: Ctx) (token: string) (load: unit -> Task<Result<Campfire.Db.Session option, Error>>) : Task<Result<Campfire.Db.Session option, Error>> =
         match versions c with
         | null -> load ()
-        | v -> through (storeOf v).Sessions token v.Sessions (fun dep -> c.SetCurrent(SessionReadAt dep)) load
+        | v ->
+            v.Sync() |> ignore
+            through (storeOf v).Sessions token v.Sessions (fun dep -> c.SetCurrent(SessionReadAt dep)) load
 
     /// `User.find_by(id:)`, through the cache (users are global). The request remembers the global counter's
     /// value the user is as of (`UserReadAt`), which the pages it renders depend on.
     let user (c: Ctx) (id: int64) (load: unit -> Task<Result<User option, Error>>) : Task<Result<User option, Error>> =
         match versions c with
         | null -> load ()
-        | v -> through (storeOf v).Users id v.Global (fun dep -> c.SetCurrent(UserReadAt dep)) load
+        | v ->
+            v.Sync() |> ignore
+            through (storeOf v).Users id v.Global (fun dep -> c.SetCurrent(UserReadAt dep)) load

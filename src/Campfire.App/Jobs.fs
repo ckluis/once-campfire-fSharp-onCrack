@@ -77,6 +77,10 @@ type Registry<'App>() =
         | true, handler -> ValueSome handler
         | _ -> ValueNone
 
+    /// onCrack: what every job runs inside, from before its first read (Boot: the fragment store of the database's epoch
+    /// when the job starts, `AppState.FragmentStoreNow`). Runs the job as it is by default.
+    member val Scope: (unit -> Task<Result<unit, string>>) -> Task<Result<unit, string>> = (fun run -> run ()) with get, set
+
 type internal Work =
     | EventWork of JobKind * Event
     | AdHocWork of name: string * run: (unit -> Task<Result<unit, string>>)
@@ -177,12 +181,13 @@ module JobRunner =
             let name = Work.name work
             try
                 let! result =
-                    match work with
-                    | AdHocWork(_, run) -> run ()
-                    | EventWork(kind, event) ->
-                        match registry.TryGet kind with
-                        | ValueSome handler -> handler app event
-                        | ValueNone -> Task.FromResult(Error $"no handler registered for {event}")
+                    registry.Scope(fun () ->
+                        match work with
+                        | AdHocWork(_, run) -> run ()
+                        | EventWork(kind, event) ->
+                            match registry.TryGet kind with
+                            | ValueSome handler -> handler app event
+                            | ValueNone -> Task.FromResult(Error $"no handler registered for {event}"))
                 match result with
                 | Ok() -> logger.LogInformation("performed job={Job}", name)
                 | Error error -> logger.LogError("job failed job={Job} error={Error}", name, error)

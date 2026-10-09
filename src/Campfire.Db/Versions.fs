@@ -31,13 +31,40 @@
 // - a page read under counters taken before a commit, and stored after it, is stored under the old
 //   values, which no later request sees again.
 //
-// One writer thread owns `pending` and does every bump; readers only read the counters.
+// One writer thread owns `pending` and does every bump; readers only read the counters, except for the watch below,
+// which adds 2 (keeping each counter's parity) under its own lock.
+//
+// Commits by other connections (the round 2 verifier's critical finding): the triggers live in the writer's connection, so a
+// row changed by anything else (a Rails console or a rollback to Rails, a second container during a deploy, an admin script,
+// the sqlite3 shell) moved no counter, and a revoked session, a deleted membership or a renamed room stayed served from the
+// caches for as long as the process ran. The watch closes that:
+//
+// - SQLite's WAL index (the `-shm` file every connection to the database maps) starts with a header whose `iChange` is
+//   incremented by every commit that writes, by any connection, and by nothing else: not by checkpoints, WAL restarts, empty
+//   commits, rollbacks or TEMP writes (sqlite.org/walformat.html, 2.2.1; checked in `VersionsWatchTests`). The watch maps it
+//   read-only and keeps `accepted`, the value every commit up to which is accounted for.
+// - The writer's own commits go through `Committing` (a `COMMIT`, an after-commit hook's autocommitted statements), under the
+//   watch's lock: it reads the writer connection's `PRAGMA data_version` before and after, which changes only when another
+//   connection committed, then makes the header's value after the commit the accepted one. If either reading shows another
+//   connection's commit (since the last one, or during this one), everything is invalidated first.
+// - `Sync` is what every cache calls before it serves anything (a page, a session, a user, a fast path replay) and what a
+//   request calls before it reads (the fragment store's epoch): a header value nobody accounted for is a commit by another
+//   connection (or one of the writer's own outside `Committing`, which costs the same and is never wrong), and moves every
+//   counter by 2 and the epoch by 1 before it is accepted. A reader that finds the header moved while the writer is in
+//   `Committing` waits for it on the lock, and then finds the value accepted.
+//
+// So a request that starts after another connection's commit returned never sees a cached page, session or fragment from
+// before it. A database without a WAL index to map (in memory, or not in WAL mode) is never cached (`Complete` stays false).
 namespace Campfire.Db
+
+#nowarn "9" // the WAL index header, read through a pointer into its mapping
 
 open System
 open System.Collections.Concurrent
 open System.Collections.Generic
+open System.IO
 open System.Threading
+open Microsoft.FSharp.NativeInterop
 
 /// One version counter. Even when no write that changes what it covers is in flight.
 [<Sealed; AllowNullLiteral>]
@@ -53,6 +80,71 @@ type VersionKind =
     | Room = 1
     | User = 2
     | Sessions = 3
+
+module private Libc =
+    open System.Runtime.InteropServices
+
+    [<DllImport("libc", EntryPoint = "open", SetLastError = true)>]
+    extern int openFile(byte[] path, int flags)
+
+    [<DllImport("libc", EntryPoint = "close")>]
+    extern int closeFile(int fd)
+
+    [<DllImport("libc", EntryPoint = "mmap", SetLastError = true)>]
+    extern nativeint mmap(nativeint addr, unativeint length, int prot, int flags, int fd, int64 offset)
+
+    [<DllImport("libc", EntryPoint = "munmap")>]
+    extern int munmap(nativeint addr, unativeint length)
+
+    [<Literal>]
+    let O_RDONLY = 0
+
+    [<Literal>]
+    let PROT_READ = 1
+
+    [<Literal>]
+    let MAP_SHARED = 1
+
+/// The `iChange` field of a WAL index's header (`<db>-shm`, offset 8, native byte order), mapped read-only.
+///
+/// Through libc, not `FileStream`: .NET takes a `flock` on a file it opens, which on macOS conflicts with SQLite's `fcntl`
+/// locks on the same file. And the descriptor stays open until `Dispose`, which must come after every SQLite connection of
+/// this process to the database has closed: closing any descriptor of a file drops the process's POSIX locks on it,
+/// SQLite's included (the WAL index's dead-man switch among them).
+[<Sealed>]
+type WalChangeCounter private (fd: int, address: nativeint) =
+    static let length = 4096un
+    let mutable disposed = false
+
+    /// The counter of the database at `path`, or null when it has no WAL index (yet) to map.
+    static member Open(path: string) : WalChangeCounter | null =
+        let shm = path + "-shm"
+        if String.IsNullOrEmpty path || not (File.Exists shm) || FileInfo(shm).Length < int64 length then
+            null
+        else
+            let bytes = Array.append (Text.Encoding.UTF8.GetBytes shm) [| 0uy |]
+            let fd = Libc.openFile (bytes, Libc.O_RDONLY)
+            if fd < 0 then
+                null
+            else
+                let address = Libc.mmap (0n, length, Libc.PROT_READ, Libc.MAP_SHARED, fd, 0L)
+                if address = -1n || address = 0n then
+                    Libc.closeFile fd |> ignore
+                    null
+                else
+                    new WalChangeCounter(fd, address)
+
+    /// The header's change counter now (every commit that wrote anything moved it by one).
+    member _.Read() : uint32 =
+        // Callers read `accepted` (volatile) right after, which keeps this load from being reused across calls.
+        NativePtr.read (NativePtr.ofNativeInt<uint32> (address + 8n))
+
+    interface IDisposable with
+        member _.Dispose() =
+            if not disposed then
+                disposed <- true
+                Libc.munmap (address, length) |> ignore
+                Libc.closeFile fd |> ignore
 
 [<Sealed>]
 type Versions() =
@@ -121,8 +213,115 @@ type Versions() =
     /// Counters marked since the start, for tests and the cache's statistics.
     member _.Marks : int64 = Volatile.Read(&marks)
 
+    // --- The watch for other connections' commits (see the top of the file) ---
+
+    [<DefaultValue>]
+    val mutable private accepted: uint32
+
+    [<DefaultValue>]
+    val mutable private epoch: int64
+
+    [<DefaultValue>]
+    val mutable private lastDataVersion: int64
+
+    [<DefaultValue>]
+    val mutable private counter: WalChangeCounter | null
+
+    [<DefaultValue>]
+    val mutable private watched: Conn | null
+
+    member val private WatchGate = obj ()
+
+    /// Every counter moves by 2 (keeping its parity, so one a write has made odd stays odd until its `Release`), and the
+    /// epoch by 1. Under `WatchGate`.
+    member private this.Unexplained() : unit =
+        Interlocked.Add(&globalCell.Value, 2L) |> ignore
+        Interlocked.Add(&sessionsCell.Value, 2L) |> ignore
+        for i in 0 .. rooms.Length - 1 do
+            match Volatile.Read(&rooms[i]) with
+            | null -> ()
+            | cell -> Interlocked.Add(&cell.Value, 2L) |> ignore
+        for KeyValue(_, cell) in users do
+            Interlocked.Add(&cell.Value, 2L) |> ignore
+        let epoch = Interlocked.Increment(&this.epoch)
+        // The app's own writes never come here (`ForeignWriteTests`, "the app's own writes never count ..."); a bench that logs
+        // this line has a write path outside `Committing`.
+        if epoch <= 10L || epoch % 1000L = 0L then
+            eprintfn "WARN campfire_db: a commit by another connection: every cache invalidated (epoch %d)" epoch
+
+    /// Starts watching the database at `path` for commits by connections other than `conn` (the writer's). False when
+    /// it has no WAL index to watch.
+    member this.Watch(conn: Conn, path: string) : bool =
+        match WalChangeCounter.Open path with
+        | null -> false
+        | counter ->
+            lock this.WatchGate (fun () ->
+                this.counter <- counter
+                this.watched <- conn
+                this.lastDataVersion <- Versions.DataVersion conn
+                Volatile.Write(&this.accepted, counter.Read()))
+            true
+
+    /// Whether `Watch` found a WAL index.
+    member this.Watching : bool = not (isNull this.counter)
+
+    /// Accounts for every commit made so far: any that no `Committing` made invalidates every counter. Returns the
+    /// epoch, which moves once for each time that happened (the fragment store's generation). Callers: every cache before
+    /// it serves anything, and every request before its first read.
+    member this.Sync() : int64 =
+        match this.counter with
+        | null -> ()
+        | counter ->
+            if counter.Read() <> Volatile.Read(&this.accepted) then
+                lock this.WatchGate (fun () ->
+                    let now = counter.Read()
+                    if now <> this.accepted then
+                        this.Unexplained()
+                        Volatile.Write(&this.accepted, now))
+        Volatile.Read(&this.epoch)
+
+    /// The epoch, without syncing.
+    member this.Epoch : int64 = Volatile.Read(&this.epoch)
+
+    /// On the writer's connection: runs `commit`, telling its commits apart from other connections' by the connection's
+    /// `data_version`, which moves only for theirs.
+    member this.Committing(commit: unit -> unit) : unit =
+        match this.counter, this.watched with
+        | null, _
+        | _, null -> commit ()
+        | counter, conn ->
+            lock this.WatchGate (fun () ->
+                let before = Versions.DataVersion conn
+                if before <> this.lastDataVersion then this.Unexplained()
+                try
+                    commit ()
+                finally
+                    let now = counter.Read()
+                    let after = Versions.DataVersion conn
+                    if after <> before then this.Unexplained()
+                    this.lastDataVersion <- after
+                    Volatile.Write(&this.accepted, now))
+
+    /// `PRAGMA data_version` on `conn`, or -1 (which no reading equals, so the caller invalidates) if it fails.
+    static member private DataVersion(conn: Conn) : int64 =
+        try
+            conn.QueryRow("PRAGMA data_version", [||], fun r -> r.Int64 0)
+        with _ ->
+            -1L
+
+    /// Stops watching (the database is closing).
+    member this.Unwatch() : unit =
+        lock this.WatchGate (fun () ->
+            match this.counter with
+            | null -> ()
+            | counter ->
+                this.counter <- null
+                this.watched <- null
+                (counter :> IDisposable).Dispose())
+
     interface IWriteMarks with
         member this.Mark(kind: int, id: int64) = this.Mark(enum<VersionKind> kind, id)
+        member this.Committing(commit: unit -> unit) = this.Committing commit
 
 module Versions =
     /// The SQL function the triggers call.
@@ -203,7 +402,9 @@ module Versions =
         conn.Marks <- versions
         let existing =
             conn.QueryAll("SELECT name FROM sqlite_master WHERE type = 'table'", [||], fun r -> r.Text 0) |> Set.ofList
+        // A database whose other connections' commits can't be seen is never cached.
+        let watching = versions.Watch(conn, conn.Raw.DataSource)
         if tables |> List.forall existing.Contains then
             for sql in triggers do
                 conn.ExecuteBatch sql
-            versions.Complete <- true
+            versions.Complete <- watching

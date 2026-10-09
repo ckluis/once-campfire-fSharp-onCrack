@@ -36,11 +36,6 @@ module MessagesController =
 
     let private indexSize = RenderSize()
 
-    /// Stands in for the digest `ETagWithTemplateDigest` adds for `messages/index` (only the ETag's
-    /// shape has to match the reference).
-    [<Literal>]
-    let private TemplateDigestIndex = "messages/index"
-
     let MessageParamsNone: MessageParams =
         { Body = None
           Attachment = None
@@ -377,27 +372,16 @@ module MessagesController =
             if messages.IsEmpty then
                 return c.Head Status.NoContent
             else
-                // fresh_when @messages: the records' cache keys, their latest updated_at, and the template.
-                let etag =
-                    messages
-                    |> List.map (fun m -> FragmentCache.cacheKeyWithVersion "messages" m.Id (m.UpdatedAt.ToDateTimeOffset()))
-                    |> String.concat "/"
-                let freshness =
-                    { Freshness.Default with
-                        Etag = etag
-                        LastModified = ValueSome((messages |> List.map (fun m -> m.UpdatedAt) |> List.max).ToDateTimeOffset())
-                        Template = TemplateDigestIndex }
-                match c.Current<PageCapture>() with
-                | ValueSome capture -> capture.Freshness <- ValueSome freshness
-                | ValueNone -> ()
-                match c.FreshWhen freshness with
-                | ValueSome notModified -> return notModified
-                | ValueNone ->
-                    do! c.RespondTo [ Format.Html ] |> Result.map ignore
-                    let! views = present c (fun presenter -> presenter.Messages messages)
-                    return!
-                        Page.bare c Status.Ok Format.Html (fun ctx ->
-                            Render.page 0 (fun w -> IndexPage.render w ctx views))
+                // Rails 90b3300 has `fresh_when @messages` here: an ETag of the records' cache keys and a Last-Modified of
+                // their latest updated_at. Neither moves when another connection edits a body, a creator or a boost without
+                // touching the message, so a client kept its stale page as a 304. onCrack (round 2 verifier) leaves the page
+                // to `Rack::ETag`, a digest of what it renders, as upstream Rails, Rust, Go and Elixir now do (README, known
+                // differences).
+                do! c.RespondTo [ Format.Html ] |> Result.map ignore
+                let! views = present c (fun presenter -> presenter.Messages messages)
+                return!
+                    Page.bare c Status.Ok Format.Html (fun ctx ->
+                        Render.page 0 (fun w -> IndexPage.render w ctx views))
         }
 
     /// `index`. onCrack: through the read cache (`ReadCache.fs`), on the room's, the user's and the global

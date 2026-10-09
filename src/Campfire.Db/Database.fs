@@ -177,6 +177,13 @@ module DbRun =
         | DbException e -> Error e
         | :? Microsoft.Data.Sqlite.SqliteException as e -> Error(Sqlite e)
 
+    /// onCrack: runs `f`, which may commit (a `COMMIT`, or autocommitted statements), through the versions' watch for other
+    /// connections' commits (`Versions.Committing`), so that the read cache tells the writer's commits from theirs.
+    let committing (conn: Conn) (f: unit -> unit) : unit =
+        match conn.Marks with
+        | null -> f ()
+        | marks -> marks.Committing f
+
     /// Runs `f` in `BEGIN IMMEDIATE`, commits, then runs the after-commit queue. An error from
     /// `f`, an exception in it, or a failed commit rolls back and discards the queue. An error from
     /// an after-commit hook is raised after the rest of the queue has run (Rails raises it from the
@@ -189,7 +196,7 @@ module DbRun =
             try
                 let value = f tx
                 tx.RunOnCommit(fun e -> if onCommitError.IsNone then onCommitError <- Some e)
-                conn.Execute("COMMIT", [||]) |> ignore
+                committing conn (fun () -> conn.Execute("COMMIT", [||]) |> ignore)
                 value
             with _ ->
                 if not conn.IsAutocommit then
@@ -212,7 +219,7 @@ module DbRun =
                     if firstError.IsNone then firstError <- Some e
             | AfterCommitItem.Hook hook ->
                 try
-                    hook after
+                    committing conn (fun () -> hook after)
                 with e ->
                     Log.error $"after_commit hook failed: {e.Message}"
                     if firstError.IsNone then firstError <- Some e
@@ -563,6 +570,10 @@ type internal WriteQueue(capacity: int) =
 module internal Writer =
     let private exec (conn: Conn) (sql: string) : unit = conn.Execute(sql, [||]) |> ignore
 
+    let private committing = DbRun.committing
+
+    let private commit (conn: Conn) : unit = committing conn (fun () -> exec conn "COMMIT")
+
     let private rollbackIfOpen (conn: Conn) : unit =
         if not conn.IsAutocommit then
             try
@@ -584,7 +595,8 @@ module internal Writer =
                     job.HookFailed e
             | AfterCommitItem.Hook hook ->
                 try
-                    hook after
+                    // Outside a transaction: its statements autocommit.
+                    committing conn (fun () -> hook after)
                 with e ->
                     Log.error $"after_commit hook failed: {e.Message}"
                     job.HookFailed e
@@ -597,7 +609,7 @@ module internal Writer =
                 exec conn "BEGIN IMMEDIATE"
                 job.Run tx
                 tx.RunOnCommit job.HookFailed
-                exec conn "COMMIT"
+                commit conn
                 true
             with e ->
                 rollbackIfOpen conn
@@ -635,7 +647,7 @@ module internal Writer =
                                     // leaves nothing of the group's after-commit work, which then runs again alone.
                                     if conn.IsAutocommit then intact <- false else failures.Add((job, e))
                 if intact then
-                    exec conn "COMMIT"
+                    commit conn
                     true
                 else
                     false
@@ -691,7 +703,7 @@ module internal Writer =
                         work.Add((job, tx.TakeAfterCommit()))
                         k <- k + 1
                     if intact then
-                        exec conn "COMMIT"
+                        commit conn
                         true
                     else
                         false
@@ -814,6 +826,8 @@ type Database
             conn.ExecuteBatch "PRAGMA wal_autocheckpoint = 0"
             // onCrack: every change the writer makes marks the read cache's versions (`Versions.fs`).
             Versions.install conn versions
+            if not versions.Watching then
+                Log.warn "read cache off: the database has no WAL index to watch for other connections' commits"
 
             // A group's run, its answers and the WAL's check: on the writer thread, or (one write that found the
             // writer idle) on its caller's thread.
@@ -916,6 +930,7 @@ type Database
             for thread in readerThreads do
                 thread.Join()
             readers.DisposeConnections()
+            versions.Unwatch()
             reraise ()
 
     member _.Env : Env = env
@@ -1063,3 +1078,5 @@ type Database
                     thread.Join()
                 readers.DisposeConnections()
                 blockingReader |> Option.iter (fun conn -> (conn :> IDisposable).Dispose())
+                // After every connection: closing the WAL index's descriptor drops this process's locks on it.
+                versions.Unwatch()

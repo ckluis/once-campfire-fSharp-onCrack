@@ -5,6 +5,7 @@
 namespace Campfire.App
 
 open System
+open System.Threading
 open System.Threading.Tasks
 open Microsoft.Extensions.Logging
 open Campfire.App.Channels
@@ -28,6 +29,12 @@ module AppErrors =
         | Other e -> Campfire.Kit.Error.Internal e
         | WriterGone -> Campfire.Kit.Error.Internal(Exception(DbError.display error))
 
+/// One epoch's fragment store (`AppState.FragmentStoreNow`).
+[<Sealed>]
+type FragmentGeneration(epoch: int64, store: FragmentCache) =
+    member _.Epoch = epoch
+    member _.Store = store
+
 /// Everything that outlives a request.
 [<Sealed; NoComparison; NoEquality>]
 type AppState
@@ -44,6 +51,8 @@ type AppState
         fragmentCache: FragmentCache,
         loggers: ILoggerFactory
     ) =
+    let mutable fragmentGeneration = FragmentGeneration(db.Versions.Epoch, fragmentCache)
+
     member _.Config = config
     member _.Secrets = secrets
     member _.Clock = clock
@@ -57,8 +66,31 @@ type AppState
     member _.WebPush = webPush
 
     /// `Rails.cache` for view fragments (`cache message do`), current during every request and every
-    /// render outside one.
-    member _.FragmentCache = fragmentCache
+    /// render outside one: the store the request (or job) took when it started (`FragmentStoreNow`), or, outside
+    /// both, the store now.
+    member this.FragmentCache : FragmentCache =
+        match FragmentCache.current () with
+        | null -> this.FragmentStoreNow()
+        | store -> store
+
+    /// onCrack (round 2 verifier): the fragment store of the database's epoch now. Fragment keys are the records'
+    /// timestamps, as Rails' are, so a row changed by another connection without touching them (a Rails console, a
+    /// second container, the sqlite3 shell) kept its old fragment. Each commit by another connection moves the epoch
+    /// (`Versions.Sync`), and the epoch gets a new, empty store. A request takes its store before its first read
+    /// (`Boot.dispatchWithFragmentCache`, before authentication), and a job before its own (`Registry.Scope`), so what
+    /// one renders from rows read before such a commit lands only in a store that nothing started after it reads.
+    member _.FragmentStoreNow() : FragmentCache =
+        let mutable store: FragmentCache = null
+        while isNull store do
+            let epoch = db.Versions.Sync()
+            let current = Volatile.Read(&fragmentGeneration)
+            if current.Epoch = epoch then
+                store <- current.Store
+            elif current.Epoch < epoch then
+                let made = FragmentGeneration(epoch, FragmentCache(fragmentCache.MaxBytes))
+                Interlocked.CompareExchange(&fragmentGeneration, made, current) |> ignore
+            // else: another caller synced later than this one; sync again (the epoch only grows).
+        store
 
     /// For what Rust logs with `tracing` from anywhere (integrations, mostly).
     member _.Loggers = loggers

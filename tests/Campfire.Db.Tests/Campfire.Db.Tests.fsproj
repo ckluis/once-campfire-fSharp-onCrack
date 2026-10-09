@@ -25,6 +25,7 @@
     <Compile Include="UserTests.fs" />
     <Compile Include="SeedTests.fs" />
     <Compile Include="VersionsTests.fs" />
+    <Compile Include="VersionsWatchTests.fs" />
     <Compile Include="GroupCommitTests.fs" />
   </ItemGroup>
   <ItemGroup>

@@ -63,7 +63,8 @@ let ``index pages with conditional gets`` () =
         Assert.DoesNotContain("<html", reply.Text)
         let etag = (reply.Header "etag").Value
         Assert.StartsWith("W/\"", etag)
-        Assert.True((reply.Header "last-modified").IsSome)
+        // onCrack: a digest of the page, not the records' timestamps, and no Last-Modified (README, known differences).
+        Assert.True((reply.Header "last-modified").IsNone)
 
         let! cached =
             david.Send((get $"/rooms/{ALL_TALK}/messages?before={messages[50].Id}").With("if-none-match", etag))

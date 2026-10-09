@@ -17,6 +17,10 @@ open SQLitePCL
 [<AllowNullLiteral>]
 type IWriteMarks =
     abstract Mark: kind: int * id: int64 -> unit
+    /// Runs `commit`, a statement or statements on the writer's connection that may commit (a `COMMIT`, an
+    /// after-commit hook's autocommitted statements), so that the commits it makes are told apart from other
+    /// connections' (`Versions.Committing`).
+    abstract Committing: commit: (unit -> unit) -> unit
 
 /// A value bound to a `?` of a query.
 [<Struct; NoComparison; NoEquality>]
