@@ -38,4 +38,8 @@ bot = User.create_bot!(name: "Bot", webhook_url: "http://x")
 bot.update_bot!(name: "Bot2", webhook_url: "http://y")
 a = Account.first; a.settings.restrict_room_creation_to_administrators = true; a.save!
 fx(Room, :hq).messages.create!(body: "Last one", client_message_id: "s3", creator: kevin)
+# Two more posts into a room whose members are already unread: each rewrites every disconnected member's unread_at here, where
+# onCrack's CAMPFIRE_POST_UNREAD_SKIP keeps the first unread post's (the differential checks both ways).
+fx(Room, :hq).messages.create!(body: "Unread one", client_message_id: "s4", creator: david)
+fx(Room, :hq).messages.create!(body: "Unread two", client_message_id: "s5", creator: jason)
 puts "ok"

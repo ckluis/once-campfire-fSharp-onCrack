@@ -19,7 +19,7 @@ CAMPFIRE_RUBY_FIXTURES_DB=$OUT/fixtures_ruby.sqlite3 \
 CAMPFIRE_RUBY_SCENARIO_DB=$OUT/scenario_ruby.sqlite3 \
 CAMPFIRE_EXPORT_DB=$OUT/fsharp_export.sqlite3 \
   dotnet test --project tests/Campfire.Db.Tests -c Release --no-build \
-    --filter-method '*fixtures match ruby row for row' --filter-method '*scenario matches ruby' --filter-method '*export database for rails'
+    --filter-method '*fixtures match ruby row for row' --filter-method '*scenario matches ruby' --filter-method '*scenario with the unread skip differs from ruby only in unread_at, as disclosed' --filter-method '*export database for rails'
 
 echo "== schema identity"
 # sqlite_master minus what SQLite derives on its own (see src/Campfire.Db/Schema.fs).

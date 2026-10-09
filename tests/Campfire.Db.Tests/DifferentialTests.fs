@@ -31,6 +31,13 @@
 //     bot.update_bot!(name: "Bot2", webhook_url: "http://y")
 //     a = Account.first; a.settings.restrict_room_creation_to_administrators = true; a.save!
 //     rooms(:hq).messages.create!(body: "Last one", client_message_id: "s3", creator: kevin)
+//     rooms(:hq).messages.create!(body: "Unread one", client_message_id: "s4", creator: david)
+//     rooms(:hq).messages.create!(body: "Unread two", client_message_id: "s5", creator: jason)
+//
+// onCrack: with `PostPath.UnreadSkip` (R2.2, on by default) a post outside a direct room marks unread only the memberships
+// that aren't yet, so a member already unread keeps the first unread post's time where Rails 90b3300 stores the latest (current
+// upstream Rails, #336, keeps the first too). The dumps reduce every time to its shape, so the comparison of `unread_at` is by
+// the message it names (`unreadOf`): byte-equal with the switch off, and with it on, different exactly as disclosed.
 module Campfire.Db.Tests.DifferentialTests
 
 open System
@@ -86,6 +93,17 @@ let private runScenario (t: TestDb) : unit =
         Account.update tx (Account.first tx.Conn).Value None None (Some [ "restrict_room_creation_to_administrators", "true" ])
         |> ignore)
     t.Write(fun tx -> Message.create tx (message "hq" "kevin" "Last one" "s3") |> ignore)
+    t.Write(fun tx -> Message.create tx (message "hq" "david" "Unread one" "s4") |> ignore)
+    t.Write(fun tx -> Message.create tx (message "hq" "jason" "Unread two" "s5") |> ignore)
+
+/// Each membership's `unread_at` as the message whose `created_at` it is (by `client_message_id`): "read" when unset, "gone"
+/// when that message was destroyed since.
+let private unreadOf (conn: Conn) : string list =
+    conn.QueryAll(
+        "SELECT m.room_id, m.user_id, CASE WHEN m.unread_at IS NULL THEN 'read' ELSE coalesce((SELECT coalesce(x.client_message_id, 'id:' || x.id) FROM messages x WHERE x.room_id = m.room_id AND x.created_at = m.unread_at ORDER BY x.id LIMIT 1), 'gone') END FROM memberships m ORDER BY m.room_id, m.user_id",
+        [||],
+        fun r -> $"{r.Int64 0}/{r.Int64 1}={r.Text 2}"
+    )
 
 /// Every row, with values that are random or clock-dependent reduced to their shape.
 let private normalizedDump (conn: Conn) (table: string) (order: string) : string list =
@@ -120,12 +138,13 @@ let private normalizedDump (conn: Conn) (table: string) (order: string) : string
             fields |> List.sort |> List.map (fun (n, v) -> $"{n}={v}") |> String.concat " "
     )
 
-[<Fact>]
-let ``scenario matches ruby`` () =
-    match Environment.GetEnvironmentVariable "CAMPFIRE_RUBY_SCENARIO_DB" with
-    | null -> Assert.Skip "needs CAMPFIRE_RUBY_SCENARIO_DB, the reference app's database after scenario.rb"
-    | path ->
-        use ruby = Conn.Open path
+/// Runs the scenario with `PostPath.UnreadSkip` as given, and returns its tables' differences from Ruby's database, with the
+/// number of rows compared, and both sides' `unreadOf`.
+let private compareScenario (rubyPath: string) (unreadSkip: bool) : string list * int * string list * string list =
+    use ruby = Conn.Open rubyPath
+    let saved = PostPath.UnreadSkip
+    PostPath.UnreadSkip <- unreadSkip
+    try
         use t = new TestDb()
         runScenario t
 
@@ -152,5 +171,38 @@ let ``scenario matches ruby`` () =
                 let onlyRuby = expected |> List.filter (fun r -> not (List.contains r actual))
                 let onlyFSharp = actual |> List.filter (fun r -> not (List.contains r expected))
                 mismatches.Add($"{table}:\n  ruby only: {onlyRuby}\n  fsharp only: {onlyFSharp}")
-        Assert.True(mismatches.Count = 0, String.Join("\n", mismatches))
+        List.ofSeq mismatches, compared, unreadOf ruby, t.Read unreadOf
+    finally
+        PostPath.UnreadSkip <- saved
+
+[<Fact>]
+let ``scenario matches ruby`` () =
+    match Environment.GetEnvironmentVariable "CAMPFIRE_RUBY_SCENARIO_DB" with
+    | null -> Assert.Skip "needs CAMPFIRE_RUBY_SCENARIO_DB, the reference app's database after scenario.rb"
+    | path ->
+        // Rails' unread marks: every row, `unread_at` by the message it names included.
+        let mismatches, compared, rubyUnread, fsharpUnread = compareScenario path false
+        Assert.True(mismatches.IsEmpty, String.Join("\n", mismatches))
         Assert.True(compared > 80, $"{compared} rows compared")
+        Assert.Equal<string list>(rubyUnread, fsharpUnread)
+
+[<Fact>]
+let ``scenario with the unread skip differs from ruby only in unread_at, as disclosed`` () =
+    match Environment.GetEnvironmentVariable "CAMPFIRE_RUBY_SCENARIO_DB" with
+    | null -> Assert.Skip "needs CAMPFIRE_RUBY_SCENARIO_DB, the reference app's database after scenario.rb"
+    | path ->
+        let mismatches, _, rubyUnread, fsharpUnread = compareScenario path true
+        Assert.True(mismatches.IsEmpty, String.Join("\n", mismatches))
+        Assert.Equal(rubyUnread.Length, fsharpUnread.Length)
+        let differing = List.zip rubyUnread fsharpUnread |> List.filter (fun (r, f) -> r <> f)
+        // Exercised: members of hq already unread when s4 and s5 came in.
+        Assert.NotEmpty(differing)
+        for ruby, fsharp in differing do
+            let key (row: string) = row.Substring(0, row.IndexOf '=')
+            let value (row: string) = row.Substring(row.IndexOf '=' + 1)
+            Assert.Equal(key ruby, key fsharp)
+            // Rails names the latest post by someone else; onCrack an earlier one (the first unread, here s2, destroyed since, or
+            // s3), never "read".
+            let order = [ "gone"; "s3"; "s4"; "s5" ]
+            let at (row: string) = List.findIndex ((=) (value row)) order
+            Assert.True(at fsharp < at ruby, $"{fsharp} is an earlier post than {ruby}")
