@@ -81,7 +81,7 @@ def main():
         cookie = lg('login', '--base', BASE, '--email', labels['emails.david'], '--password', labels['passwords.all'])['cookie']
         scrape = lg('scrape', '--base', BASE, '--cookie', cookie, '--room', str(room))
         csrf = str(scrape.get('csrf') or '')
-        so = 'created_at' if a.app in ('oncrack', 'fsharp') else 'id'
+        so = 'created_at' if a.app == 'fsharp' or os.environ.get('SEARCH_ORDER') == 'created_at' else 'id'   # R3.3: onCrack lists search by id now; SEARCH_ORDER=created_at for an image from before it
         prep = json.loads(sh('ruby', '-e', 'require "%s/bench/contracts"; base, cookie, db, labels, css, dest, so = ARGV; '
                                         'puts JSON.generate(BenchmarkContracts.prepare(base, cookie, db, JSON.parse(File.read(labels)), css, dest, search_order: so))' % VFY,
                              BASE, cookie, db, SEED + '/labels.json', scrape['css'], data + '/contracts', so))

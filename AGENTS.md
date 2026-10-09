@@ -118,10 +118,12 @@ arenas (`MALLOC_ARENA_MAX=2` in the Dockerfile; `CAMPFIRE_VIPS_CACHE_MB`, `CAMPF
 conserve memory, heap count, hard limit, concurrent, workstation: all measured, none kept; they move a read-only phase and cost a write one).
 `CAMPFIRE_PREWARM=off` turns off the start-up thread that warms the route table, SQLite and the host builder.
 
+**Search order** (unit R3.3, `bench/results/oncrack-r3-search.md`): `Message.searchReachable` lists the newest 100 reachable matches by message id (`ORDER BY idx.rowid DESC`), as Rails `dbc7620` does; the parity oracle gets the same one-method change from `parity/docker/parity_search_order.rb` (rebuild its layer with `docker build -t campfire-reference -f parity/docker/Dockerfile --build-context fixtures=reference/test/fixtures parity/docker`), and `search/results/order` is the state that tells the orders apart. The F# port keeps `90b3300`'s order and differs from that oracle in that state by design.
+
 **Upstream's method** (round 2 final, `bench/results/oncrack-r2-final.md`): the comparison that counts is Basecamp's
 `once-campfire-verification` harness (`bin/benchmark`, its seed, loadgen and contracts) against current upstream Rust and C, not the pinned
 `ccece30`. Its checkout is `~/Desktop/projects/once-campfire-verification` (branch `oncrack-adapter`: the `oncrack`/`fsharp` apps and the
-Rails 90b3300 search order for them, never pushed); the upstream checkouts and build scripts are in `~/Desktop/projects/upstream-campfire/`
+Rails 90b3300 search order for the port only since R3.3: onCrack lists search by message id as upstream does; `oncrack-cached`, `oncrack-prev`; never pushed); the upstream checkouts and build scripts are in `~/Desktop/projects/upstream-campfire/`
 (`scripts/env.sh`, `run.sh`, `build-c.sh`). Run it in colima from a tmpfs copy (`/mnt/cfv`), with the seed group-writable (the VM user is uid
 501, the containers 1000), and point the harness's workspace at a clean worktree of onCrack: it refuses a checkout that changes between rounds.
 `bench/results/oncrack-r2-final/table.py` prints its tables in upstream's form, `review.py` re-runs room page, mixed and post by hand with the

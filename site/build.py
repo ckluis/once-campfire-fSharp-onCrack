@@ -453,6 +453,13 @@ def facts():
     F['pp_total'] = {k: V(pp['total'][k], 'pixel gate, all five seeds: %s' % k, [PP, R3PIX + '/pixel_parity.py'], 'total.%s' % k) for k in pp['total']}
     F['pp_seeds'] = V(len(pp['seeds']), 'seeds in the pixel gate', [PP], 'len(seeds)')
     F['pp_room'] = pp['room_capture']
+    # R3.3: the search order changed src/ after that gate; the search states ran again, plus one that tells the two orders apart
+    R33PIX = 'bench/results/oncrack-r3-search/pixels.json'
+    p33 = jload(R33PIX)
+    F['r33_equal'] = V(sum(v['equal'] for v in p33['seeds'].values()), 'search states re-run after the search order change: screenshots pixel-equal', [R33PIX], 'sum(seeds.*.equal)')
+    F['r33_total'] = V(sum(v['cells'] for v in p33['seeds'].values()), 'search states re-run after the search order change: screenshots', [R33PIX], 'sum(seeds.*.cells)')
+    F['r33_port_diff'] = V(sum(1 for c in p33['port_vs_new_oracle_order_state'] if not c['pixels_equal']), 'the port against the same oracle, search/results/order: cells different', [R33PIX], 'count(port_vs_new_oracle_order_state, not pixels_equal)')
+    F['r33_port_cells'] = V(len(p33['port_vs_new_oracle_order_state']), 'the port against the same oracle, search/results/order: cells', [R33PIX], 'len(port_vs_new_oracle_order_state)')
     # the verifier
     VF = 'bench/results/oncrack-verifier/verifier.json'
     vj = jload(VF)
@@ -588,7 +595,7 @@ def hero(F, cl):
             'every response validated against the seed, every acknowledged post audited in the database and its search index; four server CPUs and four for the load generator, on this '
             'project&#39;s VM, not their Ryzen. <b>onCrack re-reads the session and the room membership on every cache hit</b>, as upstream&#39;s implementations do (the default since round three); '
             'its older cached decision, faster and not comparable, is the last column and an opt-in. Other work on the Mac moved every engine&#39;s samples during these sessions, so read the ranges in the details; '
-            'per room page, Rust spends %s and C %s of onCrack&#39;s CPU (hand re-runs). onCrack&#39;s and the port&#39;s search is checked against Rails <span data-lit="commit">90b3300</span>&#39;s order, which they render.</span>%s</figcaption></figure>'
+            'per room page, Rust spends %s and C %s of onCrack&#39;s CPU (hand re-runs). onCrack&#39;s search lists the newest matches by message id, as upstream&#39;s does and its contract checks (round three, unit <span data-lit="name">R3.3</span>); the port keeps Rails <span data-lit="commit">90b3300</span>&#39;s order.</span>%s</figcaption></figure>'
             '<p class="btw" id="btw"><a href="#p-climb-chart">The climb against pinned Rust</a> <span>Every logged version over Rust <span data-lit="commit">ccece30</span>&#39;s stored medians, now in a panel.</span></p>'
             '</div></section>' % (th, table, L.n(F['up3_rounds']), L.n(F['up_secs']), L.n(c16),
                                   L.x(F['cpu3', 'rust', 'room_show'].over(F['cpu3', 'oncrack', 'room_show'])), L.x(F['cpu3', 'c', 'room_show'].over(F['cpu3', 'oncrack', 'room_show'])),
@@ -1019,6 +1026,10 @@ def p_pixels(F):
         'A cell that could not be captured (a stylesheet wait that ran out at %s ms on freshly started servers, older than onCrack) was captured again and counts by its last attempt, as <code>bin/pixel-parity</code> counts it.</li>'
         '<li>Round one ran the same gate on the code before the verifier&#39;s fixes; the verifier ran it in one piece on the pre-fix image, in %s s. The Native AOT image passed the fast matrix on the default seed: %s screenshots.</li></ul>'
         % (L.n(F['pp_seeds']), lit('d708910', 'commit'), L.n(F['ready_ms']), L.n(F['ver_pp_secs']), L.n(F['aot_pp'])),
+        '<p><b>After the gate:</b> unit <span data-lit="name">R3.3</span> changed one thing in <code>src/</code>, the order of a search&#39;s results (by message id, as upstream). The gate above is for the code before it. '
+        'The search states ran again against the Rails reference with upstream&#39;s order given to it (<code>parity/docker/parity_search_order.rb</code>): %s of %s screenshots pixel-equal, including a new state, <code>search/results/order</code>, '
+        'whose results differ by time and by id. The port, which keeps the old order, differs from that reference in %s of its %s cells; so the gate can now tell the orders apart. It is a targeted gate, not the full %s.</p>'
+        % (L.n(F['r33_equal']), L.n(F['r33_total']), L.n(F['r33_port_diff']), L.n(F['r33_port_cells']), L.n(F['pp_total']['screenshots'])),
         '<p>The reports themselves (every screenshot and diff) are gitignored under <code>parity/out/pixel-parity-r3-final/</code>; <code>pixel_parity.py</code> keeps what they say.</p>',
         srcline(R3PIX + '/pixel-parity.json', R3PIX + '/pixel_parity.py', 'bin/pixel-parity', 'bin/pixel-parity-report', lead='Sources'),
     ])
@@ -1218,7 +1229,7 @@ def p_upstream(F):
         '<li><b>Not their machine.</b> Four of this VM&#39;s CPUs per side, not the Ryzen&#39;s; compare ratios, not absolute numbers, with their report.</li>'
         '<li><b>A different freshness mechanism, then.</b> Upstream re-reads the session and membership on every cache hit. In round two onCrack kept the decision and dropped it on any commit, by any connection (it watches SQLite&#39;s WAL index); '
         'the round&#39;s verifier attacked that with foreign writers and it held, but a hit was not the same work as theirs. Round three made fresh authorization the default; its numbers are the headline.</li>'
-        '<li><b>Search order.</b> onCrack and the port render Rails <span data-lit="commit">90b3300</span>, whose search lists matches by time; upstream now lists them by id. Their search is validated against the old order.</li>'
+        '<li><b>Search order.</b> Rails <span data-lit="commit">90b3300</span> lists a search&#39;s matches by time; upstream has listed them by message id since <span data-lit="commit">dbc7620</span>. onCrack now lists them by id and passes upstream&#39;s contract unchanged. The port still renders the old order, so the harness checks it against that one.</li>'
         '<li><b>One viewer, one URL.</b> Their read workloads are a cache-hit benchmark; the appendix of the results file keeps this project&#39;s realistic workloads.</li></ul>',
         srcline(UPN + '/', UPM + '/', R2 + '/kloc.json', R2 + '/upstream-performance-review.md', 'bench/results/oncrack-r2-final.md', lead='Sources'),
     ])
@@ -1316,7 +1327,7 @@ def more_row():
 # ================================================================ the check
 
 LIT_SHAPES = {   # data-lit reason: the shapes it may hold (a name, never a measurement)
-    'name': [r'C[0-4]', r'C[0-4]-C[0-4]', r'A\d[a-c]?', r'[Tt]ier [123]', r'p50|p99', r'HTTP/2', r'37signals', r'SHA-256'],
+    'name': [r'C[0-4]', r'C[0-4]-C[0-4]', r'A\d[a-c]?', r'R3\.3', r'[Tt]ier [123]', r'p50|p99', r'HTTP/2', r'37signals', r'SHA-256'],
     'test': [r'A\d[a-c]?', r'kill', r'kit-http'],
     'commit': [r'[0-9a-f]{7,12}'],
     'status': [r'[1-5]\d\d', r'[1-5]xx'],

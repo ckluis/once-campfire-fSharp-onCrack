@@ -1,0 +1,202 @@
+{
+  "metadata": {
+    "verification_revision": "a05b344d4c1f70f886c48130b56b41bc4d7296c5",
+    "response_validation": "route-contract-v1",
+    "started_at": "2026-10-09T14:25:30Z",
+    "seed_sha256": "bc5a851525b4abd5b51dd23ed9fb947761a27d9d4fff4be75c5dda018e8e7c2e",
+    "server_cpus": "0-3",
+    "client_cpus": "4-7",
+    "network": "host",
+    "gzip": true,
+    "duration": 8,
+    "concurrencies": "16",
+    "rounds": 3,
+    "loadgen_sha256": "351a66af1ea13003b845c24a63c59d7e5d2d46ddf101aa5c0e0b78e0a0869b1e",
+    "routes": "search",
+    "profile": "read-and-post-v1",
+    "mixed_writer": null,
+    "images": {
+      "oncrack": "sha256:88ae3de4b2282941d56a46ab6c485a87521b5b45d70fc0ae2b0e98f7293e313c",
+      "oncrack-prev": "sha256:e4927fa7ec95af4175e46ca11e2fed7fc3d30e4d08b96b964a7471f51bc4b40e",
+      "rust": "sha256:63d7de5e36bbc7766d0f160e76208d51ee3841f8b80ce1c710ce870d7cb15b2d",
+      "c": "sha256:cce0f35ccdc1286a0398efed012d4d8dedee635ec8498ca342b0aa9a02ced3cf",
+      "fsharp": "sha256:421f335c3ff8ee640991228ffe18bb750f2a37a4bd5ad9da64e0a0da5cb1ae0c"
+    },
+    "image_labels": {
+      "oncrack": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.revision": "2b412e53630ae882e42d881b1088460811ddf1f5",
+        "org.opencontainers.image.source": ""
+      },
+      "oncrack-prev": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.revision": "87c1ad12e97b399c16b18ef457c9d546fa936564",
+        "org.opencontainers.image.source": ""
+      },
+      "rust": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.source": ""
+      },
+      "c": {
+        "maintainer": "Clement Verna <cverna@fedoraproject.org>",
+        "org.opencontainers.image.revision": "cd0cbe4b24bcee0aa6ad75e6bc29d4e773628332"
+      },
+      "fsharp": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.revision": "2e6c08e242191cb9c982ecc0f2c06e56d2e9855e",
+        "org.opencontainers.image.source": ""
+      }
+    },
+    "source_revisions": {
+      "oncrack": {
+        "head": "2b412e53630ae882e42d881b1088460811ddf1f5",
+        "dirty": false
+      },
+      "oncrack-prev": {
+        "head": "2b412e53630ae882e42d881b1088460811ddf1f5",
+        "dirty": false
+      },
+      "rust": {
+        "head": "f9dca47e592fdcd23a75e4c8b6b97f5d452ccdc1",
+        "dirty": false
+      },
+      "c": {
+        "head": "cd0cbe4b24bcee0aa6ad75e6bc29d4e773628332",
+        "dirty": false
+      },
+      "fsharp": {
+        "head": "9954ad0b01e32a17023b30b4254e7c75053d2dd8",
+        "dirty": false
+      }
+    },
+    "preflight_only": false,
+    "topology": {
+      "oncrack": {
+        "processes": 1,
+        "runtime": ".NET (Kestrel)",
+        "cable": "native",
+        "jobs": "in-process",
+        "response_cache_mb": "64"
+      },
+      "oncrack-prev": {
+        "processes": 1,
+        "runtime": ".NET (Kestrel)",
+        "cable": "native",
+        "jobs": "in-process",
+        "response_cache_mb": "64"
+      },
+      "rust": {
+        "processes": 1,
+        "readers": "5",
+        "job_workers": "3",
+        "cable": "native tokio",
+        "jobs": "in-process",
+        "response_cache_mb": "64"
+      },
+      "c": {
+        "processes": 1,
+        "http_loops": "affinity, capped at 4",
+        "cache_bytes": "67108864",
+        "jobs": "in-process"
+      },
+      "fsharp": {
+        "processes": 1,
+        "runtime": ".NET (Kestrel)",
+        "response_cache": "none (port of Rust ccece30)",
+        "cable": "native",
+        "jobs": "in-process"
+      }
+    },
+    "runtimes": {
+      "oncrack": "oncrack",
+      "oncrack-prev": "oncrack",
+      "rust": "rust",
+      "c": "c",
+      "fsharp": "fsharp"
+    },
+    "search_order": {
+      "oncrack": "id",
+      "oncrack-prev": "created_at",
+      "rust": "id",
+      "c": "id",
+      "fsharp": "created_at"
+    },
+    "complete": true
+  },
+  "results": {
+    "oncrack": {
+      "room_show": null,
+      "messages_page": null,
+      "sidebar": null,
+      "search": {
+        "median_rps": 161475.7,
+        "runs": [
+          159544.6,
+          161475.7,
+          163397.8
+        ]
+      },
+      "post_message": null
+    },
+    "oncrack-prev": {
+      "room_show": null,
+      "messages_page": null,
+      "sidebar": null,
+      "search": {
+        "median_rps": 160097.5,
+        "runs": [
+          150190.6,
+          161853.0,
+          160097.5
+        ]
+      },
+      "post_message": null
+    },
+    "rust": {
+      "room_show": null,
+      "messages_page": null,
+      "sidebar": null,
+      "search": {
+        "median_rps": 55960.9,
+        "runs": [
+          55960.9,
+          55855.6,
+          56172.3
+        ]
+      },
+      "post_message": null
+    },
+    "c": {
+      "room_show": null,
+      "messages_page": null,
+      "sidebar": null,
+      "search": {
+        "median_rps": 83101.2,
+        "runs": [
+          82778.5,
+          83101.2,
+          83980.9
+        ]
+      },
+      "post_message": null
+    },
+    "fsharp": {
+      "room_show": null,
+      "messages_page": null,
+      "sidebar": null,
+      "search": {
+        "median_rps": 30390.7,
+        "runs": [
+          31038.0,
+          30020.4,
+          30390.7
+        ]
+      },
+      "post_message": null
+    }
+  }
+}
