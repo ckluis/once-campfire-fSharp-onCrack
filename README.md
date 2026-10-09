@@ -214,8 +214,11 @@ specific to this port are listed below, each citing the reference file it depart
     `updated_at` with each post). So after two posts a member who read neither has `unread_at` at the first post's
     time where Rails stores the second's. Rails reads the column only for being set (`Membership#unread?`, the `unread`
     scope), so a rollback to Rails shows the same state; direct rooms keep Rails' rewrite, because the sidebar's
-    `cache membership` fragment is keyed by the row. `CAMPFIRE_POST_UNREAD_SKIP=off` writes as Rails does. Tested by
-    `PostPathTests` ("a post marks unread who wasn't, keeps who was, ...", "a post into a direct room still rewrites ...").
+    `cache membership` fragment is keyed by the row. `CAMPFIRE_POST_UNREAD_SKIP=off` writes as Rails does. Current
+    upstream Rails (basecamp/once-campfire#336) keeps the first unread post's time too. Tested by `PostPathTests` ("a post
+    marks unread who wasn't, keeps who was, ...", "a post into a direct room still rewrites ...") and by `bin/db-differential`
+    (two posts into hq while its members are unread: byte-equal with the switch off, and with it on, only `unread_at` naming an
+    earlier post).
   - A post's search-index row and unread marks (`after_create_commit`) commit in the post's own transaction, after it
     (`CAMPFIRE_POST_ON_COMMIT=off` commits them after, as Rails does). A failing statement of them still reaches the
     caller after the post committed. Tested by `GroupCommitTests` ("on-commit work commits with its write ...").
@@ -225,6 +228,24 @@ specific to this port are listed below, each citing the reference file it depart
     `resume_session`, at most hourly) happens on the first request after it falls due, which a replay never answers: replays stop a
     second before it is due. The body, status and every other header are the app's answer to the same request bytes. Tested by
     `FastPathTests`. `CAMPFIRE_FAST_PATH=off` answers every request through the app.
+- **onCrack** (`bench/results/oncrack-r2-verifier.md`, the round 2 verifier's findings):
+  - The messages page (`messages#index`) has no `fresh_when`: its ETag is `Rack::ETag`'s digest of the page, and it has no
+    `Last-Modified` (`reference/app/controllers/messages_controller.rb` has `fresh_when @messages`, an ETag of the records' cache
+    keys and a `Last-Modified` of their latest `updated_at`). Those validators don't move when another connection edits a body,
+    a creator or a boost without touching the message, so a client kept its stale page as a 304, in Rails 90b3300 and Rust ccece30
+    as well. A 304 still answers an unchanged page. Upstream Rails, Rust, Go and Elixir have since made the same change. Tested by
+    `MessagesTests` ("index pages with conditional gets") and `ForeignWriteTests`.
+  - Fragments are kept per database epoch, which moves with every commit another connection makes (a Rails console, a second
+    container, the sqlite3 shell; `Versions.Sync` in `src/Campfire.Db/Versions.fs`). Fragment keys are the records' timestamps,
+    as Rails' are, so in Rails 90b3300 an edit that leaves them alone keeps its old fragment until the cache drops it; here
+    the next request renders it again. Tested by `ForeignWriteTests` ("timestamp free foreign edits invalidate nested fragments
+    and validators").
+  - `Accept-Encoding` reads `Q=` as a quality, as `q=` (RFC 9110: parameter names are case-insensitive), in the front server
+    and in `Rack::Deflater`'s place. Thruster, Rack 3 and Rust ccece30 read `gzip;Q=0` as q=1 and gzip the answer. Tested by
+    `VerifierRound2Tests` and `DeflaterTests` ("q values read like rack").
+  - `CAMPFIRE_RESPONSE_CACHE_MB`, upstream's one response cache budget, sets both of onCrack's when they are not given (0 turns
+    both off; N gives a fifth to the read cache and the rest to the fast path), and `CAMPFIRE_READ_CACHE_MB=0` or
+    `CAMPFIRE_FAST_PATH_MB=0` turns that cache off (both fell back to their defaults before). Tested by `VerifierRound2Tests`.
 
 ## License
 

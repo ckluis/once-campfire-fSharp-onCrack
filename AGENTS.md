@@ -117,6 +117,20 @@ arenas (`MALLOC_ARENA_MAX=2` in the Dockerfile; `CAMPFIRE_VIPS_CACHE_MB`, `CAMPF
 conserve memory, heap count, hard limit, concurrent, workstation: all measured, none kept; they move a read-only phase and cost a write one).
 `CAMPFIRE_PREWARM=off` turns off the start-up thread that warms the route table, SQLite and the host builder.
 
+**Commits by other connections** (round 2 verifier, `bench/results/oncrack-r2-verifier.md`): the version counters' triggers live in the
+writer's connection, so nothing else's commits (a Rails console or rollback, a second container, the sqlite3 shell) moved them. Now `Versions`
+watches the WAL index's change counter (`iChange` in `<db>-shm`, mapped read-only through libc; never through `FileStream`, whose `flock`
+fights SQLite's locks on macOS, and never closed before every SQLite connection is: closing a descriptor drops the process's POSIX locks). The
+writer's commits go through `Versions.Committing` (`DbRun.committing`: every `COMMIT` and every autocommitted after-commit hook), which tells its
+own commits from others' by its connection's `PRAGMA data_version`; `Versions.Sync`, called before every cache serves anything (pages, sessions,
+users, fast path replays) and by every request and job before its first read, moves every counter by 2 and the epoch by 1 for a commit nobody
+accounted for, and logs `WARN campfire_db: a commit by another connection` (a bench that shows it has a write path outside `Committing`). Fragments
+are kept per epoch (`AppState.FragmentStoreNow`; a request takes its store in `Boot.dispatchWithFragmentCache`, a job in `Registry.Scope`). The
+messages page has no `fresh_when` (content ETag). `ForeignWriteTests` (App, in process and fronted) and `VersionsWatchTests` (Db) are the attack
+tests; a write on the writer's connection that bypasses `Committing` costs every cache, never correctness. `CAMPFIRE_READ_CACHE_MB=0` and
+`CAMPFIRE_FAST_PATH_MB=0` turn those caches off, and upstream's `CAMPFIRE_RESPONSE_CACHE_MB` sets both (`Campfire.Kit.ResponseCacheBudgets`).
+The fast path keeps offered targets as hashes.
+
 # once-campfire-fsharp
 
 Campfire in F#. It is a port that has to be indistinguishable in use from the Rails app in
