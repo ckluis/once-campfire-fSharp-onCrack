@@ -67,12 +67,14 @@ let private warm (browser: Browser) (path: string) : Task<Reply> =
         return last
     }
 
-/// Each test runs in process and behind the front server (whose fast path replays before the app).
+/// Each test runs in process and behind the front server (whose fast path replays before the app), with fresh authorization
+/// (R3.2, the default) and with the cached decision (`CAMPFIRE_FRESH_AUTH=0`).
 let private both (body: Test -> Task) : Task =
     task {
-        for fronted in [ false; true ] do
-            use! test = bootSeededWith fronted [] "default"
-            do! body test
+        for fresh in [ "1"; "0" ] do
+            for fronted in [ false; true ] do
+                use! test = bootSeededWith fronted [ "CAMPFIRE_FRESH_AUTH", fresh ] "default"
+                do! body test
     }
 
 let private lastMessage (test: Test) (roomId: int64) : Message =

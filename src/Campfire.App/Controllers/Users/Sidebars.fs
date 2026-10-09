@@ -24,7 +24,7 @@ module Sidebars =
         act {
             do! Concerns.beforeActions c Before.Default
             let! (user: User) = Concerns.requireCurrentUser c
-            return! ReadCache.page c "sidebars#show" user.Id (ReadCache.userRoomsDeps c user.Id) ignore (fun () -> render c)
+            return! ReadCache.page c "sidebars#show" user.Id ValueNone (ReadCache.userRoomsDeps c user.Id) ignore (fun () -> render c)
         }
 
     and private render (c: Ctx) : Task<Result<Response, Error>> =

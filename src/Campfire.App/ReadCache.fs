@@ -22,6 +22,11 @@
 // - **Other connections' commits** (a Rails console, a second container, the sqlite3 shell) fire none of the writer's
 //   triggers: every lookup here (pages, sessions, users, and every fast path replay) calls `Versions.Sync` first, which
 //   moves every counter when the database's WAL index shows a commit the writer did not make (`Versions.fs`).
+// - **Fresh authorization** (R3.2, `CAMPFIRE_FRESH_AUTH`, on by default): the version counters keep a page's content; whether the
+//   request may see it is decided again on every hit, as upstream's contract has it. The session and user are read from the
+//   database on every request (`session` and `user` skip their maps), a page about one room is served only after a membership query
+//   finds the row (`page`'s `room`), and a fast path replay runs `FreshAuth.replay` first (`offerFast`). Off, a hit reuses the
+//   decision its miss made, under the counters.
 // - **Per user**: the key starts with the signed-in user's id, so a page is never served to anyone else;
 //   then everything the page's render reads from the request: the route, the full URL (path and query),
 //   scheme, host and port, Turbo-Frame, Referer, User-Agent (the platform) and the `last_room` cookie.
@@ -201,7 +206,10 @@ module ReadCache =
     /// by its session cookie, whose session and user were read through the cache's counters: the replay is valid while the page's
     /// counters (the user's and global among them) and the sessions counter keep their values, and until the session's next
     /// activity refresh is due (a second early), which is a write the replay would skip.
-    let private offerFast (c: Ctx) (deps: Dep[]) : unit =
+    ///
+    /// With fresh authorization (R3.2) a replay also runs `FreshAuth.replay` (the session, its user and, for a page about `room`, the
+    /// membership) on a reader free at that moment, and goes to the app when none is.
+    let private offerFast (c: Ctx) (deps: Dep[]) (room: int64 voption) : unit =
         if FastCandidate.enabled && Current.authenticatedBy c = BySession then
             match c.Current<SessionReadAt>(), c.Current<CurrentSessionSlot>() with
             | ValueSome at, ValueSome(CurrentSessionSlot session) ->
@@ -210,22 +218,31 @@ module ReadCache =
                 let versions = c.App.Db.Versions
                 // Every replay first accounts for other connections' commits (a session deleted or a membership removed
                 // by a Rails console moves every counter), then checks the counters.
-                c.FastCandidate <-
-                    FastCandidate(
+                let valid =
+                    if c.App.Config.FreshAuth then
+                        let db = c.App.Db
+                        let token, sessionId, userId = session.Token, session.Id, session.UserId
                         Func<bool>(fun () ->
                             versions.Sync() |> ignore
-                            Deps.valid all),
-                        refreshDue,
-                        c.Clock
-                    )
+                            Deps.valid all
+                            && match db.TryReadNow(fun conn -> FreshAuth.replay conn token sessionId userId room) with
+                               | ValueSome(Ok true) -> true
+                               | _ -> false)
+                    else
+                        Func<bool>(fun () ->
+                            versions.Sync() |> ignore
+                            Deps.valid all)
+                c.FastCandidate <- FastCandidate(valid, refreshDue, c.Clock)
             | _ -> ()
 
-    /// A page through the cache. `missDeps` takes the counters the page depends on, before any of its
-    /// queries; `onHit` does what the action does besides rendering (a cookie); `render` is the action.
+    /// A page through the cache. `room` is the room a page about one room is about (its membership is the page's authorization);
+    /// `missDeps` takes the counters the page depends on, before any of its queries; `onHit` does what the action does besides
+    /// rendering (a cookie); `render` is the action.
     let page
         (c: Ctx)
         (route: string)
         (userId: int64)
+        (room: int64 voption)
         (missDeps: unit -> Task<Result<Dep[] voption, Error>>)
         (onHit: unit -> unit)
         (render: unit -> Task<Result<Response, Error>>)
@@ -236,18 +253,15 @@ module ReadCache =
         else
             let key = requestKey c route userId
             let store = storeOf c.App.Db.Versions
-            // Commits by other connections first (`Versions.Sync`): one moves every counter.
-            c.App.Db.Versions.Sync() |> ignore
-            match store.Lookup key with
-            | ValueSome entry ->
+            let hit (entry: CachedPage) =
                 Interlocked.Increment(&store.Hits) |> ignore
                 onHit ()
                 let served = serve c entry
                 match served with
-                | Ok response when response.Status = 200 -> offerFast c entry.Deps
+                | Ok response when response.Status = 200 -> offerFast c entry.Deps room
                 | _ -> ()
-                Task.FromResult served
-            | ValueNone ->
+                served
+            let miss () =
                 Interlocked.Increment(&store.Misses) |> ignore
                 task {
                     match! missDeps () with
@@ -274,6 +288,19 @@ module ReadCache =
                         | _ -> ()
                         return result
                 }
+            // Commits by other connections first (`Versions.Sync`): one moves every counter.
+            c.App.Db.Versions.Sync() |> ignore
+            match store.Lookup key, room with
+            | ValueSome entry, ValueSome roomId when c.App.Config.FreshAuth ->
+                // Fresh authorization: the membership as it is now, or the action (whose `set_room` answers as it would uncached).
+                task {
+                    match! c.App.Read(fun conn -> FreshAuth.membership conn roomId userId) with
+                    | Error e -> return Error e
+                    | Ok true -> return hit entry
+                    | Ok false -> return! miss ()
+                }
+            | ValueSome entry, _ -> Task.FromResult(hit entry)
+            | ValueNone, _ -> miss ()
 
     /// `cells`' values now after the global counter's value when authentication read the signed-in user,
     /// or nothing (render, don't keep) when it wasn't read through `user` or a write was in flight.
@@ -328,37 +355,50 @@ module ReadCache =
     /// A read through one of the authentication maps: served while its counter is unchanged, read and kept
     /// (when the counter was even before the read) otherwise. `readAt` hears the counter's value the value
     /// served is as of (none for a read during a write).
+    ///
+    /// With `fresh` (R3.2's fresh authorization) the map is neither read nor written: every request reads the row, and still hears
+    /// the counter's value it is as of, which the pages it keeps depend on.
     let private through
+        (fresh: bool)
         (map: System.Collections.Concurrent.ConcurrentDictionary<'K, struct (Dep[] * 'V)>)
         (key: 'K)
         (cell: VersionCell)
         (readAt: Dep -> unit)
         (load: unit -> Task<Result<'V, Error>>)
         : Task<Result<'V, Error>> =
-        match map.TryGetValue key with
-        | true, struct (deps, value) when Deps.valid deps ->
+        let kept =
+            if fresh then
+                ValueNone
+            else
+                match map.TryGetValue key with
+                | true, struct (deps, value) when Deps.valid deps -> ValueSome(struct (deps, value))
+                | _ -> ValueNone
+        match kept with
+        | ValueSome(struct (deps, value)) ->
             readAt deps[0]
             Task.FromResult(Ok value)
-        | _ ->
+        | ValueNone ->
             task {
                 let deps = Deps.take [| cell |]
                 let! result = load ()
                 match result, deps with
                 | Ok value, ValueSome deps when Deps.valid deps ->
                     readAt deps[0]
-                    if map.Count >= MaxAuthEntries then map.Clear()
-                    map[key] <- struct (deps, value)
+                    if not fresh then
+                        if map.Count >= MaxAuthEntries then map.Clear()
+                        map[key] <- struct (deps, value)
                 | _ -> ()
                 return result
             }
 
-    /// `Session.find_by(token:)`, through the cache (the sessions counter covers every session row).
+    /// `Session.find_by(token:)`, through the cache (the sessions counter covers every session row), or from the database on every
+    /// request with fresh authorization.
     let session (c: Ctx) (token: string) (load: unit -> Task<Result<Campfire.Db.Session option, Error>>) : Task<Result<Campfire.Db.Session option, Error>> =
         match versions c with
         | null -> load ()
         | v ->
             v.Sync() |> ignore
-            through (storeOf v).Sessions token v.Sessions (fun dep -> c.SetCurrent(SessionReadAt dep)) load
+            through c.App.Config.FreshAuth (storeOf v).Sessions token v.Sessions (fun dep -> c.SetCurrent(SessionReadAt dep)) load
 
     /// `User.find_by(id:)`, through the cache (users are global). The request remembers the global counter's
     /// value the user is as of (`UserReadAt`), which the pages it renders depend on.
@@ -367,4 +407,4 @@ module ReadCache =
         | null -> load ()
         | v ->
             v.Sync() |> ignore
-            through (storeOf v).Users id v.Global (fun dep -> c.SetCurrent(UserReadAt dep)) load
+            through c.App.Config.FreshAuth (storeOf v).Users id v.Global (fun dep -> c.SetCurrent(UserReadAt dep)) load

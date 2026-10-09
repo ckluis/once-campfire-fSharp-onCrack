@@ -205,6 +205,7 @@ module RoomsController =
                         c
                         "rooms#show"
                         user.Id
+                        (ValueSome roomId)
                         (ReadCache.roomDeps c user.Id roomId)
                         (fun () -> Concerns.rememberLastRoomVisited c roomId)
                         render

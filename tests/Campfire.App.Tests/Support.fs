@@ -356,13 +356,20 @@ let private copyDir (from: string) (target: string) : unit =
 /// The app's configuration over `root` as its storage, with the parity secret.
 let configFor (root: string) (extra: (string * string) list) : AppConfig =
     let secret = defaultArg (parityEnv "SECRET_KEY_BASE") "test-secret-key-base"
+    // `CAMPFIRE_FRESH_AUTH` in the test process's environment reaches every app it boots (`CAMPFIRE_FRESH_AUTH=0` runs the suite with
+    // the cached authorization decision; on is the default), unless a test sets it in `extra`.
+    let passed =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_FRESH_AUTH" with
+        | null -> []
+        | value -> [ "CAMPFIRE_FRESH_AUTH", value ]
     let vars =
-        dict (
+        Map.ofList (
             [ "SECRET_KEY_BASE", secret
               "DISABLE_SSL", "true"
               "APP_VERSION", "parity"
               "GIT_REVISION", "parity"
               "CAMPFIRE_STORAGE_PATH", root ]
+            @ passed
             @ extra
         )
     match AppConfig.fromLookup (fun name -> match vars.TryGetValue name with | true, value -> value | _ -> null) with

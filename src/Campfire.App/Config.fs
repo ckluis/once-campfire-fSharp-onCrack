@@ -91,7 +91,13 @@ type AppConfig =
       JobConcurrency: int
       LogLevel: string
       /// The fragment store's limit in bytes (`CAMPFIRE_FRAGMENT_CACHE_MB`).
-      FragmentCacheBytes: int64 }
+      FragmentCacheBytes: int64
+      /// onCrack R3.2 (`CAMPFIRE_FRESH_AUTH`, on by default; `0`, `off` or `false` turns it off): upstream's contract of fresh
+      /// authorization on every cache hit. On, every request reads its session and user rows (the authentication maps are not
+      /// used), a cached room or messages page is served only after a membership query finds the row, and every fast path replay
+      /// first runs one narrow query for the session, its user and (for a room page) the membership (`Campfire.Db.FreshAuth`).
+      /// Off, a hit reuses the decision the miss made, kept under the version counters (onCrack's design until round 3).
+      FreshAuth: bool }
 
 module AppConfig =
     /// The install's own HTTPS URL when it has a TLS domain; the project's otherwise.
@@ -185,6 +191,12 @@ module AppConfig =
                       DbReaders = int (max readers 1L)
                       JobConcurrency = int (max concurrency 1L)
                       LogLevel = defaultArg (present "RAILS_LOG_LEVEL") "info"
-                      FragmentCacheBytes = megabytes * (1L <<< 20) }
+                      FragmentCacheBytes = megabytes * (1L <<< 20)
+                      FreshAuth =
+                        (match present "CAMPFIRE_FRESH_AUTH" with
+                         | None -> true
+                         | Some value ->
+                             let value = value.Trim()
+                             not (value = "0" || value.Equals("off", StringComparison.OrdinalIgnoreCase) || value.Equals("false", StringComparison.OrdinalIgnoreCase))) }
 
     let fromEnv () : Result<AppConfig, string> = fromLookup Environment.GetEnvironmentVariable

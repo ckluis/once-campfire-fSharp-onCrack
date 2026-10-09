@@ -32,6 +32,7 @@
     <Compile Include="ReadCacheTests.fs" />
     <Compile Include="FastPathTests.fs" />
     <Compile Include="ForeignWriteTests.fs" />
+    <Compile Include="FreshAuthTests.fs" />
     <Compile Include="PostPathTests.fs" />
     <Compile Include="ChannelsSupport.fs" />
     <Compile Include="ChannelsTests.fs" />

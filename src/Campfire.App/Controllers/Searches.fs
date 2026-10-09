@@ -51,7 +51,7 @@ module SearchesController =
         act {
             do! Concerns.beforeActions c Before.Default
             let! (user: User) = Concerns.requireCurrentUser c
-            return! ReadCache.page c "searches#index" user.Id (ReadCache.userRoomsDeps c user.Id) ignore (fun () -> renderIndex c)
+            return! ReadCache.page c "searches#index" user.Id ValueNone (ReadCache.userRoomsDeps c user.Id) ignore (fun () -> renderIndex c)
         }
 
     and private renderIndex (c: Ctx) : Task<Result<Response, Error>> =

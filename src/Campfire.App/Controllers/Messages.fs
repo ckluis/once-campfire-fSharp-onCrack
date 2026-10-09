@@ -392,7 +392,7 @@ module MessagesController =
             let! (user: User) = Concerns.requireCurrentUser c
             match (match c.ParamStr "room_id" with null -> None | id -> Ruby.integerCast id) with
             | Some roomId ->
-                return! ReadCache.page c "messages#index" user.Id (ReadCache.roomDeps c user.Id roomId) ignore (fun () -> renderIndex c)
+                return! ReadCache.page c "messages#index" user.Id (ValueSome roomId) (ReadCache.roomDeps c user.Id roomId) ignore (fun () -> renderIndex c)
             | None -> return! renderIndex c
         }
 

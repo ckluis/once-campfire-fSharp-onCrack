@@ -1045,6 +1045,18 @@ type Database
                 reply.SetException e)
         reply.Task
 
+    /// onCrack R3.2: `f` on a reader connection right here when one is free and no read is queued, else nothing, never waiting. For
+    /// the front server's fast path, whose fresh authorization runs on a socket's event thread: a replay that finds no reader free
+    /// goes to the app instead, which waits for one as any request does.
+    member _.TryReadNow(f: Conn -> 'T) : Result<'T, DbError> voption =
+        match readers.TakeConnection() with
+        | None -> ValueNone
+        | Some conn ->
+            try
+                ValueSome(DbRun.attempt (fun () -> f conn))
+            finally
+                readers.GiveBack conn
+
     /// `Read` for synchronous callers (tests), on the calling thread, so that `f` may borrow. It
     /// keeps a reader connection for these reads, and opens another for one that finds it in use:
     /// a `ReadBlocking` inside another would otherwise wait for itself.
