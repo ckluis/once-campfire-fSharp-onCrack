@@ -227,8 +227,12 @@ USER 1000:1000
 #     workers under steady load (38 -> 43-46 threads after about 60-80 s, with CPU per request rising from 93 to 100 us on the room
 #     page at sixteen connections). Without it the pool stays at 30-31 threads (starvation injection still adds threads for
 #     blocked work) and p99 at sixteen connections fell from 1.6-3.3 ms to 1.1-1.3 ms on the read pages, req/s within noise.
+#   MALLOC_ARENA_MAX=2 (unit R2.5, bench/results/oncrack-r2-mem.md): glibc gives each thread that allocates its own arena, and libvips' workers
+#     (a thumbnail), SQLite's callers and the pool's threads each took one and kept what they freed. Two arenas cut the peak of an upload by 32
+#     MB of 340 and cost no throughput (room page, posts at 1, 16 and 64 connections, spread: within 1%, paired runs).
 ENV DOTNET_GCgen0size=0x4000000 \
-    DOTNET_HillClimbing_Disable=1
+    DOTNET_HillClimbing_Disable=1 \
+    MALLOC_ARENA_MAX=2
 
 # Configure environment defaults
 ENV RAILS_ENV="production"

@@ -264,3 +264,16 @@ let ``a locked database fails after the busy timeout, not after the command time
                 File.Delete(path + suffix)
             with _ ->
                 ()
+
+// --- onCrack R2.5: libvips' memory ---------------------------------------------------------------
+
+[<Fact>]
+let ``libvips starts with a 16 MB operation cache and two workers unless the container says otherwise`` () =
+    match Vips.init () with
+    | Error _ -> () // no libvips on this machine
+    | Ok() ->
+        let given (name: string) = not (String.IsNullOrEmpty(Environment.GetEnvironmentVariable name))
+        if not (given "CAMPFIRE_VIPS_CACHE_MB") then
+            Assert.Equal(16UL * 1048576UL, NetVips.Cache.MaxMem)
+        if not (given "CAMPFIRE_VIPS_CONCURRENCY") && not (given "VIPS_CONCURRENCY") then
+            Assert.Equal(min 2 Environment.ProcessorCount, NetVips.NetVips.Concurrency)

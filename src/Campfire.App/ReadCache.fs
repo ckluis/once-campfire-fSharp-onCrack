@@ -26,7 +26,10 @@
 //   the way out) or answers before the cache is asked (authentication, forgery protection, format).
 //
 // Bounded: the bodies' bytes (plus their gzip members) in two generations of at most half of
-// `CAMPFIRE_READ_CACHE_MB` each (64 MB by default). `CAMPFIRE_READ_CACHE=off` turns it off.
+// `CAMPFIRE_READ_CACHE_MB` each (16 MB by default; it was 64 until R2.5, bench/results/oncrack-r2-mem.md). A page costs more here than in the
+// front server's fast path (the raw body, the gzip member and a plain copy against the gzip member alone), and what the cache is for
+// is feeding that path: a page is offered to it from its second request on. 16 MB of the dense tier next door holds what 64 MB of this
+// one did, and the heap stays 100-300 MB smaller under many users. `CAMPFIRE_READ_CACHE=off` turns it off.
 namespace Campfire.App
 
 open System
@@ -103,11 +106,11 @@ module ReadCache =
 
     let private budget: int =
         match setting "CAMPFIRE_READ_CACHE_MB" with
-        | null -> 64 * 1024 * 1024
+        | null -> 16 * 1024 * 1024
         | value ->
             match Int32.TryParse value with
             | true, mb when mb > 0 -> mb * 1024 * 1024
-            | _ -> 64 * 1024 * 1024
+            | _ -> 16 * 1024 * 1024
 
     /// What an entry costs: its key, its body and what the body will make (a gzip member, a plain copy).
     let private cost (key: string) (entry: CachedPage) : int =

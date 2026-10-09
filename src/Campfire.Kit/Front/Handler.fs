@@ -58,7 +58,8 @@ type FastEntry(candidate: FastCandidate, status: int, headers: FastHeader[]) =
 /// The fast path's answers (onCrack R2.3), keyed by every byte of the request they answered that the app can read: the protocol, the
 /// scheme and port it came in on, the target, and every header but `X-Request-Start` (the front's own), `X-Request-Id` (made again)
 /// and `X-Forwarded-For` (no page reads the client's address on a GET; the log line still does). Bounded like the read cache, in two
-/// generations of half of `CAMPFIRE_FAST_PATH_MB` (32) each. The key is only built for targets the app has offered an answer for.
+/// generations of half of `CAMPFIRE_FAST_PATH_MB` (64 since R2.5, 32 before: 2,112 pages of the crowd seed did not quite fit 32 MB and
+/// went through the slow tier, and 64 MB served them all, 156k requests a second against 79k) each. The key is only built for targets the app has offered an answer for.
 [<Sealed>]
 type FastStore(budget: int) =
     let gate = obj ()
@@ -84,11 +85,11 @@ type FastStore(budget: int) =
         else
             let mb =
                 match Environment.GetEnvironmentVariable "CAMPFIRE_FAST_PATH_MB" with
-                | null -> 32
+                | null -> 64
                 | value ->
                     match Int32.TryParse value with
                     | true, mb when mb > 0 -> mb
-                    | _ -> 32
+                    | _ -> 64
             FastStore(mb * 1024 * 1024)
 
     static member private Excluded(name: string) : bool =

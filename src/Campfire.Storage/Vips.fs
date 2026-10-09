@@ -49,6 +49,19 @@ module Vips =
                 // NetVips initializes libvips when it is first used.
                 NetVips.NetVips.BlockUntrusted <- true
                 Native.vips_operation_block_set ("VipsForeignLoadOpenslide", 1)
+                // onCrack (R2.5): libvips' operation cache holds 100 MB by default and one operation runs a worker per core; making a
+                // thumbnail of a 2160x3840 JPEG took the process 100-200 MB more for a moment, with Rust's libvips just as high. 16 MB and 2
+                // workers give the same output in the same time (a thumbnail in 28-30 ms either way) at half the peak. A container can say
+                // otherwise: `CAMPFIRE_VIPS_CACHE_MB` is the cache's memory limit, `CAMPFIRE_VIPS_CONCURRENCY` the workers of one operation.
+                let setting (name: string) (fallback: int) =
+                    match Int32.TryParse(Environment.GetEnvironmentVariable name) with
+                    | true, n when n >= 0 -> n
+                    | _ -> fallback
+                NetVips.Cache.MaxMem <- uint64 (setting "CAMPFIRE_VIPS_CACHE_MB" 16) * 1048576UL
+                match setting "CAMPFIRE_VIPS_CONCURRENCY" 2 with
+                | 0 -> ()
+                | n when isNull (Environment.GetEnvironmentVariable "VIPS_CONCURRENCY") -> NetVips.NetVips.Concurrency <- min n Environment.ProcessorCount
+                | _ -> ()
                 Ok()
              with e ->
                  Error $"vips_init failed: {e.Message}")
