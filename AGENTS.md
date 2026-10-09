@@ -106,6 +106,17 @@ A post at one connection costs 242 us of CPU (was 393), `/up` 22 (was 110). Tool
 thread name), `bench/c1-wakes` lists the futex calls per request by call chain. The pool still wakes three times per post (the push job's
 channel, `WebPushPool.DeliverLater`'s `Task.Run`, a worker waking a worker); each is asynchronous work Rails does too.
 
+**Memory and cold start** (unit R2.5, `bench/results/oncrack-r2-mem.md`): `bench/mem` runs a list of scenarios (`idle:S`, `get:room:C:S`, `post:C:S`,
+`cable:N`, `upload:N`, `real:spread:S` with `--seed crowd`) in one container and prints every phase's peak and end memory (cgroup current and anon,
+the process's Pss and Rss) beside the GC's own view (`CAMPFIRE_MEM_LOG_MS`); `bench/mem-sweep` repeats it per environment setting; `SMAPS=1` splits
+the end state into the managed heap and the rest. Anon, not `memory.current`, is the memory a process holds: current counts the page cache the
+database and the log write. `bench/boot --timeline` prints the start-up milestones (`CAMPFIRE_BOOT_LOG`). What decided memory: (a) the two page caches
+were mis-sized: the read cache keeps a page three ways (raw, gzip, plain) and the fast path keeps the gzip member alone, so the read cache is 16 MB
+and the fast path 64 MB (`CAMPFIRE_READ_CACHE_MB`, `CAMPFIRE_FAST_PATH_MB`); (b) libvips' operation cache is 16 MB and its workers two, glibc has two
+arenas (`MALLOC_ARENA_MAX=2` in the Dockerfile; `CAMPFIRE_VIPS_CACHE_MB`, `CAMPFIRE_VIPS_CONCURRENCY`); (c) no GC setting helped (gen0 size, DATAS,
+conserve memory, heap count, hard limit, concurrent, workstation: all measured, none kept; they move a read-only phase and cost a write one).
+`CAMPFIRE_PREWARM=off` turns off the start-up thread that warms the route table, SQLite and the host builder.
+
 # once-campfire-fsharp
 
 Campfire in F#. It is a port that has to be indistinguishable in use from the Rails app in

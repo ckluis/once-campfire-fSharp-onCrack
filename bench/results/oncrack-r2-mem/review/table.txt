@@ -1,0 +1,83 @@
+Series B (reported): the two images alternating, 22:36-22:55 (new rep 3 is the recheck run of 22:33)
+workload                              before                         after after/before     Rust     port after/Rust after/port
+mixed              43,050 [42,384-43,717] x2     43,763 [43,336-44,523] x3        1.02x   18,597   24,232      2.35x      1.81x
+  posts/s                              1,373                         1,378        1.00x      688      753      2.00x      1.83x
+  cpu us/req                            78.2                          77.8                 176.0    148.9
+spread             88,512 [88,433-88,592] x2  190,209 [189,609-191,038] x3        2.15x   25,655   29,902      7.41x      6.36x
+  cpu us/req                            38.8                          16.3                 142.8    125.1
+spread_mixed       10,914 [10,412-11,416] x2     11,112 [10,948-11,274] x3        1.02x   13,155   13,584      0.84x      0.82x
+  posts/s                                644                           665        1.03x      319      393      2.08x      1.69x
+  cpu us/req                           334.2                         329.1                 267.8    273.9
+search_spread      16,968 [16,831-17,104] x2     17,356 [17,352-17,394] x3        1.02x    8,468   18,942      2.05x      0.92x
+  cpu us/req                           216.6                         212.0                 415.3    185.9
+  memory over the four workloads, peak anon / peak current MB (container):
+    before   anon 579 [572-586]  current 684
+    after    anon 462 [455-467]  current 560
+    Rust     anon 220 [218-220]  current 291
+    F# port  anon 409 [397-417]  current 495
+
+Series A (the first run, 21:53-22:14; kept for the record, see the write-up)
+workload                              before                         after after/before     Rust     port after/Rust after/port
+mixed              42,355 [42,220-42,491] x2     42,383 [42,325-42,440] x2        1.00x   18,597   24,232      2.28x      1.75x
+  posts/s                              1,362                         1,231        0.90x      688      753      1.79x      1.64x
+  cpu us/req                            78.3                          81.2                 176.0    148.9
+spread             88,628 [88,432-88,825] x2  188,361 [187,552-189,170] x2        2.13x   25,655   29,902      7.34x      6.30x
+  cpu us/req                            38.2                          16.6                 142.8    125.1
+spread_mixed       11,387 [11,135-11,638] x2     11,017 [10,979-11,056] x2        0.97x   13,155   13,584      0.84x      0.81x
+  posts/s                                679                           661        0.97x      319      393      2.07x      1.68x
+  cpu us/req                           319.5                         331.4                 267.8    273.9
+search_spread      16,623 [16,209-17,037] x2     14,305 [14,276-14,334] x2        0.86x    8,468   18,942      1.69x      0.76x
+  cpu us/req                           222.3                         263.4                 415.3    185.9
+  memory over the four workloads, peak anon / peak current MB (container):
+    before   anon 574 [543-605]  current 697
+    after    anon 454 [443-466]  current 578
+    Rust     anon 220 [218-220]  current 291
+    F# port  anon 409 [397-417]  current 495
+
+Classic memory suite, one container, phases in order: peak anon MB per phase (Pss peak in brackets where it matters)
+phase                             Rust         F# port  onCrack before   onCrack after      after, AOT
+idle:10                        15 (33)         15 (84)         16 (85)         16 (87)         18 (53)
+get:room:1:10                  17 (35)        95 (176)        90 (170)        90 (171)         34 (70)
+get:room:16:15                 21 (39)       103 (185)        90 (169)        88 (169)         28 (64)
+get:messages:16:10             23 (42)       112 (195)       105 (187)       103 (186)         38 (75)
+get:sidebar:16:10              23 (42)       104 (188)       106 (188)       103 (187)         34 (70)
+get:search:16:10               27 (46)       105 (190)       108 (191)       104 (189)         47 (84)
+get:up:16:10                   27 (46)       106 (191)       114 (198)       114 (199)         40 (77)
+idle:5                         24 (43)       106 (191)       114 (198)       114 (199)         40 (76)
+post:1:15                     97 (116)       207 (293)       179 (265)       182 (269)       185 (221)
+post:16:30                   100 (119)       206 (292)       184 (270)       190 (277)       196 (233)
+post:64:20                   103 (122)       206 (293)       184 (270)       187 (275)       197 (234)
+idle:8                       101 (120)       204 (291)       179 (265)       173 (261)       175 (212)
+cable:100                    100 (119)       216 (304)       195 (283)       195 (284)       210 (247)
+idle:5                        95 (114)       214 (303)       195 (283)       185 (275)       188 (225)
+cable:500                    104 (123)       378 (467)       209 (298)       203 (294)       252 (289)
+idle:5                        99 (118)       378 (468)       203 (292)       202 (292)       210 (247)
+cable:1000                   108 (127)       535 (625)       216 (306)       226 (317)       237 (274)
+idle:5                       105 (124)       526 (616)       213 (302)       211 (302)       237 (274)
+upload:5                     105 (124)       526 (616)       301 (401)       283 (384)       265 (305)
+idle:10                      267 (291)       695 (796)       389 (490)       285 (385)       323 (362)
+whole run                    267 (291)       695 (796)       389 (490)       285 (385)       323 (362)
+peak current                       455             934             811             738             736
+
+Realistic memory suite (crowd seed, each workload from the one before): peak anon MB (Pss) per phase
+phase                   onCrack before   onCrack after
+idle:5                         16 (85)         16 (87)
+real:spread:30               500 (587)       151 (240)
+idle:3                       373 (461)       143 (232)
+real:spread_mixed:30         447 (541)       447 (542)
+idle:3                       431 (526)       401 (497)
+real:search_spread:30        522 (617)       412 (508)
+idle:3                       474 (568)       374 (470)
+real:mixed:20                468 (562)       449 (546)
+idle:3                       423 (518)       439 (535)
+whole run                    522 (617)       449 (546)
+
+Cold start (bench/boot, docker run to the first /up, median of 7 [min-max]) and idle:
+  t3-boot-new        up 186 [182-192] ms   idle current 39 MB, anon 23, rss 107
+  t3-boot-old        up 201 [189-224] ms   idle current 39 MB, anon 23, rss 105
+  t3-boot-new        up 188 [182-196] ms   idle current 39 MB, anon 22, rss 106
+  t3-boot-old        up 192 [189-198] ms   idle current 39 MB, anon 23, rss 106
+  t3-boot-rust       up 104 [98-106] ms   idle current 18 MB, anon 17, rss 35
+  t3-boot-fsharp     up 194 [190-218] ms   idle current 37 MB, anon 21, rss 103
+  t3-boot-aot        up 97 [94-148] ms   idle current 22 MB, anon 20, rss 56
+  t3-boot-aot        up 89 [86-99] ms   idle current 22 MB, anon 20, rss 56

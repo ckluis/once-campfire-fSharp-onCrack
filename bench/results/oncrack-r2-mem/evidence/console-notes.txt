@@ -1,0 +1,73 @@
+R2.5 console output that the jsonl files do not hold (requests per second of the bench/mem phases; the jsonl has the memory columns).
+All on the mounted build of b79234d plus the diagnostics (/var/tmp/campfire-r25-base) unless it says b3 or b4, inside colima, SERVER_CPUS=0-3.
+The image's own env (DOTNET_GCgen0size=0x4000000, DOTNET_HillClimbing_Disable=1) is in force in every run; "X=1" is a variable nothing reads.
+
+== baseline, JIT image, classic scenarios (mem.jsonl label "base"), req/s of each phase
+get:room:1:10 -   get:room:16:15 - (165,708 in the first smoke run)   post:1:15 4,704.8   post:16:30 14,210.0   post:64:20 17,314.6
+get:search:16:10 153,289.5   get:up:16:10 151,920.4
+Rust, same scenarios (label "rust"): post:1:15 2,547.2   post:16:30 6,366.6   post:64:20 5,667.2
+
+== GC settings, idle:3 get:room:16:12 post:16:20 post:64:15 idle:3   (mem-gc.jsonl)
+                                      room c16     post c16    post c64     anon peak (whole)
+X=1 (64 MiB gen0, DATAS default)      141,632      14,711.7    17,479.5     182
+DOTNET_GCgen0size=0x1000000           140,427.9    15,107.1    18,836.3     228
+DOTNET_GCgen0size=0x2000000           140,632.9    14,948.7    18,629.9     225
+DOTNET_GCHeapCount=2                  141,001.6    15,301.1    19,181.7     542
+DOTNET_GCgen0MaxBudget=0x2000000      140,995.4    14,603.5    17,615.9     184
+DOTNET_gcConcurrent=0                 140,745.9    13,932.4    16,602.0     167
+
+== GC settings, 2nd batch, idle:3 get:room:16:10 post:16:15 post:64:12 idle:3   (mem-gc2.jsonl)
+DOTNET_GCDynamicAdaptationMode=0      141,328.7    15,701.8    20,167.1     893   (DATAS off: 850 MB committed, 35 collections)
+DOTNET_GCDynamicAdaptationMode=1      139,246.7    14,640.5    17,722.7     183
+DOTNET_GCgen0size=0x400000            137,508.7    14,907.8    18,814.0     218
+DOTNET_GCConserveMemory=9             138,864.9    14,649.3    17,632.0     180
+
+== GC settings, idle:3 post:16:20 post:64:12 idle:3   (mem-gc3.jsonl)
+DOTNET_GCHeapHardLimit=0x10000000                  post c16 14,717.9   post c64 19,037.7    anon peak 197
+DOTNET_GCgen0MaxBudget=0x800000                    14,318.9            17,811.0             179
+GCgen0MaxBudget=8M GCgen0size=8M gcConcurrent=0    14,574.8            19,038.7             223
+DOTNET_GCgen1size=0x1000000                        14,265.4            17,568.8             179
+DOTNET_GCHeapHardLimitPercent=10                   14,468.7            17,795.6             175
+idle:3 get:room:16:10 post:16:20 post:64:12 idle:3 with workstation GC:
+DOTNET_gcServer=0                                  room 139,870.9   post c16 14,887.9   post c64 17,707.5    anon peak 187
+DOTNET_gcServer=0 gen0size=16M gcConcurrent=0      room 131,193.1   post c16 14,130.3   post c64 17,142.0    anon peak 337
+
+== realistic workloads from a cold container, 25 s each (mem-real*.jsonl, seed crowd), req/s
+                                        spread     spread_mixed   search_spread   mixed(20 s)
+base (RC 64, FP 32), 30 s windows       79,307.7   11,719.9       19,524.8        43,444.2
+DOTNET_GCConserveMemory=7               78,427.0   11,279.0       20,454.6        -
+DOTNET_GCgen0size=0x1000000             81,570.5   11,700.6       20,020.8        -
+MALLOC_ARENA_MAX=2                      79,886.5   11,290.4       20,228.6        -
+CAMPFIRE_READ_CACHE_MB=16               75,259.3   11,450.1       20,565.6        -
+RC=16 FRAGMENT_CACHE_MB=16              75,526.6   11,159.9       20,669.0        -
+CAMPFIRE_READ_CACHE_MB=32               74,818.1   11,586.1       20,540.2        -
+RC=16 FAST_PATH_MB=48                   156,356.2  11,255.0       20,708.7        44,056.8   (15 s)
+RC=16 FAST_PATH_MB=64 FRAGMENT_MB=16    155,916.5  11,403.8       21,204.0        43,260.5
+RC=8  FAST_PATH_MB=64 FRAGMENT_MB=16    156,009.4  11,237.0       21,181.8        43,952.6
+
+== spread three times in one container, 20 s each (mem-rc.jsonl), req/s
+X=1 (RC 64, FP 32)             77,958.2   79,371.6   78,885.4
+RC=16                          75,672.7   75,206.8   76,083.5
+RC=16 FAST_PATH_MB=48          156,117.9  158,374.9  158,733.3
+RC=8                           74,941.6   78,711.9   77,362.2
+
+== libvips and malloc, idle:3 post:16:15 upload:5 idle:6 (mem-vips.jsonl, mem-upload.jsonl), anon peak of the whole run
+MALLOC_ARENA_MAX=2 307 (base 339)   MALLOC_ARENA_MAX=1 297   VIPS_CONCURRENCY=1 311   MALLOC_TRIM_THRESHOLD_=131072 283
+b3: X=1 331   CAMPFIRE_VIPS_CACHE_MB=0 332   =16 307   CAMPFIRE_VIPS_CONCURRENCY=2 318   cache 16 + concurrency 2 + MALLOC_ARENA_MAX=2 253
+upload alone from idle (idle:3 upload:8 idle:3): X=1 225 / 214   cache 16 + concurrency 2 + arena 2: 123 / 120
+upload:12 median POST-to-thumbnail: X=1 29.0 ms (207 MB anon)   cache 16 + conc 2 + arena 2: 29.9 ms (107)   cache 16 + arena 2: 27.6 ms (145)
+Rust, post:16:15 upload:5 idle:3: anon 96 -> 259 (the same libvips: +163). onCrack base: 175 -> 339 (+164). F# port: 203 -> 371.
+
+== MALLOC_ARENA_MAX=2 against the default, b3, paired A B A B (mem-arena.jsonl), req/s
+                     room c16    post c1    post c16    post c64
+X=1                  137,910.2   4,575.7    15,659.2    17,510.2
+ARENA_MAX=2          140,202.3   4,615.5    15,781.8    17,441.8
+X=1                  140,501.1   4,609.6    15,846.2    17,455.2
+ARENA_MAX=2          138,575.5   4,613.2    15,683.9    17,496.3
+
+== start-up, bench/boot, 7 fresh containers each (boot.jsonl), median [min-max] ms, docker run to the first /up
+b3, X=1                         214 [189-222]     DOTNET_TieredPGO=0            195 [189-208]
+DOTNET_gcServer=0               197 [187-210]     TieredPGO=0 + gcServer=0      193 [183-217]
+QuickJitForLoops=1 OSR=1        198 [193-225]
+b4 (prewarm): CAMPFIRE_PREWARM=off 201 [194-310]   default 188 [181-205]   off 197 [193-205]   default 184 [181-195]
+docker run --network host --entrypoint /bin/true campfire-oncrack:app: 83, 67, 74, 79, 70 ms (the floor under every number above)
