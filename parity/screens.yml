@@ -1358,6 +1358,11 @@
   path: /searches?q=wifi
   covers: [searches/index, messages/_message]
 
+- id: search/results/order
+  as: david      # "launch": seventeen matches whose ids and times disagree, so the page shows upstream's order (newest 100 by id, Rails dbc7620)
+  path: /searches?q=launch
+  covers: [searches/index, messages/_message]
+
 - id: search/no_results
   as: david
   path: /searches?q=zebra

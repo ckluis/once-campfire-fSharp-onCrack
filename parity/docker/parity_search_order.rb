@@ -8,22 +8,19 @@
 # contract checks that order. onCrack follows current upstream, so the oracle has to as well. This
 # is the whole of the change: the same scope, the same 100, reordered by the index's rowid.
 #
-# It matters when ids and times disagree. The default seed's fixtures do (the search for "launch" lists
-# nine messages in a different order by time than by id), so `search/submitted` renders differently.
-#
-# PARITY_SEARCH_ORDER=created_at restores 90b3300's order, for running the F# port (which keeps it)
-# against this oracle.
-unless ENV["PARITY_SEARCH_ORDER"] == "created_at"
-  Rails.application.config.to_prepare do
-    SearchesController.class_eval do
-      private
-        def set_messages
-          if query.present?
-            @messages = Current.user.reachable_messages.search(query).reorder("idx.rowid").last(100)
-          else
-            @messages = Message.none
-          end
+# It matters when ids and times disagree. The default seed's fixtures do: the search for "launch" lists
+# seventeen messages in a different order by time than by id, which `search/results/order` photographs
+# (david's results; the F# port, which keeps 90b3300's order, differs from this oracle there).
+# Docker runtime only: a native reference runs reference/ as it is.
+Rails.application.config.to_prepare do
+  SearchesController.class_eval do
+    private
+      def set_messages
+        if query.present?
+          @messages = Current.user.reachable_messages.search(query).reorder("idx.rowid").last(100)
+        else
+          @messages = Message.none
         end
-    end
+      end
   end
 end
