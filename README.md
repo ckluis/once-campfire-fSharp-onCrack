@@ -228,6 +228,13 @@ specific to this port are listed below, each citing the reference file it depart
     `resume_session`, at most hourly) happens on the first request after it falls due, which a replay never answers: replays stop a
     second before it is due. The body, status and every other header are the app's answer to the same request bytes. Tested by
     `FastPathTests`. `CAMPFIRE_FAST_PATH=off` answers every request through the app.
+- **onCrack** (`bench/results/oncrack-r3-fresh-auth.md`, unit R3.2):
+  - Authorization on a cache hit is fresh by default, as in Rails and upstream's contract: every request reads its session and
+    user rows, a cached room or messages page is served after a membership query finds the row, and a front-server replay first
+    runs one narrow query for the session, its user and the membership (`FreshAuth` in `src/Campfire.Db/Session.fs`).
+    `CAMPFIRE_FRESH_AUTH=0` is onCrack's opt-in: a hit reuses the decision its miss made, kept under the version counters and
+    dropped on any commit by any connection. The answers are the same under every attack the tests make (`FreshAuthTests`,
+    `ForeignWriteTests`, both run in both modes); the work per hit is not, and that mode is not comparable with upstream's numbers.
 - **onCrack** (`bench/results/oncrack-r2-verifier.md`, the round 2 verifier's findings):
   - The messages page (`messages#index`) has no `fresh_when`: its ETag is `Rack::ETag`'s digest of the page, and it has no
     `Last-Modified` (`reference/app/controllers/messages_controller.rb` has `fresh_when @messages`, an ETag of the records' cache

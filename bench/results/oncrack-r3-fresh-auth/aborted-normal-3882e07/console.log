@@ -1,0 +1,74 @@
+oncrack round 1: room_show 16 clients 94645.9 req/s
+oncrack round 1: messages_page 16 clients 140399.1 req/s
+oncrack round 1: sidebar 16 clients 150306.8 req/s
+oncrack round 1: search 16 clients 146732.0 req/s
+oncrack round 1: post_message 16 clients 14646.5 req/s
+oncrack-cached round 1: room_show 16 clients 163689.5 req/s
+oncrack-cached round 1: messages_page 16 clients 170603.0 req/s
+oncrack-cached round 1: sidebar 16 clients 179727.4 req/s
+oncrack-cached round 1: search 16 clients 175247.5 req/s
+oncrack-cached round 1: post_message 16 clients 11448.6 req/s
+rust round 1: room_show 16 clients 47689.2 req/s
+rust round 1: messages_page 16 clients 43032.3 req/s
+rust round 1: sidebar 16 clients 53931.6 req/s
+rust round 1: search 16 clients 51207.7 req/s
+rust round 1: post_message 16 clients 6301.1 req/s
+c round 1: room_show 16 clients 73977.8 req/s
+c round 1: messages_page 16 clients 75571.5 req/s
+c round 1: sidebar 16 clients 80176.5 req/s
+c round 1: search 16 clients 81580.5 req/s
+c round 1: post_message 16 clients 5687.1 req/s
+fsharp round 1: room_show 16 clients 34928.4 req/s
+fsharp round 1: messages_page 16 clients 41321.3 req/s
+fsharp round 1: sidebar 16 clients 37070.9 req/s
+fsharp round 1: search 16 clients 33180.2 req/s
+fsharp round 1: post_message 16 clients 9143.7 req/s
+fsharp round 2: room_show 16 clients 34777.7 req/s
+fsharp round 2: messages_page 16 clients 40942.9 req/s
+fsharp round 2: sidebar 16 clients 36217.6 req/s
+fsharp round 2: search 16 clients 32536.9 req/s
+fsharp round 2: post_message 16 clients 9159.4 req/s
+c round 2: room_show 16 clients 74338.6 req/s
+c round 2: messages_page 16 clients 75566.3 req/s
+c round 2: sidebar 16 clients 79777.9 req/s
+c round 2: search 16 clients 78682.7 req/s
+c round 2: post_message 16 clients 5653.8 req/s
+rust round 2: room_show 16 clients 47924.9 req/s
+rust round 2: messages_page 16 clients 44213.1 req/s
+rust round 2: sidebar 16 clients 53237.5 req/s
+rust round 2: search 16 clients 52035.0 req/s
+rust round 2: post_message 16 clients 6255.0 req/s
+oncrack-cached round 2: room_show 16 clients 169384.6 req/s
+oncrack-cached round 2: messages_page 16 clients 174343.5 req/s
+oncrack-cached round 2: sidebar 16 clients 184809.7 req/s
+oncrack-cached round 2: search 16 clients 173906.5 req/s
+oncrack-cached round 2: post_message 16 clients 13116.2 req/s
+oncrack round 2: room_show 16 clients 136199.0 req/s
+oncrack round 2: messages_page 16 clients 137277.0 req/s
+oncrack round 2: sidebar 16 clients 148990.6 req/s
+oncrack round 2: search 16 clients 150012.9 req/s
+oncrack round 2: post_message 16 clients 13501.6 req/s
+oncrack round 3: room_show 16 clients 125510.6 req/s
+oncrack round 3: messages_page 16 clients 135682.1 req/s
+oncrack round 3: sidebar 16 clients 78370.7 req/s
+oncrack round 3: search 16 clients 126499.8 req/s
+oncrack round 3: post_message 16 clients 11747.9 req/s
+oncrack-cached round 3: room_show 16 clients 139220.0 req/s
+oncrack-cached round 3: messages_page 16 clients 145815.3 req/s
+oncrack-cached round 3: sidebar 16 clients 151621.3 req/s
+oncrack-cached round 3: search 16 clients 162767.3 req/s
+oncrack-cached round 3: post_message 16 clients 11175.0 req/s
+rust round 3: room_show 16 clients 37070.9 req/s
+rust round 3: messages_page 16 clients 42915.5 req/s
+rust round 3: sidebar 16 clients 50758.2 req/s
+rust round 3: search 16 clients 50295.9 req/s
+/mnt/cfv/once-campfire-verification/bench/compare.rb:86:in `block in <top (required)>': post_message: unsuccessful requests {"avg_bytes"=>1711, "conc"=>4, "errors"=>0, "gzip"=>true, "invalid_reasons"=>{"unsuccessful or empty response"=>21445}, "invalid_responses"=>21445, "latency"=>{"max_ms"=>5.315, "mean_ms"=>0.36, "n"=>21715, "p50_ms"=>0.328, "p90_ms"=>0.51, "p99_ms"=>0.959}, "ok"=>270, "path"=>"POST /rooms/201306877/messages", "rps"=>135.0, "secs"=>2.0, "statuses"=>{"200"=>270, "500"=>21445}, "validation"=>"route-contract-v1", "generator_cpu_percent"=>42.42687207094717} (RuntimeError)
+	from /mnt/cfv/once-campfire-verification/bench/compare.rb:190:in `block (3 levels) in <top (required)>'
+	from /mnt/cfv/once-campfire-verification/bench/compare.rb:173:in `each'
+	from /mnt/cfv/once-campfire-verification/bench/compare.rb:173:in `block (2 levels) in <top (required)>'
+	from /mnt/cfv/once-campfire-verification/bench/compare.rb:91:in `each'
+	from /mnt/cfv/once-campfire-verification/bench/compare.rb:91:in `block in <top (required)>'
+	from /mnt/cfv/once-campfire-verification/bench/compare.rb:89:in `times'
+	from /mnt/cfv/once-campfire-verification/bench/compare.rb:89:in `<top (required)>'
+	from bin/benchmark:5:in `require_relative'
+	from bin/benchmark:5:in `<main>'

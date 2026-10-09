@@ -1,0 +1,34 @@
+oncrack round 1: room_show 16 clients 145200.6 req/s
+oncrack round 1: messages_page 16 clients 150456.1 req/s
+oncrack round 1: sidebar 16 clients 158513.2 req/s
+oncrack round 1: search 16 clients 154865.6 req/s
+oncrack round 1: post_message 16 clients 14782.1 req/s
+oncrack-cached round 1: room_show 16 clients 173008.7 req/s
+oncrack-cached round 1: messages_page 16 clients 178278.9 req/s
+oncrack-cached round 1: sidebar 16 clients 188205.2 req/s
+oncrack-cached round 1: search 16 clients 182014.2 req/s
+oncrack-cached round 1: post_message 16 clients 14623.3 req/s
+rust round 1: room_show 16 clients 23385.5 req/s
+rust round 1: messages_page 16 clients 25228.9 req/s
+rust round 1: sidebar 16 clients 33692.2 req/s
+rust round 1: search 16 clients 37212.1 req/s
+rust round 1: post_message 16 clients 4096.9 req/s
+c round 1: room_show 16 clients 54665.1 req/s
+c round 1: messages_page 16 clients 59582.0 req/s
+c round 1: sidebar 16 clients 63471.6 req/s
+c round 1: search 16 clients 58785.3 req/s
+c round 1: post_message 16 clients 4739.8 req/s
+fsharp round 1: room_show 16 clients 24107.3 req/s
+fsharp round 1: messages_page 16 clients 22696.3 req/s
+fsharp round 1: sidebar 16 clients 30896.4 req/s
+fsharp round 1: search 16 clients 21327.1 req/s
+fsharp round 1: post_message 16 clients 7413.7 req/s
+fsharp round 2: room_show 16 clients 27390.7 req/s
+fsharp round 2: messages_page 16 clients 41386.2 req/s
+fsharp round 2: sidebar 16 clients 34645.3 req/s
+#<Thread:0x0000e82cb7e95148 /usr/lib/ruby/3.2.0/open3.rb:296 run> terminated with exception (report_on_exception is true):
+/usr/lib/ruby/3.2.0/open3.rb:296:in `read': stream closed in another thread (IOError)
+	from /usr/lib/ruby/3.2.0/open3.rb:296:in `block (2 levels) in capture3'
+#<Thread:0x0000e82cb7e94f68 /usr/lib/ruby/3.2.0/open3.rb:297 run> terminated with exception (report_on_exception is true):
+/usr/lib/ruby/3.2.0/open3.rb:297:in `read': stream closed in another thread (IOError)
+	from /usr/lib/ruby/3.2.0/open3.rb:297:in `block (2 levels) in capture3'

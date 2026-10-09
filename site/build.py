@@ -267,6 +267,29 @@ UPBASE = {'rails': 'Rails', 'rust': 'Rust', 'c': 'C', 'fsharp': 'F# port', 'oncr
 UPREADS = ['room_show', 'messages_page', 'sidebar', 'search']
 
 
+# ---- round 3, unit R3.2: fresh authorization on every hit (the default since), the same harness, current Rust and C (bench/results/oncrack-r3-fresh-auth).
+# The normal profile pools two sessions' six rounds per cell, a rule fixed before the second ran (PLAN.md there); the mixed profile is one session.
+R3 = 'bench/results/oncrack-r3-fresh-auth'
+R3N = [R3 + '/upstream-normal-noisy', R3 + '/upstream-normal-2']
+R3M = R3 + '/upstream-mixed'
+R3APPS = ['oncrack', 'oncrack-cached', 'rust', 'c', 'fsharp']
+UPBASE['oncrack-cached'] = 'onCrack, cached decision'
+
+
+def up3(app, route, mixed=False, stat='median'):
+    """bin/benchmark's requests/sec at c=16 for one app and route in round 3: pooled over both normal sessions (six rounds), or the mixed session."""
+    dirs = [R3M] if mixed else R3N
+    files = sorted(os.path.relpath(f, REPO) for d in dirs for f in glob.glob(os.path.join(REPO, d, app + '-[0-9].json')))
+    key = 'mixed_http' if mixed else 'http'
+    vals = [x['rps'] for f in files for x in jload(f)[key] if x['route'] == route and x['conc'] == 16]
+    if len(vals) != (3 if mixed else 6) or len(vals) != len(files):
+        raise SystemExit('build: %s %s: %d samples in %d rounds' % (app, route, len(vals), len(files)))
+    v = {'median': statistics.median, 'min': min, 'max': max}[stat](vals)
+    what = 'mixed profile, 10 posts/s writer, one session' if mixed else 'normal profile, two sessions pooled'
+    return V(v, '%s, %s, c=16, req/s, %s of %d rounds (verification harness, %s)' % (UPBASE[app] + (' ' + UPREV[app] if app in UPREV else ''), RNAME[route], stat, len(vals), what),
+             files, '%s of %s (%s[route=%s, conc=16].rps)' % (stat, ', '.join(g(float(x)) for x in vals), key, route))
+
+
 def upname(a, link=True):
     """An app's name with its measured upstream revision marked as a commit (not a number)."""
     return UPBASE[a] + ((' ' + lit(UPREV[a], 'commit')) if a in UPREV and link else '')
@@ -309,6 +332,25 @@ def facts():
                              'onCrack over %s, geometric mean of the five workloads, c=16, verification harness, same session' % UPBASE[b])
         F['upm_geo', b] = geo([F['upm']['oncrack', r, 'median'].over(F['upm'][b, r, 'median']) for r in UPREADS],
                               'onCrack over %s, geometric mean of the four mixed-profile reads, c=16, verification harness, same session' % UPBASE[b])
+    F['up3'] = {(a, r, st): up3(a, r, False, st) for a in R3APPS for r, _ in ROUTES for st in ('median', 'min', 'max')}
+    F['up3m'] = {(a, r, st): up3(a, r, True, st) for a in R3APPS for r in UPREADS for st in ('median', 'min', 'max')}
+    for num in ('oncrack', 'oncrack-cached'):
+        for b in ('rust', 'c', 'fsharp', 'oncrack-cached'):
+            if b == num:
+                continue
+            F['up3_geo', num, b] = geo([F['up3'][num, r, 'median'].over(F['up3'][b, r, 'median']) for r, _ in ROUTES],
+                                       '%s over %s, geometric mean of the five workloads, c=16, verification harness, two sessions pooled' % (UPBASE[num], UPBASE[b]))
+            F['up3m_geo', num, b] = geo([F['up3m'][num, r, 'median'].over(F['up3m'][b, r, 'median']) for r in UPREADS],
+                                        '%s over %s, geometric mean of the four mixed-profile reads, c=16, verification harness' % (UPBASE[num], UPBASE[b]))
+    rv = [json.loads(l) for l in open(os.path.join(REPO, R3, 'review.jsonl')) if '"window"' in l]
+    rkey = lambda d: 'oncrack-cached' if d['app'] == 'oncrack' and 'cached' in d['tag'] else d['app']
+    for a in ('oncrack', 'oncrack-cached', 'rust', 'c'):
+        for ph in ('room_show', 'mixed'):
+            xs = [d['server_cpu_us_per_req'] for d in rv if rkey(d) == a and d['phase'] == ph]
+            F['cpu3', a, ph] = V(statistics.median(xs), '%s, server CPU us per request, %s, median of %d hand re-runs (review.py)' % (UPBASE[a] + (' ' + UPREV[a] if a in UPREV else ''), 'room page' if ph == 'room_show' else 'mixed reads', len(xs)),
+                                 [R3 + '/review.jsonl'], 'median of ' + ', '.join('%.1f' % x for x in xs))
+    F['up3_rounds'] = V(len(F['up3']['oncrack', 'room_show', 'median'].files), 'rounds per app and workload, two normal sessions pooled (verification harness)',
+                        F['up3']['oncrack', 'room_show', 'median'].files, 'oncrack-N.json files over both sessions')
     F['up_c_rust'] = geo([F['up']['c', r, 'median'].over(F['up']['rust', r, 'median']) for r, _ in ROUTES], 'C over Rust, geometric mean of the five workloads, c=16, verification harness')
     sm = jload(UPN + '/summary.json')['metadata']
     F['up_conc'] = param(16, 'concurrent clients (verification harness)', UPN + '/summary.json', 'metadata.concurrencies "%s"' % sm['concurrencies'])
@@ -520,34 +562,37 @@ def tbl(head, rows, caption=None, cls=''):
 def hero(F, cl):
     c16 = F['up_conc']
     tiles = [
-        ('p-upstream', counter(F['up_geo', 'rust'], 2, '×'), 'current upstream Rust, all five workloads, their harness'),
-        ('p-upstream', counter(F['up_geo', 'c'], 2, '×'), 'current upstream C, same session'),
-        ('p-upstream', counter(F['up_geo', 'fsharp'], 2, '×'), 'the F# port it was forked from, same session'),
+        ('p-fresh', counter(F['up3_geo', 'oncrack', 'rust'], 2, '×'), 'current upstream Rust, all five workloads, their harness and their contract'),
+        ('p-fresh', counter(F['up3_geo', 'oncrack', 'c'], 2, '×'), 'current upstream C, same sessions'),
+        ('p-fresh', counter(F['up3_geo', 'oncrack', 'fsharp'], 2, '×'), 'the F# port it was forked from, same sessions'),
         ('p-pixels', '<span class="num-big">%s<i class="sl">/</i>%s</span>' % (L.n(F['pp_total']['equal'], link=False), L.n(F['pp_total']['screenshots'], link=False)),
          'screenshots pixel-equal to Rails'),
     ]
     th = ''.join('<a class="ht" href="#%s">%s<span>%s</span></a>' % t for t in tiles)
     rows = []
     for r, rn in ROUTES:
-        rows.append([rn[0].upper() + rn[1:], '<b>%s</b>' % L.n(F['up']['oncrack', r, 'median']),
-                     L.x(F['up']['oncrack', r, 'median'].over(F['up']['rust', r, 'median'])), L.x(F['up']['oncrack', r, 'median'].over(F['up']['c', r, 'median']))] +
-                    [L.n(F['up'][a, r, 'median']) for a in ('rust', 'c', 'fsharp', 'rails')])
+        rows.append([rn[0].upper() + rn[1:], '<b>%s</b>' % L.n(F['up3']['oncrack', r, 'median']),
+                     L.x(F['up3']['oncrack', r, 'median'].over(F['up3']['rust', r, 'median'])), L.x(F['up3']['oncrack', r, 'median'].over(F['up3']['c', r, 'median']))] +
+                    [L.n(F['up3'][a, r, 'median']) for a in ('rust', 'c', 'fsharp', 'oncrack-cached')])
     table = tbl([('Requests/sec, %s clients' % L.n(c16, link=False), False), ('onCrack', True), ('&divide; Rust', True), ('&divide; C', True)] +
-                [(upname(a), True) for a in ('rust', 'c', 'fsharp', 'rails')], rows)
+                [(upname(a), True) for a in ('rust', 'c', 'fsharp')] + [('onCrack, cached decision (opt-in)', True)], rows)
     return ('<section class="hero" id="top" aria-labelledby="hero-h"><div class="glow" aria-hidden="true"></div><div class="wrap">'
             '<p class="kicker hero-in">Basecamp&#39;s ONCE Campfire &middot; the F# port, unchained</p>'
             '<h1 id="hero-h" class="hero-in">onCrack.</h1>'
             '<p class="lede hero-in">The same Campfire, pixel for pixel, on a server that is free to do less work: it keeps finished pages until a commit '
-            'changes what they show, and commits concurrent posts together. Measured with Basecamp&#39;s own verification harness, in one session, beside current upstream Rails, Rust and C '
+            'changes what they show, and commits concurrent posts together. Who may see a kept page is decided again on every request, as upstream asks. Measured with Basecamp&#39;s own verification harness, beside current upstream Rust and C '
             'and the F# port it was forked from. <em>Every number on this page links to the file it came from.</em></p>'
             '<div class="htiles hero-in">%s</div>'
             '<figure class="climb hero-in" id="upstream" aria-labelledby="up-cap">%s'
-            '<figcaption id="up-cap"><span><b>Current upstream, their method.</b> <code>once-campfire-verification</code>&#39;s <code>bin/benchmark</code>: median of %s rounds of %s s at %s clients, '
+            '<figcaption id="up-cap"><span><b>Current upstream, their method, their contract.</b> <code>once-campfire-verification</code>&#39;s <code>bin/benchmark</code>: median of %s rounds (two sessions of three) of %s s at %s clients, '
             'every response validated against the seed, every acknowledged post audited in the database and its search index; four server CPUs and four for the load generator, on this '
-            'project&#39;s VM, not their Ryzen. onCrack&#39;s and the port&#39;s search is checked against Rails <span data-lit="commit">90b3300</span>&#39;s order, which they render. '
-            '<b>onCrack authorizes a cache hit from a decision kept under the database&#39;s commit counter</b>, where upstream re-reads the session and membership on every hit.</span>%s</figcaption></figure>'
+            'project&#39;s VM, not their Ryzen. <b>onCrack re-reads the session and the room membership on every cache hit</b>, as upstream&#39;s implementations do (the default since round three); '
+            'its older cached decision, faster and not comparable, is the last column and an opt-in. Other work on the Mac moved every engine&#39;s samples during these sessions, so read the ranges in the details; '
+            'per room page, Rust spends %s and C %s of onCrack&#39;s CPU (hand re-runs). onCrack&#39;s and the port&#39;s search is checked against Rails <span data-lit="commit">90b3300</span>&#39;s order, which they render.</span>%s</figcaption></figure>'
             '<p class="btw" id="btw"><a href="#p-climb-chart">The climb against pinned Rust</a> <span>Every logged version over Rust <span data-lit="commit">ccece30</span>&#39;s stored medians, now in a panel.</span></p>'
-            '</div></section>' % (th, table, L.n(F['up_rounds']), L.n(F['up_secs']), L.n(c16), details('p-upstream', 'The details')))
+            '</div></section>' % (th, table, L.n(F['up3_rounds']), L.n(F['up_secs']), L.n(c16),
+                                  L.x(F['cpu3', 'rust', 'room_show'].over(F['cpu3', 'oncrack', 'room_show'])), L.x(F['cpu3', 'c', 'room_show'].over(F['cpu3', 'oncrack', 'room_show'])),
+                                  details('p-fresh', 'The details')))
 
 
 def same_software(F, sp):
@@ -1111,6 +1156,46 @@ def p_ledger():
     return panel('p-ledger', 'Every number', 'The ledger', '<div data-ledger>%s</div>' % body, 'check')
 
 
+def p_fresh(F):
+    def rng(t, a, r):
+        return '%s <span class="rng">[%s&ndash;%s]</span>' % (L.n(t[a, r, 'median']), L.n(t[a, r, 'min']), L.n(t[a, r, 'max']))
+    names = {'oncrack': 'onCrack (fresh, default)', 'oncrack-cached': 'onCrack, cached decision (opt-in)'}
+    nm = lambda a: names.get(a) or upname(a)
+    normal = tbl([('Implementation', False)] + [(rn, True) for _, rn in ROUTES], [[nm(a)] + [rng(F['up3'], a, r) for r, _ in ROUTES] for a in R3APPS],
+                 'Normal profile, two sessions pooled: median [observed min&ndash;max] of %s rounds, requests/sec at %s clients' % (L.n(F['up3_rounds']), L.n(F['up_conc'])))
+    mixed = tbl([('Implementation', False)] + [(RNAME[r], True) for r in UPREADS], [[nm(a)] + [rng(F['up3m'], a, r) for r in UPREADS] for a in R3APPS],
+                'Mixed profile, one session: reads/sec at %s clients while one writer posts up to %s messages/s into HQ' % (L.n(F['up_conc']), L.n(F['up_rate'])))
+    ratios = tbl([('Over', False), ('onCrack, five workloads', True), ('onCrack, four mixed reads', True), ('cached decision, five workloads', True)],
+                 [[upname(b), L.x(F['up3_geo', 'oncrack', b]), L.x(F['up3m_geo', 'oncrack', b]), L.x(F['up3_geo', 'oncrack-cached', b])] for b in ('rust', 'c', 'fsharp')],
+                 'Geometric means of the medians')
+    cpu = tbl([('Server CPU per request, &micro;s', False), ('Room page', True), ('Mixed reads', True)],
+              [[nm(a), L.n(F['cpu3', a, 'room_show'], D1), L.n(F['cpu3', a, 'mixed'], D1)] for a in ('oncrack', 'oncrack-cached', 'rust', 'c')],
+              'Hand re-runs (a warm-up, then a timed window at the same clients, CPU from the container&#39;s cgroup): medians')
+    body = ''.join([
+        '<p class="lead">Upstream&#39;s contract re-reads the session and the room membership on every cache hit; until round three onCrack kept the decision its first request made and dropped it on any commit. '
+        'Now, by default, every request reads its session and user rows, a kept room or messages page is served after a membership query finds the row, and the front server&#39;s replay first runs one narrow query '
+        'for the session, its user and the membership. A room page hit then costs %s the CPU of the cached decision, and it is the number to compare: <code>CAMPFIRE_FRESH_AUTH=0</code> keeps the cached decision as an opt-in.</p>' % L.x(F['cpu3', 'oncrack', 'room_show'].over(F['cpu3', 'oncrack-cached', 'room_show'])),
+        normal, mixed, ratios, cpu,
+        '<h3>Read with care</h3><ul class="caveats">'
+        '<li><b>A busy host.</b> Another session on the Mac was compiling (Erlang and Go builds, more than a core at times) while these ran. The VM&#39;s CPUs are not pinned to cores, so every engine&#39;s samples swung: '
+        'the two normal sessions put onCrack over Rust at %s and %s. The headline pools both, a rule fixed before the second ran. The hand re-runs&#39; CPU per request is the steadier comparison.</li>'
+        '<li><b>Mixed is one session.</b> Rust&#39;s and C&#39;s mixed medians sit well under round two&#39;s on the same images; its multiples are the least certain on the page.</li>'
+        '<li><b>Not their machine.</b> Four of this VM&#39;s CPUs per side, not the Ryzen&#39;s; compare ratios, not absolute numbers, with their report.</li></ul>'
+        % (L.x(geo([up3s('upstream-normal-noisy', 'oncrack', r).over(up3s('upstream-normal-noisy', 'rust', r)) for r, _ in ROUTES], 'onCrack over Rust, geometric mean of the five workloads, first normal session of round 3')),
+           L.x(geo([up3s('upstream-normal-2', 'oncrack', r).over(up3s('upstream-normal-2', 'rust', r)) for r, _ in ROUTES], 'onCrack over Rust, geometric mean of the five workloads, second normal session of round 3'))),
+        srcline(R3N[0] + '/', R3N[1] + '/', R3M + '/', R3 + '/review.jsonl', R3 + '/PLAN.md', 'bench/results/oncrack-r3-fresh-auth.md', lead='Sources'),
+    ])
+    return panel('p-fresh', 'Round three: their contract', 'Fresh authorization, against Rust, C and the port', body, 'upstream')
+
+
+def up3s(session, app, route):
+    """One round 3 normal session's median for one app and route at c=16."""
+    files = sorted(os.path.relpath(f, REPO) for f in glob.glob(os.path.join(REPO, R3, session, app + '-[0-9].json')))
+    vals = [x['rps'] for f in files for x in jload(f)['http'] if x['route'] == route and x['conc'] == 16]
+    return V(statistics.median(vals), '%s, %s, c=16, req/s, median of %d rounds (verification harness, %s)' % (UPBASE[app], RNAME[route], len(vals), session), files,
+             'median of ' + ', '.join(g(float(x)) for x in vals))
+
+
 def p_upstream(F):
     def rng(t, a, r):
         return '%s <span class="rng">[%s&ndash;%s]</span>' % (L.n(t[a, r, 'median']), L.n(t[a, r, 'min']), L.n(t[a, r, 'max']))
@@ -1131,13 +1216,13 @@ def p_upstream(F):
         normal, mixed, ratios, val, kloc,
         '<h3>Read with care</h3><ul class="caveats">'
         '<li><b>Not their machine.</b> Four of this VM&#39;s CPUs per side, not the Ryzen&#39;s; compare ratios, not absolute numbers, with their report.</li>'
-        '<li><b>A different freshness mechanism.</b> Upstream re-reads the session and membership on every cache hit. onCrack keeps the decision and drops it on any commit, by any connection (it watches SQLite&#39;s WAL index); '
-        'the round&#39;s verifier attacked that with foreign writers and it held. The cost of a hit is not the same work as theirs.</li>'
+        '<li><b>A different freshness mechanism, then.</b> Upstream re-reads the session and membership on every cache hit. In round two onCrack kept the decision and dropped it on any commit, by any connection (it watches SQLite&#39;s WAL index); '
+        'the round&#39;s verifier attacked that with foreign writers and it held, but a hit was not the same work as theirs. Round three made fresh authorization the default; its numbers are the headline.</li>'
         '<li><b>Search order.</b> onCrack and the port render Rails <span data-lit="commit">90b3300</span>, whose search lists matches by time; upstream now lists them by id. Their search is validated against the old order.</li>'
         '<li><b>One viewer, one URL.</b> Their read workloads are a cache-hit benchmark; the appendix of the results file keeps this project&#39;s realistic workloads.</li></ul>',
         srcline(UPN + '/', UPM + '/', R2 + '/kloc.json', R2 + '/upstream-performance-review.md', 'bench/results/oncrack-r2-final.md', lead='Sources'),
     ])
-    return panel('p-upstream', 'Current upstream, their harness', 'onCrack against Rust, C, Rails and the port', body, 'upstream')
+    return panel('p-upstream', 'Round two: the cached decision', 'onCrack against Rust, C, Rails and the port', body, 'upstream')
 
 
 def p_climb_chart(cl):
@@ -1852,7 +1937,7 @@ def build():
                   [('#upstream', 'Upstream'), ('#sbs', 'Same software'), ('#mix', 'Reads &amp; writes'), ('#does', 'What it does'), ('#fanout', 'Fan-out'), ('#check', 'Check it')])
     main = ''.join([hero(F, cl), same_software(F, sp), mix_beat(F), does_beat(F), fanout(F), proof(F), cta(F), more_row()])
     panels = [p_five(F), p_sbs(F, sp), p_mix(F), p_does(F), p_correct(F), p_durability(F), p_pixels(F), p_ceiling(F), p_rust(F), p_fanout(F), p_repro(F),
-              p_upstream(F), p_climb_chart(cl), p_climb(cl), p_rules(), p_port_era()]
+              p_fresh(F), p_upstream(F), p_climb_chart(cl), p_climb(cl), p_rules(), p_port_era()]
     panels.append(p_ledger())          # last: it lists every row the others issued
     main = main.replace('__NROWS__', str(len(L.rows)))
     body = ''.join([

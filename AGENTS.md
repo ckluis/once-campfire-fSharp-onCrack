@@ -27,7 +27,7 @@ If one of these tools doesn't exist yet, building it is part of your unit. Recor
 screenshot layer, per seed; see its header for the retry of cells the harness could not capture). `bench/quick` runs onCrack only and
 `bench/quick compare DIR` scores it against the stored Rust and F# port medians of `bench/results/phase7-final/`; `bench/quick log` appends to
 `bench/results/oncrack-log.jsonl` (the port's own `phase7-log.jsonl` is history) and rebuilds `index.html`. Its hero is the current-upstream
-comparison (`site/build.py`'s `hero`, from `bench/results/oncrack-r2-final/upstream-*`); the climb chart (`bench/progress/climb.py`: onCrack over the pinned
+comparison (`site/build.py`'s `hero`, from `bench/results/oncrack-r3-fresh-auth/upstream-*`: fresh authorization, two normal sessions pooled; round 2's cached-decision sessions are the panel `p-upstream`); the climb chart (`bench/progress/climb.py`: onCrack over the pinned
 Rust `ccece30`, starting from the port's final result) is the panel "The climb against pinned Rust", and the port's dots are in another. `bench/run --apps
 reference,rust,fsharp,oncrack` measures all four in one session (`fsharp` is the port). Tier 3 of an unchanged image must land within noise of
 the port: `bench/results/oncrack-c0.md`.
@@ -125,8 +125,25 @@ Rails 90b3300 search order for them, never pushed); the upstream checkouts and b
 (`scripts/env.sh`, `run.sh`, `build-c.sh`). Run it in colima from a tmpfs copy (`/mnt/cfv`), with the seed group-writable (the VM user is uid
 501, the containers 1000), and point the harness's workspace at a clean worktree of onCrack: it refuses a checkout that changes between rounds.
 `bench/results/oncrack-r2-final/table.py` prints its tables in upstream's form, `review.py` re-runs room page, mixed and post by hand with the
-server's CPU. onCrack's lead there is its caches (with `CAMPFIRE_RESPONSE_CACHE_MB=0` it is the port, 0.79x Rust); a hit keeps its authorization
-decision under the commit counter where upstream re-reads the session and membership, so say so beside every multiple.
+server's CPU. onCrack's lead there is its caches (with `CAMPFIRE_RESPONSE_CACHE_MB=0` it is the port, 0.79x Rust). Since R3.2 a hit re-checks the session
+and membership as upstream's contract asks (`CAMPFIRE_FRESH_AUTH`, below), and that mode is the headline; the cached decision is an opt-in
+and is never quoted as the comparable number.
+
+**Fresh authorization** (unit R3.2, `bench/results/oncrack-r3-fresh-auth.md`): `CAMPFIRE_FRESH_AUTH` (on by default; `0`, `off`, `false`) is
+upstream's contract of fresh authorization on every cache hit. On, every request reads its session and user rows (the authentication maps in
+`ReadCache.session`/`user` are skipped), a cached room or messages page is served only after `FreshAuth.membership` finds the row (`ReadCache.page`'s
+`room`), and a fast path replay first runs `FreshAuth.replay` (session by token, id and user, its user row and, for a room page, the membership and
+room) on `Database.CheckNow`, a bag of read-only connections of its own (never the readers: on them, replays that found every reader taken fell into
+the app and dragged the fast path down for whole samples). The counters still guard content in both modes. `FreshAuthTests` attack it in both modes,
+in process and fronted; `ForeignWriteTests` run in both modes; `CAMPFIRE_FRESH_AUTH=0 bin/verify App` runs the suite in the cached mode. Upstream's
+harness takes a second onCrack as `oncrack-cached` (adapter commit `d7fab45`); `~/Desktop/projects/upstream-campfire/scripts/setup-r32.sh` rebuilds its
+tmpfs after a VM restart (upstream's load generator is kept built in `tools/loadgen-1.98.1-static/`), and `run-r32.sh` starts a session with `guard.sh`
+beside it. **Disk, during upstream sessions:** upstream Rust writes ~1.3 GB of stdout log per container, and the VM's disk gives space back to macOS only
+when trimmed; an untrimmed session filled the Mac (2026-10-09) and the ext4 journal aborted (`e2fsck` repaired it). Trimming during a session costs the
+measured app (Rust -6%), so cap container logs in the VM's dockerd instead (`/etc/docker/daemon.json` `log-opts` max-size 64m, max-file 2; a colima restart
+drops it) and let `guard.sh` stop the session under 12 GB free. **Host load:** the VM's vCPUs are not pinned; other work on the Mac (another session's
+builds) moves them to efficiency cores and every app's samples swing 30-50%. Sample the host while a session runs (`host-load-*.txt`) and read the hand
+re-run's CPU per request beside the harness's medians.
 
 **Commits by other connections** (round 2 verifier, `bench/results/oncrack-r2-verifier.md`): the version counters' triggers live in the
 writer's connection, so nothing else's commits (a Rails console or rollback, a second container, the sqlite3 shell) moved them. Now `Versions`
