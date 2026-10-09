@@ -81,7 +81,9 @@ module FrontCompression =
                     let mutable q = 1.0
                     for piece in pieces[1..] do
                         let piece = piece.Trim()
-                        if piece.StartsWith("q=", StringComparison.Ordinal) then
+                        // RFC 9110: parameter names are case-insensitive (`Q=0` refuses gzip too). Thruster and Rust ccece30
+                        // match `q=` only (round 2 verifier; README, known differences).
+                        if piece.StartsWith("q=", StringComparison.OrdinalIgnoreCase) then
                             let value = piece.Substring 2
                             // Rust's `f64::from_str`: "inf" and "nan" too, which .NET spells differently.
                             let parsed =

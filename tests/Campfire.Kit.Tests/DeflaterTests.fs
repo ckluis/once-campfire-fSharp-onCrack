@@ -34,7 +34,8 @@ let ``q values read like rack`` () =
     Assert.Equal(ValueNone, best "identity;q=0")
     Assert.Equal(ValueSome "gzip", best "gzip;q=")
     Assert.Equal(ValueSome "gzip", best "gzip;q=abc")
-    Assert.Equal(ValueSome "gzip", best "gzip;Q=0.5, identity;q=0.9")
+    // onCrack: `Q=` is a quality too (RFC 9110; Rack and Rust ccece30 read it as 1.0 and pick gzip; README, known differences).
+    Assert.Equal(ValueSome "identity", best "gzip;Q=0.5, identity;q=0.9")
     Assert.Equal(ValueSome "gzip", best "gzip;q=.5")
     Assert.Equal(ValueSome "identity", best "gzip;q=.")
     Assert.Equal(ValueSome "identity", best "gzip;q=0..5, identity;q=0.1")

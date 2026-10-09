@@ -39,6 +39,7 @@
     <Compile Include="ParamsVectorTests.fs" />
     <Compile Include="RailsVectorTests.fs" />
     <Compile Include="DifferentialTests.fs" />
+    <Compile Include="VerifierRound2Tests.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Campfire.Kit/Campfire.Kit.fsproj" />

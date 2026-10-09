@@ -102,18 +102,15 @@ type CachedPage =
 module ReadCache =
     let private setting (name: string) : string | null = Environment.GetEnvironmentVariable name
 
+    /// `CAMPFIRE_READ_CACHE=off`, or a budget of 0 (`CAMPFIRE_READ_CACHE_MB=0`, or upstream's `CAMPFIRE_RESPONSE_CACHE_MB=0`;
+    /// `Campfire.Kit.ResponseCacheBudgets`), turns it off.
     let enabled: bool =
-        match setting "CAMPFIRE_READ_CACHE" with
-        | null -> true
-        | value -> not (value = "0" || value.Equals("off", StringComparison.OrdinalIgnoreCase) || value.Equals("false", StringComparison.OrdinalIgnoreCase))
+        ResponseCacheBudgets.readCache > 0L
+        && match setting "CAMPFIRE_READ_CACHE" with
+           | null -> true
+           | value -> not (value = "0" || value.Equals("off", StringComparison.OrdinalIgnoreCase) || value.Equals("false", StringComparison.OrdinalIgnoreCase))
 
-    let private budget: int =
-        match setting "CAMPFIRE_READ_CACHE_MB" with
-        | null -> 16 * 1024 * 1024
-        | value ->
-            match Int32.TryParse value with
-            | true, mb when mb > 0 -> mb * 1024 * 1024
-            | _ -> 16 * 1024 * 1024
+    let private budget: int = int (min ResponseCacheBudgets.readCache (int64 Int32.MaxValue))
 
     /// What an entry costs: its key, its body and what the body will make (a gzip member, a plain copy).
     let private cost (key: string) (entry: CachedPage) : int =

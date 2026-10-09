@@ -60,11 +60,12 @@ module Deflater =
                       match part.IndexOf ';' with
                       | -1 -> part, null
                       | semi -> part.Substring(0, semi).Trim(), part.Substring(semi + 1).Trim()
-                  // `/\Aq=([\d.]+)/ =~ parameters`, else 1.0.
+                  // `/\Aq=([\d.]+)/ =~ parameters`, else 1.0; onCrack also takes `Q=` (RFC 9110: parameter names are
+                  // case-insensitive), where Rack 3 and Rust ccece30 read `gzip;Q=0` as q=1 (README, known differences).
                   let quality =
                       match parameters with
                       | null -> 1.0
-                      | parameters when parameters.StartsWith("q=", StringComparison.Ordinal) ->
+                      | parameters when parameters.StartsWith("q=", StringComparison.OrdinalIgnoreCase) ->
                           let q = parameters.Substring 2
                           let mutable stop = 0
                           while stop < q.Length && (Char.IsAsciiDigit q[stop] || q[stop] = '.') do

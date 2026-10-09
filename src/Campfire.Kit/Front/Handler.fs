@@ -65,7 +65,10 @@ type FastStore(budget: int) =
     let gate = obj ()
     let fresh () = Generations<string, FastEntry>(budget, (fun key entry -> entry.Cost key), StringComparer.Ordinal)
     let mutable entries = fresh ()
-    let targets = ConcurrentDictionary<string, byte>(StringComparer.Ordinal)
+    // The targets the app has offered an answer for, by their (process-seeded) hash: what a target costs here is the same however
+    // long it is (round 2 verifier: as strings, one signed-in user could grow the process by ~14 KB per distinct long URL, ~1.5 GB
+    // before the set was cleared). Two targets of one hash only cost the second a key built for nothing.
+    let targets = ConcurrentDictionary<int, byte>()
 
     [<ThreadStatic; DefaultValue>]
     static val mutable private builder: Text.StringBuilder | null
@@ -83,14 +86,7 @@ type FastStore(budget: int) =
         if not FastCandidate.enabled then
             null
         else
-            let mb =
-                match Environment.GetEnvironmentVariable "CAMPFIRE_FAST_PATH_MB" with
-                | null -> 64
-                | value ->
-                    match Int32.TryParse value with
-                    | true, mb when mb > 0 -> mb
-                    | _ -> 64
-            FastStore(mb * 1024 * 1024)
+            FastStore(int (min ResponseCacheBudgets.fastPath (int64 Int32.MaxValue)))
 
     static member private Excluded(name: string) : bool =
         name.Equals("X-Request-Start", StringComparison.OrdinalIgnoreCase)
@@ -117,11 +113,17 @@ type FastStore(budget: int) =
         made
 
     /// Whether the app has offered an answer for this target (so building its key may find one).
-    member _.Knows(target: string) : bool = targets.ContainsKey target
+    member _.Knows(target: string) : bool = targets.ContainsKey(target.GetHashCode())
 
+    /// At most `MaxTargets` hashes (about 4 MB), then they start again.
     member _.Mark(target: string) : unit =
-        if targets.Count >= 100_000 then targets.Clear()
-        targets.TryAdd(target, 0uy) |> ignore
+        if targets.Count >= FastStore.MaxTargets then targets.Clear()
+        targets.TryAdd(target.GetHashCode(), 0uy) |> ignore
+
+    static member MaxTargets = 100_000
+
+    /// How many targets are marked, for tests.
+    member _.MarkedTargets : int = targets.Count
 
     member this.Lookup(key: string) : FastEntry | null =
         match lock gate (fun () -> entries.Get(key, id)) with
