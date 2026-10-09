@@ -177,6 +177,7 @@ module Boot =
     /// effects, and builds the HTTP stack.
     let boot (config: AppConfig) (loggers: ILoggerFactory) : Task<Booted> =
         task {
+            Campfire.Kit.BootLog.mark "boot"
             StoragePaths.createDirs config.Storage
             let secrets = Secrets.create config.SecretKeyBase
             let clock =
@@ -188,12 +189,14 @@ module Boot =
             let jobs = Jobs(JobLimits.QueueCapacity, loggers.CreateLogger "campfire.jobs")
             let richText = AppRichText(secrets, clock, loggers.CreateLogger "campfire.rich_text")
             let! db = openDatabase config clock jobs richText
+            Campfire.Kit.BootLog.mark "database open"
 
             // config/puma.rb: `Membership.disconnect_all` when the server boots.
             match! db.Write(fun tx -> Membership.disconnectAll tx |> ignore) with
             | Ok() -> ()
             | Error error -> failwith (DbError.display error)
 
+            Campfire.Kit.BootLog.mark "connections disconnected"
             let storage =
                 Storage.create (DiskService.create config.Storage.Files "local") (RailsCompat.appVerifier secrets "ActiveStorage")
 
@@ -220,6 +223,7 @@ module Boot =
             let runner = JobRunner.start jobs cable app registry config.JobConcurrency
 
             let kit = Kit(kitConfig, secrets, clock, app, logger)
+            Campfire.Kit.BootLog.mark "app built"
             return { App = app; Pipeline = pipeline app kit; Jobs = runner }
         }
 
@@ -236,6 +240,7 @@ module Boot =
     let serve (config: AppConfig) (loggers: ILoggerFactory) : Task =
         task {
             let logger = loggers.CreateLogger "campfire"
+            Campfire.Kit.BootLog.mark "serve"
             let front = FrontConfig.fromEnv ()
             let! booted = boot config loggers
             let app = booted.App
@@ -379,6 +384,7 @@ module Boot =
                 match Server.raiseOpenFileLimit () with
                 | ValueSome limit -> (loggers.CreateLogger "campfire").LogInformation("open files limit={Limit}", limit)
                 | ValueNone -> ()
+                Campfire.Kit.BootLog.mark "file limit raised"
                 (serve config loggers).GetAwaiter().GetResult()
                 0
             | Some "backup" ->
@@ -407,10 +413,13 @@ module Boot =
             printfn "%s" Usage
             0
         else
+            Campfire.Kit.BootLog.mark "run"
             match AppConfig.fromEnv () with
             | Error message ->
                 eprintfn "Error: %s" message
                 1
             | Ok config ->
+                Campfire.Kit.BootLog.mark "config read"
                 use loggers = createLoggerFactory config
+                Campfire.Kit.BootLog.mark "loggers made"
                 execute config loggers command

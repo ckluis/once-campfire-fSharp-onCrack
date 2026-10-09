@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <Compile Include="BootLog.fs" />
     <Compile Include="Format.fs" />
     <Compile Include="KitClock.fs" />
     <Compile Include="Response.fs" />

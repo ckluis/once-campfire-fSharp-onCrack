@@ -1,0 +1,234 @@
+#!/usr/bin/env bash
+# onCrack R2.5: memory by phase. One container, a list of scenarios run one after the other, the container's and the process's memory sampled
+# every 200 ms throughout, then a table of each phase's peak and its end (what the process kept).
+# Run inside colima:
+#   bench/mem [--app oncrack] [--seed default|crowd] [--env "K=V ..."] [--mounted DIR] [--label NAME] [--out FILE.jsonl] [--no-memlog] SCENARIO ...
+#
+# Scenarios (arguments after the options, in order):
+#   idle:S                      sleep S seconds (the end of an idle phase after a load is what the process kept)
+#   get:KIND:C:S                KIND room|messages|sidebar|search|up at C connections for S seconds, signed in as the seed's first user
+#   post:C:S                    posts into the write room at C connections for S seconds
+#   cable:N                     the Cable fan-out suite at N clients (bench/run's: connect, paced, saturated; the loadgen's PHASE lines)
+#   upload:N                    N uploads of a JPEG (bench/run's upload suite: libvips makes the variants)
+#   real:WORKLOAD:S             one of bench/lib/realistic.py's workloads (mixed|spread|spread_mixed|search_spread) at REAL_CONCS reading
+#                               connections for S seconds (--seed crowd)
+# Example:  bench/mem idle:5 get:room:16:15 idle:5 post:16:20 idle:5 cable:1000 idle:10
+#
+# Per sample: the cgroup's memory.current and anon, the app process's Pss, Pss_Anon, Rss and thread count (/proc/PID/smaps_rollup, status).
+# CAMPFIRE_MEM_LOG_MS=1000 (unless --no-memlog) makes the app log its GC's view each second (Program.fs); the last such line of each phase
+# is printed with it. The sampler runs on the first load generator CPU, off the server's.
+set -euo pipefail
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+export SERVER_CPUS=${SERVER_CPUS:-0-3} LOADGEN_CPUS=${LOADGEN_CPUS:-4-7}
+export WORK=${WORK:-/var/tmp/campfire-bench-work}
+APP=oncrack ENVX="" MOUNT="" LABEL="" OUTF="" SEEDN=default MEMLOG=1
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --app) APP=$2; shift 2 ;;
+    --seed) SEEDN=$2; shift 2 ;;
+    --env) ENVX=$2; shift 2 ;;
+    --mounted) MOUNT=$2; shift 2 ;;
+    --label) LABEL=$2; shift 2 ;;
+    --out) OUTF=$2; shift 2 ;;
+    --no-memlog) MEMLOG=0; shift ;;
+    *) break ;;
+  esac
+done
+SCENARIOS=("$@")
+set --
+[ "$MEMLOG" = 0 ] || ENVX="CAMPFIRE_MEM_LOG_MS=1000 $ENVX"
+[ -z "$MOUNT" ] || export ONCRACK_MOUNT=$MOUNT
+export ONCRACK_EXTRA_ENV="$ENVX" FSHARP_EXTRA_ENV="${FSHARP_EXTRA_ENV:-}" RUST_EXTRA_ENV="${RUST_EXTRA_ENV:-}"
+export BENCH_SEED=$SEEDN
+BENCH_RUN_LIB=1 source "$ROOT/bench/run"
+wait_for_quiet
+TMP=$(mktemp -d /var/tmp/bench-mem.XXXXXX)
+t_start=$(date +%s.%N)
+up=$(start_app "$APP")
+cg=$(cgroup_dir)
+pid=$(docker inspect -f '{{.State.Pid}}' "$CONTAINER")
+# The app's own GC lines, followed live: the container's log keeps only the last 2 x 10 MB, which the request lines fill in seconds.
+( docker logs -f -t "$CONTAINER" 2>&1 | grep --line-buffered " mem: " > "$TMP/memlog.txt" ) &
+LOGGER=$!
+echo "cold start (docker run to /up): ${up} ms; pid $pid; seed $SEEDN; env: $ENVX" >&2
+
+# The sampler: a sample every 200 ms until the cgroup goes.
+taskset -c "${LOADGEN_CPUS%%[-,]*}" python3 - "$cg" "$pid" "$TMP/timeline.jsonl" <<'PY' &
+import json, os, sys, time
+cg, pid, out = sys.argv[1], sys.argv[2], sys.argv[3]
+def kv(path, keys):
+    r = {}
+    try:
+        for line in open(path):
+            k, _, v = line.partition(":") if ":" in line else line.partition(" ")
+            if k in keys:
+                r[k] = int(v.split()[0])
+    except OSError:
+        pass
+    return r
+with open(out, "w") as f:
+    while os.path.isdir(cg):
+        t = time.time()
+        try:
+            cur = int(open(f"{cg}/memory.current").read())
+        except OSError:
+            break
+        st = kv(f"{cg}/memory.stat", {"anon", "file", "kernel", "slab", "sock"})
+        sm = kv(f"/proc/{pid}/smaps_rollup", {"Pss", "Pss_Anon", "Rss", "Anonymous"})
+        pr = kv(f"/proc/{pid}/status", {"Threads", "VmHWM", "VmRSS"})
+        f.write(json.dumps({"t": t, "cur": cur, "anon": st.get("anon", 0), "file": st.get("file", 0), "kernel": st.get("kernel", 0),
+                            "pss": sm.get("Pss", 0) * 1024, "pss_anon": sm.get("Pss_Anon", 0) * 1024, "rss": pr.get("VmRSS", 0) * 1024,
+                            "threads": pr.get("Threads", 0), "hwm": pr.get("VmHWM", 0) * 1024}) + "\n")
+        f.flush()
+        time.sleep(0.2)
+PY
+SAMPLER=$!
+
+mark() { echo "$(date +%s.%N) $1 $2" >> "$TMP/phases.txt"; }
+# Signing in (bcrypt, a session, a page scrape) happens before the first scenario that needs it, so a leading idle:S is the app as it booted.
+cookie="" csrf="" streams=""
+ensure_login() {
+  [ -z "$cookie" ] || return 0
+  cookie=$(lg login --base "$BASE" --email "$EMAIL" --password "$PASSWORD" | python3 -c 'import json,sys; print(json.load(sys.stdin)["cookie"])')
+  local scrape; scrape=$(lg scrape --base "$BASE" --cookie "$cookie" --room "$ROOM")
+  csrf=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["csrf"] or "")' "$scrape")
+  streams=$(python3 -c 'import json,sys; print(",".join(json.loads(sys.argv[1])["streams"]))' "$scrape")
+}
+real_dir=$WORK/$APP-realistic
+for sc in "${SCENARIOS[@]}"; do
+  IFS=: read -r kind a b c <<<"$sc"
+  [ "$kind" = idle ] || ensure_login
+  mark start "$sc"
+  case "$kind" in
+    idle) sleep "$a" ;;
+    get)
+      case "$a" in
+        room) p=/rooms/$ROOM ;; messages) p="/rooms/$ROOM/messages?before=$BEFORE" ;; sidebar) p=/users/me/sidebar ;;
+        search) p="/searches?q=coffee" ;; up) p=/up ;; *) echo "unknown get kind $a" >&2; exit 2 ;;
+      esac
+      lg http --base "$BASE" --cookie "$cookie" --path "$p" --conc "$b" --duration "$c" >"$TMP/out-$sc.json" ;;
+    post)
+      lg http --base "$BASE" --cookie "$cookie" --post-room "$WRITE_ROOM" --csrf "$csrf" --conc "$a" --duration "$b" >"$TMP/out-$sc.json" ;;
+    cable)
+      lg cable --base "$BASE" --cookie "$cookie" --room "$ROOM" --csrf "$csrf" --streams "$streams" \
+        --clients "$a" --tput-secs "${CABLE_TPUT_SECS:-15}" --posters "${CABLE_POSTERS:-4}" 2>"$TMP/cable-$a.stderr" >"$TMP/out-$sc.json" ;;
+    upload)
+      lg upload --base "$BASE" --cookie "$cookie" --room "$WRITE_ROOM" --csrf "$csrf" \
+        --file "$ROOT/reference/test/fixtures/files/black_hole.jpg" --reps "$a" >"$TMP/out-$sc.json" ;;
+    real)
+      if [ ! -s "$real_dir/users.json" ]; then
+        rm -rf "$real_dir"
+        python3 "$BENCH/lib/realistic.py" prepare --base "$BASE" --seed-dir "$SEED" --loadgen "$LOADGEN" --loadgen-cpus "$LOADGEN_CPUS" \
+          --out "$real_dir" --users "${REAL_USERS:-0}" >&2
+      fi
+      python3 "$BENCH/lib/realistic.py" spec "$a" --prepared "$real_dir" --out "$real_dir/$a.json"
+      mark start "$sc"   # the phase starts after the sign-ins
+      lg http --base "$BASE" --cookie "$cookie" --mix-spec "$real_dir/$a.json" --conc "${REAL_CONCS:-16}" --duration "$b" >"$TMP/out-$sc.json" ;;
+    *) echo "unknown scenario $sc" >&2; exit 2 ;;
+  esac
+  mark end "$sc"
+  if [ -s "$TMP/out-$sc.json" ] && [ "$kind" != idle ]; then
+    python3 -c 'import json,sys
+r=json.load(open(sys.argv[1]))
+print("  %-28s %s" % (sys.argv[2], "rps %s statuses %s errors %s" % (r.get("rps"), r.get("statuses"), r.get("errors")) if "rps" in r else ("upload median %s ms (POST to thumbnail served)" % r["median_total_ms"] if "median_total_ms" in r else "done")), file=sys.stderr)' "$TMP/out-$sc.json" "$sc" || true
+  fi
+done
+sleep 0.5
+sleep 1; kill "$LOGGER" 2>/dev/null || true
+[ -z "${SMAPS:-}" ] || python3 - "$pid" <<'PY' >&2
+import re, sys
+maps, cur = [], None
+for line in open(f"/proc/{sys.argv[1]}/smaps"):
+    m = re.match(r"([0-9a-f]+)-([0-9a-f]+) (\S+) \S+ \S+ \S+\s*(.*)", line)
+    if m:
+        cur = {"start": int(m.group(1), 16), "end": int(m.group(2), 16), "size": (int(m.group(2), 16) - int(m.group(1), 16)) // 1024, "perm": m.group(3), "name": m.group(4) or "[anon]", "anon": 0, "rss": 0}
+        maps.append(cur)
+    elif line.startswith("Anonymous:"):
+        cur["anon"] = int(line.split()[1])
+    elif line.startswith("Rss:"):
+        cur["rss"] = int(line.split()[1])
+kinds = {}
+for m in maps:
+    k = m["name"] if m["name"].startswith("/") or m["name"].startswith("[") else "[anon]"
+    k = re.sub(r"/[^ ]*/", "", k) if k.startswith("/") else k
+    kinds.setdefault(k, [0, 0, 0]); kinds[k][0] += m["rss"]; kinds[k][1] += m["anon"]; kinds[k][2] += 1
+print("smaps at the end (MB): rss, anon, mappings")
+for k, v in sorted(kinds.items(), key=lambda kv: -kv[1][0])[:8]:
+    print(f"  {k:<40}{v[0]/1024:8.1f}{v[1]/1024:8.1f}{v[2]:6d}")
+# The GC's reserved range is one huge PROT_NONE mapping; what is committed in it is a chain of mappings that end where the rest begins.
+i = max(range(len(maps)), key=lambda k: maps[k]["size"])
+huge = maps[i]
+chain = [huge]
+for k in range(i - 1, -1, -1):
+    if maps[k]["end"] == chain[0]["start"] and maps[k]["name"] == "[anon]":
+        chain.insert(0, maps[k])
+    else:
+        break
+for k in range(i + 1, len(maps)):
+    if maps[k]["start"] == chain[-1]["end"] and maps[k]["name"] == "[anon]":
+        chain.append(maps[k])
+    else:
+        break
+gc_anon = sum(m["anon"] for m in chain) / 1024
+total_anon = sum(m["anon"] for m in maps) / 1024
+print(f"managed heap (the {huge['size']/1048576:.0f} GB reservation's committed part): {gc_anon:.1f} MB anon; anon elsewhere: {total_anon - gc_anon:.1f} MB (glibc heaps and arenas, SQLite, libvips, stacks, the runtime)")
+big = sorted((m for m in maps if m["name"] == "[anon]" and m not in chain), key=lambda m: -m["anon"])[:6]
+print("largest anonymous mappings (size MB, anon MB, perms):", ", ".join(f"{m['size']/1024:.0f}/{m['anon']/1024:.0f}/{m['perm']}" for m in big))
+PY
+cg_peak=$(( $(cat "$cg/memory.peak" 2>/dev/null || echo 0) / 1048576 ))
+kill "$SAMPLER" 2>/dev/null || true; wait "$SAMPLER" 2>/dev/null || true
+docker rm -f "$CONTAINER" >/dev/null; rm -rf "${WORK:?}/$APP" "$real_dir"
+python3 - "$TMP" "$LABEL" "$OUTF" "$up" "$cg_peak" "$ENVX" "$MOUNT" <<'PY'
+import datetime, json, re, sys
+tmp, label, outf, up, cg_peak, envx, mount = sys.argv[1:]
+samples = [json.loads(l) for l in open(f"{tmp}/timeline.jsonl") if l.strip()]
+marks = []
+for l in open(f"{tmp}/phases.txt"):
+    t, kind, name = l.rstrip("\n").split(" ", 2)
+    marks.append((float(t), kind, name))
+phases, open_at = [], {}
+for t, kind, name in marks:
+    if kind == "start":
+        open_at[name] = t
+    else:
+        phases.append((name, open_at[name], t))
+gc = []
+try:
+    for l in open(f"{tmp}/memlog.txt"):
+        m = re.match(r"(\S+) .*mem: (.*)", l.strip())
+        if m:
+            ts = datetime.datetime.fromisoformat(m.group(1).replace("Z", "+00:00")).timestamp()
+            gc.append((ts, dict(kv.split("=") for kv in m.group(2).split())))
+except OSError:
+    pass
+mb = lambda b: round(b / 1048576)
+rows = []
+print(f"{'phase':<26}{'cur peak':>9}{'anon peak':>10}{'pss peak':>9}{'| end: cur':>11}{'anon':>6}{'pss':>6}{'rss':>6}{'thr':>5}   GC at end (committed/heap/frag MB, gen0/1/2/loh, gcs, pause ms)")
+def row(name, win):
+    if not win:
+        return None
+    last = win[-1]
+    g = [x for x in gc if x[0] <= last["t"]]
+    r = {"phase": name, "cur_peak_mb": mb(max(s["cur"] for s in win)), "anon_peak_mb": mb(max(s["anon"] for s in win)),
+         "pss_peak_mb": mb(max(s["pss"] for s in win)), "end_cur_mb": mb(last["cur"]), "end_anon_mb": mb(last["anon"]),
+         "end_pss_mb": mb(last["pss"]), "end_rss_mb": mb(last["rss"]), "end_threads": last["threads"]}
+    if g:
+        r["gc_end"] = g[-1][1]
+    return r
+first = samples[0]["t"] if samples else 0
+for name, t0, t1 in phases:
+    r = row(name, [s for s in samples if t0 <= s["t"] <= t1])
+    if r is None:
+        continue
+    rows.append(r)
+    g = r.get("gc_end")
+    gs = (f"{g['committed']}/{g['heap']}/{g['frag']}  {g['gen0']}/{g['gen1']}/{g['gen2']}/{g['loh']}  {g['gcs']}  {g['pause_ms']}" if g else "")
+    print(f"{name:<26}{r['cur_peak_mb']:>9}{r['anon_peak_mb']:>10}{r['pss_peak_mb']:>9}{'|':>3}{r['end_cur_mb']:>8}{r['end_anon_mb']:>6}{r['end_pss_mb']:>6}{r['end_rss_mb']:>6}{r['end_threads']:>5}   {gs}")
+whole = {"cur_peak_mb": mb(max(s["cur"] for s in samples)), "anon_peak_mb": mb(max(s["anon"] for s in samples)),
+         "pss_peak_mb": mb(max(s["pss"] for s in samples)), "cgroup_peak_mb": int(cg_peak)}
+print(f"whole run: peak current {whole['cur_peak_mb']} MB, anon {whole['anon_peak_mb']} MB, Pss {whole['pss_peak_mb']} MB (cgroup memory.peak {cg_peak} MB); cold start {up} ms")
+if outf:
+    with open(outf, "a") as f:
+        f.write(json.dumps({"label": label, "env": envx.strip(), "mount": mount, "cold_start_ms": int(up), "phases": rows, "whole": whole}) + "\n")
+PY
+rm -rf "$TMP"

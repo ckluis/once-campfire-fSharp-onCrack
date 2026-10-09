@@ -31,9 +31,58 @@ let disableTransparentHugePages () : unit =
 /// Whether `disableTransparentHugePages` took (Linux only).
 let transparentHugePagesDisabled () : bool = Native.prctl (PrGetThpDisable, 0UL, 0UL, 0UL, 0UL) = 1
 
+/// onCrack (R2.5): `CAMPFIRE_MEM_LOG_MS=N` writes a `mem:` line to stderr every N ms, from a thread of its own: the working set, the GC's
+/// committed bytes, heap size and fragmentation as of its last collection, each generation's size, the collections of each generation, the
+/// total pause time and the thread pool's size. A diagnostic for `bench/mem`; off unless the variable is set.
+let private startMemLog () : unit =
+    match Int32.TryParse(Environment.GetEnvironmentVariable "CAMPFIRE_MEM_LOG_MS") with
+    | true, ms when ms > 0 ->
+        let mb (bytes: int64) = bytes / 1048576L
+        let line () =
+            let info = GC.GetGCMemoryInfo GCKind.Any
+            let gens = Array.init 5 (fun i -> if i < info.GenerationInfo.Length then mb info.GenerationInfo[i].SizeAfterBytes else 0L)
+            let gen i = gens[i]
+            $"mem: ws={mb Environment.WorkingSet} committed={mb info.TotalCommittedBytes} heap={mb info.HeapSizeBytes} frag={mb info.FragmentedBytes} "
+            + $"gen0={gen 0} gen1={gen 1} gen2={gen 2} loh={gen 3} poh={gen 4} total={mb (GC.GetTotalMemory false)} "
+            + $"gcs={GC.CollectionCount 0}/{GC.CollectionCount 1}/{GC.CollectionCount 2} pause_ms={int (GC.GetTotalPauseDuration().TotalMilliseconds)} "
+            + $"threads={Threading.ThreadPool.ThreadCount}"
+        let loop () =
+            while true do
+                Threading.Thread.Sleep ms
+                eprintfn "%s" (line ())
+        Threading.Thread(loop, IsBackground = true, Name = "mem-log").Start()
+    | _ -> ()
+
+/// onCrack (R2.5): the first use of the route table (177 compiled regexes), of SQLite (the native library) and of the web host builder costs
+/// tens of milliseconds each, on the boot's critical path, while the other cores idle. A thread of its own does that first use while the main
+/// thread builds the logger factory and opens the database; the real uses then find the work done (the route table is a `lazy`, which waits
+/// for the one that is running). It changes nothing the app does. `CAMPFIRE_PREWARM=off` turns it off.
+let private prewarm () : unit =
+    if not (String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_PREWARM", "off", StringComparison.OrdinalIgnoreCase)) then
+        let work () =
+            try
+                Campfire.App.RouteTable.recognize "GET" "/rooms/1" |> ignore
+                Campfire.Kit.BootLog.mark "prewarm: routes"
+            with _ ->
+                ()
+            try
+                (Campfire.Db.Conn.OpenInMemory() :> IDisposable).Dispose()
+                Campfire.Kit.BootLog.mark "prewarm: sqlite"
+            with _ ->
+                ()
+            try
+                Microsoft.AspNetCore.Builder.WebApplication.CreateSlimBuilder() |> ignore
+                Campfire.Kit.BootLog.mark "prewarm: host builder"
+            with _ ->
+                ()
+        Threading.Thread(work, IsBackground = true, Name = "prewarm").Start()
+
 [<EntryPoint>]
 let main argv =
+    Campfire.Kit.BootLog.mark "main"
+    prewarm ()
     disableTransparentHugePages ()
+    startMemLog ()
     // onCrack (R2.3): with CAMPFIRE_INLINE (`Campfire.Kit.FrontInline`), socket completions run on the event threads too (the runtime
     // reads this once, when the first socket is made), unless the variable was given.
     if Campfire.Kit.FrontInline.mode <> Campfire.Kit.FrontInline.Off
@@ -50,4 +99,5 @@ let main argv =
         Environment.SetEnvironmentVariable("DOTNET_ThreadPool_UnfairSemaphoreSpinLimit", "0")
     // The health check does no I/O and takes microseconds: the front server runs it on the event thread (`Campfire.Kit.CheapPaths`).
     Campfire.Kit.CheapPaths.register [ "/up"; "/up.html"; "/up.json" ]
+    Campfire.Kit.BootLog.mark "program set up"
     Boot.run argv

@@ -118,7 +118,9 @@ module Front =
                             listen.UseHttps(FrontTls.handshakeOptions certs timeouts.Read) |> ignore
                     ))
             |> ignore
+            BootLog.mark "front: services configured"
             let host = builder.Build()
+            BootLog.mark "front: host built"
 
             // The app's pipeline, built once for the front listeners and the app's own.
             let branch = (host :> IApplicationBuilder).New()
@@ -144,7 +146,9 @@ module Front =
                         handler.Invoke ctx)
             (host :> IApplicationBuilder).Run(FrontConn.withDeadlines timeouts dispatch)
 
+            BootLog.mark "front: pipeline built"
             do! host.StartAsync()
+            BootLog.mark "front: listening"
             if config.HasTls then
                 logger.LogInformation("Server started http=:{Http} https=:{Https} tls_domain={Domains}", config.HttpPort, config.HttpsPort, String.Join(",", config.TlsDomains))
             else

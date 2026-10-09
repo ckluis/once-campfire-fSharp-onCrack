@@ -7,12 +7,13 @@
 #   page_ms   docker run to the first 200 for the busy room's page, signed in (JIT or not, the first real page costs more than /up),
 #   idle_mb   the container's memory.current and anon after IDLE_SECS (3 by default) of idleness,
 #   rss_mb    the app process's VmRSS then (what `ps` shows).
+# --timeline: also the app's own start-up milestones (CAMPFIRE_BOOT_LOG, ms since the process started) for each run.
 # Prints one line per run and the median of each; --out appends a JSON line with the medians.
 set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 export SERVER_CPUS=${SERVER_CPUS:-0-3} LOADGEN_CPUS=${LOADGEN_CPUS:-4-7}
 export WORK=${WORK:-/var/tmp/campfire-bench-work}
-RUNS=7 APP=oncrack ENVX="" MOUNT="" LABEL="" OUTF="" IDLE=${IDLE_SECS:-3}
+RUNS=7 APP=oncrack ENVX="" MOUNT="" LABEL="" OUTF="" TIMELINE="" IDLE=${IDLE_SECS:-3}
 while [ $# -gt 0 ]; do
   case "$1" in
     --runs) RUNS=$2; shift 2 ;;
@@ -20,6 +21,7 @@ while [ $# -gt 0 ]; do
     --env) ENVX=$2; shift 2 ;;
     --mounted) MOUNT=$2; shift 2 ;;
     --label) LABEL=$2; shift 2 ;;
+    --timeline) ENVX="CAMPFIRE_BOOT_LOG=1 $ENVX"; TIMELINE=1; shift ;;
     --out) OUTF=$2; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
@@ -41,6 +43,7 @@ for i in $(seq 1 "$RUNS"); do
   cur=$(( $(cat "$cg/memory.current") / 1048576 )); an=$(( $(mem_anon "$cg") / 1048576 ))
   pid=$(docker inspect -f '{{.State.Pid}}' "$CONTAINER")
   rss=$(awk '/VmRSS/{print int($2/1024)}' "/proc/$pid/status")
+  [ -z "$TIMELINE" ] || docker logs "$CONTAINER" 2>&1 | grep '^boot:' | sed 's/^/    /'
   echo "run $i: up ${up} ms, first room page ${page} ms (after sign-in), idle ${cur} MB (anon ${an}), rss ${rss} MB"
   ups+=("$up"); pages+=("$page"); curs+=("$cur"); anons+=("$an"); rsss+=("$rss")
 done
