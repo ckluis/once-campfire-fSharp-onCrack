@@ -1,0 +1,36 @@
+=== kt1 4603 3
+run dbd8ffed: acked 7735, non-200 0, connection errors 192 (after the kill)
+stored 7744 distinct tokens (7744 rows); unacknowledged but stored 9
+LOST acknowledged posts: 0 []
+DUPLICATED: 0 []
+acknowledged without a search-index row: 0 []
+room page after restart: status 200; newest acknowledged post on it: True
+journal_mode wal
+exit=0
+=== kt2 4604 10
+run 77f266e1: acked 34888, non-200 0, connection errors 192 (after the kill)
+stored 34888 distinct tokens (34888 rows); unacknowledged but stored 0
+LOST acknowledged posts: 0 []
+DUPLICATED: 0 []
+acknowledged without a search-index row: 0 []
+room page after restart: status 200; newest acknowledged post on it: True
+journal_mode wal
+exit=0
+=== kt3 4605 25
+run 1ba3307d: acked 105415, non-200 0, connection errors 211 (after the kill)
+stored 105415 distinct tokens (105415 rows); unacknowledged but stored 0
+LOST acknowledged posts: 0 []
+DUPLICATED: 0 []
+acknowledged without a search-index row: 0 []
+room page after restart: status 200; newest acknowledged post on it: True
+journal_mode wal
+exit=0
+=== kt4 4606 25 CAMPFIRE_WAL_DEFER=on
+run 95901114: acked 84057, non-200 0, connection errors 272 (after the kill)
+stored 84057 distinct tokens (84057 rows); unacknowledged but stored 0
+LOST acknowledged posts: 0 []
+DUPLICATED: 0 []
+acknowledged without a search-index row: 0 []
+room page after restart: status 200; newest acknowledged post on it: True
+journal_mode wal
+exit=0

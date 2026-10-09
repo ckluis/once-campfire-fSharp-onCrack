@@ -1,0 +1,1 @@
+{"group": "memory", "app": "oncrack", "env": [], "urls": 20000, "pad": 7000, "requests": 40000, "secs": 36.8, "anon_mb_before": 22, "anon_mb_after": 101, "non200": 0, "statuses": [], "after": 200}

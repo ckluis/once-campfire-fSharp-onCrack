@@ -1,0 +1,17 @@
+{"case": "room_rename", "check": "room page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [200, 200]}
+{"case": "room_rename", "check": "sidebar", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [200, 200]}
+{"case": "body_edit", "check": "room page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [200, 200]}
+{"case": "body_edit", "check": "permalink", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [200, 200]}
+{"case": "creator_change", "check": "room page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [200, 200]}
+{"case": "creator_rename", "check": "room page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [200, 200]}
+{"case": "boost_insert", "check": "room page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [200, 200]}
+{"case": "boost_update", "check": "room page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [200, 200]}
+{"case": "new_message_with_timestamps", "check": "room page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [200, 200]}
+{"case": "session_deleted", "check": "room page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [302, 302]}
+{"case": "session_token_rotated", "check": "room page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [302, 302]}
+{"case": "membership_deleted", "check": "room page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [302, 302]}
+{"case": "membership_deleted_messages", "check": "messages page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [404, 404]}
+{"case": "user_deactivated", "check": "room page (status=1 only)", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": false, "after_1.5s": false, "status": [200, 200], "evidence": " etag=W/\"d45fe4a9025e506790b21e18d35f64ce\" xrt=0.010374"}
+{"case": "stale_conditional", "check": "If-None-Match W/\"9e108519bc9bf7b67d8fbc5644980ea6\"", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [200, 200]}
+{"case": "search_body_edit", "check": "search page", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": false, "after_1.5s": false, "status": [200, 200], "evidence": " etag=W/\"cda09789682f5fa0228d63e24cc766c1\" xrt=0.000036"}
+{"case": "search_body_edit_visible", "check": "search page (Third)", "app": "oncrack", "env": ["CAMPFIRE_FRESH_AUTH=0"], "now": true, "after_1.5s": true, "status": [200, 200]}
