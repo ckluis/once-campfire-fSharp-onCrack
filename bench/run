@@ -301,6 +301,8 @@ start_app() {
   local mount=()
   if [[ "$app" = fsharp* ]] && [ -n "$FSHARP_MOUNT" ]; then mount=(-v "$FSHARP_MOUNT:/opt/campfire:ro"); fi
   if [[ "$app" = oncrack* ]] && [ -n "$ONCRACK_MOUNT" ]; then mount=(-v "$ONCRACK_MOUNT:/opt/campfire:ro"); fi
+  # TRACE_DIR=DIR: mounted at /trace, for an app's trace files (CAMPFIRE_WAL_TRACE=/trace/wal.log; unit R3.4).
+  if [ -n "${TRACE_DIR-}" ]; then mkdir -p "$TRACE_DIR"; chmod 777 "$TRACE_DIR"; mount+=(-v "$TRACE_DIR:/trace"); fi
   docker run -d --name "$CONTAINER" --cpuset-cpus "$SERVER_CPUS" --user "$(id -u):$(id -g)" \
     "${mount[@]}" "${DOCKER_LOG_ARGS[@]}" "${net[@]}" "${scratch[@]}" "${args[@]}" "${DOCKER_EXTRA_ARGS[@]}" \
     -v "$dir/db:/rails/storage/db" -v "$dir/storage:/rails/storage/files" \
@@ -494,7 +496,7 @@ if os.environ.get("MERGE_PART") == "1" and os.path.exists(f):
 json.dump(result, open(f, "w"), indent=1)
 PY
   # The last request log lines the app wrote (a sample, that logging is on and what it says; the driver keeps only 2 x LOG_MAX_SIZE).
-  docker logs --tail 12 "$CONTAINER" > "$OUT/$app-$rep-logtail.txt" 2>&1 || true
+  docker logs --tail "${LOGTAIL_LINES:-12}" "$CONTAINER" > "$OUT/$app-$rep-logtail.txt" 2>&1 || true
   docker rm -f "$CONTAINER" >/dev/null
   rm -rf "$WORK/$app" "$WORK/$app-realistic"
   log "$app rep $rep: done -> $f"

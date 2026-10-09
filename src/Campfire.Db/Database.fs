@@ -34,8 +34,17 @@
 // The trade-off is WAL size. SQLite only restarts the WAL from its beginning once a checkpoint
 // has caught up with it entirely, which a background checkpoint never does while writes keep
 // coming. So the WAL grows past 1,000 pages under sustained writes (it restarts in the first
-// lull), and at `WalLimitPages` (~40 MB) the writer checkpoints it itself with RESTART,
+// lull), and past `WalLimitPages` (~40 MB) the writer checkpoints it itself with RESTART,
 // stalling writes as Rails' commits do, but once per 10,000 pages instead of per 1,000.
+//
+// onCrack (unit R3.4, `bench/results/oncrack-r3-wal.md`): that RESTART waited for a running
+// checkpoint and synced itself, and when the disk was slow to sync (0.3-1.4 s every few seconds at
+// c=16 in the VM) every write waited with it. With `PostPath.WalDefer` (the default) the writer
+// restarts the WAL only when that is cheap: the checkpointer idle, at most `RestartTailPages` left
+// to copy, and the last checkpoint quick (`Checkpoints.Healthy`); otherwise it wakes the
+// checkpointer again and keeps writing, up to `WalCeilingPages` (~160 MB), where it waits as before.
+// Durability is unchanged: commits and checkpoints sync exactly as before, and a quiet WAL is now
+// also checkpointed within `CheckpointIntervalMs`, as current Rails' checkpoint thread does.
 //
 // Errors: a model raises `DbException` (or SQLite raises `SqliteException`) where Rust returns
 // `Err` (a stored value a `Row` accessor can't read, such as a NULL or a datetime that doesn't parse,
@@ -270,10 +279,43 @@ module internal Pragmas =
     [<Literal>]
     let AutocheckpointPages = 1000
 
-    /// The WAL size at which the writer checkpoints and restarts the WAL itself, because writes never
-    /// paused long enough for a background checkpoint to catch up. Below `journal_size_limit`.
+    /// The WAL size at which the writer restarts the WAL itself, because writes never paused long enough for a background
+    /// checkpoint to catch up. With `PostPath.WalDefer` (onCrack, unit R3.4) it is where the writer starts looking for a
+    /// moment to restart it (`RestartTailPages`, `Checkpoints.Healthy`), not where it waits.
     [<Literal>]
     let WalLimitPages = 10_000
+
+    /// onCrack (unit R3.4): past `WalLimitPages`, the writer restarts the WAL only when the frames no finished checkpoint
+    /// has copied (the tail) are at most this many: its own RESTART then copies and syncs no more than an ordinary
+    /// checkpoint does. A longer tail goes to the checkpointer, woken again at once.
+    [<Literal>]
+    let RestartTailPages = 1000
+
+    /// onCrack (unit R3.4): the WAL's size past which the writer waits for a running checkpoint and restarts the WAL,
+    /// whatever the tail or the disk: ~160 MB, 30,000 frames past the limit, about half a second of posting at c=16 in the
+    /// VM (55-70,000 frames a second), as long as most of the slow checkpoints the traces saw (`bench/results/oncrack-r3-wal.md`). The writer connection's `journal_size_limit` is above it
+    /// (`WalFileLimitBytes`), so the file is never truncated after a restart (on a disk mounted with `discard`, the
+    /// truncation's trim stalled the next fsyncs for seconds).
+    [<Literal>]
+    let WalCeilingPages = 40_000
+
+    /// onCrack (unit R3.4): the writer connection's `journal_size_limit` (192 MB) with `PostPath.WalDefer`: above
+    /// `WalCeilingPages` frames of 4,120 bytes. Readers and the checkpointer never restart the WAL, so theirs is unused.
+    [<Literal>]
+    let WalFileLimitBytes = 201_326_592L
+
+    /// onCrack (unit R3.4): a checkpoint that ran longer than this (ms) says the disk is slow to sync just now; the writer
+    /// does not restart the WAL (its RESTART syncs too) until one has run quicker.
+    [<Literal>]
+    let HealthyCheckpointMs = 25.0
+
+    /// onCrack (unit R3.4): with no commit reaching `AutocheckpointPages`, the checkpointer still runs a PASSIVE this often
+    /// (ms) when the WAL holds frames it has not copied, as current Rails' checkpoint thread does (every 0.25 s): a quiet
+    /// database's WAL is synced within a quarter of a second, not after 1,000 pages. `CAMPFIRE_WAL_CHECKPOINT_MS` (0: off).
+    let CheckpointIntervalMs =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_WAL_CHECKPOINT_MS" with
+        | null | "" -> 250
+        | v -> int v
 
     let openConnection (path: string) (reader: bool) : Conn =
         let conn = Conn.Open(path, StatementCacheCapacity)
@@ -289,20 +331,52 @@ module internal Pragmas =
 /// running, or readers still on old frames past the busy timeout) in its `busy` column, not as an
 /// error.
 module internal Checkpoint =
-    let run (conn: Conn) (mode: string) : unit =
+    /// onCrack (unit R3.4): `CAMPFIRE_WAL_TRACE` logs every checkpoint (who ran it, how long it waited for another to finish,
+    /// how long it ran, the WAL's frames and those checkpointed) and every time the WAL restarted from its beginning.
+    let Trace =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_WAL_TRACE" with
+        | null | "" | "0" | "off" | "false" -> false
+        | _ -> true
+
+    let private started = Diagnostics.Stopwatch.GetTimestamp()
+
+    /// `CAMPFIRE_WAL_TRACE=/path` writes the trace to that file instead of stderr (a request log would bury it).
+    let private traceFile : IO.StreamWriter option =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_WAL_TRACE" with
+        | null -> None
+        | v when v.StartsWith "/" -> Some(new IO.StreamWriter(v, true, AutoFlush = true))
+        | _ -> None
+
+    let trace (message: string) : unit =
+        let ms = Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds
+        match traceFile with
+        | Some w -> lock w (fun () -> w.WriteLine(DateTime.UtcNow.ToString("HH:mm:ss.fff") + " " + ms.ToString("F1") + " " + message))
+        | None -> eprintfn "TRACE campfire_db wal %.1f %s" ms message
+
+    /// The checkpoint, and SQLite's (busy, WAL frames, frames checkpointed); -1s when it failed.
+    let runCounted (conn: Conn) (mode: string) : struct (int64 * int64 * int64) =
         try
-            match conn.QueryRow($"PRAGMA wal_checkpoint({mode})", [||], fun r -> r.Int64 0) with
-            | 0L -> ()
-            | _ -> Log.warn $"WAL checkpoint couldn't finish ({mode})"
+            let struct (busy, log, done') =
+                conn.QueryRow($"PRAGMA wal_checkpoint({mode})", [||], fun r -> struct (r.Int64 0, r.Int64 1, r.Int64 2))
+            if busy <> 0L then Log.warn $"WAL checkpoint couldn't finish ({mode})"
+            struct (busy, log, done')
         with e ->
             Log.warn $"WAL checkpoint failed ({mode}): {e.Message}"
+            struct (-1L, -1L, -1L)
+
+    let run (conn: Conn) (mode: string) : unit = runCounted conn mode |> ignore
 
     /// The WAL's size in frames: what `sqlite3_wal_hook` reports after a commit. NOOP mode checkpoints
     /// nothing and takes no locks (SQLite 3.51+).
     let walPages (conn: Conn) : int = int (conn.QueryRow("PRAGMA wal_checkpoint(NOOP)", [||], fun r -> r.Int64 1))
 
+    /// The WAL's frames and how many of them a finished checkpoint has copied into the database (SQLite's `nBackfill`), the
+    /// same NOOP: frames past the second have not been synced by any checkpoint (`synchronous=normal` syncs the WAL only there).
+    let walFrames (conn: Conn) : struct (int * int) =
+        conn.QueryRow("PRAGMA wal_checkpoint(NOOP)", [||], fun r -> struct (int (r.Int64 1), int (r.Int64 2)))
+
 /// The writer's side of the checkpointer thread, which runs a PASSIVE checkpoint on its own
-/// connection each time it's woken.
+/// connection each time it's woken (and, onCrack R3.4, every `CheckpointIntervalMs` while the WAL holds frames it hasn't copied).
 type internal Checkpoints(path: string) =
     let conn = Pragmas.openConnection path false
     let wake = new SemaphoreSlim(0, 1)
@@ -310,15 +384,38 @@ type internal Checkpoints(path: string) =
     let mutable stopped = false
     /// The WAL's size in pages when the checkpointer was last woken.
     let mutable wokenAt = 0
+    /// The WAL's size at the last commit (`CAMPFIRE_WAL_TRACE` only).
+    let mutable lastPages = 0
+    /// How long the last PASSIVE ran, in ms (read by the writer: `Healthy`).
+    let mutable lastRunMs = 0.0
+    let mutable slowForTests = false
+
+    let passive () =
+        // Held while the checkpointer runs, so the writer's RESTART waits for it rather
+        // than being refused (SQLite runs one checkpoint at a time) and letting the WAL
+        // grow past its limit.
+        lock running (fun () ->
+            let t0 = Diagnostics.Stopwatch.GetTimestamp()
+            let struct (busy, log, done') = Checkpoint.runCounted conn "PASSIVE"
+            let ms = Diagnostics.Stopwatch.GetElapsedTime(t0).TotalMilliseconds
+            Volatile.Write(&lastRunMs, ms)
+            if Checkpoint.Trace then
+                Checkpoint.trace $"PASSIVE ran {ms:F1} ms busy {busy} log {log} checkpointed {done'}")
 
     let thread =
         Thread(
             (fun () ->
-                while (wake.Wait(); not stopped) do
-                    // Held while the checkpointer runs, so the writer's RESTART waits for it rather
-                    // than being refused (SQLite runs one checkpoint at a time) and letting the WAL
-                    // grow past its limit.
-                    lock running (fun () -> Checkpoint.run conn "PASSIVE")),
+                let interval = if Pragmas.CheckpointIntervalMs > 0 then Pragmas.CheckpointIntervalMs else Timeout.Infinite
+                let mutable go = true
+                while go do
+                    let woken = wake.Wait interval
+                    if stopped then go <- false
+                    elif woken then passive ()
+                    else
+                        // The interval: only when some frame is not yet copied (and so not yet synced).
+                        match (try Checkpoint.walFrames conn with _ -> struct (0, 0)) with
+                        | struct (log, done') when log > done' -> passive ()
+                        | _ -> ()),
             Name = "campfire-db-checkpointer",
             IsBackground = true
         )
@@ -327,8 +424,14 @@ type internal Checkpoints(path: string) =
 
     member _.Thread : Thread = thread
 
+    /// Held while a checkpoint runs (the tests hold it to stand for one stuck in its fsync).
+    member internal _.Running : obj = running
+
     /// Wakes the checkpointer for every `AutocheckpointPages` the WAL grows.
     member _.WalGrewTo(pages: int) : unit =
+        if Checkpoint.Trace then
+            if pages < lastPages then Checkpoint.trace $"restarted: {lastPages} -> {pages} frames"
+            lastPages <- pages
         if pages < wokenAt then wokenAt <- 0 // the WAL restarted
         // While a checkpoint is still due (it hasn't taken the last wake), the next commit tries again.
         if pages - wokenAt >= Pragmas.AutocheckpointPages && wake.CurrentCount = 0 then
@@ -338,10 +441,58 @@ type internal Checkpoints(path: string) =
             with :? SemaphoreFullException ->
                 ()
 
+    /// onCrack (unit R3.4): wakes the checkpointer for another PASSIVE (at once if it is idle, after the one running
+    /// otherwise), to shorten the tail the writer's restart would copy.
+    member this.WakeAgain(pages: int) : unit =
+        if Checkpoint.Trace then
+            if pages < lastPages then Checkpoint.trace $"restarted: {lastPages} -> {pages} frames"
+            lastPages <- pages
+        if wake.CurrentCount = 0 then
+            try
+                wake.Release() |> ignore
+                wokenAt <- pages
+            with :? SemaphoreFullException ->
+                ()
+
+    /// onCrack (unit R3.4): the last PASSIVE ran within `HealthyCheckpointMs`: a sync now is likely quick.
+    member _.Healthy : bool = not slowForTests && Volatile.Read(&lastRunMs) <= Pragmas.HealthyCheckpointMs
+
+    /// Tests: `Healthy` is false while set, as after a slow checkpoint.
+    member internal _.SlowForTests
+        with set (v: bool) = slowForTests <- v
+
     /// A RESTART checkpoint on the writer connection, between writes: it copies what the
     /// checkpointer hasn't, and waits for readers so that the next write restarts the WAL. It waits
     /// for a running PASSIVE checkpoint first, which would otherwise make SQLite refuse it.
-    member _.RestartWal(writer: Conn) : unit = lock running (fun () -> Checkpoint.run writer "RESTART")
+    member _.RestartWal(writer: Conn) : unit =
+        let t0 = Diagnostics.Stopwatch.GetTimestamp()
+        lock running (fun () ->
+            if Checkpoint.Trace then
+                let waited = Diagnostics.Stopwatch.GetElapsedTime(t0).TotalMilliseconds
+                let t1 = Diagnostics.Stopwatch.GetTimestamp()
+                let struct (busy, log, done') = Checkpoint.runCounted writer "RESTART"
+                let ms = Diagnostics.Stopwatch.GetElapsedTime(t1).TotalMilliseconds
+                Checkpoint.trace $"RESTART waited {waited:F1} ms ran {ms:F1} ms busy {busy} log {log} checkpointed {done'}"
+            else
+                Checkpoint.run writer "RESTART")
+
+    /// onCrack (unit R3.4): the RESTART only if no checkpoint is running (true when it ran): the writer never waits on the
+    /// checkpointer's copy and sync for a restart it can make a moment later.
+    member _.TryRestartWal(writer: Conn) : bool =
+        if Monitor.TryEnter running then
+            try
+                if Checkpoint.Trace then
+                    let t0 = Diagnostics.Stopwatch.GetTimestamp()
+                    let struct (busy, log, done') = Checkpoint.runCounted writer "RESTART"
+                    let ms = Diagnostics.Stopwatch.GetElapsedTime(t0).TotalMilliseconds
+                    Checkpoint.trace $"RESTART (idle) ran {ms:F1} ms busy {busy} log {log} checkpointed {done'}"
+                else
+                    Checkpoint.run writer "RESTART"
+                true
+            finally
+                Monitor.Exit running
+        else
+            false
 
     member _.Stop() : unit =
         stopped <- true
@@ -755,6 +906,15 @@ type WriterStats() =
     [<DefaultValue>]
     val mutable LongestRestartUs: int64
 
+    /// onCrack (unit R3.4): commits past `WalLimitPages` after which the writer left the restart for later
+    /// (`PostPath.WalDefer`), rather than wait for the checkpointer.
+    [<DefaultValue>]
+    val mutable Deferrals: int64
+
+    member internal this.Deferred() : unit =
+        Interlocked.Increment(&this.Deferrals) |> ignore
+        Interlocked.Increment(&WriterStats.All.Deferrals) |> ignore
+
     member internal this.Restarted(took: TimeSpan) : unit =
         Interlocked.Increment(&this.Restarts) |> ignore
         Interlocked.Increment(&WriterStats.All.Restarts) |> ignore
@@ -827,6 +987,8 @@ type Database
             // In place of the auto-checkpoint, which the writer's commits note the WAL size for instead
             // (Rust installs `sqlite3_wal_hook`, which the .NET bindings don't expose).
             conn.ExecuteBatch "PRAGMA wal_autocheckpoint = 0"
+            // onCrack (unit R3.4): the WAL may pass 64 MB below `WalCeilingPages`; never truncate it after a restart.
+            if PostPath.WalDefer then conn.ExecuteBatch $"PRAGMA journal_size_limit = {Pragmas.WalFileLimitBytes}"
             // onCrack: every change the writer makes marks the read cache's versions (`Versions.fs`).
             Versions.install conn versions
             if not versions.Watching then
@@ -836,6 +998,7 @@ type Database
             // writer idle) on its caller's thread.
             let processGroup (jobs: ResizeArray<WriteJob>) (onWriter: bool) : unit =
                 stats.Record jobs.Count
+                let traceStart = if Checkpoint.Trace then Diagnostics.Stopwatch.GetTimestamp() else 0L
                 // A write that raises must not take the writer down with it: `Writer` hands the
                 // closure's exception to its caller and rolls back; this is the backstop for
                 // anything else.
@@ -857,23 +1020,42 @@ type Database
                         // the versions it marked become even, past every stored value, before any
                         // caller hears back, so a read right after its own write finds them even.
                         versions.Release()
+                if Checkpoint.Trace then
+                    let ms = Diagnostics.Stopwatch.GetElapsedTime(traceStart).TotalMilliseconds
+                    if ms >= 20.0 then
+                        let struct (frames, backfilled) = try Checkpoint.walFrames conn with _ -> struct (-1, -1)
+                        Checkpoint.trace $"slow group of {jobs.Count} took {ms:F1} ms (writer {onWriter}), WAL {frames} frames, {backfilled} checkpointed"
                 for job in jobs do
                     try
                         job.Reply()
                     with e ->
                         Log.error $"write reply failed: {e.Message}"
                 if committed then
-                    match (try Checkpoint.walPages conn with _ -> 0) with
-                    | 0 -> ()
-                    | pages when pages >= Pragmas.WalLimitPages ->
+                    match (try Checkpoint.walFrames conn with _ -> struct (0, 0)) with
+                    | struct (0, _) -> ()
+                    | struct (pages, backfilled) when pages >= Pragmas.WalLimitPages ->
+                        // onCrack (unit R3.4): with `WalDefer` the writer waits for the checkpointer only at the WAL's
+                        // ceiling. Below it, it restarts the WAL itself only when that is cheap: the checkpointer idle, at
+                        // most `RestartTailPages` frames left to copy and the last checkpoint quick (the disk syncing
+                        // quickly); otherwise it wakes the checkpointer again and keeps writing. Off restores R2.2's
+                        // RESTART at the limit, waiting for a running checkpoint.
+                        let forced = not PostPath.WalDefer || pages >= Pragmas.WalCeilingPages
                         // RESTART waits for the readers; a request's thread must not (onCrack, unit R2.2): an empty
                         // write sends the writer thread round, which checks the WAL after it.
-                        if onWriter then
+                        if not onWriter then
+                            queue.Enqueue(WriteJob<unit>(ignore, ignore)) |> ignore
+                        elif forced then
                             let started = Diagnostics.Stopwatch.GetTimestamp()
                             cp.RestartWal conn
                             stats.Restarted(Diagnostics.Stopwatch.GetElapsedTime(started))
-                        else queue.Enqueue(WriteJob<unit>(ignore, ignore)) |> ignore
-                    | pages -> cp.WalGrewTo pages
+                        else
+                            let started = Diagnostics.Stopwatch.GetTimestamp()
+                            if pages - backfilled <= Pragmas.RestartTailPages && cp.Healthy && cp.TryRestartWal conn then
+                                stats.Restarted(Diagnostics.Stopwatch.GetElapsedTime(started))
+                            else
+                                stats.Deferred()
+                                cp.WakeAgain pages
+                    | struct (pages, _) -> cp.WalGrewTo pages
             processInline <- fun jobs -> processGroup jobs false
 
             let thread =
@@ -947,6 +1129,13 @@ type Database
     member _.WriterStats : WriterStats = stats
 
     /// Reader threads still running; zero once disposed.
+    /// onCrack (unit R3.4): the lock a running checkpoint holds, for tests that stand in for a checkpoint stuck in its fsync.
+    member internal _.CheckpointLock : obj = checkpoints.Running
+
+    /// Tests: the checkpointer reports its last checkpoint as slow while set (`Checkpoints.Healthy`).
+    member internal _.CheckpointSlowForTests
+        with set (v: bool) = checkpoints.SlowForTests <- v
+
     member internal _.ReaderThreadsAlive : int = readerThreads |> List.filter (fun t -> t.IsAlive) |> List.length
 
     /// Reads waiting for a reader thread.

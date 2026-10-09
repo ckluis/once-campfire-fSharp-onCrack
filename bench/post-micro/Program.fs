@@ -213,7 +213,7 @@ let main argv =
         (try Task.WaitAll(tasks, 5000) |> ignore with _ -> ())
         let n = float (ok1 - ok0)
         let all = Campfire.Db.WriterStats.All
-        if all.Restarts > 0L then eprintfn "  %s c=%d: WAL restarts so far %d, longest %d ms" variant conc all.Restarts (all.LongestRestartUs / 1000L)
+        if all.Restarts > 0L then eprintfn "  %s c=%d: WAL restarts so far %d, longest %d ms, deferred %d" variant conc all.Restarts (all.LongestRestartUs / 1000L) all.Deferrals
         if counts.Slow > 0L then eprintfn "  %s c=%d: %d answers over 100 ms, slowest %d ms" variant conc counts.Slow (counts.MaxUs / 1000L)
         n / el, (c1 - c0).TotalMilliseconds * 1000.0 / n, float (a1 - a0) / n / 1024.0, counts.Bad
     // The copy grows by every post; it goes when the run ends.
@@ -231,4 +231,13 @@ let main argv =
             let rs = results[v]
             let med (f: float * float * float -> float) = (rs |> Seq.map f |> Seq.sort |> Array.ofSeq)[rs.Count / 2]
             printfn "c=%-3d %-40s %8.0f posts/s  %7.1f us CPU/post  %7.1f KB/post   [cpu %s]" conc v (med (fun (a, _, _) -> a)) (med (fun (_, b, _) -> b)) (med (fun (_, _, c) -> c)) (String.Join(" ", rs |> Seq.map (fun (_, b, _) -> b.ToString("0"))))
+    // POST_MICRO_KEEP=DIR: the database, its WAL and index as the last window left them (bench/lib/walmix.py reads them).
+    match Environment.GetEnvironmentVariable "POST_MICRO_KEEP" with
+    | null | "" -> ()
+    | keep ->
+        Directory.CreateDirectory keep |> ignore
+        for f in [ "production.sqlite3"; "production.sqlite3-wal"; "production.sqlite3-shm" ] do
+            let from = Path.Combine(dir, "db", f)
+            if File.Exists from then File.Copy(from, Path.Combine(keep, f), true)
+        eprintfn "kept the database in %s" keep
     0

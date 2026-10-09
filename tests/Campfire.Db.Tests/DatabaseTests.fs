@@ -279,6 +279,10 @@ let ``a read waits for a connection in use on the calling thread`` () =
         Assert.Equal(1L, unwrap result)
     }
 
+/// ~500 pages of 4 KiB in one statement.
+let private fill500 =
+    "WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 500) INSERT INTO filler SELECT randomblob(3900) FROM n"
+
 /// Commits never checkpoint on the writer: the WAL reaching the auto-checkpoint threshold wakes the
 /// checkpointer, which copies it into the database file on its own.
 [<Fact>]
@@ -309,7 +313,7 @@ let ``the checkpointer copies the wal into the database`` () =
 let ``the bundled sqlite has the wal reset fix`` () =
     Assert.True(SQLitePCL.raw.sqlite3_libversion_number () >= 3_051_003, SQLitePCL.raw.sqlite3_libversion().utf8_to_string ())
 
-/// Writes that never pause still get the WAL restarted, at `WalLimitPages`.
+/// Writes that never pause still get the WAL restarted, past `WalLimitPages` and never past `WalCeilingPages`.
 [<Fact>]
 let ``the wal stays bounded under sustained writes`` () =
     use dir = new TempDir()
@@ -319,13 +323,136 @@ let ``the wal stays bounded under sustained writes`` () =
 
     // ~25,000 pages, 500 per commit.
     for _ in 1..50 do
-        unwrap (
-            db.WriteBlocking(fun tx ->
-                tx.Conn.ExecuteBatch
-                    "WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 500) INSERT INTO filler SELECT randomblob(3900) FROM n")
-        )
+        unwrap (db.WriteBlocking(fun tx -> tx.Conn.ExecuteBatch fill500))
     let wal = mainFileLen (path + "-wal")
-    Assert.True(wal < (int64 Pragmas.WalLimitPages + 1000L) * 4200L, $"WAL of {wal} bytes")
+    Assert.True(wal < (int64 Pragmas.WalCeilingPages + 1000L) * 4200L, $"WAL of {wal} bytes")
+    Assert.True(db.WriterStats.Restarts > 0L, "the WAL never restarted")
+
+/// The WAL's frames, as the writer reads them after a commit.
+let private walFramesOf (path: string) : int =
+    use conn = Conn.Open(path, 4)
+    let struct (frames, _) = Checkpoint.walFrames conn
+    frames
+
+/// A thread that holds the checkpointer's lock, as a checkpoint stuck in its fsync does, until disposed.
+type private StuckCheckpoint(db: Database) =
+    let held = new ManualResetEventSlim(false)
+    let release = new ManualResetEventSlim(false)
+    let thread =
+        Thread(fun () ->
+            lock db.CheckpointLock (fun () ->
+                held.Set()
+                release.Wait()))
+    do
+        thread.Start()
+        held.Wait()
+
+    interface IDisposable with
+        member _.Dispose() =
+            release.Set()
+            thread.Join()
+
+/// onCrack (unit R3.4): past `WalLimitPages` the writer does not wait for a running checkpoint (R2.2's 0.5-1 s stalls were the
+/// writer waiting on the checkpointer's fsync); it restarts the WAL at the first commit after the checkpoint is over.
+[<Fact>]
+let ``the writer carries on past the wal limit while a checkpoint runs`` () =
+    use dir = new TempDir()
+    let path = dir.File "test.sqlite3"
+    use db = openWithReaders dir 1
+    unwrap (db.WriteBlocking(fun tx -> tx.Conn.ExecuteBatch "CREATE TABLE filler (data BLOB)"))
+    let stuck = new StuckCheckpoint(db)
+    // ~12,500 pages: past the limit, short of the ceiling.
+    let writes =
+        Task.Run(fun () ->
+            for _ in 1..25 do
+                unwrap (db.WriteBlocking(fun tx -> tx.Conn.ExecuteBatch fill500)))
+    Assert.True(writes.Wait(TimeSpan.FromSeconds 30.0), "the writer waited for the checkpoint")
+    Assert.True(walFramesOf path >= Pragmas.WalLimitPages, "the WAL never reached its limit")
+    Assert.Equal(0L, db.WriterStats.Restarts)
+    Assert.True(db.WriterStats.Deferrals > 0L)
+    (stuck :> IDisposable).Dispose()
+    // The checkpointer, which was waiting for the lock, may take it first: then its PASSIVE copies every frame and the next
+    // commit restarts the WAL by itself; otherwise the writer's RESTART does.
+    let deadline = DateTime.UtcNow + TimeSpan.FromSeconds 10.0
+    while walFramesOf path >= Pragmas.WalLimitPages do
+        Assert.True(DateTime.UtcNow < deadline, "the WAL never restarted after the checkpoint")
+        unwrap (db.WriteBlocking(fun tx -> tx.Conn.ExecuteBatch "INSERT INTO filler VALUES (1)"))
+        Thread.Sleep 5
+    Assert.True(walFramesOf path < 100, "the WAL did not restart")
+
+/// Writes run in a task, counting the ones answered, while a checkpoint is stuck: they stop once `bound` frames are in the WAL,
+/// within a commit of it, and go on when the checkpoint is over.
+let private writesStopAt (bound: int) =
+    use dir = new TempDir()
+    let path = dir.File "test.sqlite3"
+    use db = openWithReaders dir 1
+    unwrap (db.WriteBlocking(fun tx -> tx.Conn.ExecuteBatch "CREATE TABLE filler (data BLOB)"))
+    let stuck = new StuckCheckpoint(db)
+    let mutable answered = 0
+    let total = bound / 500 + 6
+    let writes =
+        Task.Run(fun () ->
+            for _ in 1..total do
+                unwrap (db.WriteBlocking(fun tx -> tx.Conn.ExecuteBatch fill500))
+                Interlocked.Increment(&answered) |> ignore)
+    let deadline = DateTime.UtcNow + TimeSpan.FromSeconds 30.0
+    let mutable last = -1
+    // Until no write is answered for a second.
+    while Volatile.Read(&answered) <> last do
+        Assert.True(DateTime.UtcNow < deadline, "the writes never stopped")
+        last <- Volatile.Read(&answered)
+        Thread.Sleep 1000
+    Assert.False(writes.IsCompleted, "the writes never waited")
+    let frames = walFramesOf path
+    Assert.True(frames >= bound && frames < bound + 1100, $"the writes stopped at {frames} frames")
+    (stuck :> IDisposable).Dispose()
+    Assert.True(writes.Wait(TimeSpan.FromSeconds 30.0), "the writes did not go on")
+    Assert.True(db.WriterStats.Restarts > 0L)
+
+/// The WAL's file never grows past `WalCeilingPages` (below the writer's `journal_size_limit`, so it is never truncated):
+/// there the writer waits for the checkpoint, as R2.2's did at `WalLimitPages`.
+[<Fact>]
+let ``the writer waits for a running checkpoint at the wal ceiling`` () = writesStopAt Pragmas.WalCeilingPages
+
+/// onCrack (unit R3.4): after a slow checkpoint (the disk syncing slowly) the writer leaves the restart for later, whatever
+/// the tail, and keeps writing; it restarts the WAL once checkpoints are quick again.
+[<Fact>]
+let ``after a slow checkpoint the writer leaves the restart for later`` () =
+    use dir = new TempDir()
+    let path = dir.File "test.sqlite3"
+    use db = openWithReaders dir 1
+    unwrap (db.WriteBlocking(fun tx -> tx.Conn.ExecuteBatch "CREATE TABLE filler (data BLOB)"))
+    db.CheckpointSlowForTests <- true
+    // ~12,500 pages: past the limit, short of the ceiling.
+    for _ in 1..25 do
+        unwrap (db.WriteBlocking(fun tx -> tx.Conn.ExecuteBatch fill500))
+    Assert.True(walFramesOf path >= Pragmas.WalLimitPages, "the WAL restarted after a slow checkpoint")
+    Assert.Equal(0L, db.WriterStats.Restarts)
+    Assert.True(db.WriterStats.Deferrals > 0L)
+    db.CheckpointSlowForTests <- false
+    let deadline = DateTime.UtcNow + TimeSpan.FromSeconds 10.0
+    while walFramesOf path >= Pragmas.WalLimitPages do
+        Assert.True(DateTime.UtcNow < deadline, "the WAL never restarted after checkpoints were quick again")
+        unwrap (db.WriteBlocking(fun tx -> tx.Conn.ExecuteBatch "INSERT INTO filler VALUES (1)"))
+        Thread.Sleep 5
+    Assert.True(walFramesOf path < 100, "the WAL did not restart")
+
+/// onCrack (unit R3.4): a quiet database's WAL is checkpointed (and so synced) within `CheckpointIntervalMs`, as current
+/// Rails' checkpoint thread does, though the commits never reached `AutocheckpointPages`.
+[<Fact>]
+let ``a quiet wal is checkpointed within the interval`` () =
+    use dir = new TempDir()
+    let path = dir.File "test.sqlite3"
+    use db = openWithReaders dir 1
+    unwrap (db.WriteBlocking(fun tx -> tx.Conn.ExecuteBatch "CREATE TABLE filler (data BLOB); INSERT INTO filler VALUES (1)"))
+    let copied () =
+        use conn = Conn.Open(path, 4)
+        let struct (frames, backfilled) = Checkpoint.walFrames conn
+        frames > 0 && backfilled = frames
+    let deadline = DateTime.UtcNow + TimeSpan.FromMilliseconds(float Pragmas.CheckpointIntervalMs * 4.0 + 500.0)
+    while not (copied ()) do
+        Assert.True(DateTime.UtcNow < deadline, "the WAL was never checkpointed")
+        Thread.Sleep 20
 
 // `reference/config/database.yml` and the sqlite3 adapter's connection settings (see `Schema.fs`).
 
@@ -335,16 +462,17 @@ let private pragma (conn: Conn) (name: string) : int64 = conn.QueryRow($"PRAGMA 
 let ``connections are configured as Rails configures them`` () =
     use dir = new TempDir()
     use db = openWithReaders dir 1
-    let check (conn: Conn) =
+    let check (writer: bool) (conn: Conn) =
         Assert.Equal(5000L, pragma conn "busy_timeout")
         Assert.Equal(1L, pragma conn "foreign_keys")
         Assert.Equal(1L, pragma conn "synchronous") // NORMAL
-        Assert.Equal(67_108_864L, pragma conn "journal_size_limit")
+        // onCrack (unit R3.4): the writer, the only connection that restarts the WAL, keeps it whole up to its ceiling.
+        Assert.Equal((if writer then Pragmas.WalFileLimitBytes else 67_108_864L), pragma conn "journal_size_limit")
         Assert.Equal(2000L, pragma conn "cache_size")
         Assert.Equal(0L, pragma conn "mmap_size") // memory mapping is off
         Assert.Equal("wal", conn.QueryRow("PRAGMA journal_mode", [||], fun r -> r.Text 0))
-    unwrap (db.ReadBlocking check)
-    unwrap (db.WriteBlocking(fun tx -> check tx.Conn))
+    unwrap (db.ReadBlocking(check false))
+    unwrap (db.WriteBlocking(fun tx -> check true tx.Conn))
     // Only the writer writes, and it doesn't checkpoint by itself (the checkpointer thread does).
     Assert.Equal(0L, unwrap (db.WriteBlocking(fun tx -> pragma tx.Conn "wal_autocheckpoint")))
     Assert.Equal(1L, unwrap (db.ReadBlocking(fun conn -> pragma conn "query_only")))
