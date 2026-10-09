@@ -82,7 +82,7 @@ thread when the writer is idle, nothing is queued and `WriteLoad` (requests in f
 Whole bodies gzip with libdeflate (`CAMPFIRE_GZIP_LIBDEFLATE`), and the answer to anything but a GET or HEAD is gzipped once at level 1,
 outside the gzip cache (`CAMPFIRE_GZIP_ONCE_LEVEL`). `POST_RATE` paces the posts lane of `mixed`/`spread_mixed` (compare builds reading under
 the same writes; a paced run is not comparable with the stored baseline and stays out of the climb log). Open: sustained c=16 posting
-stalls 0.8-2.5 s every 20-30 s on the writer's WAL RESTART (`WARN campfire_db: WAL restart took N ms`).
+stalls 0.8-2.5 s every 20-30 s on the writer's WAL RESTART (`WARN campfire_db: WAL restart took N ms`); R3.4 (below) traced it to the VM's disk.
 
 **The front server's fast path** (unit R2.3, `bench/results/oncrack-r2-front.md`): a read cache hit authenticated by its session cookie
 offers its answer (`Campfire.Kit.FastCandidate`, set in `ReadCache.offerFast`); the front server (`FastStore` in `Front/Handler.fs`)
@@ -119,6 +119,16 @@ conserve memory, heap count, hard limit, concurrent, workstation: all measured, 
 `CAMPFIRE_PREWARM=off` turns off the start-up thread that warms the route table, SQLite and the host builder.
 
 **Search order** (unit R3.3, `bench/results/oncrack-r3-search.md`): `Message.searchReachable` lists the newest 100 reachable matches by message id (`ORDER BY idx.rowid DESC`), as Rails `dbc7620` does; the parity oracle gets the same one-method change from `parity/docker/parity_search_order.rb` (rebuild its layer with `docker build -t campfire-reference -f parity/docker/Dockerfile --build-context fixtures=reference/test/fixtures parity/docker`), and `search/results/order` is the state that tells the orders apart. The F# port keeps `90b3300`'s order and differs from that oracle in that state by design.
+
+**The WAL** (unit R3.4, `bench/results/oncrack-r3-wal.md`): the c=16 post stall is the VM's disk stopping for 0.3-1.7 s under the 250-300 MB/s of
+WAL that sustained posting writes (about 5.3 frames a post, ~20 pages rewritten per group commit, FTS5 36% of them), not the checkpoint policy; any
+sync in that time waits it out. The default stays R2.2's restart. `CAMPFIRE_WAL_DEFER` (opt-in) restarts the WAL only when that is cheap (checkpointer
+idle, at most 1,000 frames to copy, last checkpoint under 25 ms) and otherwise keeps writing up to `CAMPFIRE_WAL_CEILING_PAGES` (40,000; the writer's
+`journal_size_limit` is then raised so the WAL is never truncated: a truncation's trim on the `discard`-mounted disk stalled syncs for seconds); no
+ceiling measured gave a gain that held up in alternating reps. A quiet WAL is checkpointed every 250 ms, as current Rails does
+(`CAMPFIRE_WAL_CHECKPOINT_MS`). Tools: `CAMPFIRE_WAL_TRACE=/path` (checkpoints, restarts, writer groups over 20 ms) with `bench/run`'s `TRACE_DIR`;
+`bench/results/oncrack-r3-wal/trace-run.sh` (a traced tier 2 rep plus the VM's disk stats) and `trace.py`; `bench/lib/walmix.py` (a WAL's frames by
+b-tree, from `bench/post-micro`'s `POST_MICRO_KEEP`). The lever left is fewer WAL frames per post.
 
 **Upstream's method** (round 2 final, `bench/results/oncrack-r2-final.md`): the comparison that counts is Basecamp's
 `once-campfire-verification` harness (`bin/benchmark`, its seed, loadgen and contracts) against current upstream Rust and C, not the pinned
