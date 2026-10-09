@@ -179,6 +179,7 @@ def vnum(pattern, label, group=1):
 
 R1 = 'bench/results/oncrack-round1-final'
 REVIEW = R1 + '/review'
+R3PIX = 'bench/results/oncrack-r3-pixels'   # the full pixel gate on the final code (round 3, unit R3.1)
 NAME = {'reference': 'Rails', 'rust': 'Rust', 'fsharp': 'F# port', 'oncrack': 'onCrack'}
 APPS = ['reference', 'rust', 'fsharp', 'oncrack']
 ROUTES = [('room_show', 'room page'), ('messages_page', 'messages page'), ('sidebar', 'sidebar'), ('search', 'search'), ('post_message', 'post a message')]
@@ -400,14 +401,14 @@ def facts():
             F['manual'][a, r['route'], r['c']] = {k: V(r[k], '%s, hand run, %s c=%d: %s' % (NAME[a], RNAME[r['route']], r['c'], k), [rel, REVIEW + '/manual.sh'], k)
                                                  for k in ('rps_loadgen', 'n_loadgen', 'server_log_lines', 'rows_written', 'cpu_us_per_req', 'cores_busy', 'errors')}
     # pixel parity
-    PP = REVIEW + '/pixel-parity.json'
+    PP = R3PIX + '/pixel-parity.json'
     pp = jload(PP)
-    F['pp'] = {s: {k: V(v[k], 'pixel gate, seed %s: %s' % (s, k), [PP, REVIEW + '/pixel_parity.py'], 'seeds.%s.%s' % (s, k)) for k in ('equal', 'screenshots', 'flaky')} for s, v in pp['seeds'].items()}
+    F['pp'] = {s: {k: V(v[k], 'pixel gate, seed %s: %s' % (s, k), [PP, R3PIX + '/pixel_parity.py'], 'seeds.%s.%s' % (s, k)) for k in ('equal', 'screenshots', 'flaky')} for s, v in pp['seeds'].items()}
     for s, v in pp['seeds'].items():
         F['pp'][s]['different'] = V(len(v['different']), 'pixel gate, seed %s: screenshots different' % s, [PP], 'len(seeds.%s.different)' % s)
         F['pp'][s]['not_captured'] = V(len(v['not_captured']), 'pixel gate, seed %s: cells not captured' % s, [PP], 'len(seeds.%s.not_captured)' % s)
         F['pp'][s]['engines'] = {k: V(x['screenshots'], 'pixel gate, seed %s: %s screenshots' % (s, k), [PP], 'seeds.%s.by_engine.%s' % (s, k)) for k, x in v['by_engine'].items()}
-    F['pp_total'] = {k: V(pp['total'][k], 'pixel gate, all five seeds: %s' % k, [PP, REVIEW + '/pixel_parity.py'], 'total.%s' % k) for k in pp['total']}
+    F['pp_total'] = {k: V(pp['total'][k], 'pixel gate, all five seeds: %s' % k, [PP, R3PIX + '/pixel_parity.py'], 'total.%s' % k) for k in pp['total']}
     F['pp_seeds'] = V(len(pp['seeds']), 'seeds in the pixel gate', [PP], 'len(seeds)')
     F['pp_room'] = pp['room_capture']
     # the verifier
@@ -773,10 +774,10 @@ def p_sbs(F, sp):
         '<p><b>The captures differ.</b> Compare the hashes under the thumbnails.</p>'
     body = ''.join([
         '<p class="lead">%s. Each picture is the parity harness&#39;s own capture of that page from one app: Chromium, %s, light scheme, the default seed with the clock frozen.</p>'
-        % (e(sp['page']), e(sp['viewport']).replace('1440', L.n(V(1440, 'capture width, px', [REVIEW + '/pixel-parity.json'], 'the cell chromium-desktop-light'), link=True)).replace('900', L.n(V(900, 'capture height, px', [REVIEW + '/pixel-parity.json'], 'the cell chromium-desktop-light')))) if sp else '',
+        % (e(sp['page']), e(sp['viewport']).replace('1440', L.n(V(1440, 'capture width, px', [R3PIX + '/pixel-parity.json'], 'the cell chromium-desktop-light'), link=True)).replace('900', L.n(V(900, 'capture height, px', [R3PIX + '/pixel-parity.json'], 'the cell chromium-desktop-light')))) if sp else '',
         '<div class="sbs-thumbs">%s</div>' % thumbs,
         verdict,
-        srcline(REVIEW + '/pixel-parity.json', 'site/same_pixels.py', 'site/data.json'),
+        srcline(R3PIX + '/pixel-parity.json', 'site/same_pixels.py', 'site/data.json'),
         '<h3>The counters</h3>',
         '<p>Each counter adds its engine&#39;s median requests a second for this page, for every second the section is on screen, and its row of dots moves in the same proportion. '
         'Without JavaScript, or with reduced motion, they show the rates and nothing moves.</p>',
@@ -965,16 +966,16 @@ def p_pixels(F):
     rows.append(['<b>all</b>', '<b>%s</b>' % L.n(t['equal']), '<b>%s</b>' % L.n(t['screenshots']), L.n(t['different']), L.n(t['not_captured']), L.n(t['flaky']), ''])
     body = ''.join([
         '<p class="lead">The rule onCrack works under: every parity screen&#39;s pixels must match Rails&#39;. The server&#39;s HTML, the live DOM and Cable frames may differ; what a person sees may not.</p>',
-        tbl([('Seed', False), ('Equal', True), ('Screenshots', True), ('Different', True), ('Not captured', True), ('Flaky', True), ('By engine', False)], rows, 'Round one&#39;s gate, per seed'),
+        tbl([('Seed', False), ('Equal', True), ('Screenshots', True), ('Different', True), ('Not captured', True), ('Flaky', True), ('By engine', False)], rows, 'The full gate on the final code, per seed'),
         '<h3>How it was run</h3><ul class="caveats">'
         '<li><code>bin/pixel-parity</code> against the Rails reference, the harness&#39;s lean matrix: every state on Chromium (desktop and phone, light and dark), the smoke states on Firefox and WebKit, '
-        'and the breakpoint sweep, on all %s seeds. Image <code>campfire-candidate-oncrack</code> built from %s, the image that was benchmarked.</li>'
-        '<li>The default seed ran in ten <code>--only</code> slices so each fit one call; together they cover the same cells as a full run. A cell that could not be captured (a stylesheet wait '
-        'that ran out at %s ms on freshly started servers, older than onCrack) was captured again and counts by its last attempt, as <code>bin/pixel-parity</code> counts it.</li>'
-        '<li>Before the fixes the verifier ran the gate in one piece on the pre-fix image: also all equal, in %s s. The Native AOT image passed the fast matrix on the default seed: %s screenshots.</li></ul>'
-        % (L.n(F['pp_seeds']), lit('da1e92f', 'commit'), L.n(F['ready_ms']), L.n(F['ver_pp_secs']), L.n(F['aot_pp'])),
-        '<p>The reports themselves (every screenshot and diff) are gitignored under <code>parity/out/pixel-parity-round1-final/</code>; <code>pixel_parity.py</code> keeps what they say.</p>',
-        srcline(REVIEW + '/pixel-parity.json', REVIEW + '/pixel_parity.py', 'bin/pixel-parity', 'bin/pixel-parity-report', lead='Sources'),
+        'and the breakpoint sweep, on all %s seeds. Image <code>campfire-candidate-oncrack</code> rebuilt from %s, the final code of round two: nothing in <code>src/</code> has changed since the gate ran.</li>'
+        '<li>The default seed ran in twelve <code>--only</code> slices so each fit one call, and the four small seeds in one run; the slices partition the default seed&#39;s states, and <code>pixel_parity.py</code> checks that no cell ran in two of them. '
+        'A cell that could not be captured (a stylesheet wait that ran out at %s ms on freshly started servers, older than onCrack) was captured again and counts by its last attempt, as <code>bin/pixel-parity</code> counts it.</li>'
+        '<li>Round one ran the same gate on the code before the verifier&#39;s fixes; the verifier ran it in one piece on the pre-fix image, in %s s. The Native AOT image passed the fast matrix on the default seed: %s screenshots.</li></ul>'
+        % (L.n(F['pp_seeds']), lit('d708910', 'commit'), L.n(F['ready_ms']), L.n(F['ver_pp_secs']), L.n(F['aot_pp'])),
+        '<p>The reports themselves (every screenshot and diff) are gitignored under <code>parity/out/pixel-parity-r3-final/</code>; <code>pixel_parity.py</code> keeps what they say.</p>',
+        srcline(R3PIX + '/pixel-parity.json', R3PIX + '/pixel_parity.py', 'bin/pixel-parity', 'bin/pixel-parity-report', lead='Sources'),
     ])
     return panel('p-pixels', 'Pixel parity', 'Every screenshot, per seed', body, 'check')
 
@@ -1076,8 +1077,8 @@ def p_repro(F):
             "python3 bench/results/oncrack-round1-final/review/table.py\n"
             "$R/manual.sh rust; $R/manual.sh oncrack; $R/mixed.sh rust|fsharp|oncrack; $R/bytes.sh\n"
             "bin/pixel-parity --seeds crowd,custom_styles,first_run,restricted\n"
-            "bin/pixel-parity --seeds default --only 'realtime/**'   # ... ten slices\n"
-            "python3 bench/results/oncrack-round1-final/review/pixel_parity.py\n"
+            "bin/pixel-parity --seeds default --only 'realtime/**'   # ... twelve slices (SLICES in pixel_parity.py)\n"
+            "python3 bench/results/oncrack-r3-pixels/pixel_parity.py\n"
             "python3 site/same_pixels.py && python3 site/build.py")
     sched = re.search(r'^schedule: (.+)$', env, re.M).group(1)
     body = ''.join([
@@ -1837,7 +1838,7 @@ def same_pixels_facts():
         files[a['key']] = open(p, 'rb').read() if os.path.exists(p) else None
     ok = (sp['identical'] and len({a['capture_sha256'] for a in sp['apps']}) == 1 and None not in files.values() and len(set(files.values())) == 1
           and bool(sp.get('image')) and os.path.exists(os.path.join(REPO, sp['image'])))
-    pp = jload(REVIEW + '/pixel-parity.json')['room_capture']['png_sha256']
+    pp = jload(R3PIX + '/pixel-parity.json')['room_capture']['png_sha256']
     ok = ok and pp['reference'] == pp['candidate'] == sp['apps'][0]['capture_sha256']
     return dict(sp, ok=ok)
 

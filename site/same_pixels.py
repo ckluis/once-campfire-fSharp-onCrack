@@ -2,8 +2,8 @@
 """Make the "Same software." images from the parity harness's own captures, and record what they prove.
 
 The page shows the signed-in room page (the request bench/run measures as room_show) once, because Rails, Rust, the F# port and
-onCrack render it to the same pixels. Two of the four captures are round 1's pixel gate (Rails on the reference side, onCrack on the
-candidate side of parity/out/pixel-parity-round1-final, the cell bench/results/oncrack-round1-final/review/pixel-parity.json names);
+onCrack render it to the same pixels. Two of the four captures are the full pixel gate on the final code (Rails on the reference side, onCrack on the
+candidate side of parity/out/pixel-parity-r3-final, the cell bench/results/oncrack-r3-pixels/pixel-parity.json names);
 the other two are the port's own check (Rust and the F# port against Rails, recorded in the port's site/data.json "same_pixels" and
 committed as its thumbnails). All of them are Chromium at 1440x900, light scheme, the default seed with the clock frozen.
 
@@ -27,7 +27,7 @@ SITE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(SITE)
 DATA = os.path.join(SITE, 'data.json')
 ASSETS = 'site/assets/same-pixels'
-PIXELS = 'bench/results/oncrack-round1-final/review/pixel-parity.json'
+PIXELS = 'bench/results/oncrack-r3-pixels/pixel-parity.json'
 PORT = os.environ.get('PORT_CHECKOUT', os.path.join(os.path.dirname(REPO), 'once-campfire-fsharp'))
 PORT_REF = os.environ.get('PORT_REF', 'side-by-side')
 

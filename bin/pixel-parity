@@ -66,6 +66,18 @@ echo "pixel-parity: ${PARITY_CANDIDATE_APP:-oncrack} vs the Rails reference, scr
 run_compare() {   # run_compare SEED OUTDIR LOG [--only STATES]
   local seed=$1 out=$2 log=$3; shift 3
   "$ROOT/parity/bin/candidate" compare --seed "$seed" --out "$out" "$@" ${PASS[@]+"${PASS[@]}"} >"$log" 2>&1 || true
+  core_guard
+}
+
+# A crashing browser (WebKit's WPEWebProcess) has left a multi-GB core dump in parity/ in three rounds; the capture containers now run with
+# --ulimit core=0, and this removes any that still appears, says so, and prints the VM's free space so a run that fills it is seen early.
+core_guard() {
+  local f
+  for f in "$ROOT"/parity/core "$ROOT"/parity/core.*; do
+    [ -e "$f" ] || continue
+    echo "pixel-parity: core dump $(du -h "$f" | cut -f1) at $f, deleted"; rm -f "$f"
+  done
+  echo "pixel-parity: VM free $(df -h /var/lib/docker | awk 'NR==2 {print $4}'), parity/out $(du -sh "$OUT" 2>/dev/null | cut -f1)"
 }
 
 for seed in ${SEEDS//,/ }; do

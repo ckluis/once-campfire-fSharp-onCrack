@@ -2604,7 +2604,7 @@
         "cable"
       ],
       "port_ref": "side-by-side (71dacd5)",
-      "checked": "2026-10-08T05:12:21Z",
+      "checked": "2026-10-09T11:34:12Z",
       "apps": [
         {
           "key": "rails",
@@ -2612,7 +2612,7 @@
           "capture_sha256": "ac7420e6d0a8941463402fbeddc90f4972c50c0a7c4f935e637345164c13d0b8",
           "thumb": "site/assets/same-pixels/rails.webp",
           "harness_verdict": "pass",
-          "source": "parity/out/pixel-parity-round1-final/C/default/report.json (reference side)"
+          "source": "parity/out/pixel-parity-r3-final/L/default/report.json (reference side)"
         },
         {
           "key": "rust",
@@ -2636,7 +2636,7 @@
           "capture_sha256": "ac7420e6d0a8941463402fbeddc90f4972c50c0a7c4f935e637345164c13d0b8",
           "thumb": "site/assets/same-pixels/oncrack.webp",
           "harness_verdict": "pass",
-          "source": "parity/out/pixel-parity-round1-final/C/default/report.json (candidate side)"
+          "source": "parity/out/pixel-parity-r3-final/L/default/report.json (candidate side)"
         }
       ]
     }

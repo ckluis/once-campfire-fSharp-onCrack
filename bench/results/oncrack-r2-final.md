@@ -57,7 +57,7 @@ onCrack is scored on its own terms (plan rule 4). It is not a like-for-like port
   on the same image, against 15,214 on upstream's harness. The writer's WAL-restart stall, open since R2.2, appears only after
   longer posting than upstream's samples.
 - **Pixels:** 252 screenshots of the states this round's fixes reach, plus every small seed, are pixel-equal to Rails. This is a
-  targeted gate, not the full 940.
+  targeted gate, not the full 940. (Superseded: the full gate ran on the final code afterwards, 940/940: [`oncrack-r3-pixels.md`](oncrack-r3-pixels.md).)
 - **Code size** (cloc 2.10, upstream's rules): onCrack 44.4 KLOC of F#, the port 42.5, Rust 29.8, C 94.8 and Rails 4.4 (the last three
   as upstream published them). 3.6 KLOC of onCrack and the port is an F# port of the html5ever tokenizer, which Rust takes as a crate.
 

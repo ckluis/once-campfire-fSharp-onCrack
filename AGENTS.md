@@ -20,7 +20,7 @@ re-baselines stay full-length; the inner loop gets faster by removing setup, not
   run on every seed is the round verifier's job.
 - **In-process harness for logic questions** (is the hit path cheaper, did the post pipeline shrink): host the app in a
   test server, drive requests directly, report CPU and allocation per request, seconds per run.
-Disk: run `bin/clean-parity` with `bin/clean-docker` at every gate (old parity reports reached 5 GB in round 2).
+Disk: run `bin/clean-parity` with `bin/clean-docker` at every gate (old parity reports reached 5 GB in round 2). The full gate is `bin/pixel-parity` on every seed (round 3's run: the default seed in twelve `--only` slices, one foreground call each, `bin/clean-docker` between them; `bench/results/oncrack-r3-pixels.md`); it deletes a `parity/core*` dump after every compare and prints the VM's free space, but the Mac's floor (12 GB) is yours to watch.
 If one of these tools doesn't exist yet, building it is part of your unit. Record the loop time before and after.
 
 **onCrack's gates and scoring** (unit C0): `bin/pixel-parity` is the one-command "the UI is identical" check (the parity harness's
