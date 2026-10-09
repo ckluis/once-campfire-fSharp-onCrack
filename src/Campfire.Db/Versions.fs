@@ -81,21 +81,39 @@ type VersionKind =
     | User = 2
     | Sessions = 3
 
-module private Libc =
+/// The libc calls the WAL index's mapping needs, by the name each platform gives libc (as `Campfire.Kit.Server` does).
+module private LinuxC =
     open System.Runtime.InteropServices
 
-    [<DllImport("libc", EntryPoint = "open", SetLastError = true)>]
+    [<DllImport("libc.so.6", EntryPoint = "open")>]
     extern int openFile(byte[] path, int flags)
 
-    [<DllImport("libc", EntryPoint = "close")>]
+    [<DllImport("libc.so.6", EntryPoint = "close")>]
     extern int closeFile(int fd)
 
-    [<DllImport("libc", EntryPoint = "mmap", SetLastError = true)>]
+    [<DllImport("libc.so.6", EntryPoint = "mmap")>]
     extern nativeint mmap(nativeint addr, unativeint length, int prot, int flags, int fd, int64 offset)
 
-    [<DllImport("libc", EntryPoint = "munmap")>]
+    [<DllImport("libc.so.6", EntryPoint = "munmap")>]
     extern int munmap(nativeint addr, unativeint length)
 
+module private MacC =
+    open System.Runtime.InteropServices
+
+    [<DllImport("libSystem.dylib", EntryPoint = "open")>]
+    extern int openFile(byte[] path, int flags)
+
+    [<DllImport("libSystem.dylib", EntryPoint = "close")>]
+    extern int closeFile(int fd)
+
+    [<DllImport("libSystem.dylib", EntryPoint = "mmap")>]
+    extern nativeint mmap(nativeint addr, unativeint length, int prot, int flags, int fd, int64 offset)
+
+    [<DllImport("libSystem.dylib", EntryPoint = "munmap")>]
+    extern int munmap(nativeint addr, unativeint length)
+
+module private Libc =
+    // O_RDONLY, PROT_READ and MAP_SHARED have these values on Linux and macOS alike.
     [<Literal>]
     let O_RDONLY = 0
 
@@ -104,6 +122,21 @@ module private Libc =
 
     [<Literal>]
     let MAP_SHARED = 1
+
+    let supported = OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()
+
+    let openFile (path: byte[], flags: int) : int =
+        if OperatingSystem.IsLinux() then LinuxC.openFile (path, flags) else MacC.openFile (path, flags)
+
+    let closeFile (fd: int) : int =
+        if OperatingSystem.IsLinux() then LinuxC.closeFile fd else MacC.closeFile fd
+
+    let mmap (addr: nativeint, length: unativeint, prot: int, flags: int, fd: int, offset: int64) : nativeint =
+        if OperatingSystem.IsLinux() then LinuxC.mmap (addr, length, prot, flags, fd, offset)
+        else MacC.mmap (addr, length, prot, flags, fd, offset)
+
+    let munmap (addr: nativeint, length: unativeint) : int =
+        if OperatingSystem.IsLinux() then LinuxC.munmap (addr, length) else MacC.munmap (addr, length)
 
 /// The `iChange` field of a WAL index's header (`<db>-shm`, offset 8, native byte order), mapped read-only.
 ///
@@ -116,23 +149,28 @@ type WalChangeCounter private (fd: int, address: nativeint) =
     static let length = 4096un
     let mutable disposed = false
 
-    /// The counter of the database at `path`, or null when it has no WAL index (yet) to map.
+    /// The counter of the database at `path`, or null when it has no WAL index (yet) to map, or the platform can't map it
+    /// (the caches then stay off: `Versions.install`).
     static member Open(path: string) : WalChangeCounter | null =
         let shm = path + "-shm"
-        if String.IsNullOrEmpty path || not (File.Exists shm) || FileInfo(shm).Length < int64 length then
+        if not Libc.supported || String.IsNullOrEmpty path || not (File.Exists shm) || FileInfo(shm).Length < int64 length then
             null
         else
-            let bytes = Array.append (Text.Encoding.UTF8.GetBytes shm) [| 0uy |]
-            let fd = Libc.openFile (bytes, Libc.O_RDONLY)
-            if fd < 0 then
-                null
-            else
-                let address = Libc.mmap (0n, length, Libc.PROT_READ, Libc.MAP_SHARED, fd, 0L)
-                if address = -1n || address = 0n then
-                    Libc.closeFile fd |> ignore
+            try
+                let bytes = Array.append (Text.Encoding.UTF8.GetBytes shm) [| 0uy |]
+                let fd = Libc.openFile (bytes, Libc.O_RDONLY)
+                if fd < 0 then
                     null
                 else
-                    new WalChangeCounter(fd, address)
+                    let address = Libc.mmap (0n, length, Libc.PROT_READ, Libc.MAP_SHARED, fd, 0L)
+                    if address = -1n || address = 0n then
+                        Libc.closeFile fd |> ignore
+                        null
+                    else
+                        new WalChangeCounter(fd, address)
+            with
+            | :? DllNotFoundException
+            | :? EntryPointNotFoundException -> null
 
     /// The header's change counter now (every commit that wrote anything moved it by one).
     member _.Read() : uint32 =
