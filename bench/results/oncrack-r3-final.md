@@ -18,7 +18,8 @@ The closing measurement of round 3. It runs the checks and the numbers on the co
 | Cached decision (opt-in), normal | 2.97x | 2.13x | 4.37x |
 | Cached decision (opt-in), mixed | 3.95x | 2.46x | 5.89x |
 
-- **CPU per request agrees and is the steadier number.** From the container's cgroup, median of five hand re-runs each: a room page costs onCrack 23.0 us, Rust 62.6 and C 43.5, so Rust spends 2.72x and C 1.89x onCrack's CPU. Mixed reads: 21.7 against 62.3 and 49.5 (2.87x, 2.28x). A post: 200 us against 494 and 673 (2.47x, 3.36x).
+- **The pooled normal figure is below both sessions'** (2.68x and 3.33x over Rust): the second session ran every engine at about half speed, and a six-round median lands between the two regimes at a different point per engine (section 2, "Each session alone"). It understates. The quiet session alone gives 2.68x Rust and 1.85x C. **The mixed figure leans the other way:** its quiet session reads 3.10x Rust and 1.83x C against the pooled 3.31x and 2.06x. *(Added by the final review.)*
+- **CPU per request agrees and is the steadier number.** Each engine's CPU per request times its throughput comes to 2.6-3.4 busy cores of the 4 in all 60 hand re-run windows, so the two measures are consistent. From the container's cgroup, median of five hand re-runs each: a room page costs onCrack 23.0 us, Rust 62.6 and C 43.5, so Rust spends 2.72x and C 1.89x onCrack's CPU. Mixed reads: 21.7 against 62.3 and 49.5 (2.87x, 2.28x). A post: 200 us against 494 and 673 (2.47x, 3.36x).
 - **Against R3.2** (2.83x Rust, 2.07x C, 3.67x the port; mixed 3.39x, 2.04x): the same mode on an earlier build, on a different and differently busy afternoon. The gap (2.59x, 1.86x) is inside the spread this host gives, so I claim no change in either direction. Round 2's cached-decision headline was 3.25x and 2.37x; that mode reads 2.97x and 2.13x here on the same noise.
 - **Everything was validated.** 156,621,852 timed responses passed the full content contract, 1,899,793 acknowledged writes were audited against the messages, rich-text and search-index rows, and there were 0 errors or invalid responses across 648 raw samples. The hand re-runs add 60 validated windows and 5,030,671 audited posts.
 - **The checks pass, with one thing I could not close:** a single failure of the verifier's A7 attack test in 18 full runs, not reproduced (see "Open").
@@ -160,7 +161,9 @@ Set D ran while 56% of its host samples were at 150% or more. Without D the medi
 
 Hand re-runs (review.jsonl): 60 timed windows (every one valid: True), 60 warm-ups, 20 database audits (every one ok: True, rich-text rows equal acknowledged: True, search-index rows missing: 0), 5,030,671 acknowledged posts audited.
 
-The pooled medians sit between the sessions, as they should, but the sessions are far apart. onCrack over Rust is 2.68x in normal-1 and 3.33x in normal-2, and normal-2 reads fresh at 1.01x of cached, which cannot be right for a mode that does strictly more work per hit. That one figure shows how much of the spread is the host. With a host this busy every harness multiple is good to about +/-25%; the CPU-per-request comparison is steadier, and it agrees with the pooled harness numbers.
+The sessions are far apart, and the pooled normal multiples do **not** sit between them (corrected in the final review; this paragraph first said they did). onCrack over Rust is 2.68x in normal-1 and 3.33x in normal-2 but 2.59x pooled; the cached decision is 3.27x and 3.30x but 2.97x pooled. normal-2 ran in another regime: every engine at roughly half its normal-1 speed, posts included (onCrack's room page 76/52/76k against 128/135/132k, Rust's 46/22/23k against 48/51/44k). A median of six rounds then falls between the two regimes, at a different point for each engine (Rust's first normal-2 round was near its normal-1 level, onCrack's were not), so the pooled ratio can land outside both sessions'. Here it lands below both, so it understates the gap rather than overstating it. The plan fixed the pooled figure as the headline before any session ran, and it stays the headline. normal-1, the session the plan's rule reads as quiet, gives 2.68x Rust and 1.85x C, which agrees with the CPU per request (2.72x, 1.89x). normal-2 also reads fresh at 1.01x of cached, which cannot be right for a mode that does strictly more work per hit; that figure shows how much of the spread is the host. With a host this busy every harness multiple is good to about +/-25%.
+
+The mixed profile goes the other way. The pooled multiples (3.31x Rust, 2.06x C) sit between the sessions but lean on mixed-1, the noisy one (3.56x, 2.30x). mixed-2, the quiet one, reads 3.10x Rust and 1.83x C, and the hand re-runs' mixed windows read 3.10x and 2.13x by throughput. So quote onCrack's mixed lead over C as about 1.8-2.1x, not 2.06x.
 
 ### The host
 
@@ -212,3 +215,25 @@ Both F# counts include the html5ever tokenizer port (3,582 lines), which Rust ta
 3. **The harness multiples swing 2.68x to 3.33x** between the two normal sessions. The CPU-per-request ratios (2.72x Rust, 1.89x C for a room page) are the figures I would quote for the size of the gap.
 4. **The hand re-runs' set D** was noisy; the medians do not depend on it (shown above).
 5. **The full pixel gate was not repeated on the final code.** The targeted gate (82 of 82) covers what R3.2-R3.4 could reach.
+
+## Final review (round 3)
+
+I read `git log d708910..HEAD` for behaviour changes and the data above skeptically. I re-ran no benchmark, because nothing pointed to a cell that a re-run on this host would settle.
+
+**Correctness: no defect found, so no code changed.**
+- **Fresh authorization.** Every request reads its session and user rows. A kept room or messages page is served only after `FreshAuth.membership` finds the row, and when it doesn't the action runs and answers as it would uncached. A replay runs `FreshAuth.replay` with the token, session id and user id captured when the answer was made, and any failure (`ValueNone` or an error) sends it to the app, so every failure path ends at the app's own answer. The page key still starts with the user's id, and the version counters still guard content.
+- **The checks' own connections** (`Database.CheckNow`) are read-only, opened on demand up to 16, and never wait. Every statement on them is reset after its step (`Sql.fs` `finish`), so none holds a read snapshot that could see a deleted session as live. `FreshAuthTests` cover sign-out, a removed membership, a ban, the direct queries and starvation of the readers.
+- **Search order.** `ORDER BY idx.rowid DESC LIMIT 100` is message id order, as Rails `dbc7620`. The join to the memberships is unchanged, so the order changed and what a user can reach did not.
+- **The WAL.** By default the writer takes the same path as R2.2's restart (`forced` is true whenever `CAMPFIRE_WAL_DEFER` is off). The new 250 ms PASSIVE checkpoint of a quiet WAL only syncs earlier. The checkpointer stops cleanly with the timed wait. `synchronous` is unchanged. One overclaim, corrected in `oncrack-r3-wal.md`: the opt-in deferred restart keeps crash durability (the 4th kill -9 run used it, with 0 lost), but under power loss it can hold more acknowledged, unsynced commits while a checkpoint is stuck. That is not the default.
+- **A7** (one 302 to sign-in in 18 full runs) stays open. It fails closed: a valid user was refused, and no data was served to anyone who should not see it. Each test copies the seed whole, so it is not shared state between tests. The cause is unknown.
+
+**Numbers: two write-up corrections, now in the verdict, section 2 and the page.**
+1. The pooled normal multiples are below both sessions' (2.59x against 2.68x and 3.33x over Rust; 2.97x against 3.27x and 3.30x for the cached decision). The report said the pooled medians sat between the sessions. The cause is the two host regimes, and the effect understates. The pre-registered headline stays.
+2. The pooled mixed multiples (3.31x Rust, 2.06x C) lean on the noisy session; the quiet one reads 3.10x and 1.83x.
+
+Checked and true:
+- The validation totals (recounted from the raw files: 0 errors or invalid responses, every write audit verified).
+- The hand re-runs' CPU per request against their throughput (2.6-3.4 busy cores in all 60 windows).
+- The fresh-mode cost (1.18x the CPU of the cached decision per room-page hit; 0.82-0.86x of its throughput in every session but the noisy normal-2).
+
+**Verdict.** Against current Rust `f9dca47`, onCrack in its default, comparable mode (fresh authorization) is about **2.6-2.7x** on upstream's five normal workloads. Against current C `cd0cbe4` it is about **1.85-1.9x**. The pooled harness figure, the quiet session and the server's CPU per request all agree on that. On the mixed profile it is about 3.1-3.3x Rust and 1.8-2.1x C. Posts are about 2x both by the harness, and 2.5x Rust and 3.4x C by CPU per post. These are real leads, measured on a busy host and good to about +/-25%. They are smaller than round 2's cached-decision 3.25x and 2.37x, because fresh authorization costs about 15-18% of throughput on cache hits.

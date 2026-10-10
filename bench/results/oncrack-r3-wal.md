@@ -13,7 +13,7 @@ alternating reps. **The default stays R2.2's restart.** What came out of the uni
 - The tools that found the cause: a WAL trace, a WAL breakdown by b-tree, and disk sampling.
 - The real lever, which is fewer WAL frames per post (below).
 
-Durability is unchanged in every variant.
+Durability is unchanged by default, and against a crash of the process in every variant (the kill -9 test ran with `CAMPFIRE_WAL_DEFER=on` too: 0 lost). *(Final review's correction: this line first said "unchanged in every variant".)* Against a power failure the opt-in is weaker. With `synchronous=normal` a commit is not synced until a checkpoint syncs the WAL, and while a checkpoint is stuck in a slow sync the deferred restart keeps acknowledging commits up to the ceiling (40,000 frames) where the default waits at 10,000. More acknowledged posts can therefore sit unsynced at that moment. That is one more reason it stays off.
 
 ## What the stall is
 

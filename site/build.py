@@ -1208,12 +1208,16 @@ def p_fresh(F):
         normal, mixed, ratios, cpu, val,
         '<h3>Read with care</h3><ul class="caveats">'
         '<li><b>A busy host.</b> Another session on the Mac was compiling (Erlang and Go builds, more than a core at times) while these ran. The VM&#39;s CPUs are not pinned to cores, so every engine&#39;s samples swung: '
-        'the two normal sessions put onCrack over Rust at %s and %s. The headline pools both sessions of each profile, by a plan fixed before any ran, and drops none. The hand re-runs&#39; CPU per request is the steadier comparison.</li>'
+        'the two normal sessions put onCrack over Rust at %s and %s. The headline pools both sessions of each profile, by a plan fixed before any ran, and drops none. '
+        'The pooled normal multiple is lower than either session&#39;s: the second session ran every engine at about half speed, and a median of six rounds lands at a different point between the two regimes for each engine, so here it understates. '
+        'The pooled mixed multiples lean the other way: the quieter mixed session alone puts onCrack at %s over Rust and %s over C. The hand re-runs&#39; CPU per request is the steadier comparison.</li>'
         '<li><b>Mixed is pooled too.</b> Its first session was noisy by the plan&#39;s rule (the host&#39;s other work was above the plan&#39;s load limit for more than a quarter of its samples) and was run again; both are in the medians. Rust&#39;s and C&#39;s mixed medians sit under round two&#39;s on the same images, so the mixed multiples are less certain than the normal ones.</li>'
         '<li><b>The final code.</b> These sessions ran the image built from the final code, with the search order and the WAL work of units <span data-lit="name">R3.3</span> and <span data-lit="name">R3.4</span>; the targeted pixel gate on it passed %s of %s screenshots (<a href="#p-pixels">Pixel parity</a>).</li>'
         '<li><b>Not their machine.</b> Four of this VM&#39;s CPUs per side, not the Ryzen&#39;s; compare ratios, not absolute numbers, with their report.</li></ul>'
         % (L.x(geo([up3s('normal-1', 'oncrack', r).over(up3s('normal-1', 'rust', r)) for r, _ in ROUTES], 'onCrack over Rust, geometric mean of the five workloads, first normal session of the final run')),
            L.x(geo([up3s('normal-2', 'oncrack', r).over(up3s('normal-2', 'rust', r)) for r, _ in ROUTES], 'onCrack over Rust, geometric mean of the five workloads, second normal session of the final run')),
+           L.x(geo([up3ms('mixed-2', 'oncrack', r).over(up3ms('mixed-2', 'rust', r)) for r in UPREADS], 'onCrack over Rust, geometric mean of the four mixed reads, second (quieter) mixed session of the final run')),
+           L.x(geo([up3ms('mixed-2', 'oncrack', r).over(up3ms('mixed-2', 'c', r)) for r in UPREADS], 'onCrack over C, geometric mean of the four mixed reads, second (quieter) mixed session of the final run')),
            L.n(F['r3f_equal']), L.n(F['r3f_total'])),
         srcline(R3N[0] + '/', R3N[1] + '/', R3M[0] + '/', R3M[1] + '/', R3 + '/review.jsonl', R3 + '/PLAN.md', R3 + '/totals.md', 'bench/results/oncrack-r3-final.md', lead='Sources'),
     ])
@@ -1225,6 +1229,14 @@ def up3s(session, app, route):
     files = sorted(os.path.relpath(f, REPO) for f in glob.glob(os.path.join(REPO, R3, session, app + '-[0-9].json')))
     vals = [x['rps'] for f in files for x in jload(f)['http'] if x['route'] == route and x['conc'] == 16]
     return V(statistics.median(vals), '%s, %s, c=16, req/s, median of %d rounds (verification harness, %s)' % (UPBASE[app], RNAME[route], len(vals), session), files,
+             'median of ' + ', '.join(g(float(x)) for x in vals))
+
+
+def up3ms(session, app, route):
+    """One round 3 mixed session's median for one app and read route at c=16."""
+    files = sorted(os.path.relpath(f, REPO) for f in glob.glob(os.path.join(REPO, R3, session, app + '-[0-9].json')))
+    vals = [x['rps'] for f in files for x in (jload(f)['mixed_http'] or []) if x['route'] == route and x['conc'] == 16]
+    return V(statistics.median(vals), '%s, %s, mixed profile, c=16, reads/sec, median of %d rounds (verification harness, %s)' % (UPBASE[app], RNAME[route], len(vals), session), files,
              'median of ' + ', '.join(g(float(x)) for x in vals))
 
 
