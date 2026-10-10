@@ -125,7 +125,8 @@ let ``A2 version counters for room ids nobody has grow without bound`` () =
         let david = david test
         let versions = test.App.Db.Versions
         let field = typeof<Versions>.GetField("rooms", Reflection.BindingFlags.NonPublic ||| Reflection.BindingFlags.Instance)
-        let count () = (field.GetValue versions :?> ConcurrentDictionary<int64, VersionCell>).Count
+        // Since round 2 the room cells are a fixed array of stripes (Versions.RoomStripes), so the bound is the array's length.
+        let count () = (field.GetValue versions :?> VersionCell[]) |> Array.filter (fun c -> not (isNull (box c))) |> Array.length
         let before = count ()
         GC.Collect()
         let memBefore = GC.GetTotalMemory true
@@ -137,7 +138,9 @@ let ``A2 version counters for room ids nobody has grow without bound`` () =
                            task {
                                let cookie = davidCookie ()
                                for i in 0 .. (n / 8) - 1 do
-                                   let id = 900_000_000L + int64 (w * (n / 8) + i)
+                                   // Since round 2 the counters are one per id modulo RoomStripes, so ids that are all equal modulo that
+                                   // number reach one cell: 40,000 distinct ids must make at most one, however many a request names.
+                                   let id = 900_000_000L + int64 (w * (n / 8) + i) * int64 Versions.RoomStripes
                                    // No cookie jar: a redirect's flash would make the next request skip the cache.
                                    let! r = test.Send((getWithCookie (if i % 2 = 0 then $"/rooms/{id}" else $"/rooms/{id}/messages") cookie).With("accept", "text/html"))
                                    if r.Status <> 302 && r.Status <> 404 then failwith $"status {r.Status}"
@@ -147,6 +150,7 @@ let ``A2 version counters for room ids nobody has grow without bound`` () =
         let after = count ()
         out $"A2: room version cells {before} -> {after} after {n} requests for rooms that don't exist; managed heap {memBefore / 1024L} KB -> {memAfter / 1024L} KB ({(memAfter - memBefore) / int64 n} bytes per request kept)"
         Assert.True(after - before < 1000, $"{after - before} cells kept for rooms that don't exist")
+        Assert.True(after <= Versions.RoomStripes, $"{after} cells, more than the {Versions.RoomStripes} stripes")
     }
 
 /// A3. Membership removal racing readers of the room page, the messages page, the sidebar and search: once the
@@ -333,10 +337,21 @@ let ``A6 headers of a hit equal a miss, HEAD first does not poison GET, ETags st
             match g3.Header "etag" with
             | Some etag ->
                 let! j = jasonB.Send((get path).With("if-none-match", etag))
-                if j.Status = 304 then problems.Add($"{path}: Jason got 304 for David's ETag")
+                // The messages pages carry a content ETag (Rack::ETag's digest, as Rails): two members who see the same page share it, and
+                // authorization runs before the 304. The per-user pages (room, sidebar, search) must not share one.
+                let contentEtag = path.Contains "/messages"
+                if j.Status = 304 && not contentEtag then problems.Add($"{path}: Jason got 304 for David's ETag")
                 let! d = david.Send((get path).With("if-none-match", etag))
                 out $"A6 {path}: etag {etag}, David conditional {d.Status}, Jason with David's etag {j.Status}"
             | None -> out $"A6 {path}: no etag (status {g3.Status})"
+        // A content ETag must never answer for a room the viewer cannot see: David's ETag sent for a room that does not exist.
+        let! known = david.Get $"/rooms/{ALL_TALK}/messages"
+        match known.Header "etag" with
+        | Some etag ->
+            let! nope = david.Send((get "/rooms/900000001/messages").With("if-none-match", etag))
+            out $"A6 messages page of a room that does not exist, with a real content ETag: {nope.Status}"
+            if nope.Status = 304 || nope.Status = 200 then problems.Add($"a room that does not exist answered {nope.Status} to a content ETag")
+        | None -> problems.Add "no ETag on the messages page"
         // Accept variants on a warm key: JSON, turbo-stream.
         for path in [ $"/rooms/{ALL_TALK}"; "/users/me/sidebar"; "/searches?q=the"; $"/rooms/{ALL_TALK}/messages" ] do
             let! html = david.Get path
