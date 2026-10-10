@@ -280,3 +280,65 @@ let ``the app's own writes never count as another connection's`` () =
         let! _ = warm david $"/rooms/{ALL_TALK}"
         Assert.Equal(epoch, versions.Sync())
     }
+
+/// Round 4 verifier: the commits above come from another connection in this process; Rails is another process (POSIX locks, its own
+/// mapping of `-shm`). The sqlite3 shell, a process of its own, revokes and restores David's session (its token) and his membership of
+/// All Talk, each right after a cached hit while Jason reads without pause (so the checks' transactions are held), thirty times: every
+/// request after a revocation is refused and every request after a restore is served, in both authorization modes, in process and
+/// fronted. What makes this hold is `Versions.Sync` (a foreign commit drops every cache, so the next request is a miss), not R4.3's held
+/// check transactions: with the hold never renewed (`Prepare` comparing "held at all" instead of the stamp) this test still passes,
+/// while `CheckHoldTests` fail; the held checks only answer hits, and a foreign commit leaves none.
+[<Fact>]
+let ``revocations committed by another process are seen by the next request, every time`` () =
+    let shell = [ "/usr/bin/sqlite3"; "/usr/local/bin/sqlite3"; "/opt/homebrew/opt/sqlite/bin/sqlite3" ] |> List.tryFind IO.File.Exists
+    match shell with
+    | None ->
+        Assert.Skip "no sqlite3 shell"
+        Task.CompletedTask
+    | Some shell ->
+    let run (test: Test) (sql: string) =
+        let info = Diagnostics.ProcessStartInfo(shell, RedirectStandardError = true, RedirectStandardOutput = true)
+        info.ArgumentList.Add "-cmd"
+        info.ArgumentList.Add ".timeout 5000"
+        info.ArgumentList.Add test.App.Db.Path
+        info.ArgumentList.Add sql
+        use p = nonNull (Diagnostics.Process.Start info)
+        p.WaitForExit()
+        Assert.True((p.ExitCode = 0), $"sqlite3: {p.StandardError.ReadToEnd()}")
+    both (fun test ->
+        task {
+            let david = david test
+            let room = $"/rooms/{ALL_TALK}"
+            let messages = $"/rooms/{ALL_TALK}/messages"
+            let! _ = warm david room
+            // Jason reads his page without pause, so the checks' connections keep their transactions (a held one is let go after 5 ms idle).
+            let jason = browser test "198.51.100.62"
+            do! jason.SignIn "jason@37signals.com"
+            use stop = new CancellationTokenSource()
+            let background =
+                Task.Run(fun () ->
+                    task {
+                        while not stop.IsCancellationRequested do
+                            let! _ = jason.Get room
+                            ()
+                    }
+                    :> Task)
+            for round in 1..30 do
+                let path = if round % 2 = 0 then room else messages
+                let! hit = david.Get path
+                Assert.Equal(200, hit.Status)
+                if round % 3 = 0 then
+                    run test $"UPDATE memberships SET room_id = -room_id WHERE user_id = {DAVID} AND room_id = {ALL_TALK}"
+                    let! gone = david.Get path
+                    Assert.True((gone.Status <> 200), $"round {round}: {path} served after the membership went ({gone.Status})")
+                    run test $"UPDATE memberships SET room_id = -room_id WHERE user_id = {DAVID} AND room_id = -{ALL_TALK}"
+                else
+                    run test $"UPDATE sessions SET token = token || 'x' WHERE user_id = {DAVID}"
+                    let! gone = david.Get path
+                    Assert.True((gone.Status = 302), $"round {round}: {path} after the session's token changed: {gone.Status}")
+                    run test $"UPDATE sessions SET token = substr(token, 1, length(token) - 1) WHERE user_id = {DAVID}"
+                let! back = david.Get path
+                Assert.True((back.Status = 200), $"round {round}: {path} after the restore: {back.Status} {back.Location}")
+            stop.Cancel()
+            do! background
+        })
