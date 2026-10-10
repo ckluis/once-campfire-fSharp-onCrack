@@ -8,6 +8,7 @@
 //!   loadgen cable  --base URL --cookie C --room ID --csrf T --clients N [--streams a,b,c]
 //!                  [--sources 127.0.0.2,127.0.0.3 --hold-secs 60 --deflate 1]
 //!                  [--latency-msgs 30 --interval-ms 200 --tput-secs 15 --posters 4]
+//!                  [--window 128] [--client raw|tungstenite --threads 3]       (raw, the default: epoll loops, rawcable.rs)
 //!   loadgen upload --base URL --cookie C --room ID --csrf T --file PATH [--reps 5]
 //!   loadgen fetch  --base URL --cookie C --path P --out FILE     -> saves an uncompressed body
 //!   loadgen gzip   --file F [--iters 200]                         -> CPU per compression, by backend/level
@@ -28,6 +29,8 @@
 //! desktop Chrome: `--user-agent 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 //! (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'` (one line).
 
+mod rawcable;
+
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -41,6 +44,7 @@ use hyper::client::conn::http1::SendRequest;
 use hyper_util::rt::TokioIo;
 use serde_json::{Value, json};
 use tokio::net::TcpStream;
+use rawcable::{RAW_SEQ_CAP, RawShared};
 use tokio_tungstenite::tungstenite::{Message as WsMessage, client::IntoClientRequest};
 
 type Res<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -641,6 +645,60 @@ struct Delivery {
     receipts: AtomicU64,
     /// Bytes read off the sockets (`--deflate` clients only): what the network carries.
     wire_bytes: AtomicU64,
+    /// The raw epoll clients' bookkeeping (`--client raw`, the default): with it, `sent`, `got`, `per_client` and `receipts` above
+    /// are unused and the methods below answer from it instead.
+    raw: Option<Arc<RawShared>>,
+}
+
+impl Delivery {
+    fn mark_sent(&self, seq: u64, t0: Instant) {
+        match &self.raw {
+            Some(r) => r.mark_sent(seq, t0),
+            None => {
+                self.sent.lock().unwrap().insert(seq, t0);
+            }
+        }
+    }
+
+    /// The highest sequence number that can be tracked (posters stop there).
+    fn seq_limit(&self) -> u64 {
+        if self.raw.is_some() { RAW_SEQ_CAP as u64 - 1 } else { u64::MAX }
+    }
+
+    fn all_received(&self, seqs: &[u64], clients: usize) -> bool {
+        match &self.raw {
+            Some(r) => seqs.iter().all(|s| r.received(*s) >= clients),
+            None => {
+                let got = self.got.lock().unwrap();
+                seqs.iter().all(|s| got.get(s).map(|g| g.0 >= clients).unwrap_or(false))
+            }
+        }
+    }
+
+    fn receipt_count(&self) -> u64 {
+        match &self.raw {
+            Some(r) => r.stats.iter().map(|w| w.receipts.load(Ordering::Relaxed)).sum(),
+            None => self.receipts.load(Ordering::Relaxed),
+        }
+    }
+
+    /// The per-client latencies of the phase that is ending, and (raw) the start of the next one.
+    fn take_client_hist(&self, phase: usize, next: Option<usize>) -> Histogram<u64> {
+        match &self.raw {
+            Some(r) => {
+                let mut all = hist();
+                for w in &r.stats {
+                    all.add(&w.hists.lock().unwrap()[phase]).ok();
+                }
+                if let Some(n) = next {
+                    r.phase.store(n, Ordering::Relaxed);
+                }
+                all
+            }
+            None if next.is_some() => std::mem::replace(&mut *self.per_client.lock().unwrap(), hist()),
+            None => self.per_client.lock().unwrap().clone(),
+        }
+    }
 }
 
 /// The `bmk<digits>z` markers in a frame's text. Every client reads every frame, so this is the load generator's hot loop on a
@@ -890,7 +948,7 @@ async fn post_marked(
     }
     let (h, b) = message_request(cookie, csrf, &format!("fanout bmk{seq}z"));
     let t0 = Instant::now();
-    delivery.sent.lock().unwrap().insert(seq, t0);
+    delivery.mark_sent(seq, t0);
     match send(sender.as_mut()?, addr, "POST", &format!("/rooms/{room}/messages"), &h, b).await {
         Ok(r) if r.status < 400 => Some(t0.elapsed().as_micros() as u64),
         _ => {
@@ -903,11 +961,7 @@ async fn post_marked(
 async fn wait_drain(delivery: &Delivery, seqs: &[u64], clients: usize, timeout: Duration) {
     let until = Instant::now() + timeout;
     while Instant::now() < until {
-        let drained = {
-            let got = delivery.got.lock().unwrap();
-            seqs.iter().all(|s| got.get(s).map(|g| g.0 >= clients).unwrap_or(false))
-        };
-        if drained {
+        if delivery.all_received(seqs, clients) {
             return;
         }
         tokio::time::sleep(Duration::from_millis(50)).await;
@@ -933,11 +987,25 @@ fn phase(name: &str) {
 }
 
 fn fanout_stats(delivery: &Delivery, seqs: &[u64], clients: usize) -> (Histogram<u64>, usize, Option<Instant>) {
-    let sent = delivery.sent.lock().unwrap();
-    let got = delivery.got.lock().unwrap();
     let mut all = hist();
     let mut complete = 0;
     let mut last = None::<Instant>;
+    if let Some(r) = &delivery.raw {
+        for s in seqs {
+            let (n, t) = r.totals(*s);
+            if n > 0 {
+                let t = r.start + Duration::from_nanos(t);
+                last = Some(last.map_or(t, |l| l.max(t)));
+                if n >= clients {
+                    complete += 1;
+                    all.record(t.duration_since(r.sent_at(*s)).as_micros() as u64).ok();
+                }
+            }
+        }
+        return (all, complete, last);
+    }
+    let sent = delivery.sent.lock().unwrap();
+    let got = delivery.got.lock().unwrap();
     for s in seqs {
         if let Some((n, t)) = got.get(s) {
             last = Some(last.map_or(*t, |l| l.max(*t)));
@@ -960,6 +1028,11 @@ async fn cable(a: &Args) -> Res<Value> {
     let interval = Duration::from_millis(a.num("interval-ms", 200));
     let tput_secs: f64 = a.num("tput-secs", 15.0);
     let posters: usize = a.num("posters", 4);
+    // The saturated phase keeps at most `window` messages posted and not yet delivered to every client (0: no limit). Without it
+    // a client that keeps up lets the posters outrun the fan-out, the server's stream rings (256 frames) lap the slowest
+    // subscribers and it closes their connections, as Action Cable does: messages are then missing for those clients and the
+    // throughput measured is the loss. A client too slow to keep up throttled the posters by itself, which hid this (R4.1).
+    let window: u64 = a.num("window", 128u64);
     let hold_secs: u64 = a.num("hold-secs", 0);
     let deflate = a.num("deflate", 0u8) != 0;
     let sources: Vec<std::net::IpAddr> =
@@ -977,12 +1050,19 @@ async fn cable(a: &Args) -> Res<Value> {
         subs.push(json!({"channel": channel, "signed_stream_name": name}).to_string());
     }
 
+    // `--client raw` (the default) is the epoll client of rawcable.rs; `tungstenite` is the one rounds 1-3 measured with, and `--deflate 1`
+    // has its own client.
+    let client = a.opt("client").unwrap_or_else(|| "raw".into());
+    let raw_threads: usize = a.num("threads", 3usize).max(1);
+    let use_raw = client == "raw" && !deflate;
+    let raw = use_raw.then(|| Arc::new(rawcable::RawShared::new(raw_threads, hist)));
     let delivery = Arc::new(Delivery {
         sent: Mutex::new(HashMap::new()),
         got: Mutex::new(HashMap::new()),
         per_client: Mutex::new(hist()),
         receipts: AtomicU64::new(0),
         wire_bytes: AtomicU64::new(0),
+        raw: raw.clone(),
     });
     let confirmed = Arc::new(AtomicUsize::new(0));
     let connected = Arc::new(AtomicUsize::new(0));
@@ -994,7 +1074,46 @@ async fn cable(a: &Args) -> Res<Value> {
     let connect_start = Instant::now();
     let gate = Arc::new(tokio::sync::Semaphore::new(50));
     let mut handles = Vec::new();
-    for n in 0..clients {
+    let mut raw_threads_joined = Vec::new();
+    if let Some(raw) = &raw {
+        let mut request = format!(
+            "GET /cable HTTP/1.1\r\nHost: {addr}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\
+             Sec-WebSocket-Version: 13\r\nSec-WebSocket-Protocol: actioncable-v1-json, actioncable-unsupported\r\nOrigin: http://{addr}\r\nCookie: {cookie}\r\n"
+        );
+        if let Some(user_agent) = user_agent() {
+            request.push_str(&format!("User-Agent: {user_agent}\r\n"));
+        }
+        request.push_str("\r\n");
+        let subscribes: Vec<u8> = subs
+            .iter()
+            .flat_map(|ident| masked_text_frame(json!({"command": "subscribe", "identifier": ident}).to_string().as_bytes()))
+            .collect();
+        let cfg = Arc::new(rawcable::RawConfig {
+            addr: addr.clone(),
+            request: request.into_bytes(),
+            subscribes,
+            nsubs: subs.len(),
+            handshakes_in_flight: (50 / raw_threads).max(1),
+        });
+        for t in 0..raw_threads {
+            let mine: Vec<Option<std::net::IpAddr>> =
+                (0..clients).filter(|n| n % raw_threads == t).map(|n| (!sources.is_empty()).then(|| sources[n % sources.len()])).collect();
+            let counters = rawcable::Counters {
+                confirmed: confirmed.clone(),
+                connected: connected.clone(),
+                failed: failed.clone(),
+                stop: stop.clone(),
+            };
+            let (cfg, shared, stats, failed) = (cfg.clone(), raw.clone(), raw.stats[t].clone(), failed.clone());
+            raw_threads_joined.push(std::thread::spawn(move || {
+                if let Err(e) = rawcable::run_worker(cfg, counters, shared, stats, mine) {
+                    eprintln!("raw cable worker {t}: {e}");
+                    failed.fetch_add(usize::MAX / 2, Ordering::Relaxed);
+                }
+            }));
+        }
+    }
+    for n in 0..(if use_raw { 0 } else { clients }) {
         let permit = gate.clone().acquire_owned().await?;
         let source = (!sources.is_empty()).then(|| sources[n % sources.len()]);
         let (addr, cookie, subs, confirmed, connected, stop, delivery, failed) = (
@@ -1062,7 +1181,7 @@ async fn cable(a: &Args) -> Res<Value> {
     wait_drain(&delivery, &seqs, ready, Duration::from_secs(20)).await;
     phase("paced_drained");
     let (all_h, complete, _) = fanout_stats(&delivery, &seqs, ready);
-    let client_h = std::mem::replace(&mut *delivery.per_client.lock().unwrap(), hist());
+    let client_h = delivery.take_client_hist(0, Some(1));
     let latency = json!({
         "messages": latency_msgs,
         "complete": complete,
@@ -1072,9 +1191,10 @@ async fn cable(a: &Args) -> Res<Value> {
     });
 
     // Phase 2: closed-loop posters for tput_secs, then drain; delivered messages/sec.
-    let receipts_before = delivery.receipts.load(Ordering::Relaxed);
+    let receipts_before = delivery.receipt_count();
     let wire_before = delivery.wire_bytes.load(Ordering::Relaxed);
     let next = Arc::new(AtomicU64::new(seq + 1));
+    let stalls = Arc::new(AtomicU64::new(0));
     phase("saturated");
     let tput_start = Instant::now();
     let tput_deadline = tput_start + Duration::from_secs_f64(tput_secs);
@@ -1082,12 +1202,27 @@ async fn cable(a: &Args) -> Res<Value> {
     for _ in 0..posters {
         let (addr, room, cookie, csrf, delivery, next) =
             (addr.clone(), room.clone(), cookie.clone(), csrf.clone(), delivery.clone(), next.clone());
+        let (first, stalls) = (seq + 1, stalls.clone());
         ptasks.push(tokio::spawn(async move {
             let mut conn = None;
             let mut mine = Vec::new();
             let mut h = hist();
             while Instant::now() < tput_deadline {
                 let s = next.fetch_add(1, Ordering::Relaxed);
+                if s > delivery.seq_limit() {
+                    break;
+                }
+                if window > 0 && s > first + window {
+                    // Wait until the message `window` places back has reached every client (2 s at most: a lost client never will).
+                    let until = Instant::now() + Duration::from_secs(2);
+                    while !delivery.all_received(&[s - window], ready) {
+                        if Instant::now() >= until {
+                            stalls.fetch_add(1, Ordering::Relaxed);
+                            break;
+                        }
+                        tokio::time::sleep(Duration::from_micros(200)).await;
+                    }
+                }
                 if let Some(us) = post_marked(&mut conn, &addr, &room, &cookie, &csrf, s, &delivery).await {
                     h.record(us).ok();
                     mine.push(s);
@@ -1109,11 +1244,13 @@ async fn cable(a: &Args) -> Res<Value> {
     phase("saturated_drained");
     let (tall_h, tcomplete, last) = fanout_stats(&delivery, &tseqs, ready);
     let span = last.map(|l| l.duration_since(tput_start).as_secs_f64()).unwrap_or(posting_secs).max(posting_secs);
-    let tclient_h = delivery.per_client.lock().unwrap().clone();
-    let receipts = delivery.receipts.load(Ordering::Relaxed) - receipts_before;
+    let tclient_h = delivery.take_client_hist(1, None);
+    let receipts = delivery.receipt_count() - receipts_before;
     let wire_bytes = delivery.wire_bytes.load(Ordering::Relaxed) - wire_before;
     let throughput = json!({
         "posters": posters,
+        "window": window,
+        "window_stalls": stalls.load(Ordering::Relaxed),
         "posted": tseqs.len(),
         "posts_per_sec": ((tseqs.len() as f64 / posting_secs) * 10.0).round() / 10.0,
         "complete": tcomplete,
@@ -1135,7 +1272,11 @@ async fn cable(a: &Args) -> Res<Value> {
     for h in handles {
         h.abort();
     }
+    for t in raw_threads_joined {
+        let _ = t.join();
+    }
     Ok(json!({
+        "client": raw.as_ref().map(|r| r.summary()).unwrap_or_else(|| json!({"kind": if deflate { "deflate" } else { "tungstenite" }})),
         "clients": clients,
         "ready": ready,
         "failed": failed.load(Ordering::Relaxed),

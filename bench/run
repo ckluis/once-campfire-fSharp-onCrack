@@ -71,7 +71,7 @@
 #   because they need different seeds (BENCH_SEED overrides the choice). Each rep signs the crowd seed's 525 people in first
 #   (REAL_USERS caps them) and a realistic result carries `lanes` (reads and posts, each its own req/s, statuses and latency); the
 #   rows check of a workload that posts counts every message in the database against its posts lane's answers.
-#   CABLE_CLIENTS="100 500 1000" CABLE_TPUT_SECS=15 CABLE_POSTERS=4 UPLOAD_REPS=5 PORT=4390
+#   CABLE_CLIENTS="100 500 1000" CABLE_TPUT_SECS=15 CABLE_POSTERS=4 CABLE_ARGS="--client tungstenite" UPLOAD_REPS=5 PORT=4390
 # The apps run with --network host: PORT and PORT+1 (and 6379, for the reference's Redis) must be
 # free on the host. NETWORK=bridge measures as the preliminary run did instead: the container on
 # Docker's bridge, reached through a published port (docker-proxy), with no DNS resolver.
@@ -84,6 +84,8 @@
 # of the fastest it has ever been on this VM ($WORK/.hostprobe-baseline), every measured window is followed by a probe, and
 # the results (host_probe_start, host_probe_after per run) are in the JSON; bench/report flags runs that overlapped noise.
 set -euo pipefail
+# 2,000 cable clients are 2,000 descriptors in the load generator; the VM's soft limit is 1,024 (R4.1: 988 of 2,000 failed to connect).
+ulimit -n 65536 2>/dev/null || ulimit -n "$(ulimit -Hn)" 2>/dev/null || true
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 BENCH=$ROOT/bench
@@ -119,6 +121,9 @@ IDLE_SECS=${IDLE_SECS:-10}
 CABLE_CLIENTS=${CABLE_CLIENTS:-100 500 1000}
 CABLE_TPUT_SECS=${CABLE_TPUT_SECS:-15}
 CABLE_POSTERS=${CABLE_POSTERS:-4}
+# Extra arguments for `loadgen cable` (space-separated): `--client tungstenite` is the client rounds 1-3 measured with; the default is
+# the raw epoll client (bench/loadgen/src/rawcable.rs, unit R4.1), `--threads N` its loops (3).
+CABLE_ARGS=${CABLE_ARGS-}
 UPLOAD_REPS=${UPLOAD_REPS:-5}
 PORT=${PORT:-4390}
 NETWORK=${NETWORK:-host}
@@ -443,11 +448,38 @@ run_rep() {
   for n in $CABLE_CLIENTS_RUN; do
     local pm=$OUT/.$app-$rep-cable$n
     taskset -c "$PROCMEM_CPUS" python3 "$BENCH/lib/procmem.py" sample "$cg" "$pm.jsonl" & PROCMEM=$!
+    # CABLE_SENDS=1: count the app's send syscalls over 3 s of the saturated phase (perf stat's tracepoints cost the app a few percent, so
+    # a run that counts is a run of its own, not one whose msgs/s is compared); `sends_per_delivery` is in the result.
+    local sendwatch=""
+    if [ -n "${CABLE_SENDS:-}" ]; then
+      local apppid; apppid=$(docker inspect -f '{{.State.Pid}}' "$CONTAINER")
+      ( for _ in $(seq 1 6000); do grep -q 'PHASE saturated ' "$pm.stderr" 2>/dev/null && break; sleep 0.1; done; sleep 4
+        sudo perf stat -x, -e 'syscalls:sys_enter_sendto,syscalls:sys_enter_sendmsg,syscalls:sys_enter_sendmmsg,syscalls:sys_enter_write,syscalls:sys_enter_writev,syscalls:sys_enter_futex,syscalls:sys_enter_epoll_pwait,context-switches' \
+          -p "$apppid" -o "$pm.syscalls.csv" -- sleep 3 >/dev/null 2>&1 ) & sendwatch=$!
+    fi
     local res; res=$(lg cable --base "$BASE" --cookie "$cookie" --room "$ROOM" --csrf "$csrf" --streams "$streams" \
-      --clients "$n" --tput-secs "$CABLE_TPUT_SECS" --posters "$CABLE_POSTERS" 2> "$pm.stderr")
+      --clients "$n" --tput-secs "$CABLE_TPUT_SECS" --posters "$CABLE_POSTERS" $CABLE_ARGS 2> "$pm.stderr")
     sleep 0.5; kill "$PROCMEM" 2>/dev/null || true; wait "$PROCMEM" 2>/dev/null || true; PROCMEM=""
+    [ -n "$sendwatch" ] && { wait "$sendwatch" || true; }
     res=$(python3 -c 'import json,sys; r=json.loads(sys.argv[1]); r["process_memory"]=json.loads(sys.argv[2]); print(json.dumps(r))' \
       "$res" "$(python3 "$BENCH/lib/procmem.py" phases "$pm.jsonl" "$pm.stderr")")
+    if [ -s "$pm.syscalls.csv" ]; then
+      res=$(python3 - "$res" "$pm.syscalls.csv" <<'PY'
+import json, sys
+r = json.loads(sys.argv[1])
+rate = r["throughput"]["frames_per_sec"]
+calls = {}
+for line in open(sys.argv[2]):
+    f = line.strip().split(",")
+    if len(f) > 2 and f[0].replace(".", "").isdigit():
+        calls[f[2].replace("syscalls:sys_enter_", "")] = float(f[0]) / 3
+sends = sum(calls.get(k, 0) for k in ("sendto", "sendmsg", "sendmmsg", "write", "writev"))
+r["syscalls_per_s"] = calls
+r["sends_per_delivery"] = round(sends / rate, 4) if rate else None
+print(json.dumps(r))
+PY
+)
+    fi
     cable_json=$(python3 -c 'import json,sys; a=json.loads(sys.argv[1]); a.append(json.loads(sys.argv[2])); print(json.dumps(a))' "$cable_json" "$res")
     log "$app rep $rep: cable $n clients $(python3 -c 'import json,sys; r=json.loads(sys.argv[1]); print("ready", r["ready"], "lat all p50", r["latency"]["all_clients"].get("p50_ms"), "p99", r["latency"]["all_clients"].get("p99_ms"), "tput", r["throughput"]["delivered_msgs_per_sec"], "msg/s", r["throughput"]["complete"], "/", r["throughput"]["posted"])' "$res")"
     sleep 2

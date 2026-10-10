@@ -20,6 +20,9 @@ serde_json = "1"
 regex = "1"
 # The cable clients' marker search (already in the lock through regex).
 memchr = "2"
+# The raw cable client's epoll loops (rawcable.rs); already in the lock through tokio.
+socket2 = "0.6"
+mio = { version = "1", features = ["os-poll", "net"] }
 # `loadgen gzip`: zlib-rs, the app's deflate backend, against miniz_oxide, flate2's default.
 # `runtime_detection` gives zlib-rs the `std` its SIMD feature detection needs.
 miniz_oxide = "0.9"

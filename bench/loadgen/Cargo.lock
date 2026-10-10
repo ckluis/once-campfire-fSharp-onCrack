@@ -308,8 +308,10 @@ dependencies = [
  "hyper-util",
  "memchr",
  "miniz_oxide",
+ "mio",
  "regex",
  "serde_json",
+ "socket2",
  "tokio",
  "tokio-tungstenite",
 ]
@@ -351,6 +353,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b18443e9c262bfe8fa82f51666e2642c53393f7e5c27b3e1aeab922cff5b9d8"
 dependencies = [
  "libc",
+ "log",
  "wasi",
  "windows-sys",
 ]
