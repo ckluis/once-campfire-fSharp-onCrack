@@ -176,6 +176,21 @@ drops it) and let `guard.sh` stop the session under 12 GB free. **Host load:** t
 builds) moves them to efficiency cores and every app's samples swing 30-50%. Sample the host while a session runs (`host-load-*.txt`) and read the hand
 re-run's CPU per request beside the harness's medians.
 
+**Held read transactions for the fresh checks** (unit R4.3, `bench/results/oncrack-r4-fresh.md`): a fresh check is one narrow query, and starting and ending its
+read transaction cost more than the query (SQLite's shared lock on a WAL read mark: an `fcntl` each way, plus an `fstat` for an empty WAL). `Database.CheckNow`
+(`CheckerPool` in `Database.fs`, slots with a compare-and-swap state in place of the bag) keeps the connection's read transaction open after a check and runs
+the next check's query in it while `Versions.ChangeStamp` (the WAL index header's change counter, which every commit by any connection moves; the watch's own
+mapping) still reads what it read before that transaction began; a moved counter ends it and begins another before the query. Every check still runs its query
+against the database, and nothing is remembered between checks but SQLite's own snapshot, so a revoked session, a removed membership or a deleted room is seen by the
+first check that starts after the commit returned. A kept transaction pins the WAL, so a 5 ms timer ends the stale and the idle ones (armed only while one is
+kept), and the writer's RESTART calls `ReleaseHolds` first (`Checkpoints.BeforeRestart`), which also keeps checks from beginning one for 50 ms.
+`CAMPFIRE_FRESH_HOLD=0` restores one transaction per check; `CAMPFIRE_FRESH_HOLD_FILE` (benches only) flips it from a file within 20 ms. `CheckHoldTests` (Db) hold it to
+the rule (a stress run that fails if any check answers from before a commit that returned ahead of it; mutation: comparing the stamp for "held at all" fails three
+tests). Rejected: remembering a check's answer under the change counter (or the version counters) and skipping the query while it holds; that is the cached decision
+with a database stamp, not upstream's contract of re-reading on every hit. Tools: `bench/fresh-micro` (Linux, `bench/micro-linux fresh-micro`, the whole app in one
+process, a page read by N connections beside optional posts, windows alternating the setting), `bench/fresh-ab` (one running container, the setting alternating by
+window, CPU per request from the cgroup), `bench/db-micro` (`fresh` scenarios: the check's shapes).
+
 **Commits by other connections** (round 2 verifier, `bench/results/oncrack-r2-verifier.md`): the version counters' triggers live in the
 writer's connection, so nothing else's commits (a Rails console or rollback, a second container, the sqlite3 shell) moved them. Now `Versions`
 watches the WAL index's change counter (`iChange` in `<db>-shm`, mapped read-only through libc; never through `FileStream`, whose `flock`

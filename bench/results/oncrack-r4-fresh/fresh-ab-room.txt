@@ -1,0 +1,10 @@
+bench/fresh-ab --mounted /var/tmp/campfire-mounted --rounds 6 --secs 4 '/rooms/@ROOM@'   (build b73cc0f + the control file, 2026-10-10 09:11)
+load 2.62 2.77 2.79; path /rooms/486777696; c=16; 4 s windows; hold/nohold alternating, order flips each round
+round 1: hold 134846 25.80 0 | nohold 121099 27.80 0   load 3.13
+round 2: nohold 114667 30.10 0 | hold 126521 27.60 0   load 3.65
+round 3: hold 126362 27.70 0 | nohold 118813 28.70 0   load 3.85
+round 4: nohold 123376 27.00 0 | hold 141457 24.20 0   load 4.10
+round 5: hold 142503 24.30 0 | nohold 125535 27.30 0   load 4.55
+round 6: nohold 126821 27.40 0 | hold 138132 25.50 0   load 4.31
+hold    median    136489 rps   25.65 us/req   nohold  median    122238 rps   27.60 us/req
+CPU per request, hold vs nohold: median of round differences -7.7%  (rounds: -7.2 -8.3 -3.5 -10.4 -11.0 -6.9)

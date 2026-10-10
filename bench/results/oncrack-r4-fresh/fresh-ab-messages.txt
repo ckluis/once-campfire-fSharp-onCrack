@@ -1,0 +1,10 @@
+bench/fresh-ab --mounted /var/tmp/campfire-mounted --rounds 6 --secs 4 '/rooms/@ROOM@/messages?before=@BEFORE@'   (2026-10-10 09:14)
+load 3.06 2.86 2.83; path /rooms/486777696/messages?before=933434569; c=16; 4 s windows; hold/nohold alternating, order flips each round
+round 1: hold 144928 23.60 0 | nohold 100289 31.20 0   load 3.45
+round 2: nohold 122468 28.20 0 | hold 113489 30.20 0   load 3.93
+round 3: hold 120439 29.10 0 | nohold 115892 29.40 0   load 4.48
+round 4: nohold 99001 33.30 0 | hold 118454 29.70 0   load 4.68
+round 5: hold 110380 31.30 0 | nohold 101231 34.20 0   load 5.04
+round 6: nohold 85326 38.10 0 | hold 108071 32.40 0   load 5.50
+hold    median    115972 rps   29.95 us/req   nohold  median    100760 rps   32.25 us/req
+CPU per request, hold vs nohold: median of round differences -9.6%  (rounds: -24.4 +7.1 -1.0 -10.8 -8.5 -15.0)
