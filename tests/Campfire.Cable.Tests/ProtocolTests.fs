@@ -310,7 +310,7 @@ let ``restart closes with server_restart`` () =
 
 [<Fact>]
 let ``lagging subscribers are disconnected with reconnect`` () =
-    withServer { testConfig with StreamCapacity = 1; MaxWriteBatch = 1 } (fun app ->
+    withServer { testConfig with StreamCapacity = 1; LagBytes = 1L; MaxWriteBatch = 1 } (fun app ->
         task {
             let! client = connect app 1UL
             let! _ = client.NextText()

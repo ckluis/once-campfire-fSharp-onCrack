@@ -1029,9 +1029,11 @@ async fn cable(a: &Args) -> Res<Value> {
     let tput_secs: f64 = a.num("tput-secs", 15.0);
     let posters: usize = a.num("posters", 4);
     // The saturated phase keeps at most `window` messages posted and not yet delivered to every client (0: no limit). Without it
-    // a client that keeps up lets the posters outrun the fan-out, the server's stream rings (256 frames) lap the slowest
-    // subscribers and it closes their connections, as Action Cable does: messages are then missing for those clients and the
-    // throughput measured is the loss. A client too slow to keep up throttled the posters by itself, which hid this (R4.1).
+    // a client that keeps up lets the posters outrun the fan-out; with onCrack's fixed 256-frame stream rings (R4.1-R4.4,
+    // `CAMPFIRE_CABLE_LOG=ring`) they lapped the slowest subscribers and the server closed their connections, so messages
+    // were missing for those clients and the throughput measured was the loss. (That is not what Action Cable does: it never
+    // closes a client for being slow to read, it queues without bound; R4.5 replaced the ring with a byte-bounded shared log
+    // and `--window 0` is now a valid load.) A client too slow to keep up throttled the posters by itself, which hid this (R4.1).
     let window: u64 = a.num("window", 128u64);
     let hold_secs: u64 = a.num("hold-secs", 0);
     let deflate = a.num("deflate", 0u8) != 0;

@@ -208,6 +208,13 @@ module Boot =
                     DirectWrites = not (String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_DIRECT", "off", StringComparison.OrdinalIgnoreCase))
                     // onCrack (unit R4.2): a direct connection sends a batch's shared payloads in place with one `sendmsg`; `CAMPFIRE_CABLE_GATHER=off` copies them.
                     GatherWrites = not (String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_GATHER", "off", StringComparison.OrdinalIgnoreCase))
+                    // onCrack (unit R4.5): a broadcasting's log holds this many bytes behind its oldest subscriber before that one is cut.
+                    LagBytes =
+                        match Int64.TryParse(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_LAG_BYTES") with
+                        | true, bytes when bytes > 0L -> bytes
+                        | _ -> Campfire.Cable.Config.defaults.LagBytes
+                    // `CAMPFIRE_CABLE_LOG=ring` keeps rounds 1-4's fixed ring of 256 frames.
+                    RingLog = String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_LOG", "ring", StringComparison.OrdinalIgnoreCase)
                     // onCrack (unit R2.1): Turbo Stream frames without Active Support's `<`, `>`, `&` escapes; `CAMPFIRE_CABLE_COMPACT_JSON=off` keeps them.
                     CompactJson = not (String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_COMPACT_JSON", "off", StringComparison.OrdinalIgnoreCase)) }
             let deps: Deps = { Db = db; Secrets = secrets; Clock = clock }

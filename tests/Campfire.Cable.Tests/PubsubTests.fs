@@ -2,6 +2,7 @@
 module Campfire.Cable.Tests.PubsubTests
 
 open System
+open System.Threading
 open Xunit
 open Campfire.Cable
 open Campfire.Cable.Socket
@@ -51,17 +52,19 @@ let ``wraps payloads once per identifier`` () =
     (raw :> IDisposable).Dispose()
     Assert.Equal(1, hub.GroupCount "room")
 
+// Unit R4.5: the fixed ring (`CAMPFIRE_CABLE_LOG=ring`) still cuts a subscriber that is its capacity behind.
+
 [<Fact>]
-let ``slow subscribers see lag instead of gaps`` () =
-    let hub = Hub(2)
+let ``ring: slow subscribers see lag instead of gaps`` () =
+    let hub = Hub(2, 0L, true)
     let slow = hub.Subscribe("room", null, Wake())
     for i in 0..4 do
         hub.Broadcast("room", string i) |> ignore
     Assert.Equal(Error RecvStatus.Lagged, recv slow)
 
 [<Fact>]
-let ``a subscriber that keeps up never lags, and one that fell behind reads on from the oldest kept`` () =
-    let hub = Hub(4)
+let ``ring: a subscriber that keeps up never lags, and one that fell behind reads on from the oldest kept`` () =
+    let hub = Hub(4, 0L, true)
     let steady = hub.Subscribe("room", null, Wake())
     let slow = hub.Subscribe("room", null, Wake())
     for i in 0..99 do
@@ -70,6 +73,212 @@ let ``a subscriber that keeps up never lags, and one that fell behind reads on f
     Assert.Equal(Error RecvStatus.Lagged, recv slow)
     // As tokio's receiver does after `Lagged`: the oldest message still in the ring comes next.
     Assert.Equal(Ok "96", recv slow)
+
+// Unit R4.5: the log keeps every frame for a subscriber within its byte budget, however many frames behind.
+
+let private drainAll (subscriber: Subscriber) : string list =
+    let seen = Collections.Generic.List<string>()
+    let mutable reading = true
+    while reading do
+        match recv subscriber with
+        | Ok text ->
+            seen.Add text
+            // A reader that never gets to the end (a cursor that does not advance) fails here, not by hanging.
+            if seen.Count > 5_000_000 then failwith "the subscriber reads without end"
+        | Error status ->
+            Assert.Equal(RecvStatus.Empty, status)
+            reading <- false
+    List.ofSeq seen
+
+[<Fact>]
+let ``log: a subscriber 100,000 frames behind reads every one, in order, then finds nothing`` () =
+    let hub = Hub(256)
+    let behind = hub.Subscribe("room", null, Wake())
+    let steady = hub.Subscribe("room", null, Wake())
+    for i in 0..99999 do
+        hub.Broadcast("room", string i) |> ignore
+    let got = drainAll behind
+    Assert.Equal<string list>([ for i in 0..99999 -> string i ], got)
+    Assert.Equal(100000, (drainAll steady).Length)
+    Assert.Equal(0L, hub.CutCount)
+    // It goes on from there.
+    hub.Broadcast("room", "next") |> ignore
+    Assert.Equal(Ok "next", recv behind)
+
+[<Fact>]
+let ``log: reads are exact at the chunk's edges`` () =
+    for frames in [ 0; 1; 7; 8; 9; 15; 16; 17; 255; 256; 257; 511; 512; 513 ] do
+        // Small chunks (8) and the default (256) both: the edges are the chunk size, a chunk and one either side.
+        for chunk in [ 8; 256 ] do
+            let hub = Hub(chunk)
+            let late = hub.Subscribe("room", null, Wake())
+            let eager = hub.Subscribe("room", null, Wake())
+            let eagerSeen = Collections.Generic.List<string>()
+            for i in 0 .. frames - 1 do
+                hub.Broadcast("room", string i) |> ignore
+                // One reader reads as it goes, so it is often at the end of a full chunk when the next publish comes.
+                eagerSeen.AddRange(drainAll eager)
+            let expected = [ for i in 0 .. frames - 1 -> string i ]
+            Assert.Equal<string list>(expected, List.ofSeq eagerSeen)
+            Assert.Equal<string list>(expected, drainAll late)
+            // A subscriber added at the edge sees exactly what comes after.
+            let after = hub.Subscribe("room", null, Wake())
+            Assert.Equal(0, (drainAll after).Length)
+            hub.Broadcast("room", "x") |> ignore
+            Assert.Equal<string list>([ "x" ], drainAll after)
+            Assert.Equal<string list>([ "x" ], drainAll late)
+
+[<Fact>]
+let ``log: one publisher and eight readers that stall lose and reorder nothing`` () =
+    let hub = Hub(16, Int64.MaxValue, false)
+    let readers = 8
+    let subscribers = [| for _ in 1..readers -> hub.Subscribe("room", null, Wake()) |]
+    let total = ref 0
+    let running = ref true
+    let deadline = Diagnostics.Stopwatch.StartNew()
+    let readerTasks =
+        [| for r in 0 .. readers - 1 ->
+               System.Threading.Tasks.Task.Run(fun () ->
+                   let random = Random(r)
+                   let mutable next = 0
+                   let mutable finished = false
+                   while not finished do
+                       match recv subscribers[r] with
+                       | Ok text ->
+                           if text <> string next then failwith $"reader {r}: expected {next}, got {text}"
+                           next <- next + 1
+                           if random.Next 20000 = 0 then Threading.Thread.Sleep(random.Next 20)
+                       | Error RecvStatus.Empty ->
+                           if not (Volatile.Read(&running.contents)) && next = Volatile.Read(&total.contents) then finished <- true else Threading.Thread.Yield() |> ignore
+                       | Error status -> failwith $"reader {r}: {status}"
+                   next) |]
+    let publisher =
+        System.Threading.Tasks.Task.Run(fun () ->
+            let mutable i = 0
+            while deadline.Elapsed < TimeSpan.FromSeconds 2.0 do
+                hub.Broadcast("room", string i) |> ignore
+                i <- i + 1
+            Volatile.Write(&total.contents, i)
+            Volatile.Write(&running.contents, false))
+    publisher.Wait()
+    let counts = readerTasks |> Array.map (fun t -> t.Result)
+    for count in counts do
+        Assert.Equal(total.Value, count)
+    Assert.True(total.Value > 1000, $"published {total.Value}")
+    Assert.Equal(0L, hub.CutCount)
+
+let private chunkOf (subscriber: Subscriber) : WeakReference = WeakReference(subscriber.Chunk)
+
+[<System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)>]
+let private forgottenChunkAfterCatchUp (hub: Hub) (subscribers: Subscriber list) : WeakReference =
+    let first = chunkOf subscribers.Head
+    for i in 0..9999 do
+        hub.Broadcast("room", string i) |> ignore
+    Assert.True(hub.RetainedBytes > 1000L, $"{hub.RetainedBytes}")
+    for s in subscribers do
+        Assert.Equal(10000, (drainAll s).Length)
+    first
+
+[<Fact>]
+let ``log: chunks nobody can read are freed and the retained bytes come back down`` () =
+    let hub = Hub(8)
+    let subscribers = [ for _ in 1..3 -> hub.Subscribe("room", null, Wake()) ]
+    let first = forgottenChunkAfterCatchUp hub subscribers
+    // Nothing is published now: the heartbeat's trim frees what the readers have passed.
+    hub.Trim()
+    // The subscribers are in the last chunk (8 frames of up to 5 bytes).
+    Assert.True(hub.RetainedBytes <= 8L * 5L, $"{hub.RetainedBytes} retained after catching up")
+    Assert.True(hub.RetainedPeakBytes >= 10000L, $"{hub.RetainedPeakBytes}")
+    GC.Collect()
+    GC.WaitForPendingFinalizers()
+    GC.Collect()
+    Assert.False(first.IsAlive, "the first chunk is still held")
+    // Disposing the last subscriber of the group takes the rest.
+    for s in subscribers do
+        (s :> IDisposable).Dispose()
+    Assert.Equal(0L, hub.RetainedBytes)
+
+[<Fact>]
+let ``log: the oldest subscriber leaving or the others moving on frees the log behind it`` () =
+    let hub = Hub(8)
+    let slow = hub.Subscribe("room", null, Wake())
+    let quick = hub.Subscribe("room", null, Wake())
+    for i in 0..999 do
+        hub.Broadcast("room", $"{i:D4}") |> ignore
+    drainAll quick |> ignore
+    // 1000 frames of 4 bytes; the slow one still holds all of them.
+    Assert.Equal(4000L, hub.RetainedBytes)
+    // Reading it all is not enough on its own to free: the group is told by the next trim.
+    drainAll slow |> ignore
+    hub.Trim()
+    Assert.True(hub.RetainedBytes <= 8L * 4L, $"{hub.RetainedBytes}")
+    // A dispose of the one holding the oldest chunk does it too.
+    let holder = hub.Subscribe("room", null, Wake())
+    for i in 0..999 do
+        hub.Broadcast("room", $"{i:D4}") |> ignore
+    drainAll quick |> ignore
+    drainAll slow |> ignore
+    Assert.True(hub.RetainedBytes >= 4000L)
+    (holder :> IDisposable).Dispose()
+    Assert.True(hub.RetainedBytes <= 8L * 4L, $"{hub.RetainedBytes}")
+
+[<Fact>]
+let ``log: a subscriber over the byte budget is cut, the others read on, and its connection is aborted`` () =
+    task {
+        // Chunks of 4 frames of 1,000 bytes; the budget is 20 KB.
+        let hub = Hub(4, 20_000L, false)
+        let cutWake = Wake()
+        let aborted = Threading.Tasks.TaskCompletionSource()
+        cutWake.Abort <- (fun () -> aborted.TrySetResult() |> ignore)
+        let stalled = hub.Subscribe("room", null, cutWake)
+        let steadyWake = Wake()
+        steadyWake.Abort <- (fun () -> failwith "the steady subscriber must not be cut")
+        let steady = hub.Subscribe("room", null, steadyWake)
+        let payload = String('x', 1000)
+        let mutable steadyCount = 0
+        for _ in 0..99 do
+            hub.Broadcast("room", payload) |> ignore
+            steadyCount <- steadyCount + (drainAll steady).Length
+        Assert.Equal(100, steadyCount)
+        Assert.Equal(1L, hub.CutCount)
+        Assert.Equal(Error RecvStatus.Lagged, recv stalled)
+        // It stays lagged; the memory it pinned is gone: the log holds at most the budget and the slack of one chunk.
+        Assert.Equal(Error RecvStatus.Lagged, recv stalled)
+        Assert.True(hub.RetainedBytes <= 20_000L + 4L * 1008L, $"{hub.RetainedBytes} retained")
+        Assert.True(hub.RetainedPeakBytes <= 20_000L + 2L * 4L * 1008L, $"{hub.RetainedPeakBytes} peak")
+        // Its connection is woken, and cut once the grace is over (the default is a second).
+        let! woke = cutWake.WaitAsync()
+        Assert.True woke
+        let! finished = Threading.Tasks.Task.WhenAny(aborted.Task, Threading.Tasks.Task.Delay(TimeSpan.FromSeconds 5.0))
+        Assert.True(obj.ReferenceEquals(finished, aborted.Task), "the cut connection was never aborted")
+        // A connection that finished by itself in the grace is left alone.
+        let wake = Wake()
+        let touched = ref false
+        wake.Abort <- (fun () -> touched.Value <- true)
+        wake.Retire()
+        wake.Cut()
+        do! Threading.Tasks.Task.Delay(TimeSpan.FromSeconds 1.5)
+        Assert.False touched.Value
+        // The cut subscriber is out of its group: the next broadcast does not count it.
+        Assert.Equal(1, hub.Broadcast("room", payload))
+    }
+
+[<Fact>]
+let ``log: a subscriber that never reads is cut once 70 MB have been published past it`` () =
+    let hub = Hub(256)
+    let never = hub.Subscribe("room", null, Wake())
+    let steady = hub.Subscribe("room", null, Wake())
+    let payload = String('x', 1400)
+    let mutable steadyCount = 0
+    // 50,000 frames of about 1.4 KB: past the 64 MB default budget.
+    for i in 0..49999 do
+        hub.Broadcast("room", payload) |> ignore
+        if i % 100 = 99 then steadyCount <- steadyCount + (drainAll steady).Length
+    steadyCount <- steadyCount + (drainAll steady).Length
+    Assert.Equal(50000, steadyCount)
+    Assert.Equal(1L, hub.CutCount)
+    Assert.Equal(Error RecvStatus.Lagged, recv never)
+    Assert.True(hub.RetainedPeakBytes <= Hub.DefaultLagBytes + 256L * 1410L, $"{hub.RetainedPeakBytes}")
 
 [<Fact>]
 let ``a broadcast sets the wake of every subscriber`` () =

@@ -41,7 +41,18 @@ type Server<'U>
         channels: Dictionary<string, unit -> Channel<'U>>,
         logger: ILogger
     ) =
-    let hub = Hub(config.StreamCapacity)
+    let hub =
+        Hub(
+            config.StreamCapacity,
+            config.LagBytes,
+            config.RingLog,
+            Action<int, int64>(fun cut budget ->
+                logger.LogWarning(
+                    "Cable: {Cut} subscriber(s) more than {Budget} bytes behind were disconnected; their clients reconnect",
+                    cut,
+                    budget
+                ))
+        )
     let stop = new CancellationTokenSource()
     let beacons = List<Beacon>()
     let mutable heartbeatStarted = 0
@@ -64,6 +75,8 @@ type Server<'U>
                         // One frame per beat, shared by every connection.
                         Volatile.Write(&heartbeat, Frame.OfString(Protocol.ping (ServerNames.unixNow ())))
                         Interlocked.Increment(&beat) |> ignore
+                        // R4.5: free what the logs hold behind the oldest subscriber, where nothing has been published since.
+                        hub.Trim()
                         lock beacons (fun () ->
                             for beacon in beacons do
                                 beacon.Wake.Set())

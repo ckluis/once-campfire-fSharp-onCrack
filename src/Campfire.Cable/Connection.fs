@@ -349,6 +349,7 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
         let logger = server.Logger
         use stop = new CancellationTokenSource()
         let wake = Wake()
+        wake.Abort <- abort
         let channel = Channels.Channel.CreateBounded<Received>(Channels.BoundedChannelOptions(IncomingCapacity, SingleReader = true, SingleWriter = true))
         let incoming = channel.Reader
         let sink = Writer(stream, deflate, WriteTimeout, abort, direct, config.GatherWrites)
@@ -495,6 +496,7 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                     server.Unregister beacon
             with e ->
                 logger.LogError(e, "Cable connection failed")
+            wake.Retire()
             stop.Cancel()
             do! readerTask
             do! connection.HandleClose()

@@ -13,9 +13,14 @@ type Config =
       /// `config.assume_ssl` (on unless `DISABLE_SSL`): `ActionDispatch::AssumeSSL` makes every
       /// request look like HTTPS, so the same-origin check compares against `https://<host>`.
       AssumeSsl: bool
-      /// Messages buffered per broadcasting (shared by its subscribers) before a slow subscriber
-      /// counts as lagging and is disconnected with `reconnect: true`.
+      /// Frames per chunk of a broadcasting's log (shared by its subscribers); with `RingLog`, the ring's size: messages
+      /// buffered before a slow subscriber counts as lagging and is disconnected with `reconnect: true`.
       StreamCapacity: int
+      /// onCrack (unit R4.5): the most a broadcasting's log holds behind its oldest subscriber. A subscriber further behind is
+      /// disconnected with `reconnect: true`; anything nearer loses nothing. `CAMPFIRE_CABLE_LAG_BYTES`.
+      LagBytes: int64
+      /// onCrack (unit R4.5): the fixed ring of rounds 1-4 instead of the log (`CAMPFIRE_CABLE_LOG=ring`): the A/B switch.
+      RingLog: bool
       /// Frames coalesced into one socket write at most, which also bounds what a connection
       /// buffers beyond the socket.
       MaxWriteBatch: int
@@ -38,6 +43,8 @@ module Config =
           AllowSameOriginAsHost = true
           AssumeSsl = true
           StreamCapacity = 256
+          LagBytes = 64L * 1024L * 1024L
+          RingLog = false
           MaxWriteBatch = 64
           CloseTimeout = TimeSpan.FromSeconds 5.0
           DirectWrites = true
