@@ -291,3 +291,25 @@ let ``clients that stop reading do not make the room congested, and lose nothing
                 for client in clients do
                     (client :> IDisposable).Dispose()
         })
+
+// Round 4 verifier: a remote disconnect (a ban, a sign-out, a removed membership: `Server.Disconnect`) is the last thing the connection
+// sends. Frames published to its streams after the disconnect must not go out ahead of it: the connection read its streams first and
+// its internal channel second, so up to a batch (64) of frames published after a revocation reached the revoked client.
+[<Fact>]
+let ``nothing published after a remote disconnect is sent before it`` () =
+    withServer testConfig (fun app ->
+        task {
+            use! client = connect app 1UL
+            do! expectText Welcome client
+            do! client.Subscribe(room 1)
+            do! expectText (confirm (room 1)) client
+            do! roundTrip app client 0 5 10
+            // The revocation, then frames published after it, all before the connection wakes.
+            WakeBatch.Begin()
+            app.Server.Disconnect("user-1", false) |> ignore
+            for i in 0..99 do
+                app.Server.Broadcast("room:room-1", object' [ "after", int' i ]) |> ignore
+            WakeBatch.End()
+            let! text = client.NextText()
+            eq """{"type":"disconnect","reason":"remote","reconnect":false}""" text
+        })

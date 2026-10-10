@@ -509,19 +509,23 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                         // While the probe is out, writes are held (bounded: no more is read from the streams once a batch is held).
                         let holding = not (isNull probe)
                         if running && closing.IsNone && not (holding && pending.Count >= config.MaxWriteBatch) then
-                            // Whatever is ready goes out in the same write.
-                            match (if ordered then merge.Drain(readers, pending, config.MaxWriteBatch) else drain readers pending config.MaxWriteBatch) with
-                            | Drained.Lagged -> closing <- ValueSome lagged
-                            | Drained.Full -> if not holding then wake.Set()
-                            | _ -> ()
-
-                            // The internal channel carries raw payloads.
+                            // The internal channel carries raw payloads. Round 4 verifier: it is read before the streams, and a remote
+                            // disconnect (a ban, a sign-out, a revoked membership) stops the reading there, so nothing published after the
+                            // revocation goes out ahead of the goodbye (read second, up to a batch of later frames did). What the streams
+                            // still held from before it is not sent either: the connection is closing for a revocation.
                             match internal' with
                             | ValueSome internal' ->
                                 match drainInternal internal' with
                                 | ValueSome remote -> closing <- ValueSome remote
                                 | ValueNone -> ()
                             | ValueNone -> ()
+
+                            // Whatever is ready goes out in the same write.
+                            if closing.IsNone then
+                                match (if ordered then merge.Drain(readers, pending, config.MaxWriteBatch) else drain readers pending config.MaxWriteBatch) with
+                                | Drained.Lagged -> closing <- ValueSome lagged
+                                | Drained.Full -> if not holding then wake.Set()
+                                | _ -> ()
 
                             // One ping per beat, shared by every connection.
                             if beacon.BeatSeen <> server.Beat then
