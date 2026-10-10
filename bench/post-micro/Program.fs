@@ -169,6 +169,16 @@ let main argv =
     for kv in (arg argv "--env" "").Split(',', StringSplitOptions.RemoveEmptyEntries) do
         let i = kv.IndexOf '='
         Environment.SetEnvironmentVariable(kv.Substring(0, i), (match kv.Substring(i + 1) with "" -> null | v -> v))
+    // --fts "automerge=0,crisismerge=16": FTS5 settings written into the copy's index before the app starts (unit R4.4).
+    for kv in (arg argv "--fts" "").Split(',', StringSplitOptions.RemoveEmptyEntries) do
+        let i = kv.IndexOf '='
+        let ftsDb = Path.Combine(dir, "db/production.sqlite3")
+        use c = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={ftsDb}")
+        c.Open()
+        use cmd = c.CreateCommand()
+        cmd.CommandText <- $"INSERT INTO message_search_index(message_search_index, rank) VALUES('{kv.Substring(0, i)}', {kv.Substring(i + 1)})"
+        cmd.ExecuteNonQuery() |> ignore
+        eprintfn "fts %s" kv
     Environment.SetEnvironmentVariable("CAMPFIRE_STORAGE_PATH", dir)
     Environment.SetEnvironmentVariable("HTTP_PORT", string port)
     Environment.SetEnvironmentVariable("LOG_REQUESTS", "false")
@@ -198,6 +208,8 @@ let main argv =
     let who = emails |> List.filter members.Contains |> List.truncate (max postersN 1)
     let posters = who |> List.mapi (fun i e -> (signIn port e password room i).Result) |> Array.ofList
     eprintfn "room %s (%d), %d members, posting as %s" roomLabel room members.Count (String.Join(", ", who))
+    let lastFpp = ref 0.0
+    let lastGroup = ref 0.0
     let run (variant: string) (conc: int) (seconds: float) =
         Campfire.Db.PostPath.Apply(if variant = "base" then "" else variant)
         let counts = Counts()
@@ -205,9 +217,11 @@ let main argv =
         let tasks = [| for i in 0 .. conc - 1 -> poster port room posters[i % posters.Length] counts stop.Token |]
         Thread.Sleep 300
         let ok0, c0, a0 = Volatile.Read(&counts.Ok), cpu (), GC.GetTotalAllocatedBytes false
+        let f0, g0, w0 = Volatile.Read(&Campfire.Db.WriterStats.All.Frames), Volatile.Read(&Campfire.Db.WriterStats.All.Groups), Volatile.Read(&Campfire.Db.WriterStats.All.Writes)
         let sw = Stopwatch.StartNew()
         Thread.Sleep(TimeSpan.FromSeconds seconds)
         let ok1, c1, a1 = Volatile.Read(&counts.Ok), cpu (), GC.GetTotalAllocatedBytes false
+        let f1, g1, w1 = Volatile.Read(&Campfire.Db.WriterStats.All.Frames), Volatile.Read(&Campfire.Db.WriterStats.All.Groups), Volatile.Read(&Campfire.Db.WriterStats.All.Writes)
         let el = sw.Elapsed.TotalSeconds
         stop.Cancel()
         (try Task.WaitAll(tasks, 5000) |> ignore with _ -> ())
@@ -215,6 +229,9 @@ let main argv =
         let all = Campfire.Db.WriterStats.All
         if all.Restarts > 0L then eprintfn "  %s c=%d: WAL restarts so far %d, longest %d ms, deferred %d" variant conc all.Restarts (all.LongestRestartUs / 1000L) all.Deferrals
         if counts.Slow > 0L then eprintfn "  %s c=%d: %d answers over 100 ms, slowest %d ms" variant conc counts.Slow (counts.MaxUs / 1000L)
+        // Unit R4.4: WAL frames a post cost, and the writes a group held (WriterStats; the frame count is the writer's, read after each group).
+        lastFpp.Value <- float (f1 - f0) / float (max 1L (w1 - w0))
+        lastGroup.Value <- float (w1 - w0) / float (max 1L (g1 - g0))
         n / el, (c1 - c0).TotalMilliseconds * 1000.0 / n, float (a1 - a0) / n / 1024.0, counts.Bad
     // The copy grows by every post; it goes when the run ends.
     AppDomain.CurrentDomain.ProcessExit.Add(fun _ -> try Directory.Delete(dir, true) with _ -> ())
@@ -227,6 +244,7 @@ let main argv =
                 if bad > 0L then eprintfn "  %s: %d non-2xx" v bad
                 if not (results.ContainsKey v) then results[v] <- ResizeArray()
                 results[v].Add((rate, us, kb))
+                eprintfn "    window %-30s c=%d %8.0f posts/s  %5.2f frames/post  %5.2f writes/group" v conc rate lastFpp.Value lastGroup.Value
         for v in variants do
             let rs = results[v]
             let med (f: float * float * float -> float) = (rs |> Seq.map f |> Seq.sort |> Array.ofSeq)[rs.Count / 2]

@@ -351,3 +351,40 @@ let ``writes on their callers' threads never share the writer connection and com
         WriteLoad.Leave()
         WriteLoad.Leave()
     Assert.Equal(inlineBefore, t.Db.WriterStats.Inline)
+
+// Unit R4.4: the writer counts the WAL frames its commits append, for frames per post.
+[<Fact>]
+let ``the writer counts the frames its commits append`` () =
+    use t = new TestDb(false)
+    scratch t
+    let before = t.Db.WriterStats.Frames
+    for i in 1..20 do
+        t.Write(fun tx -> insert tx $"w{i}")
+    // Every commit appends at least the scratch table's page, unless the WAL was restarted by a checkpoint in between.
+    Assert.True(t.Db.WriterStats.Frames - before >= 20L, $"frames counted: {t.Db.WriterStats.Frames - before}")
+    Assert.True(t.Db.WriterStats.Frames <= 20L * 40L + before, "a handful of frames a commit, not the WAL's size each time")
+
+// Unit R4.4: FTS5's `automerge` is a stored setting; changing it must not change what a search finds.
+[<Fact>]
+let ``the search index's automerge setting is stored and changes no search result`` () =
+    use t = new TestDb(false)
+    let words = [| "alpha"; "bravo"; "charlie"; "delta"; "echo"; "foxtrot" |]
+    let load (from: int) (upTo: int) =
+        for i in from..upTo do
+            t.Write(fun tx ->
+                tx.Conn.Execute("INSERT INTO message_search_index(rowid, body) VALUES (?, ?)", [| I (int64 i); S $"{words[i % words.Length]} message {i}" |])
+                |> ignore)
+    let search (word: string) =
+        t.Read(fun c -> c.QueryAll("SELECT rowid FROM message_search_index WHERE message_search_index MATCH ? ORDER BY rowid", [| S word |], fun r -> r.Int64 0))
+    Assert.Equal(4, t.Read Schema.ftsAutomerge)
+    load 1 60
+    let before = words |> Array.map search
+    t.Write(fun tx -> Schema.setFtsAutomerge tx.Conn 16)
+    Assert.Equal(16, t.Read Schema.ftsAutomerge)
+    Assert.Equal<int64 list []>(before, words |> Array.map search)
+    load 61 200
+    let expected = [ for i in 1..200 do if words[i % words.Length] = "charlie" then int64 i ]
+    Assert.Equal<int64 list>(expected, search "charlie")
+    t.Write(fun tx -> Schema.setFtsAutomerge tx.Conn 0)
+    Assert.Equal(0, t.Read Schema.ftsAutomerge)
+    Assert.Equal<int64 list>(expected, search "charlie")

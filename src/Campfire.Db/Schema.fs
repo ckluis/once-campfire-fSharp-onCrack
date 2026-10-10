@@ -12,6 +12,7 @@
 /// position over `*`.
 module Campfire.Db.Schema
 
+open System
 open System.IO
 open System.Reflection
 open Campfire.RailsCompat.Clock
@@ -110,6 +111,31 @@ let private loadSchema (conn: Conn) (environment: string) (clock: Clock) : unit 
         if not conn.IsAutocommit then conn.ExecuteBatch "ROLLBACK"
         reraise ()
 
+/// onCrack (unit R4.4): the search index's FTS5 `automerge` setting as stored in its `%_config` table (a persistent
+/// setting every connection to the database reads when it opens the table, Rails' included), or 4, FTS5's default, when none
+/// is stored.
+let ftsAutomerge (conn: Conn) : int =
+    match conn.QueryOne("""SELECT "v" FROM "message_search_index_config" WHERE "k" = 'automerge'""", [||], fun r -> r.Int64 0) with
+    | Some v -> int v
+    | None -> 4
+
+/// Stores `automerge` for the search index (a no-op when it already reads that). FTS5 starts merging a level's segments when
+/// there are this many of them; each post's commit adds a segment, and a merge of a few tiny segments rewrites a handful of pages
+/// whatever their size (their rows deleted, a new segment and its index rows written, the structure record), so a lower number
+/// costs frames per post. 0 turns the incremental merges off (a level still merges at `crisismerge`, 16, all at once).
+let setFtsAutomerge (conn: Conn) (n: int) : unit =
+    if ftsAutomerge conn <> n then
+        conn.Execute($"INSERT INTO message_search_index(message_search_index, rank) VALUES('automerge', {n})", [||]) |> ignore
+
+/// `CAMPFIRE_FTS_AUTOMERGE`: the value `prepare` stores (`default`, or unset, leaves what the database holds).
+let ftsAutomergeSetting : int option =
+    match Environment.GetEnvironmentVariable "CAMPFIRE_FTS_AUTOMERGE" with
+    | null | "" | "default" -> None
+    | v ->
+        match Int32.TryParse v with
+        | true, n when n >= 0 && n <= 16 -> Some n
+        | _ -> None
+
 /// `bin/rails db:prepare`: loads the schema into an empty database, or verifies an
 /// existing one is fully migrated. We don't port migrations, so a database with pending
 /// migrations is an error (boot the Rails image once to migrate it). Then adds `additions`.
@@ -124,4 +150,7 @@ let prepare (conn: Conn) (environment: string) (clock: Clock) : Prepared =
             Loaded
     for addition in additions do
         conn.ExecuteBatch addition
+    match ftsAutomergeSetting with
+    | Some n when tableExists conn "message_search_index_config" -> setFtsAutomerge conn n
+    | _ -> ()
     prepared

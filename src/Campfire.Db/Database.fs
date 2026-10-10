@@ -929,11 +929,26 @@ type WriterStats() =
         if us > Volatile.Read(&this.LongestRestartUs) then Volatile.Write(&this.LongestRestartUs, us)
         if us > Volatile.Read(&WriterStats.All.LongestRestartUs) then Volatile.Write(&WriterStats.All.LongestRestartUs, us)
         if took.TotalMilliseconds > 100.0 then Log.warn $"WAL restart took {int took.TotalMilliseconds} ms"
+        // Unit R4.4: the writer's running totals, to read frames and writes per group (and so frames per post) off a traced run.
+        if Checkpoint.Trace then
+            Checkpoint.trace $"writer totals: groups {Volatile.Read(&this.Groups)} writes {Volatile.Read(&this.Writes)} frames {Volatile.Read(&this.Frames)}"
+
+    /// onCrack (unit R4.4): WAL frames the writer's commits have appended, counted from the frame count it already reads after
+    /// every committed group (a restart in between loses at most that group's frames from the count). Frames a post costs =
+    /// `Frames / Writes`; bytes = frames * (page size + 24).
+    [<DefaultValue>]
+    val mutable Frames: int64
+
+    member internal this.Framed(delta: int) : unit =
+        Interlocked.Add(&this.Frames, int64 delta) |> ignore
+        Interlocked.Add(&WriterStats.All.Frames, int64 delta) |> ignore
 
     /// On the writer thread, per group taken.
     member internal this.Record(size: int) : unit =
         Interlocked.Increment(&this.Groups) |> ignore
         Interlocked.Add(&this.Writes, int64 size) |> ignore
+        Interlocked.Increment(&WriterStats.All.Groups) |> ignore
+        Interlocked.Add(&WriterStats.All.Writes, int64 size) |> ignore
         if size > Volatile.Read(&this.Largest) then Volatile.Write(&this.Largest, size)
 
 /// onCrack (unit R4.3, `CAMPFIRE_FRESH_HOLD`, on by default): `Enabled` lets the fresh authorization checks keep a read
@@ -1210,6 +1225,7 @@ type Database
     let blockingGate = new SemaphoreSlim(1, 1)
     let mutable blockingReader: Conn option = None
     let mutable disposed = false
+    let mutable controlTimer: Timer | null = null
 
     /// Opens (and with `Config.Prepare` prepares) the database at `config.Path`, and starts its writer,
     /// checkpointer and reader threads.
@@ -1252,6 +1268,8 @@ type Database
             if not versions.Watching then
                 Log.warn "read cache off: the database has no WAL index to watch for other connections' commits"
 
+            // The WAL's frame count after the last committed group (`WriterStats.Frames`); whoever holds the writer connection owns it.
+            let lastFrames = ref 0
             // A group's run, its answers and the WAL's check: on the writer thread, or (one write that found the
             // writer idle) on its caller's thread.
             let processGroup (jobs: ResizeArray<WriteJob>) (onWriter: bool) : unit =
@@ -1289,7 +1307,11 @@ type Database
                     with e ->
                         Log.error $"write reply failed: {e.Message}"
                 if committed then
-                    match (try Checkpoint.walFrames conn with _ -> struct (0, 0)) with
+                    let walNow = try Checkpoint.walFrames conn with _ -> struct (0, 0)
+                    let struct (framesNow, _) = walNow
+                    stats.Framed(if framesNow >= lastFrames.Value then framesNow - lastFrames.Value else framesNow)
+                    lastFrames.Value <- framesNow
+                    match walNow with
                     | struct (0, _) -> ()
                     | struct (pages, backfilled) when pages >= Pragmas.WalLimitPages ->
                         // onCrack (unit R3.4): with `WalDefer` the writer waits for the checkpointer only at the WAL's
@@ -1322,7 +1344,7 @@ type Database
                         let groupMax = max config.GroupMax 1
                         let mutable running = true
                         while running do
-                            let jobs = queue.TakeGroup(groupMax, config.GroupWindowUs)
+                            let jobs = queue.TakeGroup(groupMax, (if PostPath.GroupWindowUs >= 0 then PostPath.GroupWindowUs else config.GroupWindowUs))
                             if jobs.Count = 0 then
                                 running <- false
                             else
@@ -1360,7 +1382,9 @@ type Database
                 thread.Start()
                 readerThreads.Add thread
                 started thread
-            new Database(env, config.Path, queue, readers, List.ofSeq readerThreads, cp, thread, conn, versions, stats, config.InlineWrites, processInline, checkerPool)
+            let db = new Database(env, config.Path, queue, readers, List.ofSeq readerThreads, cp, thread, conn, versions, stats, config.InlineWrites, processInline, checkerPool)
+            db.StartPostPathControl()
+            db
         with _ ->
             // Rust's `?` drops what was built: the queue's sender, which ends the writer thread and
             // with it the writer connection and the checkpointer, and the readers' connections.
@@ -1380,6 +1404,7 @@ type Database
     member _.Env : Env = env
 
     member _.Path : string = path
+
 
     /// onCrack: the read cache's version counters, which this database's writer bumps.
     member _.Versions : Versions = versions
@@ -1536,10 +1561,40 @@ type Database
             use conn = Pragmas.openConnection path true
             DbRun.attempt (fun () -> f conn)
 
+    /// Benches only (unit R4.4): with `CAMPFIRE_POSTPATH_FILE` set, the file's text (`PostPath.Apply`'s `name=value,...`, plus
+    /// `fts_automerge=N`) is applied within 20 ms of a change, so that one running app can be measured with a setting
+    /// alternating by window (`bench/wal-ab`). Inert otherwise.
+    member internal this.StartPostPathControl() : unit =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_POSTPATH_FILE" with
+        | null | "" -> ()
+        | file ->
+            let last = ref ""
+            controlTimer <-
+                new Timer(
+                    (fun _ ->
+                        try
+                            let text = IO.File.ReadAllText(file).Trim()
+                            if text <> last.Value then
+                                last.Value <- text
+                                let parts = text.Split(',', StringSplitOptions.RemoveEmptyEntries ||| StringSplitOptions.TrimEntries)
+                                for part in parts do
+                                    if part.StartsWith "fts_automerge=" then
+                                        this.WriteBlocking(fun tx -> Schema.setFtsAutomerge tx.Conn (int (part.Substring 14))) |> ignore
+                                PostPath.Apply(String.Join(",", parts |> Array.filter (fun p -> not (p.StartsWith "fts_automerge="))))
+                        with _ ->
+                            ()),
+                    null,
+                    20,
+                    20
+                )
+
     interface IDisposable with
         member _.Dispose() =
             if not disposed then
                 disposed <- true
+                (match controlTimer with
+                 | null -> ()
+                 | t -> t.Dispose())
                 writeQueue.Close()
                 writerThread.Join()
                 checkpoints.Stop()

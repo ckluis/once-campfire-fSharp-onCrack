@@ -17,6 +17,7 @@ type PostPath private () =
         PostPath.Reset()
         for part in spec.Split(',', StringSplitOptions.RemoveEmptyEntries ||| StringSplitOptions.TrimEntries) do
             match part.Split('=', 2) with
+            | [| "group_window_us"; value |] -> PostPath.GroupWindowUs <- int value
             | [| name; value |] ->
                 let on = not (value = "off" || value = "0" || value = "false")
                 if not (PostPath.Set(name, on)) then failwithf "unknown post path switch %s" name
@@ -50,7 +51,11 @@ type PostPath private () =
     /// that held up at the 160 MB ceiling (`bench/results/oncrack-r3-wal.md`), so it stays an opt-in.
     static member val WalDefer = env "CAMPFIRE_WAL_DEFER" false with get, set
 
+    /// Unit R4.4 (bench switch): the group window in microseconds, over `Config.GroupWindowUs`; -1 keeps the configured one.
+    static member val GroupWindowUs = -1 with get, set
+
     static member Reset() : unit =
+        PostPath.GroupWindowUs <- -1
         PostPath.WalDefer <- env "CAMPFIRE_WAL_DEFER" false
         PostPath.PushInline <- env "CAMPFIRE_PUSH_INLINE" true
         PostPath.PlainTextEarly <- env "CAMPFIRE_POST_PLAIN_TEXT_EARLY" true

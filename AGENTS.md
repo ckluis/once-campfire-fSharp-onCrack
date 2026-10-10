@@ -149,6 +149,13 @@ ceiling measured gave a gain that held up in alternating reps. A quiet WAL is ch
 `bench/results/oncrack-r3-wal/trace-run.sh` (a traced tier 2 rep plus the VM's disk stats) and `trace.py`; `bench/lib/walmix.py` (a WAL's frames by
 b-tree, from `bench/post-micro`'s `POST_MICRO_KEEP`). The lever left is fewer WAL frames per post.
 
+**WAL volume per post** (unit R4.4, `bench/results/oncrack-r4-wal.md`): a post's commit rewrites ~18 pages (one right-edge page per b-tree touched, FTS5 40% of them), so frames a post
+is about 18 / writes per group (4.4 at c=16, 1.75 at c=64). A group window halves the bytes and costs throughput (-25% at c=16, -7.5% at c=64, alternating windows), FTS5 `automerge=16`
+(`CAMPFIRE_FTS_AUTOMERGE`, opt-in, stored in the index's config table) showed 0-5% in the container; nothing became a default. `WriterStats.Frames` counts the frames the writer
+appends (`CAMPFIRE_WAL_TRACE` logs the totals per restart); `bench/wal-ab` alternates a post-path setting (`CAMPFIRE_POSTPATH_FILE`, `group_window_us=N`, `fts_automerge=N`) by window in one
+container and prints frames and bytes per post for each; `bench/results/oncrack-r4-wal/replay.py` attributes a commit's frames to b-trees offline. Single tier 2 reps on a busy host
+misled twice here: alternate.
+
 **Upstream's method** (round 2 final, `bench/results/oncrack-r2-final.md`): the comparison that counts is Basecamp's
 `once-campfire-verification` harness (`bin/benchmark`, its seed, loadgen and contracts) against current upstream Rust and C, not the pinned
 `ccece30`. Its checkout is `~/Desktop/projects/once-campfire-verification` (branch `oncrack-adapter`: the `oncrack`/`fsharp` apps and the
