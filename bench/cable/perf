@@ -131,6 +131,8 @@ print("\ninclusive:")
 for k, v in incl.most_common(top):
     print(f"  {100*v/n:5.1f}%  {k}")
 PY
+# KEEP_SCRIPT=1 keeps the folded call chains (perf.script.gz in OUT) for breakdowns the layers above do not make.
+[ -n "${KEEP_SCRIPT:-}" ] && gzip -c "$DIAG/perf.script" > "$OUT/perf.script.gz"
 sudo rm -f "$DIAG/perf.data" "$DIAG/perf.script"
 python3 - "$OUT/run.json" "$OUT/syscalls-$APP-$CLIENTS.csv" <<'PY'
 import json, sys
