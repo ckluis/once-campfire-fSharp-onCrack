@@ -258,3 +258,36 @@ let ``many connections, each sees every frame once and in order`` () =
                 for client in clients do
                     (client :> IDisposable).Dispose()
         })
+
+// Round 4 verifier: clients that stop reading are not the fan-out falling behind. Two of three connections in a room stop reading while
+// 40 MB are broadcast; once their sends have waited longer than `Hub.ReaderBoundAfter` the room is not congested (posts do not wait for
+// them), and when they read again they get every frame in order.
+[<Fact>]
+let ``clients that stop reading do not make the room congested, and lose nothing`` () =
+    withServer testConfig (fun app ->
+        task {
+            let clients = [| for i in 1..3 -> connect app (uint64 (1 + i % 2)) |]
+            let! clients = Task.WhenAll clients
+            try
+                for client in clients do
+                    do! expectText Welcome client
+                    do! client.Subscribe(room 1)
+                    do! expectText (confirm (room 1)) client
+                let body (i: int) = object' [ "n", int' i; "pad", str (String(char (97 + i % 26), 8000)) ]
+                let reader =
+                    task {
+                        for i in 0..4999 do
+                            do! expectText (message (room 1) (Json.generate (body i))) clients[0]
+                    }
+                for i in 0..4999 do
+                    app.Server.Broadcast("room:room-1", body i) |> ignore
+                do! reader
+                do! Task.Delay(Hub.ReaderBoundAfter + TimeSpan.FromMilliseconds 300.0)
+                Assert.False(app.Server.Hub.Congested("room:room-1", 2048), "the two behind are waiting on their own sockets")
+                for client in clients[1..] do
+                    for i in 0..4999 do
+                        do! expectText (message (room 1) (Json.generate (body i))) client
+            finally
+                for client in clients do
+                    (client :> IDisposable).Dispose()
+        })

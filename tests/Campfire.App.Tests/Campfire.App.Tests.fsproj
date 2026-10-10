@@ -38,6 +38,7 @@
     <Compile Include="ChannelsSupport.fs" />
     <Compile Include="ChannelsTests.fs" />
     <Compile Include="BroadcastsTests.fs" />
+    <Compile Include="CablePressureTests.fs" />
     <Compile Include="RevocationTests.fs" />
     <Compile Include="ChannelsGoldenTests.fs" />
   </ItemGroup>

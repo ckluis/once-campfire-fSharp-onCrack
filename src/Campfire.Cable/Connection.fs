@@ -542,7 +542,13 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                                 wake.Set()
                             if pending.Count > 0 && isNull probe then
                                 try
-                                    do! sink.Send pending
+                                    let send = sink.Send pending
+                                    // Round 4 verifier: a write the socket did not take at once is waited on; `Hub.Congested` reads how long.
+                                    if not send.IsCompleted then wake.WriteWaitSince <- Diagnostics.Stopwatch.GetTimestamp()
+                                    try
+                                        do! send
+                                    finally
+                                        wake.WriteWaitSince <- 0L
                                 with _ ->
                                     running <- false
                                 pending.Clear()

@@ -603,3 +603,60 @@ let ``congested: a ring has no measure`` () =
     Threading.Thread.Sleep 25
     Assert.False(hub.Congested("room", 1))
     ignore s
+
+// Round 4 verifier: the pressure gate is about the fan-out falling behind, not about one client. A room's verdict is taken over all of
+// its subscribers, whatever identifier each subscribed with (a client picks its own: key order and spacing make a group of its own),
+// and a subscriber whose connection has been waiting on one socket write for longer than `Hub.ReaderBoundAfter` is limited by its own
+// reader, so it is left out (the byte budget deals with it).
+
+[<Fact>]
+let ``congested (verifier): one subscriber under an identifier of its own does not make the room congested`` () =
+    let hub = Hub(8)
+    let shared = "\"{\\\"channel\\\":\\\"Turbo::StreamsChannel\\\",\\\"signed_stream_name\\\":\\\"x\\\"}\""
+    let own = "\"{\\\"signed_stream_name\\\":\\\"x\\\",\\\"channel\\\":\\\"Turbo::StreamsChannel\\\"}\""
+    let readers = [| for _ in 1..4 -> hub.Subscribe("room", shared, Wake()) |]
+    let attacker = hub.Subscribe("room", own, Wake())
+    Assert.Equal(2, hub.GroupCount "room")
+    for i in 0..2999 do
+        hub.Broadcast("room", string i) |> ignore
+        if i % 100 = 0 then
+            for r in readers do
+                drainAll r |> ignore
+    for r in readers do
+        drainAll r |> ignore
+    Threading.Thread.Sleep 25
+    Assert.False(hub.Congested("room", 2048), "one of five subscribers is behind, alone in a group of its own")
+    // Four of five behind is congestion, whatever the identifiers.
+    for i in 0..2999 do
+        hub.Broadcast("room", string i) |> ignore
+    drainAll attacker |> ignore
+    Threading.Thread.Sleep 25
+    Assert.True(hub.Congested("room", 2048), "four of five are behind")
+
+[<Fact>]
+let ``congested (verifier): subscribers whose connections wait on their sockets do not count`` () =
+    let hub = Hub(8)
+    let wakes = [| for _ in 1..3 -> Wake() |]
+    let subscribers = wakes |> Array.map (fun wake -> hub.Subscribe("room", null, wake))
+    for i in 0..2999 do
+        hub.Broadcast("room", string i) |> ignore
+    drainAll subscribers[0] |> ignore
+    let settle () = Threading.Thread.Sleep 25
+    settle ()
+    Assert.True(hub.Congested("room", 2048), "two of three are behind")
+    // Their connections have waited a second on one socket write: their readers are the limit, not the fan-out.
+    let longAgo = Diagnostics.Stopwatch.GetTimestamp() - Diagnostics.Stopwatch.Frequency
+    wakes[1].WriteWaitSince <- longAgo
+    wakes[2].WriteWaitSince <- longAgo
+    settle ()
+    Assert.False(hub.Congested("room", 2048), "both behind are waiting on their sockets")
+    // A write that began just now still counts; so does one that completed.
+    wakes[1].WriteWaitSince <- Diagnostics.Stopwatch.GetTimestamp()
+    wakes[2].WriteWaitSince <- 0L
+    settle ()
+    Assert.True(hub.Congested("room", 2048), "neither has waited long")
+    // Everyone waiting long: nobody counted, nothing congested.
+    for wake in wakes do
+        wake.WriteWaitSince <- longAgo
+    settle ()
+    Assert.False(hub.Congested("room", 2048))
