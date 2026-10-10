@@ -27,6 +27,7 @@
     <Compile Include="VersionsTests.fs" />
     <Compile Include="VersionsWatchTests.fs" />
     <Compile Include="GroupCommitTests.fs" />
+    <Compile Include="CheckHoldTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Campfire.Db/Campfire.Db.fsproj" />

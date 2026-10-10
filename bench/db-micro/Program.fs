@@ -2,7 +2,7 @@
 //
 //   dotnet run -c Release --project bench/db-micro -- [SEED_DB] [SECONDS_PER_SCENARIO]
 //
-// SEED_DB defaults to parity/.seed/default/db/production.sqlite3 (copied to a temporary directory first). Each scenario is the
+// A third argument runs only the scenarios whose name starts with it. SEED_DB defaults to parity/.seed/default/db/production.sqlite3 (copied to a temporary directory first). Each scenario is the
 // Campfire.Db side of one benchmarked page: the same model calls, on one connection opened the way a reader is, mapping rows to the
 // same records. It prints best-of-5 ns per iteration and bytes allocated per iteration, after a warm-up long enough for tiered
 // compilation. The numbers compare two builds of Campfire.Db on this machine and are never reported as results.
@@ -53,6 +53,22 @@ let main argv =
     let room = conn.QueryRow("SELECT room_id FROM messages GROUP BY room_id ORDER BY count(*) DESC LIMIT 1", [||], fun r -> r.Int64 0)
     let middle = (Message.lastPage conn room)[10]
 
+    // DB_MICRO_WAL=1: a commit by another connection first, so the WAL holds a frame (a read of an empty WAL asks the file's size instead).
+    if not (isNull (Environment.GetEnvironmentVariable "DB_MICRO_WAL")) then
+        let w = Conn.Open(Path.Combine(dir, "production.sqlite3"), 16)
+        Schema.configureConnection w
+        w.ExecuteBatch "UPDATE sessions SET updated_at = updated_at WHERE id = 1"
+        printfn "WAL frames after the commit: %d" (w.QueryRow("PRAGMA wal_checkpoint(NOOP)", [||], fun r -> r.Int64 1))
+        // Not disposed: closing the last connection would checkpoint and delete the WAL.
+        GC.KeepAlive w
+    let held = Conn.Open(Path.Combine(dir, "production.sqlite3"), 256)
+    Schema.configureConnection held
+    held.ExecuteBatch "PRAGMA query_only = ON"
+    held.ExecuteBatch "BEGIN"
+    let sessionId = conn.QueryRow("SELECT id FROM sessions ORDER BY id LIMIT 1", [||], fun r -> r.Int64 0)
+    let sessionUser = conn.QueryRow("SELECT user_id FROM sessions ORDER BY id LIMIT 1", [||], fun r -> r.Int64 0)
+    let JoinSql =
+        """SELECT 1 FROM "sessions" CROSS JOIN "users" ON "users"."id" = "sessions"."user_id" CROSS JOIN "memberships" ON "memberships"."room_id" = ? AND "memberships"."user_id" = "sessions"."user_id" CROSS JOIN "rooms" ON "rooms"."id" = "memberships"."room_id" WHERE "sessions"."id" = ? AND "sessions"."user_id" = ? AND "sessions"."token" = ? LIMIT 1"""
     let scenarios: (string * (unit -> unit)) list =
         [ "last 40 messages: stepping only (map ignores the row)",
           (fun () -> conn.QueryAll(Selects.Message + " WHERE \"messages\".\"room_id\" = ? ORDER BY \"messages\".\"created_at\" DESC LIMIT 40", [| I room |], fun _ -> ()) |> ignore)
@@ -65,6 +81,17 @@ let main argv =
           (let pad = String(' ', 380) in let sql = "SELECT 1" + pad + " /* x */" in fun () -> conn.QueryRow(sql, [||], fun r -> r.Int64 0) |> ignore)
           "PRAGMA wal_checkpoint(NOOP) (what the writer asks after every commit)",
           (fun () -> conn.QueryRow("PRAGMA wal_checkpoint(NOOP)", [||], fun r -> r.Int64 1) |> ignore)
+          // onCrack R4.3: the fresh authorization check's shapes (a third argument, 'fresh', or DB_MICRO_ONLY runs only scenarios whose name starts with it).
+          "fresh: one pk seek in a read transaction (floor of any check)",
+          (fun () -> conn.QueryRow("SELECT 1 FROM \"sessions\" WHERE \"id\" = ?", [| I sessionId |], fun r -> r.Int64 0) |> ignore)
+          "fresh: FreshAuth.replay, session only", (fun () -> FreshAuth.replay conn token sessionId sessionUser ValueNone |> ignore)
+          "fresh: FreshAuth.replay, session + membership (current)", (fun () -> FreshAuth.replay conn token sessionId sessionUser (ValueSome room) |> ignore)
+          "fresh: FreshAuth.replay, session + membership, read transaction held open",
+          (fun () -> FreshAuth.replay held token sessionId sessionUser (ValueSome room) |> ignore)
+          "fresh: FreshAuth.membership", (fun () -> FreshAuth.membership conn room sessionUser |> ignore)
+          "fresh: one join, one row or none",
+          (fun () ->
+              conn.Exists(JoinSql, [| I room; I sessionId; I sessionUser; S token |]) |> ignore)
           "1 statement: Account.first", (fun () -> Account.first conn |> ignore)
           "session + user (2 lookups)", (fun () -> Session.findByToken conn token |> ignore; User.findById conn user.Id |> ignore)
           "room page db (room, last 40 messages, account, last room)",
@@ -88,8 +115,11 @@ let main argv =
               Search.orderedForUser conn user.Id |> ignore) ]
     // What each scenario reads, so two builds can be checked to have read the same thing.
     printfn "rows: search %d, last page %d, page before %d, memberships %d" (Message.searchReachable conn user.Id "coffee").Length (Message.lastPage conn room).Length (Message.pageBefore conn room middle).Length (Membership.visibleWithOrderedRoom conn user.Id).Length
+    printfn "fresh check results: both %b, session %b, membership %b, join %b" (FreshAuth.replay conn token sessionId sessionUser (ValueSome room)) (FreshAuth.replay conn token sessionId sessionUser ValueNone) (FreshAuth.membership conn room sessionUser) (conn.Exists(JoinSql, [| I room; I sessionId; I sessionUser; S token |]))
     printfn "%-70s %12s %12s" "scenario" "ns/iter" "bytes/iter"
+    let only = if argv.Length > 2 then argv[2] else (match Environment.GetEnvironmentVariable "DB_MICRO_ONLY" with null -> "" | v -> v)
     for (name, f) in scenarios do
+      if only.Length = 0 || name.StartsWith(only, StringComparison.Ordinal) then
         let ns, bytes = time seconds f
         printfn "%-70s %12.0f %12.0f" name ns bytes
     (conn :> IDisposable).Dispose()

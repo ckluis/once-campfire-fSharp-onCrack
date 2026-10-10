@@ -321,6 +321,14 @@ type Versions() =
     /// The epoch, without syncing.
     member this.Epoch : int64 = Volatile.Read(&this.epoch)
 
+    /// onCrack R4.3: the WAL index header's change counter now (every commit by any connection moves it by one), or -1 when
+    /// there is no WAL index to watch. A read transaction begun after a reading of N sees every commit that had returned by
+    /// that reading, and while the counter still reads N it still sees the whole database: no commit has returned since.
+    member this.ChangeStamp : int64 =
+        match this.counter with
+        | null -> -1L
+        | counter -> int64 (counter.Read())
+
     /// On the writer's connection: runs `commit`, telling its commits apart from other connections' by the connection's
     /// `data_version`, which moves only for theirs.
     member this.Committing(commit: unit -> unit) : unit =

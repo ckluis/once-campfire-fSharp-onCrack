@@ -462,10 +462,15 @@ type internal Checkpoints(path: string) =
     member internal _.SlowForTests
         with set (v: bool) = slowForTests <- v
 
+    /// onCrack (unit R4.3): called before the writer asks for a RESTART, which waits for every reader of the WAL: the fresh
+    /// authorization checks' idle snapshots (`CheckerPool`) let go first.
+    member val BeforeRestart : unit -> unit = ignore with get, set
+
     /// A RESTART checkpoint on the writer connection, between writes: it copies what the
     /// checkpointer hasn't, and waits for readers so that the next write restarts the WAL. It waits
     /// for a running PASSIVE checkpoint first, which would otherwise make SQLite refuse it.
-    member _.RestartWal(writer: Conn) : unit =
+    member this.RestartWal(writer: Conn) : unit =
+        this.BeforeRestart()
         let t0 = Diagnostics.Stopwatch.GetTimestamp()
         lock running (fun () ->
             if Checkpoint.Trace then
@@ -479,9 +484,10 @@ type internal Checkpoints(path: string) =
 
     /// onCrack (unit R3.4): the RESTART only if no checkpoint is running (true when it ran): the writer never waits on the
     /// checkpointer's copy and sync for a restart it can make a moment later.
-    member _.TryRestartWal(writer: Conn) : bool =
+    member this.TryRestartWal(writer: Conn) : bool =
         if Monitor.TryEnter running then
             try
+                this.BeforeRestart()
                 if Checkpoint.Trace then
                     let t0 = Diagnostics.Stopwatch.GetTimestamp()
                     let struct (busy, log, done') = Checkpoint.runCounted writer "RESTART"
@@ -930,6 +936,231 @@ type WriterStats() =
         Interlocked.Add(&this.Writes, int64 size) |> ignore
         if size > Volatile.Read(&this.Largest) then Volatile.Write(&this.Largest, size)
 
+/// onCrack (unit R4.3, `CAMPFIRE_FRESH_HOLD`, on by default): `Enabled` lets the fresh authorization checks keep a read
+/// transaction open between checks while the WAL index proves nothing has been committed (`CheckerPool`).
+[<AbstractClass; Sealed>]
+type FreshHold private () =
+    static member val Enabled: bool =
+        (match Environment.GetEnvironmentVariable "CAMPFIRE_FRESH_HOLD" with
+         | "0" | "off" | "false" -> false
+         | _ -> true) with get, set
+
+/// One connection of the fresh authorization checks (`CheckerPool`). `State` is 0 when idle and 1 while a thread, or the reaper,
+/// owns it: only the owner touches the connection and the fields below.
+[<Sealed; AllowNullLiteral>]
+type internal Checker =
+    val Conn: Conn
+    val Slot: int
+    val mutable State: int
+    /// The WAL index's change counter, read before the transaction this connection holds open began; -1 when it holds none.
+    val mutable HoldStamp: int64
+    /// `Environment.TickCount64` when a check last finished on it.
+    val mutable LastUse: int64
+    /// The connection could not be brought back to autocommit: it is closed and its slot is free.
+    val mutable Broken: bool
+
+    new(conn: Conn, slot: int) = { Conn = conn; Slot = slot; State = 1; HoldStamp = -1L; LastUse = 0L; Broken = false }
+
+/// onCrack (R3.2, R4.3): the connections `Database.CheckNow` runs on. A check is one narrow existence query on a connection
+/// of its own, never a reader (R3.2: on the readers a replay that found them all taken fell into the app and dragged the
+/// fast path down). A thread gets back the connection it used last when it is free, more open on demand up to `Max`, and a
+/// check never waits.
+///
+/// R4.3: starting a read transaction costs more than the narrow query it serves: SQLite takes a shared lock on a read mark of
+/// the WAL index (an `fcntl` system call each way when no other connection of the process holds that mark at the moment, and
+/// an `fstat` for an empty WAL) and gives it back. So the connection keeps its read transaction open after a check, and the
+/// next check runs its query in it when, and only when, the WAL index's change counter still reads what it read before that
+/// transaction began: the counter moves with every commit by any connection (`Versions.ChangeStamp`), so an unchanged counter
+/// proves the snapshot is the whole database as it is now. Each check still runs its query against the database, a revoked
+/// session, a removed membership or a deleted room is seen by the first check that starts after the commit returned, and
+/// nothing is remembered between checks but the snapshot SQLite itself keeps. When the counter has moved (or reads nothing)
+/// the transaction ends and a new one begins before the query.
+///
+/// A transaction kept open must not outlive its use: it pins the WAL, and the writer's RESTART waits for it. Every check that
+/// leaves one open arms a timer (`reapMs` milliseconds) that ends the transactions that are stale (the counter has moved) or idle for that
+/// long; and the writer's RESTART calls `ReleaseHolds` first, which also keeps checks from beginning a new one for a moment.
+[<Sealed>]
+type internal CheckerPool(path: string, versions: Versions) =
+    static let reapMs = 5
+    static let holdOffMs = 50
+    let slots: Checker[] = Array.zeroCreate CheckerPool.Max
+    let mutable opened = 0
+    let mutable disposed = false
+    let mutable reaperArmed = 0
+    let mutable timer: Timer | null = null
+    let timerGate = obj ()
+    // `Environment.TickCount64` (milliseconds) until which no check begins a transaction to keep.
+    let mutable holdOffUntil = 0L
+
+    /// At most this many connections for checks (a front server's event threads are as many as its cores).
+    static member Max = 16
+
+    /// Ends the transaction `c` holds, with its connection owned by the caller. A connection that cannot be brought back to
+    /// autocommit is closed and its slot freed (`Broken`).
+    member private this.EndHold(c: Checker) : unit =
+        c.HoldStamp <- -1L
+        try
+            c.Conn.Execute("COMMIT", [||]) |> ignore
+        with _ ->
+            try
+                c.Conn.Execute("ROLLBACK", [||]) |> ignore
+            with _ ->
+                ()
+        if not c.Conn.IsAutocommit then this.Discard c
+
+    /// Closes the connection of `c`, owned by the caller, and frees its slot.
+    member private _.Discard(c: Checker) : unit =
+        c.Broken <- true
+        c.HoldStamp <- -1L
+        (try (c.Conn :> IDisposable).Dispose() with _ -> ())
+        Volatile.Write(&slots[c.Slot], null)
+        Interlocked.Decrement(&opened) |> ignore
+
+    member private this.ArmReaper() : unit =
+        if not disposed && Volatile.Read(&reaperArmed) = 0 && Interlocked.CompareExchange(&reaperArmed, 1, 0) = 0 then
+            try
+                lock timerGate (fun () ->
+                    if not disposed then
+                        match timer with
+                        | null -> timer <- new Timer((fun _ -> this.Reap false), null, reapMs, Timeout.Infinite)
+                        | t -> t.Change(reapMs, Timeout.Infinite) |> ignore)
+            with :? ObjectDisposedException ->
+                ()
+
+    /// Ends the held transactions that are stale or idle (all of them with `force`) on the connections nobody is using.
+    member private this.Reap(force: bool) : unit =
+        try
+            if not force then Volatile.Write(&reaperArmed, 0)
+            let now = Environment.TickCount64
+            let stamp = versions.ChangeStamp
+            let mutable anyHeld = false
+            for i in 0 .. slots.Length - 1 do
+                let c = Volatile.Read(&slots[i])
+                if not (isNull c) && Volatile.Read(&c.HoldStamp) >= 0L && Interlocked.CompareExchange(&c.State, 1, 0) = 0 then
+                    try
+                        if c.HoldStamp >= 0L then
+                            if force || c.HoldStamp <> stamp || now - c.LastUse >= int64 reapMs || now < Volatile.Read(&holdOffUntil) then
+                                this.EndHold c
+                            else
+                                anyHeld <- true
+                    finally
+                        if not c.Broken then Volatile.Write(&c.State, 0)
+            if anyHeld then this.ArmReaper()
+        with _ ->
+            ()
+
+    /// The writer is about to RESTART the WAL: lets go of every transaction kept open, and keeps new ones from beginning for a
+    /// moment. A check running just now ends its own when it finishes.
+    member this.ReleaseHolds() : unit =
+        Volatile.Write(&holdOffUntil, Environment.TickCount64 + int64 holdOffMs)
+        this.Reap true
+
+    member private _.Acquire() : Checker =
+        let start = Environment.CurrentManagedThreadId
+        let mask = CheckerPool.Max - 1
+        let mutable found: Checker = null
+        let mutable k = 0
+        while isNull found && k < slots.Length do
+            let c = Volatile.Read(&slots[(start + k) &&& mask])
+            if not (isNull c) && Volatile.Read(&c.State) = 0 && Interlocked.CompareExchange(&c.State, 1, 0) = 0 then found <- c
+            k <- k + 1
+        if not (isNull found) then
+            found
+        elif Interlocked.Increment(&opened) <= CheckerPool.Max then
+            try
+                let conn = Pragmas.openConnection path true
+                let mutable placed: Checker = null
+                let mutable j = 0
+                while isNull placed && j < slots.Length do
+                    let slot = (start + j) &&& mask
+                    let c = Checker(conn, slot)
+                    if isNull (Interlocked.CompareExchange(&slots[slot], c, null)) then placed <- c
+                    j <- j + 1
+                if isNull placed then
+                    (conn :> IDisposable).Dispose()
+                    Interlocked.Decrement(&opened) |> ignore
+                placed
+            with _ ->
+                Interlocked.Decrement(&opened) |> ignore
+                null
+        else
+            Interlocked.Decrement(&opened) |> ignore
+            null
+
+    /// Begins, keeps or ends the connection's held transaction before a check.
+    member private this.Prepare(c: Checker) : unit =
+        let stamp =
+            if FreshHold.Enabled && Environment.TickCount64 >= Volatile.Read(&holdOffUntil) then versions.ChangeStamp else -1L
+        if stamp < 0L then
+            if c.HoldStamp >= 0L then this.EndHold c
+        elif c.HoldStamp <> stamp then
+            if c.HoldStamp >= 0L then this.EndHold c
+            if not c.Broken then
+                // The reading above comes before the snapshot the query takes.
+                Interlocked.MemoryBarrier()
+                c.Conn.Execute("BEGIN", [||]) |> ignore
+                c.HoldStamp <- stamp
+
+    /// `f` on a connection of the checks' own, or nothing when none is free and none may be opened (or the pool is closed).
+    member this.Run(f: Conn -> 'T) : Result<'T, DbError> voption =
+        if disposed then
+            ValueNone
+        else
+            match this.Acquire() with
+            | null -> ValueNone
+            | c ->
+                let mutable ok = false
+                try
+                    (try
+                        this.Prepare c
+                     with _ ->
+                        // `BEGIN` failed (the connection is still in autocommit), or something worse: close it.
+                        c.HoldStamp <- -1L
+                        if not c.Conn.IsAutocommit then this.Discard c)
+                    if c.Broken then
+                        ValueNone
+                    else
+                        let result = DbRun.attempt (fun () -> f c.Conn)
+                        ok <- (match result with Ok _ -> true | Error _ -> false)
+                        ValueSome result
+                finally
+                    if not c.Broken then
+                        if c.HoldStamp >= 0L then
+                            // A failed check, or the writer's RESTART meanwhile: nothing is kept.
+                            let now = Environment.TickCount64
+                            if not ok || now < Volatile.Read(&holdOffUntil) then
+                                this.EndHold c
+                            else
+                                c.LastUse <- now
+                                this.ArmReaper()
+                        if not c.Broken then Volatile.Write(&c.State, 0)
+
+    /// Connections open.
+    member _.Open : int = Volatile.Read(&opened)
+
+    /// Connections holding a transaction open (tests).
+    member _.Held : int =
+        slots |> Array.sumBy (fun c -> if not (isNull c) && Volatile.Read(&c.HoldStamp) >= 0L then 1 else 0)
+
+    /// Closes every connection, after the checks running have finished.
+    member this.Dispose() : unit =
+        if not disposed then
+            disposed <- true
+            lock timerGate (fun () ->
+                match timer with
+                | null -> ()
+                | t -> t.Dispose())
+            for i in 0 .. slots.Length - 1 do
+                let c = Volatile.Read(&slots[i])
+                if not (isNull c) then
+                    let spin = SpinWait()
+                    while Interlocked.CompareExchange(&c.State, 1, 0) <> 0 do
+                        spin.SpinOnce()
+                    if c.HoldStamp >= 0L then this.EndHold c
+                    if not c.Broken then
+                        (c.Conn :> IDisposable).Dispose()
+                        Volatile.Write(&slots[i], null)
+
 /// The database handle: dispose it to stop its threads and close its connections.
 [<NoComparison; NoEquality>]
 type Database
@@ -946,16 +1177,14 @@ type Database
         versions: Versions,
         stats: WriterStats,
         inlineWrites: bool,
-        processInline: ResizeArray<WriteJob> -> unit
+        processInline: ResizeArray<WriteJob> -> unit,
+        checkerPool: CheckerPool
     ) =
     // Not a `Monitor`, which the thread already holding it could enter again: a `ReadBlocking` inside
     // another gets a connection of its own.
     let blockingGate = new SemaphoreSlim(1, 1)
     let mutable blockingReader: Conn option = None
     let mutable disposed = false
-    // onCrack R3.2: the connections `CheckNow` runs on, apart from the readers, and how many are open.
-    let checkers = System.Collections.Concurrent.ConcurrentBag<Conn>()
-    let mutable checkersOpen = 0
 
     /// Opens (and with `Config.Prepare` prepares) the database at `config.Path`, and starts its writer,
     /// checkpointer and reader threads.
@@ -980,10 +1209,12 @@ type Database
         let mutable checkpoints: Checkpoints option = None
         let mutable writerThread: Thread option = None
         let mutable processInline: ResizeArray<WriteJob> -> unit = ignore
+        let checkerPool = CheckerPool(config.Path, versions)
         try
             if config.Prepare then Schema.prepare conn config.Environment env.Clock |> ignore
             let cp = Checkpoints config.Path
             checkpoints <- Some cp
+            cp.BeforeRestart <- checkerPool.ReleaseHolds
             started cp.Thread
             // In place of the auto-checkpoint, which the writer's commits note the WAL size for instead
             // (Rust installs `sqlite3_wal_hook`, which the .NET bindings don't expose).
@@ -1103,7 +1334,7 @@ type Database
                 thread.Start()
                 readerThreads.Add thread
                 started thread
-            new Database(env, config.Path, queue, readers, List.ofSeq readerThreads, cp, thread, conn, versions, stats, config.InlineWrites, processInline)
+            new Database(env, config.Path, queue, readers, List.ofSeq readerThreads, cp, thread, conn, versions, stats, config.InlineWrites, processInline, checkerPool)
         with _ ->
             // Rust's `?` drops what was built: the queue's sender, which ends the writer thread and
             // with it the writer connection and the checkpointer, and the readers' connections.
@@ -1116,6 +1347,7 @@ type Database
             for thread in readerThreads do
                 thread.Join()
             readers.DisposeConnections()
+            checkerPool.Dispose()
             versions.Unwatch()
             reraise ()
 
@@ -1244,36 +1476,19 @@ type Database
     /// waits. The front server's fast path runs a replay's check here, on a socket's event thread. On the readers, a replay that found
     /// them all taken went to the app, whose requests then held them longer, so more replays found them taken: under load the fast
     /// path fell into the slow one for whole samples (`bench/results/oncrack-r3-fresh-auth.md`).
-    member _.CheckNow(f: Conn -> 'T) : Result<'T, DbError> voption =
-        if disposed then
-            ValueNone
-        else
-            let conn =
-                match checkers.TryTake() with
-                | true, conn -> ValueSome conn
-                | _ ->
-                    if Interlocked.Increment(&checkersOpen) <= Database.MaxCheckers then
-                        try
-                            ValueSome(Pragmas.openConnection path true)
-                        with _ ->
-                            Interlocked.Decrement(&checkersOpen) |> ignore
-                            ValueNone
-                    else
-                        Interlocked.Decrement(&checkersOpen) |> ignore
-                        ValueNone
-            match conn with
-            | ValueNone -> ValueNone
-            | ValueSome conn ->
-                try
-                    ValueSome(DbRun.attempt (fun () -> f conn))
-                finally
-                    checkers.Add conn
+    member _.CheckNow(f: Conn -> 'T) : Result<'T, DbError> voption = if disposed then ValueNone else checkerPool.Run f
 
     /// At most this many connections for `CheckNow` (a front server's event threads are as many as its cores).
-    static member MaxCheckers = 16
+    static member MaxCheckers = CheckerPool.Max
 
     /// How many `CheckNow` connections are open, for tests.
-    member _.CheckersOpen : int = Volatile.Read(&checkersOpen)
+    member _.CheckersOpen : int = checkerPool.Open
+
+    /// How many `CheckNow` connections hold a read transaction open between checks (R4.3), for tests.
+    member internal _.CheckersHolding : int = checkerPool.Held
+
+    /// Ends the transactions the checks keep open, as the writer's RESTART does (R4.3), for tests.
+    member internal _.ReleaseCheckerHolds() : unit = checkerPool.ReleaseHolds()
 
     /// `Read` for synchronous callers (tests), on the calling thread, so that `f` may borrow. It
     /// keeps a reader connection for these reads, and opens another for one that finds it in use:
@@ -1308,8 +1523,6 @@ type Database
                     thread.Join()
                 readers.DisposeConnections()
                 blockingReader |> Option.iter (fun conn -> (conn :> IDisposable).Dispose())
-                let mutable checker = Unchecked.defaultof<Conn>
-                while checkers.TryTake(&checker) do
-                    (checker :> IDisposable).Dispose()
+                checkerPool.Dispose()
                 // After every connection: closing the WAL index's descriptor drops this process's locks on it.
                 versions.Unwatch()
