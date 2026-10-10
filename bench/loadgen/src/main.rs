@@ -1094,6 +1094,7 @@ async fn cable(a: &Args) -> Res<Value> {
             subscribes,
             nsubs: subs.len(),
             handshakes_in_flight: (50 / raw_threads).max(1),
+            tail_window: a.num("tail-window", 4096usize),
         });
         for t in 0..raw_threads {
             let mine: Vec<Option<std::net::IpAddr>> =

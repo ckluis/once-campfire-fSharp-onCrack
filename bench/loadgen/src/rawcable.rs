@@ -24,8 +24,6 @@ use mio::{Events, Interest, Poll, Token};
 /// Sequence numbers the bookkeeping tracks (a message posted past it would not be counted, so posters stop short of it).
 pub const RAW_SEQ_CAP: usize = 1 << 20;
 
-/// How much of a frame's end is searched for its marker before the whole frame is.
-const TAIL_WINDOW: usize = 4096;
 
 /// `LOADGEN_DUMP=FILE`: the first frame that carries a marker, written there (to see where in a frame the marker sits).
 static DUMPED: AtomicBool = AtomicBool::new(false);
@@ -203,6 +201,8 @@ pub struct RawConfig {
     pub subscribes: Vec<u8>,
     pub nsubs: usize,
     pub handshakes_in_flight: usize,
+    /// How much of a frame's end is searched for its marker before the whole frame is (0: the whole frame).
+    pub tail_window: usize,
 }
 
 pub struct Counters {
@@ -268,11 +268,11 @@ impl Worker<'_> {
             }
         }
         // The profile of round 4's first raw client put 28% of its CPU in the substring search over 10 KB frames, and a message's
-        // text sits about 1 KB from the end of its frame. So look in the last TAIL_WINDOW bytes first, and in the whole frame only
+        // text sits about 1 KB from the end of its frame. So look in the last `tail_window` bytes first (4,096 by default; `--tail-window 0` searches whole frames), and in the whole frame only
         // when that has no complete marker (a marker cut by the window's edge, or sitting early in a frame). A frame that carries
         // two messages, one early and one late, would be counted for the late one only: this suite posts one message per frame, and
         // a miscount can only make a message look undelivered, never delivered.
-        let tail = payload.len().saturating_sub(TAIL_WINDOW);
+        let tail = if self.cfg.tail_window == 0 { 0 } else { payload.len().saturating_sub(self.cfg.tail_window) };
         let mut found = if tail > 0 { self.markers(c, &payload[tail..], hist) } else { 0 };
         if found == 0 {
             found = self.markers(c, payload, hist);
@@ -697,6 +697,7 @@ mod tests {
             subscribes: Vec::new(),
             nsubs,
             handshakes_in_flight: 2,
+            tail_window: 4096,
         });
         // Three clients over two loops.
         let mut threads = Vec::new();
