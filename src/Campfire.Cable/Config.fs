@@ -21,6 +21,9 @@ type Config =
       LagBytes: int64
       /// onCrack (unit R4.5): the fixed ring of rounds 1-4 instead of the log (`CAMPFIRE_CABLE_LOG=ring`): the A/B switch.
       RingLog: bool
+      /// onCrack (unit R4.5): a connection takes the frames of its streams in the order they were published, across the streams
+      /// (`Connection.Merge`); off: a stream at a time, in the order they were subscribed (rounds 1-4). `CAMPFIRE_CABLE_ORDER=stream`.
+      PublishOrder: bool
       /// Frames coalesced into one socket write at most, which also bounds what a connection
       /// buffers beyond the socket.
       MaxWriteBatch: int
@@ -45,6 +48,7 @@ module Config =
           StreamCapacity = 256
           LagBytes = 64L * 1024L * 1024L
           RingLog = false
+          PublishOrder = true
           MaxWriteBatch = 64
           CloseTimeout = TimeSpan.FromSeconds 5.0
           DirectWrites = true

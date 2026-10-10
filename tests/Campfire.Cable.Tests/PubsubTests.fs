@@ -452,3 +452,98 @@ let ``batches on many threads at once lose no wake`` () =
         for count in counts do
             Assert.Equal(total, count)
     }
+
+// Unit R4.5 change 2: a connection takes its streams' frames in publish order, across the streams.
+
+let private mergeAll (readers: Collections.Generic.List<Subscriber>) (limit: int) : Collections.Generic.List<string> * Connection.Drained list =
+    let merge = Connection.Merge()
+    let pending = Collections.Generic.List<Frame>()
+    let taken = Collections.Generic.List<string>()
+    let outcomes = Collections.Generic.List<Connection.Drained>()
+    let mutable going = true
+    while going do
+        let outcome = merge.Drain(readers, pending, limit)
+        outcomes.Add outcome
+        for frame in pending do
+            taken.Add frame.Text
+        pending.Clear()
+        if outcome <> Connection.Drained.Full then going <- false
+    taken, List.ofSeq outcomes
+
+[<Fact>]
+let ``merge: two interleaved streams come out in publish order, in batches, with nothing lost`` () =
+    let hub = Hub(16)
+    let a = hub.Subscribe("a", null, Wake())
+    let b = hub.Subscribe("b", null, Wake())
+    let c = hub.Subscribe("c", null, Wake())
+    let random = Random(7)
+    let expected = Collections.Generic.List<string>()
+    // The reader is stalled while 10,000 frames go to the three streams in a random interleaving.
+    for i in 0..9999 do
+        let stream = [| "a"; "b"; "c" |][random.Next 3]
+        let text = $"{stream}{i}"
+        hub.Broadcast(stream, text) |> ignore
+        expected.Add text
+    let taken, outcomes = mergeAll (Collections.Generic.List [ a; b; c ]) 64
+    Assert.Equal<string list>(List.ofSeq expected, List.ofSeq taken)
+    Assert.Equal(Connection.Drained.Drained, List.last outcomes)
+    Assert.True(outcomes.Length > 100, "taken in batches of 64")
+
+[<Fact>]
+let ``merge: a stream with a deep backlog does not hold back another`` () =
+    let hub = Hub(16)
+    let deep = hub.Subscribe("deep", null, Wake())
+    let shallow = hub.Subscribe("shallow", null, Wake())
+    for i in 0..999 do
+        hub.Broadcast("deep", $"deep{i}") |> ignore
+    hub.Broadcast("shallow", "one") |> ignore
+    for i in 1000..1999 do
+        hub.Broadcast("deep", $"deep{i}") |> ignore
+    // The first batch of 64 takes 64 of deep's frames and stops before the shallow one's: it was published after the 1,000th.
+    let merge = Connection.Merge()
+    let pending = Collections.Generic.List<Frame>()
+    let readers = Collections.Generic.List [ deep; shallow ]
+    let mutable batches = 0
+    let mutable position = -1
+    while position < 0 && batches < 100 do
+        merge.Drain(readers, pending, 64) |> ignore
+        batches <- batches + 1
+        position <- pending.FindIndex(fun f -> f.Text = "one")
+        pending.Clear()
+    // 1,000 frames of deep come before it: 16 batches of 64 (1,024), the 17th has it.
+    Assert.Equal(16, batches)
+    // The order of rounds 1-4 (a stream at a time) puts it after all of deep's 2,000 frames.
+    let deep2 = hub.Subscribe("deep", null, Wake())
+    let shallow2 = hub.Subscribe("shallow", null, Wake())
+    ignore (deep2, shallow2)
+    // (subscribed now, so they see only later frames: publish the same shape again for them)
+    for i in 0..999 do
+        hub.Broadcast("deep", $"deep{i}") |> ignore
+    hub.Broadcast("shallow", "one") |> ignore
+    for i in 1000..1999 do
+        hub.Broadcast("deep", $"deep{i}") |> ignore
+    let oldReaders = Collections.Generic.List [ deep2; shallow2 ]
+    let mutable oldBatches = 0
+    let mutable found = -1
+    while found < 0 && oldBatches < 100 do
+        Connection.drain oldReaders pending 64 |> ignore
+        oldBatches <- oldBatches + 1
+        found <- pending.FindIndex(fun f -> f.Text = "one")
+        pending.Clear()
+    Assert.Equal(32, oldBatches)
+
+[<Fact>]
+let ``merge: a lagged stream is reported and a stopped one dropped`` () =
+    let hub = Hub(4, 100L, false)
+    let stuck = hub.Subscribe("a", null, Wake())
+    let other = hub.Subscribe("b", null, Wake())
+    let payload = String('x', 60)
+    for _ in 0..20 do
+        hub.Broadcast("a", payload) |> ignore
+    hub.Broadcast("b", "late") |> ignore
+    let readers = Collections.Generic.List [ stuck; other ]
+    let _, outcomes = mergeAll readers 64
+    Assert.Equal(Connection.Drained.Lagged, List.last outcomes)
+    (other :> IDisposable).Dispose()
+    let _, outcomes = mergeAll (Collections.Generic.List [ other ]) 64
+    Assert.Equal<Connection.Drained list>([ Connection.Drained.Drained ], outcomes)

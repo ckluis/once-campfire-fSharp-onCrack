@@ -180,6 +180,7 @@ type RecvStatus =
 [<Sealed>]
 type internal Chunk(size: int, id: int64, start: int64) =
     let frames: Frame[] = Array.zeroCreate size
+    let seqs: int64[] = Array.zeroCreate size
     let mutable filled = 0
     let mutable next: Chunk | null = null
 
@@ -191,6 +192,9 @@ type internal Chunk(size: int, id: int64, start: int64) =
 
     member _.Size = size
     member _.Frames = frames
+
+    /// Each frame's number in the hub's publish order (`LogStats.NextSequence`), written with the frame.
+    member _.Sequences = seqs
 
     /// How many slots hold a frame (published with `Volatile.Write` after the frame is in its slot).
     member _.Filled
@@ -210,6 +214,10 @@ type internal LogStats() =
     let mutable retained = 0L
     let mutable peak = 0L
     let mutable cuts = 0L
+    let mutable sequence = 0L
+
+    /// The next number in the hub's publish order: a frame published later has a higher one, across every group.
+    member _.NextSequence() : int64 = Interlocked.Increment(&sequence)
 
     member _.Retained = Interlocked.Read(&retained)
     member _.Peak = Interlocked.Read(&peak)
@@ -263,6 +271,9 @@ type internal GroupBase(identifier: string | null) =
 
     /// Reads `subscriber`'s next frame: the frame, or whether there is none yet or it missed some.
     abstract TryRead: Subscriber * byref<Frame> -> RecvStatus
+
+    /// The publish-order number of `subscriber`'s next frame, without taking it (logs only: a ring has none).
+    abstract TryPeek: Subscriber * byref<int64> -> RecvStatus
 
     /// Wakes `receivers[0 .. count - 1]`, or holds their wakes for the thread's `WakeBatch` scope.
     static member internal WakeAll(receivers: Subscriber[], count: int) : unit =
@@ -343,6 +354,7 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
                     fresh <- true
                 let length = int64 frame.Bytes.Length
                 chunk.Frames[chunk.Filled] <- frame
+                chunk.Sequences[chunk.Filled] <- stats.NextSequence()
                 written <- written + length
                 chunk.Filled <- chunk.Filled + 1
                 if not retired then stats.Add length
@@ -399,27 +411,45 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
     /// Bytes this log holds now (from its oldest chunk).
     member _.Retained = lock gate (fun () -> written - head.Start)
 
+    /// Finds `subscriber`'s next slot, following the link out of a chunk it has read to the end.
+    static member private Locate(subscriber: Subscriber, chunk: byref<Chunk>, index: byref<int>) : bool =
+        chunk <- subscriber.Chunk
+        index <- subscriber.Index
+        if index = chunk.Size then
+            // All of this chunk is read; the next may not exist yet.
+            match chunk.Next with
+            | null -> ()
+            | next ->
+                chunk <- next
+                index <- 0
+                subscriber.MoveTo next
+                subscriber.Index <- 0
+        index < chunk.Filled
+
     override _.TryRead(subscriber: Subscriber, frame: byref<Frame>) : RecvStatus =
         if subscriber.Overrun then
             RecvStatus.Lagged
         else
             let mutable chunk = subscriber.Chunk
-            let mutable index = subscriber.Index
-            let mutable status = RecvStatus.Empty
-            if index = chunk.Size then
-                // All of this chunk is read; the next may not exist yet.
-                match chunk.Next with
-                | null -> ()
-                | next ->
-                    chunk <- next
-                    index <- 0
-                    subscriber.MoveTo next
-            if index < chunk.Filled then
+            let mutable index = 0
+            if LogGroup.Locate(subscriber, &chunk, &index) then
                 frame <- chunk.Frames[index]
-                index <- index + 1
-                status <- RecvStatus.Got
-            subscriber.Index <- index
-            status
+                subscriber.Index <- index + 1
+                RecvStatus.Got
+            else
+                RecvStatus.Empty
+
+    override _.TryPeek(subscriber: Subscriber, sequence: byref<int64>) : RecvStatus =
+        if subscriber.Overrun then
+            RecvStatus.Lagged
+        else
+            let mutable chunk = subscriber.Chunk
+            let mutable index = 0
+            if LogGroup.Locate(subscriber, &chunk, &index) then
+                sequence <- chunk.Sequences[index]
+                RecvStatus.Got
+            else
+                RecvStatus.Empty
 
 /// The group of rounds 1-4 (`CAMPFIRE_CABLE_LOG=ring`): a fixed ring of `capacity` frames shared by its subscribers; one more
 /// than `capacity` frames behind is lagged and loses the frames it missed.
@@ -456,6 +486,8 @@ and [<Sealed>] internal RingGroup(identifier: string | null, capacity: int) =
                 receivers[at] <- receivers[count - 1]
                 receivers[count - 1] <- Unchecked.defaultof<_>
                 Volatile.Write(&count, count - 1))
+
+    override _.TryPeek(_: Subscriber, _: byref<int64>) : RecvStatus = RecvStatus.Empty
 
     /// Reads from the subscriber's position: the frame there, or whether there is none yet or the ring has moved past it.
     override _.TryRead(subscriber: Subscriber, frame: byref<Frame>) : RecvStatus =
@@ -507,6 +539,10 @@ and [<Sealed>] Subscriber internal (group: GroupBase, hub: Hub, broadcasting: st
     /// The next frame, if there is one. Read by one thread at a time.
     member this.TryRecv(frame: byref<Frame>) : RecvStatus =
         if this.Stopped then RecvStatus.Empty else group.TryRead(this, &frame)
+
+    /// Unit R4.5: the publish-order number of the next frame (higher is later, across the hub's groups), without taking it.
+    member this.TryPeek(sequence: byref<int64>) : RecvStatus =
+        if this.Stopped then RecvStatus.Empty else group.TryPeek(this, &sequence)
 
     interface IDisposable with
         member this.Dispose() =

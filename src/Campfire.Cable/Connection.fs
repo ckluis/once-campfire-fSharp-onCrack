@@ -74,14 +74,14 @@ let private attempt (work: Task) : Task<bool> =
             return false
     }
 
-type private Drained =
+type internal Drained =
     | Drained = 0
     /// The batch is full; more may be waiting.
     | Full = 1
     | Lagged = 2
 
 /// Reads the ready frames of every stream onto `pending`, up to `limit` of them in all.
-let private drain (readers: List<Subscriber>) (pending: List<Frame>) (limit: int) : Drained =
+let internal drain (readers: List<Subscriber>) (pending: List<Frame>) (limit: int) : Drained =
     let mutable outcome = Drained.Drained
     let mutable i = 0
     while outcome = Drained.Drained && i < readers.Count do
@@ -104,6 +104,63 @@ let private drain (readers: List<Subscriber>) (pending: List<Frame>) (limit: int
                 | _ -> reading <- false
             i <- i + 1
     outcome
+
+/// onCrack (unit R4.5): reads the ready frames of every stream onto `pending` in the order they were published, across the
+/// streams, up to `limit` of them in all: the lowest publish number among the streams' next frames goes first, so one deep
+/// stream cannot hold back the others, and a post's append and its unread ping arrive together. What one connection's single
+/// write queue would see in Rails. (`drain` above is the order of rounds 1-4: a stream at a time, in the list's order.)
+[<Sealed>]
+type internal Merge() =
+    let mutable heads: int64[] = Array.zeroCreate 8
+
+    member _.Drain(readers: List<Subscriber>, pending: List<Frame>, limit: int) : Drained =
+        let count = readers.Count
+        if heads.Length < count then heads <- Array.zeroCreate (max count (heads.Length * 2))
+        // Each stream's next number (MaxValue: nothing ready), looked up once; only the stream taken from is looked up again.
+        let mutable outcome = Drained.Drained
+        let mutable i = 0
+        while outcome = Drained.Drained && i < readers.Count do
+            let reader = readers[i]
+            if reader.Stopped then
+                readers.RemoveAt i
+            else
+                let mutable sequence = 0L
+                match reader.TryPeek(&sequence) with
+                | RecvStatus.Got -> heads[i] <- sequence
+                | RecvStatus.Lagged -> outcome <- Drained.Lagged
+                | _ -> heads[i] <- Int64.MaxValue
+                i <- i + 1
+        let mutable scanning = outcome = Drained.Drained
+        while scanning do
+            let mutable best = -1
+            let mutable lowest = Int64.MaxValue
+            for j in 0 .. readers.Count - 1 do
+                if heads[j] < lowest then
+                    lowest <- heads[j]
+                    best <- j
+            if best < 0 then
+                scanning <- false
+            else
+                let reader = readers[best]
+                let mutable frame = Unchecked.defaultof<Frame>
+                match reader.TryRecv(&frame) with
+                | RecvStatus.Got ->
+                    pending.Add frame
+                    let mutable sequence = 0L
+                    match reader.TryPeek(&sequence) with
+                    | RecvStatus.Got -> heads[best] <- sequence
+                    | RecvStatus.Lagged ->
+                        outcome <- Drained.Lagged
+                        scanning <- false
+                    | _ -> heads[best] <- Int64.MaxValue
+                    if scanning && pending.Count >= limit then
+                        outcome <- Drained.Full
+                        scanning <- false
+                | RecvStatus.Lagged ->
+                    outcome <- Drained.Lagged
+                    scanning <- false
+                | _ -> heads[best] <- Int64.MaxValue
+        outcome
 
 /// `InternalChannel#process_internal_message`.
 let private processInternalMessage (frame: Frame) : Closing voption =
@@ -353,6 +410,9 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
         let channel = Channels.Channel.CreateBounded<Received>(Channels.BoundedChannelOptions(IncomingCapacity, SingleReader = true, SingleWriter = true))
         let incoming = channel.Reader
         let sink = Writer(stream, deflate, WriteTimeout, abort, direct, config.GatherWrites)
+        // A ring has no publish numbers.
+        let ordered = config.PublishOrder && not config.RingLog
+        let merge = if ordered then Merge() else Unchecked.defaultof<Merge>
         let readerTask = readLoop (Reader(stream, deflate)) channel.Writer wake stop.Token
 
         // handle_open: connect, subscribe to the internal channel, welcome, then process whatever
@@ -450,7 +510,7 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                         let holding = not (isNull probe)
                         if running && closing.IsNone && not (holding && pending.Count >= config.MaxWriteBatch) then
                             // Whatever is ready goes out in the same write.
-                            match drain readers pending config.MaxWriteBatch with
+                            match (if ordered then merge.Drain(readers, pending, config.MaxWriteBatch) else drain readers pending config.MaxWriteBatch) with
                             | Drained.Lagged -> closing <- ValueSome lagged
                             | Drained.Full -> if not holding then wake.Set()
                             | _ -> ()
