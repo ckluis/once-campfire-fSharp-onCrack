@@ -1,0 +1,6 @@
+06:25:12 rust rep 1 start:  06:25:12 up 17:59,  1 user,  load average: 1.46, 2.38, 2.48
+06:27:00 rust rep 1 end:    06:27:00 up 18:01,  1 user,  load average: 2.10, 2.31, 2.44
+06:27:30 fsharp rep 1 start:  06:27:30 up 18:01,  1 user,  load average: 1.27, 2.09, 2.36
+06:28:59 fsharp rep 1 end:    06:28:59 up 18:03,  1 user,  load average: 2.47, 2.23, 2.38
+06:29:29 oncrack rep 1 start:  06:29:29 up 18:03,  1 user,  load average: 1.49, 2.02, 2.30
+06:31:46 oncrack rep 1 end:    06:31:46 up 18:05,  1 user,  load average: 2.50, 2.00, 2.24

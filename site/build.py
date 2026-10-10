@@ -2,7 +2,7 @@
 """Render index.html (at the repository root): onCrack's page.
 
 Python 3 standard library only. The page is short: the climb chart, the same room page served by four engines, the honest read/write
-mix, what onCrack does differently, the Cable fan-out it still loses, and a row of proofs. Everything else sits in a side panel a link
+mix, what onCrack does differently, the Cable fan-out, and a row of proofs. Everything else sits in a side panel a link
 opens. Panels are CSS :target drawers, so they work with JavaScript off; with it on they also close on Esc or a click outside, keep
 focus inside while open, and give it back on close.
 
@@ -179,6 +179,11 @@ def vnum(pattern, label, group=1):
 
 R1 = 'bench/results/oncrack-round1-final'
 REVIEW = R1 + '/review'
+# Cable fan-out: unit R4.2's session (bench/results/oncrack-r4-fanout.md), the raw epoll client and a window of 128; Rails was not run in it, and the
+# round-1 Cable numbers (a different client, a different load shape) are not comparable, so the picture has three apps.
+R42 = 'bench/results/oncrack-r4-fanout/t3'
+CABLE_APPS = ['rust', 'fsharp', 'oncrack']
+CABLE_COUNTS = (100, 500, 1000, 2000)
 R3PIX = 'bench/results/oncrack-r3-pixels'   # the full pixel gate on the final code (round 3, unit R3.1)
 NAME = {'reference': 'Rails', 'rust': 'Rust', 'fsharp': 'F# port', 'oncrack': 'onCrack'}
 APPS = ['reference', 'rust', 'fsharp', 'oncrack']
@@ -230,9 +235,11 @@ def cable(app, clients, what):
              'frames': 'Cable, %s clients, deliveries a second (frames)',
              'p50': 'Cable, %s clients, paced latency to the last client, p50 ms',
              'pss': 'Cable, %s clients saturated, app Pss MB'}[what] % format(clients, ',')
+    if app == 'rust':
+        label += ' (upstream f9dca47)'
     field = {'msgs': 'throughput.delivered_msgs_per_sec', 'frames': 'throughput.frames_per_sec', 'p50': 'latency.all_clients.p50_ms',
              'pss': 'process_memory.saturated.peak_total_pss_mb'}[what]
-    return per_rep(app, label, get, 'cable[clients=%d].%s' % (clients, field))
+    return per_rep(app, label, get, 'cable[clients=%d].%s' % (clients, field), d=R42)
 
 
 def env_field(pattern, label, rel=R1 + '/env.txt'):
@@ -407,14 +414,17 @@ def facts():
         F['peak', a] = per_rep(a, 'peak memory.current over the whole run, MB', lambda d: d['memory']['peak_current_mb'], 'memory.peak_current_mb')
         F['anon', a] = per_rep(a, 'peak anon memory over the whole run, MB', lambda d: d['memory']['peak_anon_mb'], 'memory.peak_anon_mb')
         F['upload', a] = per_rep(a, 'upload + thumbnail, POST to thumbnail served, ms', lambda d: d['upload']['median_total_ms'], 'upload.median_total_ms')
-        for n in (100, 500, 1000):
-            for w in ('msgs', 'frames', 'p50'):
-                F['cable', a, n, w] = cable(a, n, w)
-        F['cable', a, 1000, 'pss'] = cable(a, 1000, 'pss')
+        if a in CABLE_APPS:
+            for n in CABLE_COUNTS:
+                for w in ('msgs', 'frames', 'p50'):
+                    F['cable', a, n, w] = cable(a, n, w)
+            F['cable', a, 1000, 'pss'] = cable(a, 1000, 'pss')
         for r in ('static_css', 'avatar', 'up'):
             for m in ('rps', 'cpu'):
                 F['w'][a, r, 16, m] = http(a, r, 16, m)
-    F['clients'] = {n: param(n, 'Cable clients', R1 + '/oncrack-1.json', 'cable[].clients') for n in (100, 500, 1000)}
+    F['window'] = param(jload(R42 + '/oncrack-1.json')['cable'][0]['throughput']['window'], 'Cable suite: messages posted and not yet delivered to every client, at most',
+                        R42 + '/oncrack-1.json', 'cable[].throughput.window')
+    F['clients'] = {n: param(n, 'Cable clients', R42 + '/oncrack-1.json', 'cable[].clients') for n in CABLE_COUNTS}
     # load generator headroom
     for a in APPS:
         for r, _ in ROUTES + [('static_css', ''), ('avatar', ''), ('up', '')]:
@@ -704,18 +714,19 @@ def fanout(F):
     """One message out to N clients, per app: pulses leave the hub at a rate in proportion to the app's measured messages a second (each pulse
     stands for k messages, the same k for every app at that N), and N clients light up as each pulse lands. CSS only; JS adds counters."""
     panes, tabs, radios = [], [], []
-    for n in (100, 500, 1000):
-        lead = max(F['cable', a, n, 'msgs'].v for a in APPS)
+    for n in CABLE_COUNTS:
+        lead = max(F['cable', a, n, 'msgs'].v for a in CABLE_APPS)
         k = fan_scale(lead)
         kv = V(k, 'messages per pulse in the fan-out picture at %s clients' % format(n, ','), ['site/build.py'],
                'fan_scale(): the smallest of 10, 20, 50, 100, 200, 500, 1000 that draws the fastest app at no more than 7 pulses a second')
-        dotv = V(10, 'clients per dot in the fan-out picture', ['site/build.py'], 'fanout(): one dot per ten clients')
-        dots = n // 10
+        per_dot = 10 if n <= 1000 else 20
+        dotv = V(per_dot, 'clients per dot in the fan-out picture', ['site/build.py'], 'fanout(): one dot per ten clients, per twenty above a thousand')
+        dots = n // per_dot
         cols = {10: 5, 50: 10, 100: 10}[dots]
         rows_ = dots // cols
         lanes = []
         rust = F['cable', 'rust', n, 'msgs']
-        for a in APPS:
+        for a in CABLE_APPS:
             m, fr = F['cable', a, n, 'msgs'], F['cable', a, n, 'frames']
             f = m.v / k                       # pulses a second
             K = 4
@@ -744,18 +755,20 @@ def fanout(F):
         radios.append('<input class="fan-r" type="radio" name="fan-n" id="fan-n%d"%s>' % (n, ' checked' if n == 1000 else ''))
         tabs.append('<label for="fan-n%d">%s clients</label>' % (n, L.n(F['clients'][n], link=False)))
         panes.append('<div class="fan-pane fan-p%d"><ol class="fan-lanes">%s</ol><p class="fan-key">Each dot is %s clients; each pulse is %s messages, '
-                     'leaving at the app&#39;s measured rate. Rails&#39; pulses barely move.</p></div>'
+                     'leaving at the app&#39;s measured rate.</p></div>'
                      % (n, ''.join(lanes), L.n(dotv), L.n(kv)))
-    lead_n = F['cable', 'oncrack', 1000, 'msgs'].over(F['cable', 'rust', 1000, 'msgs'])
-    hi_n = F['cable', 'oncrack', 100, 'msgs'].over(F['cable', 'rust', 100, 'msgs'])
+    ratio = {n: F['cable', 'oncrack', n, 'msgs'].over(F['cable', 'rust', n, 'msgs']) for n in CABLE_COUNTS}
+    if not all(x.v >= 1 for x in ratio.values()):
+        raise SystemExit('build: onCrack is behind Rust at some client count; the fan-out copy says it leads at all of them')
     return ('<section class="beat fanout" id="fanout" aria-labelledby="fan-h"><div class="wrap">'
-            '<p class="kicker reveal">Where Rust still leads</p><h2 id="fan-h" class="reveal">One message, a thousand clients.</h2>'
-            '<p class="line reveal">A post goes out over Action Cable to everyone in the room. onCrack hasn&#39;t touched that code yet: it is the port&#39;s, and it trails Rust, '
-            'from %s at %s clients to %s at %s. That is the next round.</p>'
+            '<p class="kicker reveal">Fan-out</p><h2 id="fan-h" class="reveal">One message, a thousand clients.</h2>'
+            '<p class="line reveal">A post goes out over Action Cable to everyone in the room. onCrack now delivers %s Rust&#39;s messages a second at %s clients, '
+            '%s at %s, %s at %s and %s at %s: the lead narrows as the room fills, because the kernel&#39;s cost of sending each frame is the same for both.</p>'
             '<div class="fan reveal">%s<div class="fan-tabs" role="presentation">%s</div><div class="fan-panes">%s</div></div>'
             '<p class="links reveal">%s %s</p></div></section>'
-            % (L.x(hi_n), L.n(F['clients'][100]), L.x(lead_n), L.n(F['clients'][1000]), ''.join(radios), ''.join(tabs), ''.join(panes),
-               details('p-fanout', 'How the fan-out was measured'), details('p-rust', 'Everything Rust still wins')))
+            % (L.x(ratio[100]), L.n(F['clients'][100]), L.x(ratio[500]), L.n(F['clients'][500]), L.x(ratio[1000]), L.n(F['clients'][1000]),
+               L.x(ratio[2000]), L.n(F['clients'][2000]), ''.join(radios), ''.join(tabs), ''.join(panes),
+               details('p-fanout', 'How the fan-out was measured'), details('p-rust', 'What Rust still wins')))
 
 
 def proof(F):
@@ -1103,37 +1116,36 @@ def p_rust(F):
          'Static files are the port&#39;s; onCrack still serves more of them.'],
         ['idle memory, MB', L.n(F['idle', 'rust']), L.n(F['idle', 'oncrack']), L.x(r(F['idle', 'oncrack'], F['idle', 'rust'])), 'The .NET runtime.'],
         ['peak anon memory over the run, MB', L.n(F['anon', 'rust']), L.n(F['anon', 'oncrack']), L.x(r(F['anon', 'oncrack'], F['anon', 'rust'])), 'GC heaps plus the page store.'],
-        ['Cable, %s clients saturated, Pss MB' % L.n(F['clients'][1000]), L.n(F['cable', 'rust', 1000, 'pss']), L.n(F['cable', 'oncrack', 1000, 'pss']), L.x(r(F['cable', 'oncrack', 1000, 'pss'], F['cable', 'rust', 1000, 'pss'])), 'The port&#39;s Cable code.'],
+        ['Cable, %s clients saturated, Pss MB' % L.n(F['clients'][1000]), L.n(F['cable', 'rust', 1000, 'pss']), L.n(F['cable', 'oncrack', 1000, 'pss']), L.x(r(F['cable', 'oncrack', 1000, 'pss'], F['cable', 'rust', 1000, 'pss'])), 'The .NET runtime and the heap the posts leave behind; a connection itself costs about what Rust&#39;s does. Rust here is upstream ' + lit('f9dca47', 'commit') + '.'],
         ['cold start, ms', L.n(F['cold', 'rust']), L.n(F['cold', 'oncrack']), L.x(r(F['cold', 'oncrack'], F['cold', 'rust'])),
          'The JIT. The opt-in AOT image starts in %s ms.' % L.n(F['boot', 'aot-image', 'up_ms'])],
     ]
-    for n in (100, 500, 1000):
-        rows.append(['Cable, %s clients, messages a second to all' % L.n(F['clients'][n]), L.n(F['cable', 'rust', n, 'msgs']), L.n(F['cable', 'oncrack', n, 'msgs']),
-                     L.x(r(F['cable', 'oncrack', n, 'msgs'], F['cable', 'rust', n, 'msgs'])), 'Unchanged from the port: the next round.'])
     body = ''.join([
         '<p class="lead">onCrack is ahead of Rust on every benchmarked HTTP workload at every concurrency. Here is everything it is not ahead on, from the same session.</p>',
         tbl([('', False), ('Rust', True), ('onCrack', True), ('onCrack / Rust', True), ('Why', False)], rows, 'Same session, medians of the reps', 'dense'),
-        '<p>Memory and fan-out are the port&#39;s: onCrack has not worked on them yet. Next round&#39;s list starts here.</p>',
+        '<p>Memory is the .NET runtime&#39;s and the heap the posts leave behind; fan-out is no longer on this list (it is ahead of Rust at every client count measured, see the fan-out panel).</p>',
         srcline(R1 + '/rust-1.json', R1 + '/oncrack-1.json', 'bench/results/oncrack-c4/boot.jsonl', 'bench/results/oncrack-round1-final.md', lead='Sources'),
     ])
-    return panel('p-rust', 'Where Rust still leads', 'Not ahead on these', body, 'fanout')
+    return panel('p-rust', 'What Rust still wins', 'Not ahead on these', body, 'fanout')
 
 
 def p_fanout(F):
-    head = [('Clients', False)] + [(NAME[a], True) for a in APPS] + [('onCrack / Rust', True)]
-    rows_m = [[L.n(F['clients'][n])] + [L.n(F['cable', a, n, 'msgs'], D1 if F['cable', a, n, 'msgs'].v < 100 else I) for a in APPS] + [L.x(F['cable', 'oncrack', n, 'msgs'].over(F['cable', 'rust', n, 'msgs']))] for n in (100, 500, 1000)]
-    rows_f = [[L.n(F['clients'][n])] + [L.n(F['cable', a, n, 'frames']) for a in APPS] + [L.x(F['cable', 'oncrack', n, 'frames'].over(F['cable', 'rust', n, 'frames']))] for n in (100, 500, 1000)]
-    rows_l = [[L.n(F['clients'][n])] + [L.n(F['cable', a, n, 'p50'], D1) for a in APPS] + [''] for n in (100, 500, 1000)]
+    head = [('Clients', False)] + [(NAME[a] + (' ' + lit('f9dca47', 'commit') if a == 'rust' else ''), True) for a in CABLE_APPS] + [('onCrack / Rust', True)]
+    rows_m = [[L.n(F['clients'][n])] + [L.n(F['cable', a, n, 'msgs'], D1 if F['cable', a, n, 'msgs'].v < 100 else I) for a in CABLE_APPS] + [L.x(F['cable', 'oncrack', n, 'msgs'].over(F['cable', 'rust', n, 'msgs']))] for n in CABLE_COUNTS]
+    rows_f = [[L.n(F['clients'][n])] + [L.n(F['cable', a, n, 'frames']) for a in CABLE_APPS] + [L.x(F['cable', 'oncrack', n, 'frames'].over(F['cable', 'rust', n, 'frames']))] for n in CABLE_COUNTS]
+    rows_l = [[L.n(F['clients'][n])] + [L.n(F['cable', a, n, 'p50'], D1) for a in CABLE_APPS] + [''] for n in CABLE_COUNTS]
     body = ''.join([
-        '<p class="lead"><code>bench/run</code>&#39;s Cable suite: N signed-in clients each hold a WebSocket with the room&#39;s subscriptions, and posters post into the room as fast as the app '
-        'delivers every message to every client. A message counts when the last client has it.</p>',
+        '<p class="lead"><code>bench/run</code>&#39;s Cable suite: N signed-in clients each hold a WebSocket with the room&#39;s subscriptions, and four posters post into the room, '
+        'never more than %s messages ahead of what every client has received. A message counts when the last client has it. The clients are one epoll-driven program with no WebSocket library '
+        '(<code>bench/loadgen/src/rawcable.rs</code>), so it is the server that runs out of cores, not the load generator. One session, three reps; Rails was not run in it, and Cable numbers '
+        'from before this client are not comparable.</p>' % L.n(F['window']),
         tbl(head, rows_m, 'Messages a second delivered to every client (median of the reps)'),
         tbl(head, rows_f, 'Deliveries a second: messages times clients, as frames on the wire'),
         tbl(head, rows_l, 'Paced: one message at a time, %s ms until the last client has it' % P50),
         '<h3>How the picture is drawn</h3><p>Each lane sends pulses from its hub at a rate in proportion to its measured messages a second; at a given N one pulse stands for the same number of '
         'messages in every lane, and each dot for ten clients. The pulses are CSS animations, so they run without JavaScript; with JavaScript each lane also counts what it has delivered '
         'since you opened the page, and how far behind Rust that leaves it. With reduced motion nothing moves and the rates are what you read.</p>',
-        srcline(R1 + '/oncrack-1.json', R1 + '/rust-1.json', R1 + '/fsharp-1.json', R1 + '/reference-1.json', 'bench/loadgen/src/main.rs', lead='Sources (and the other reps beside each)'),
+        srcline(R42 + '/oncrack-1.json', R42 + '/rust-1.json', R42 + '/fsharp-1.json', 'bench/loadgen/src/rawcable.rs', 'bench/results/oncrack-r4-fanout.md', lead='Sources (and the other reps beside each)'),
     ])
     return panel('p-fanout', 'Cable fan-out', 'One message to N clients', body, 'fanout')
 
@@ -1808,10 +1820,10 @@ a.sn:hover,a.sn:focus-visible{color:var(--accent);border-bottom-color:var(--acce
 .fan-r{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
 .fan-tabs{display:flex;gap:6px;padding:12px 12px 0;flex-wrap:wrap}
 .fan-tabs label{cursor:pointer;padding:7px 14px;border-radius:999px;border:1px solid var(--line);font-size:14px;font-weight:600;color:var(--ink-2);background:var(--bg)}
-#fan-n100:checked~.fan-tabs label[for=fan-n100],#fan-n500:checked~.fan-tabs label[for=fan-n500],#fan-n1000:checked~.fan-tabs label[for=fan-n1000]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-#fan-n100:focus-visible~.fan-tabs label[for=fan-n100],#fan-n500:focus-visible~.fan-tabs label[for=fan-n500],#fan-n1000:focus-visible~.fan-tabs label[for=fan-n1000]{outline:2px solid var(--accent);outline-offset:2px}
+#fan-n100:checked~.fan-tabs label[for=fan-n100],#fan-n500:checked~.fan-tabs label[for=fan-n500],#fan-n1000:checked~.fan-tabs label[for=fan-n1000],#fan-n2000:checked~.fan-tabs label[for=fan-n2000]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#fan-n100:focus-visible~.fan-tabs label[for=fan-n100],#fan-n500:focus-visible~.fan-tabs label[for=fan-n500],#fan-n1000:focus-visible~.fan-tabs label[for=fan-n1000],#fan-n2000:focus-visible~.fan-tabs label[for=fan-n2000]{outline:2px solid var(--accent);outline-offset:2px}
 .fan-pane{display:none;padding:6px 12px 14px}
-#fan-n100:checked~.fan-panes .fan-p100,#fan-n500:checked~.fan-panes .fan-p500,#fan-n1000:checked~.fan-panes .fan-p1000{display:block}
+#fan-n100:checked~.fan-panes .fan-p100,#fan-n500:checked~.fan-panes .fan-p500,#fan-n1000:checked~.fan-panes .fan-p1000,#fan-n2000:checked~.fan-panes .fan-p2000{display:block}
 .fan-lanes{list-style:none;margin:0;padding:0}
 .fan-lane{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:6px 18px;align-items:center;padding:12px 4px;border-top:1px solid var(--line-2)}
 .fan-lane:first-child{border-top:0}

@@ -9,7 +9,7 @@ label=$1 extra=${2-} clients=${3:-1000 2000}
 out=bench/results/oncrack-r4-fanout/pairs/$label
 mkdir -p "$out"
 export SERVER_CPUS=0-3 LOADGEN_CPUS=4-7 WORK=/var/tmp/campfire-bench-work
-export ONCRACK_MOUNT=/var/tmp/campfire-mounted ONCRACK_EXTRA_ENV="$extra" CABLE_CLIENTS="$clients"
+export ONCRACK_MOUNT=${ONCRACK_MOUNT-/var/tmp/campfire-mounted} ONCRACK_EXTRA_ENV="$extra" CABLE_CLIENTS="$clients"
 w=0; while awk '{exit !($1 >= 1.5)}' /proc/loadavg && [ $w -lt 300 ]; do sleep 10; w=$((w+10)); done
 echo "before $(cat /proc/loadavg)" > "$out/load.txt"
 MERGE_PART=1 HTTP_ROUTES=up SUITES=cable LOAD_WAIT_SECS=300 \
