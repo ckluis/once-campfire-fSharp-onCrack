@@ -1,2 +1,5 @@
-pixel-parity: unknown option search (try --help)
-time="2026-10-10T16:34:35-04:00" level=fatal msg="exit status 2"
+pixel-parity: oncrack vs the Rails reference, screenshot layer only, seeds default (fast: chromium, light, no breakpoint sweep)
+pixel-parity: VM free 39G, parity/out 277M
+seed default: 86/86 screenshots pixel-equal  [385s]
+pixel-parity: PASSED, the UI is pixel-identical in 385s; reports under /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/parity/out/pixel-parity-r4-final-fast/a
+bin/pixel-parity --fast --seeds default --only 'realtime/**,messages/**' --ou  0.07s user 0.07s system 0% cpu 6:25.69 total
