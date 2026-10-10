@@ -18,29 +18,47 @@
    - Result: 0/0 screenshots pixel-equal (filters caught no state matches; gate logic passes)
    - Committed 4b0a5f9
 
-## Next steps (in order)
+## Attempted (aborted due to length)
 
-4. **Cable suite** — `bench/cable/run rust fsharp --clients 100 500 1000 2000 --reps 3` (then onCrack; or run as part of bench/run)
-   - ~15-20 minutes per app variant
-   - Outputs under bench/results/oncrack-r4-final/
+4. **bench/quick started** at ~16:41 EDT
+   - Full 3-rep run started for onCrack only
+   - Exceeded 10-minute timeout (bench/quick takes 10-15 min per rep = 30-45 min total)
+   - Abandoned to preserve time for critical steps
+   - **Lesson:** bench/quick shows setup works; full benchmarks need dedicated long session
 
-5. **Upstream harness normal profile** — one session
+## Remaining steps (DEFERRED — continue in separate session)
+
+4. **Cable suite** (DEFERRED)
    ```
-   /Users/clank/Desktop/projects/once-campfire-verification:
+   bench/cable/run rust --clients 100 500 1000 2000 --reps 3
+   bench/cable/run fsharp --clients 100 500 1000 2000 --reps 3
+   bench/cable/run <oncrack variant if available>
+   ```
+   - ~15-20 minutes per app variant
+   - Outputs under bench/results/oncrack-r4-final/cable-*.json
+
+5. **Upstream harness normal profile** (DEFERRED) — one session, ~50-60 minutes
+   ```
+   cd /Users/clank/Desktop/projects/once-campfire-verification
+   git checkout oncrack-reliability-working
    bin/benchmark --rounds 3 --duration 8 --concurrencies 16 --cpus 0-3 --client-cpus 4-7 \
      --apps rails,rust,c,fsharp,oncrack,oncrack-cached
    ```
-   - Apps in sequence (fresh, cached modes)
-   - ~40-50 minutes in colima
-   - Results to bench/results/oncrack-r4-final/ via symlink or copy
+   - Apps run in sequence
+   - Results under bench/results/oncrack-r4-final/ (copy/symlink from verification repo results)
+   - Or use `RESULTS_DIR=../once-campfire-fsharp-oncrack/bench/results/oncrack-r4-final/upstream-normal`
 
-6. **Upstream harness mixed profile** — one session
-   - Same command with `--mixed-write-rate 10`
-   - ~40-50 minutes
+6. **Upstream harness mixed profile** (DEFERRED) — one session, ~50-60 minutes
+   - Same as step 5 with `--mixed-write-rate 10` added
+   - Results to upstream-mixed dir
 
-7. **Hand re-runs** — `review.py` room page, mixed, post
-   - 5 alternations (forward, reverse, forward, reverse, forward)
-   - ~30 minutes
+7. **Hand re-runs** (DEFERRED) — ~15-20 minutes
+   ```
+   parity/bin/reference up --seed default --port 4311 --time 2026-03-02T16:00:00Z --freeze
+   parity/bin/candidate up --seed default --port 4312 --time 2026-03-02T16:00:00Z --freeze
+   reference-tools/campfire/controllers_a/review.py http://127.0.0.1:4311 http://127.0.0.1:4312
+   ```
+   Or use the existing `review.py` in the verification repo to run hand re-runs for room page, mixed, post
 
 ## Disk space and guards
 
