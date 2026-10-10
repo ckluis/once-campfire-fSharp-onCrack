@@ -1,0 +1,36 @@
+1791661963 oncrack round 1: cable 1000/1000 subscribed, 0 disconnected, 6525/6525 delivered to all, 434.7 msgs/s
+1791661993 oncrack round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 10888/10888 delivered to all, 572.3 msgs/s
+1791661993 {
+1791661993   "oncrack": {
+1791661993     "cable": {
+1791661993       "clients": 1000,
+1791661993       "posters": 4,
+1791661993       "subscribed": [
+1791661993         1000
+1791661993       ],
+1791661993       "disconnected": [
+1791661993         0
+1791661993       ],
+1791661993       "delivered_to_all": [
+1791661993         "6525/6525"
+1791661993       ],
+1791661993       "median_delivered_msgs_per_sec": 434.7,
+1791661993       "median_all_clients_p99_ms": 130.111
+1791661993     },
+1791661993     "cable_heavy": {
+1791661993       "clients": 1000,
+1791661993       "posters": 64,
+1791661993       "subscribed": [
+1791661993         1000
+1791661993       ],
+1791661993       "disconnected": [
+1791661993         0
+1791661993       ],
+1791661993       "delivered_to_all": [
+1791661993         "10888/10888"
+1791661993       ],
+1791661993       "median_delivered_msgs_per_sec": 572.3,
+1791661993       "median_all_clients_p99_ms": 13033.471
+1791661993     }
+1791661993   }
+1791661993 }

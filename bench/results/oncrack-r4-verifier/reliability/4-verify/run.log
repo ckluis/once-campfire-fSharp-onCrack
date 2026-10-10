@@ -1,0 +1,36 @@
+1791662091 oncrack round 1: cable 1000/1000 subscribed, 0 disconnected, 6270/6270 delivered to all, 417.8 msgs/s
+1791662121 oncrack round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 9201/9201 delivered to all, 491.4 msgs/s
+1791662121 {
+1791662121   "oncrack": {
+1791662121     "cable": {
+1791662121       "clients": 1000,
+1791662121       "posters": 4,
+1791662121       "subscribed": [
+1791662121         1000
+1791662121       ],
+1791662121       "disconnected": [
+1791662121         0
+1791662121       ],
+1791662121       "delivered_to_all": [
+1791662121         "6270/6270"
+1791662121       ],
+1791662121       "median_delivered_msgs_per_sec": 417.8,
+1791662121       "median_all_clients_p99_ms": 75.455
+1791662121     },
+1791662121     "cable_heavy": {
+1791662121       "clients": 1000,
+1791662121       "posters": 64,
+1791662121       "subscribed": [
+1791662121         1000
+1791662121       ],
+1791662121       "disconnected": [
+1791662121         0
+1791662121       ],
+1791662121       "delivered_to_all": [
+1791662121         "9201/9201"
+1791662121       ],
+1791662121       "median_delivered_msgs_per_sec": 491.4,
+1791662121       "median_all_clients_p99_ms": 12615.679
+1791662121     }
+1791662121   }
+1791662121 }
