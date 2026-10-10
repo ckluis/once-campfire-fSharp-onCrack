@@ -547,3 +547,57 @@ let ``merge: a lagged stream is reported and a stopped one dropped`` () =
     (other :> IDisposable).Dispose()
     let _, outcomes = mergeAll (Collections.Generic.List [ other ]) 64
     Assert.Equal<Connection.Drained list>([ Connection.Drained.Drained ], outcomes)
+
+// Unit R4.5: `Hub.Congested` says when most of a room's subscribers are far behind (a post then waits).
+
+[<Fact>]
+let ``congested: true only while more than half of the subscribers are more than the limit behind`` () =
+    // The verdict is worked out at most every 10 ms.
+    let settle () = Threading.Thread.Sleep 25
+    let hub = Hub(8)
+    let subscribers = [| for _ in 1..4 -> hub.Subscribe("room", null, Wake()) |]
+    settle ()
+    Assert.False(hub.Congested("room", 50))
+    settle ()
+    Assert.False(hub.Congested("nobody", 50))
+    for i in 0..199 do
+        hub.Broadcast("room", string i) |> ignore
+    // The verdict is worked out at most every 10 ms.
+    settle ()
+    settle ()
+    Assert.True(hub.Congested("room", 50))
+    settle ()
+    Assert.False(hub.Congested("room", 500), "200 frames behind is not 500")
+    // Two of four caught up: exactly half is not more than half.
+    drainAll subscribers[0] |> ignore
+    drainAll subscribers[1] |> ignore
+    settle ()
+    settle ()
+    Assert.False(hub.Congested("room", 50))
+    // One more behind the limit tips it again: publish 100 more, so those two are 100 behind and the others 300.
+    for i in 0..99 do
+        hub.Broadcast("room", string i) |> ignore
+    settle ()
+    settle ()
+    Assert.True(hub.Congested("room", 50))
+    drainAll subscribers[2] |> ignore
+    settle ()
+    settle ()
+    Assert.False(hub.Congested("room", 250), "only one subscriber is more than 250 behind")
+    settle ()
+    Assert.True(hub.Congested("room", 50), "three of four are more than 50 behind")
+    for s in subscribers do
+        drainAll s |> ignore
+    settle ()
+    settle ()
+    Assert.False(hub.Congested("room", 0 + 1))
+
+[<Fact>]
+let ``congested: a ring has no measure`` () =
+    let hub = Hub(8, 0L, true)
+    let s = hub.Subscribe("room", null, Wake())
+    for i in 0..99 do
+        hub.Broadcast("room", string i) |> ignore
+    Threading.Thread.Sleep 25
+    Assert.False(hub.Congested("room", 1))
+    ignore s

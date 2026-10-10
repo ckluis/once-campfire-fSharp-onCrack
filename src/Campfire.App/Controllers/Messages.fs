@@ -411,6 +411,8 @@ module MessagesController =
             | None -> return! renderRoomNotFound c
             | Some room ->
                 let! attributes = messageParams c
+                // onCrack (unit R4.5): a post waits while the room's fan-out is seconds behind (a no-op otherwise).
+                do! c.App.Broadcasts.AwaitRoom room
                 // onCrack: the broadcast goes out in commit order (`BroadcastOrder`), unless the post has an
                 // attachment, whose analysis between the commit and the broadcast would hold the line.
                 match attributes.Attachment with

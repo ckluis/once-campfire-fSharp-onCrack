@@ -269,6 +269,10 @@ type internal GroupBase(identifier: string | null) =
     abstract Retire: unit -> unit
     default _.Retire() = ()
 
+    /// Unit R4.5: whether more than half of the subscribers are more than `frames` behind the newest frame (a ring has no such measure).
+    abstract Congested: frames: int -> bool
+    default _.Congested(_: int) = false
+
     /// Reads `subscriber`'s next frame: the frame, or whether there is none yet or it missed some.
     abstract TryRead: Subscriber * byref<Frame> -> RecvStatus
 
@@ -306,6 +310,9 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
     let mutable receivers: Subscriber[] = Array.zeroCreate 4
     let mutable count = 0
     let mutable retired = false
+    let mutable verdict = false
+    let mutable verdictAt = 0L
+    let verdictTicks = Diagnostics.Stopwatch.Frequency / 100L
 
     /// Moves `head` to the oldest chunk a subscriber is in (or the tail, with none), freeing what is behind it. Under `gate`.
     let trim () : unit =
@@ -396,6 +403,24 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
                 Volatile.Write(&count, count - 1)
                 // The oldest subscriber leaving frees the log behind the next one.
                 if obj.ReferenceEquals(subscriber.Chunk, head) && not (obj.ReferenceEquals(head, tail)) then trim ())
+
+    /// A verdict is worked out at most every 10 ms, however many ask: a pass over the subscribers under the group's lock.
+    override _.Congested(frames: int) : bool =
+        let now = Diagnostics.Stopwatch.GetTimestamp()
+        if now - Volatile.Read(&verdictAt) < verdictTicks then
+            Volatile.Read(&verdict)
+        else
+            lock gate (fun () ->
+                let behind = ref 0
+                if count > 0 then
+                    let newest = tail.Id * int64 chunkSize + int64 tail.Filled
+                    for i in 0 .. count - 1 do
+                        let subscriber = receivers[i]
+                        if newest - (subscriber.Chunk.Id * int64 chunkSize + int64 subscriber.Index) > int64 frames then behind.Value <- behind.Value + 1
+                let congested = count > 0 && behind.Value * 2 > count
+                Volatile.Write(&verdict, congested)
+                Volatile.Write(&verdictAt, now)
+                congested)
 
     override _.Retire() : unit =
         lock gate (fun () ->
@@ -617,6 +642,17 @@ and [<Sealed>] Hub(capacity: int, lagBytes: int64, ring: bool, onCut: Action<int
     member _.RetainedBytes: int64 = stats.Retained
     member _.RetainedPeakBytes: int64 = stats.Peak
     member _.CutCount: int64 = stats.Cuts
+
+    /// Unit R4.5: whether any group of `broadcasting` has more than half of its subscribers more than `frames` frames behind: the fan-out
+    /// cannot keep up with what is posted, and a poster should wait (`Broadcasts.AwaitRoom`) rather than let the backlog grow to the budget.
+    member _.Congested(broadcasting: string, frames: int) : bool =
+        match streams.TryGetValue broadcasting with
+        | true, groups ->
+            let mutable congested = false
+            for group in groups do
+                if group.Congested frames then congested <- true
+            congested
+        | _ -> false
 
     /// Frees the log behind the oldest subscriber of every group (the heartbeat calls it).
     member _.Trim() : unit =

@@ -1,0 +1,170 @@
+{
+  "app": "oncrack",
+  "round": 1,
+  "cable": {
+    "clients": 1000,
+    "connect_secs": 0.21,
+    "disconnected": 0,
+    "distinct_session_cookies": 1,
+    "failed": 0,
+    "latency": {
+      "all_clients": {
+        "max_ms": 17.583,
+        "mean_ms": 8.62,
+        "n": 30,
+        "p50_ms": 4.951,
+        "p90_ms": 15.463,
+        "p99_ms": 17.583
+      },
+      "complete": 30,
+      "messages": 30,
+      "per_client": {
+        "max_ms": 17.583,
+        "mean_ms": 6.1,
+        "n": 30000,
+        "p50_ms": 4.435,
+        "p90_ms": 12.567,
+        "p99_ms": 16.231
+      },
+      "post": {
+        "max_ms": 14.423,
+        "mean_ms": 4.92,
+        "n": 30,
+        "p50_ms": 4.335,
+        "p90_ms": 8.287,
+        "p99_ms": 14.423
+      },
+      "post_attempts": 30,
+      "post_errors": 0,
+      "post_successes": 30
+    },
+    "ready": 1000,
+    "refreshes": 0,
+    "session_rows": 1,
+    "subscriptions_per_client": 6,
+    "subscriptions_per_client_range": {
+      "max": 6,
+      "min": 6
+    },
+    "throughput": {
+      "all_clients": {
+        "max_ms": 367.615,
+        "mean_ms": 30.03,
+        "n": 6756,
+        "p50_ms": 25.231,
+        "p90_ms": 44.319,
+        "p99_ms": 106.303
+      },
+      "complete": 6756,
+      "delivered_msgs_per_sec": 450.0,
+      "drain_secs": 0.01,
+      "frames_per_sec": 450039.0,
+      "per_client": {
+        "max_ms": 367.615,
+        "mean_ms": 13.23,
+        "n": 6756000,
+        "p50_ms": 10.815,
+        "p90_ms": 22.623,
+        "p99_ms": 46.623
+      },
+      "post": {
+        "max_ms": 338.431,
+        "mean_ms": 8.88,
+        "n": 6756,
+        "p50_ms": 6.807,
+        "p90_ms": 16.399,
+        "p99_ms": 34.975
+      },
+      "post_attempts": 6756,
+      "post_errors": 0,
+      "posted": 6756,
+      "posters": 4,
+      "posts_per_sec": 450.3,
+      "wire_mb_per_sec": null
+    },
+    "unread_frames": 6786000
+  },
+  "cable_heavy": {
+    "clients": 1000,
+    "connect_secs": 0.16,
+    "disconnected": 900,
+    "distinct_session_cookies": 1,
+    "failed": 0,
+    "latency": {
+      "all_clients": {
+        "max_ms": 28.031,
+        "mean_ms": 10.57,
+        "n": 30,
+        "p50_ms": 10.399,
+        "p90_ms": 15.975,
+        "p99_ms": 28.031
+      },
+      "complete": 30,
+      "messages": 30,
+      "per_client": {
+        "max_ms": 28.031,
+        "mean_ms": 7.56,
+        "n": 30000,
+        "p50_ms": 6.379,
+        "p90_ms": 13.039,
+        "p99_ms": 26.879
+      },
+      "post": {
+        "max_ms": 28.015,
+        "mean_ms": 5.85,
+        "n": 30,
+        "p50_ms": 5.635,
+        "p90_ms": 8.255,
+        "p99_ms": 28.015
+      },
+      "post_attempts": 30,
+      "post_errors": 0,
+      "post_successes": 30
+    },
+    "ready": 1000,
+    "refreshes": 0,
+    "session_rows": 1,
+    "subscriptions_per_client": 6,
+    "subscriptions_per_client_range": {
+      "max": 6,
+      "min": 6
+    },
+    "throughput": {
+      "all_clients": {
+        "max_ms": 3006.463,
+        "mean_ms": 1649.03,
+        "n": 655,
+        "p50_ms": 1551.359,
+        "p90_ms": 2717.695,
+        "p99_ms": 3004.415
+      },
+      "complete": 655,
+      "delivered_msgs_per_sec": 43.6,
+      "drain_secs": 0.0,
+      "frames_per_sec": 531928.0,
+      "per_client": {
+        "max_ms": 3248.127,
+        "mean_ms": 540.66,
+        "n": 7987497,
+        "p50_ms": 28.927,
+        "p90_ms": 1881.087,
+        "p99_ms": 2529.279
+      },
+      "post": {
+        "max_ms": 180.863,
+        "mean_ms": 16.88,
+        "n": 56825,
+        "p50_ms": 12.751,
+        "p90_ms": 31.599,
+        "p99_ms": 74.687
+      },
+      "post_attempts": 56825,
+      "post_errors": 0,
+      "posted": 56825,
+      "posters": 64,
+      "posts_per_sec": 3784.3,
+      "wire_mb_per_sec": null
+    },
+    "unread_frames": 8017339
+  }
+}

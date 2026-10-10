@@ -296,6 +296,26 @@ type Broadcasts(server: Cable) =
     /// onCrack: the posts' broadcasts in commit order (`BroadcastOrder`).
     member val Order = BroadcastOrder()
 
+    /// onCrack (unit R4.5): a post waits here, before it writes, while most of its room's subscribers are far behind (`Config.PressureFrames`),
+    /// for at most `Config.PressureWait`: a room fed faster than it can be fanned out then holds a bounded backlog instead of cutting its
+    /// clients when the log reaches its byte budget. Nothing waits unless the fan-out is behind by seconds; Action Cable queues without bound.
+    member _.AwaitRoom(room: Room) : System.Threading.Tasks.Task =
+        let config = server.Config
+        if config.PressureFrames <= 0 then
+            System.Threading.Tasks.Task.CompletedTask
+        else
+            match streamName (Broadcasts.RoomMessages room) with
+            | None -> System.Threading.Tasks.Task.CompletedTask
+            | Some name ->
+                if not (server.Hub.Congested(name, config.PressureFrames)) then
+                    System.Threading.Tasks.Task.CompletedTask
+                else
+                    task {
+                        let limit = System.Diagnostics.Stopwatch.GetTimestamp() + int64 (config.PressureWait.TotalSeconds * float System.Diagnostics.Stopwatch.Frequency)
+                        while server.Hub.Congested(name, config.PressureFrames) && System.Diagnostics.Stopwatch.GetTimestamp() < limit do
+                            do! System.Threading.Tasks.Task.Delay 5
+                    }
+
     /// `broadcast_unread_room`: `{ roomId: }` to each member's `user_<id>_unreads`.
     member this.UnreadRoom(conn: Conn, room: Room) : unit =
         this.UnreadRoomTo(room, Membership.userIdsForRoom conn room.Id)

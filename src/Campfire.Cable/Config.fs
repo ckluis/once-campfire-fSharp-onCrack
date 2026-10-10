@@ -19,6 +19,12 @@ type Config =
       /// onCrack (unit R4.5): the most a broadcasting's log holds behind its oldest subscriber. A subscriber further behind is
       /// disconnected with `reconnect: true`; anything nearer loses nothing. `CAMPFIRE_CABLE_LAG_BYTES`.
       LagBytes: int64
+      /// onCrack (unit R4.5): a post waits (`Broadcasts.AwaitRoom`) while more than half of its room's subscribers are more than this many frames
+      /// behind, so a room fed faster than it can be fanned out holds a bounded backlog instead of cutting its clients; 0 never waits.
+      /// `CAMPFIRE_CABLE_PRESSURE_FRAMES` (2048; `CAMPFIRE_CABLE_PRESSURE=off` is 0).
+      PressureFrames: int
+      /// The longest one post waits (`CAMPFIRE_CABLE_PRESSURE_MS`, 2000).
+      PressureWait: TimeSpan
       /// onCrack (unit R4.5): the fixed ring of rounds 1-4 instead of the log (`CAMPFIRE_CABLE_LOG=ring`): the A/B switch.
       RingLog: bool
       /// onCrack (unit R4.5): a connection takes the frames of its streams in the order they were published, across the streams
@@ -52,6 +58,8 @@ module Config =
           StreamCapacity = 256
           LagBytes = 64L * 1024L * 1024L
           RingLog = false
+          PressureFrames = 2048
+          PressureWait = TimeSpan.FromSeconds 2.0
           PublishOrder = true
           StallTimeout = TimeSpan.FromSeconds 30.0
           MaxWriteBatch = 64

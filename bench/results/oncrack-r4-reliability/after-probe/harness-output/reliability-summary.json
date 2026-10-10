@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "verification_revision": "eed4105f4f5f38faa0159ce68852e2e0aec0fac1",
+    "started_at": "2026-10-10T17:18:26Z",
+    "seed_sha256": "fef46014007cc69a97517b90ae122e0e043734e3760eb0f292078fefecacb7f4",
+    "server_cpus": "0-3",
+    "client_cpus": "4-7",
+    "network": "host",
+    "rounds": 1,
+    "profiles": [
+      "cable"
+    ],
+    "loadgen_sha256": "4568f79e1ce238f4f48b6ece5327a09d1c37e7087c79117a9970291d08bda0de",
+    "options": {
+      "apps": "oncrack",
+      "rounds": 1,
+      "port": 25130,
+      "cpus": "0-3",
+      "client_cpus": "4-7",
+      "profiles": "cable",
+      "overload_concurrencies": "64,256",
+      "overload_duration": 8,
+      "overload_routes": "room_show,messages_page,sidebar,search",
+      "cable_clients": 1000,
+      "cable_tput_secs": 15,
+      "cable_posters": 4,
+      "cable_heavy_posters": 64
+    },
+    "images": {
+      "oncrack": "sha256:e4638989facb6121ffc6af9958105b13a103287f89769c4deb3a7d851c6fe986"
+    },
+    "source_revisions": {
+      "oncrack": {
+        "head": "f635d859eca307e334bd53feaa1b90899908398e",
+        "dirty": false
+      }
+    },
+    "complete": true
+  },
+  "results": {
+    "oncrack": {
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          0
+        ],
+        "delivered_to_all": [
+          "8303/8303"
+        ],
+        "median_delivered_msgs_per_sec": 553.0,
+        "median_all_clients_p99_ms": 54.303
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          884
+        ],
+        "delivered_to_all": [
+          "1100/69597"
+        ],
+        "median_delivered_msgs_per_sec": 73.3,
+        "median_all_clients_p99_ms": 3086.335
+      }
+    }
+  }
+}

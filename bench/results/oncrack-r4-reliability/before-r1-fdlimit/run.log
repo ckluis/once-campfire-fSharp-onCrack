@@ -1,0 +1,218 @@
+1791651568 oncrack: overload room_show 64 clients 176479.2 valid req/s, 0 errors, 0 invalid
+1791651576 oncrack: overload room_show 256 clients 166573.6 valid req/s, 0 errors, 0 invalid
+1791651586 oncrack: overload messages_page 64 clients 200388.1 valid req/s, 0 errors, 0 invalid
+1791651594 oncrack: overload messages_page 256 clients 196141.7 valid req/s, 0 errors, 0 invalid
+1791651604 oncrack: overload sidebar 64 clients 217769.5 valid req/s, 0 errors, 0 invalid
+1791651612 oncrack: overload sidebar 256 clients 225752.2 valid req/s, 0 errors, 0 invalid
+1791651622 oncrack: overload search 64 clients 214507.4 valid req/s, 0 errors, 0 invalid
+1791651630 oncrack: overload search 256 clients 197866.1 valid req/s, 0 errors, 0 invalid
+1791651658 oncrack round 1: cable 1000/1000 subscribed,  disconnected, 8453/8453 delivered to all, 563.1 msgs/s
+1791651684 oncrack round 1: cable_heavy 1000/1000 subscribed,  disconnected, 13/13 delivered to all, 0.9 msgs/s
+1791651698 oncrack-cached: overload room_show 64 clients 178492.3 valid req/s, 0 errors, 0 invalid
+1791651706 oncrack-cached: overload room_show 256 clients 143556.4 valid req/s, 0 errors, 0 invalid
+1791651716 oncrack-cached: overload messages_page 64 clients 207412.3 valid req/s, 0 errors, 0 invalid
+1791651724 oncrack-cached: overload messages_page 256 clients 173020.5 valid req/s, 0 errors, 0 invalid
+1791651734 oncrack-cached: overload sidebar 64 clients 172300.4 valid req/s, 0 errors, 0 invalid
+1791651742 oncrack-cached: overload sidebar 256 clients 243382.7 valid req/s, 0 errors, 0 invalid
+1791651752 oncrack-cached: overload search 64 clients 192211.3 valid req/s, 0 errors, 0 invalid
+1791651760 oncrack-cached: overload search 256 clients 205107.5 valid req/s, 0 errors, 0 invalid
+1791651787 oncrack-cached round 1: cable 1000/1000 subscribed,  disconnected, 7326/7326 delivered to all, 487.9 msgs/s
+1791651814 oncrack-cached round 1: cable_heavy 1000/1000 subscribed,  disconnected, 13/13 delivered to all, 0.9 msgs/s
+1791651814 {
+1791651814   "oncrack": {
+1791651814     "overload": [
+1791651814       {
+1791651814         "route": "room_show",
+1791651814         "conc": 64,
+1791651814         "median_valid_rps": 176479.2,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 1.185
+1791651814       },
+1791651814       {
+1791651814         "route": "room_show",
+1791651814         "conc": 256,
+1791651814         "median_valid_rps": 166573.6,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 4.715
+1791651814       },
+1791651814       {
+1791651814         "route": "messages_page",
+1791651814         "conc": 64,
+1791651814         "median_valid_rps": 200388.1,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 1.034
+1791651814       },
+1791651814       {
+1791651814         "route": "messages_page",
+1791651814         "conc": 256,
+1791651814         "median_valid_rps": 196141.7,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 4.515
+1791651814       },
+1791651814       {
+1791651814         "route": "sidebar",
+1791651814         "conc": 64,
+1791651814         "median_valid_rps": 217769.5,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 0.963
+1791651814       },
+1791651814       {
+1791651814         "route": "sidebar",
+1791651814         "conc": 256,
+1791651814         "median_valid_rps": 225752.2,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 4.291
+1791651814       },
+1791651814       {
+1791651814         "route": "search",
+1791651814         "conc": 64,
+1791651814         "median_valid_rps": 214507.4,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 0.888
+1791651814       },
+1791651814       {
+1791651814         "route": "search",
+1791651814         "conc": 256,
+1791651814         "median_valid_rps": 197866.1,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 4.891
+1791651814       }
+1791651814     ],
+1791651814     "cable": {
+1791651814       "clients": 1000,
+1791651814       "posters": 4,
+1791651814       "subscribed": [
+1791651814         1000
+1791651814       ],
+1791651814       "disconnected": [
+1791651814         0
+1791651814       ],
+1791651814       "delivered_to_all": [
+1791651814         "8453/8453"
+1791651814       ],
+1791651814       "median_delivered_msgs_per_sec": 563.1,
+1791651814       "median_all_clients_p99_ms": 47.007
+1791651814     },
+1791651814     "cable_heavy": {
+1791651814       "clients": 1000,
+1791651814       "posters": 64,
+1791651814       "subscribed": [
+1791651814         1000
+1791651814       ],
+1791651814       "disconnected": [
+1791651814         0
+1791651814       ],
+1791651814       "delivered_to_all": [
+1791651814         "13/13"
+1791651814       ],
+1791651814       "median_delivered_msgs_per_sec": 0.9,
+1791651814       "median_all_clients_p99_ms": 15007.743
+1791651814     }
+1791651814   },
+1791651814   "oncrack-cached": {
+1791651814     "overload": [
+1791651814       {
+1791651814         "route": "room_show",
+1791651814         "conc": 64,
+1791651814         "median_valid_rps": 178492.3,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 1.288
+1791651814       },
+1791651814       {
+1791651814         "route": "room_show",
+1791651814         "conc": 256,
+1791651814         "median_valid_rps": 143556.4,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 6.967
+1791651814       },
+1791651814       {
+1791651814         "route": "messages_page",
+1791651814         "conc": 64,
+1791651814         "median_valid_rps": 207412.3,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 0.964
+1791651814       },
+1791651814       {
+1791651814         "route": "messages_page",
+1791651814         "conc": 256,
+1791651814         "median_valid_rps": 173020.5,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 5.295
+1791651814       },
+1791651814       {
+1791651814         "route": "sidebar",
+1791651814         "conc": 64,
+1791651814         "median_valid_rps": 172300.4,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 1.935
+1791651814       },
+1791651814       {
+1791651814         "route": "sidebar",
+1791651814         "conc": 256,
+1791651814         "median_valid_rps": 243382.7,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 4.009
+1791651814       },
+1791651814       {
+1791651814         "route": "search",
+1791651814         "conc": 64,
+1791651814         "median_valid_rps": 192211.3,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 1.401
+1791651814       },
+1791651814       {
+1791651814         "route": "search",
+1791651814         "conc": 256,
+1791651814         "median_valid_rps": 205107.5,
+1791651814         "errors": 0,
+1791651814         "invalid_responses": 0,
+1791651814         "median_p99_ms": 4.427
+1791651814       }
+1791651814     ],
+1791651814     "cable": {
+1791651814       "clients": 1000,
+1791651814       "posters": 4,
+1791651814       "subscribed": [
+1791651814         1000
+1791651814       ],
+1791651814       "disconnected": [
+1791651814         0
+1791651814       ],
+1791651814       "delivered_to_all": [
+1791651814         "7326/7326"
+1791651814       ],
+1791651814       "median_delivered_msgs_per_sec": 487.9,
+1791651814       "median_all_clients_p99_ms": 80.383
+1791651814     },
+1791651814     "cable_heavy": {
+1791651814       "clients": 1000,
+1791651814       "posters": 64,
+1791651814       "subscribed": [
+1791651814         1000
+1791651814       ],
+1791651814       "disconnected": [
+1791651814         0
+1791651814       ],
+1791651814       "delivered_to_all": [
+1791651814         "13/13"
+1791651814       ],
+1791651814       "median_delivered_msgs_per_sec": 0.9,
+1791651814       "median_all_clients_p99_ms": 15007.743
+1791651814     }
+1791651814   }
+1791651814 }

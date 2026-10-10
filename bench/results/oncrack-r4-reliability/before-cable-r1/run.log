@@ -1,0 +1,172 @@
+1791651889 rails round 1: cable 1000/1000 subscribed,  disconnected, 308/308 delivered to all, 19.9 msgs/s
+1791651923 rails round 1: cable_heavy 1000/1000 subscribed,  disconnected, 447/447 delivered to all, 24.9 msgs/s
+1791651950 rust round 1: cable 1000/1000 subscribed,  disconnected, 7275/7275 delivered to all, 484.7 msgs/s
+1791652036 rust round 1: cable_heavy 1000/1000 subscribed,  disconnected, 54/61707 delivered to all, 3.6 msgs/s
+1791652243 c round 1: cable 95/1000 subscribed,  disconnected, 192/48934 delivered to all, 12.8 msgs/s
+1791652449 c round 1: cable_heavy 91/1000 subscribed,  disconnected, 59/47411 delivered to all, 3.9 msgs/s
+1791652475 oncrack round 1: cable 1000/1000 subscribed,  disconnected, 7498/7498 delivered to all, 499.3 msgs/s
+1791652562 oncrack round 1: cable_heavy 1000/1000 subscribed,  disconnected, 13/41198 delivered to all, 0.9 msgs/s
+1791652588 oncrack-cached round 1: cable 1000/1000 subscribed,  disconnected, 8780/8780 delivered to all, 584.9 msgs/s
+1791652675 oncrack-cached round 1: cable_heavy 1000/1000 subscribed,  disconnected, 43/67129 delivered to all, 2.9 msgs/s
+1791652675 {
+1791652675   "rails": {
+1791652675     "cable": {
+1791652675       "clients": 1000,
+1791652675       "posters": 4,
+1791652675       "subscribed": [
+1791652675         1000
+1791652675       ],
+1791652675       "disconnected": [
+1791652675         0
+1791652675       ],
+1791652675       "delivered_to_all": [
+1791652675         "308/308"
+1791652675       ],
+1791652675       "median_delivered_msgs_per_sec": 19.9,
+1791652675       "median_all_clients_p99_ms": 1695.743
+1791652675     },
+1791652675     "cable_heavy": {
+1791652675       "clients": 1000,
+1791652675       "posters": 64,
+1791652675       "subscribed": [
+1791652675         1000
+1791652675       ],
+1791652675       "disconnected": [
+1791652675         0
+1791652675       ],
+1791652675       "delivered_to_all": [
+1791652675         "447/447"
+1791652675       ],
+1791652675       "median_delivered_msgs_per_sec": 24.9,
+1791652675       "median_all_clients_p99_ms": 14114.815
+1791652675     }
+1791652675   },
+1791652675   "rust": {
+1791652675     "cable": {
+1791652675       "clients": 1000,
+1791652675       "posters": 4,
+1791652675       "subscribed": [
+1791652675         1000
+1791652675       ],
+1791652675       "disconnected": [
+1791652675         0
+1791652675       ],
+1791652675       "delivered_to_all": [
+1791652675         "7275/7275"
+1791652675       ],
+1791652675       "median_delivered_msgs_per_sec": 484.7,
+1791652675       "median_all_clients_p99_ms": 49.151
+1791652675     },
+1791652675     "cable_heavy": {
+1791652675       "clients": 1000,
+1791652675       "posters": 64,
+1791652675       "subscribed": [
+1791652675         1000
+1791652675       ],
+1791652675       "disconnected": [
+1791652675         0
+1791652675       ],
+1791652675       "delivered_to_all": [
+1791652675         "54/61707"
+1791652675       ],
+1791652675       "median_delivered_msgs_per_sec": 3.6,
+1791652675       "median_all_clients_p99_ms": 517.375
+1791652675     }
+1791652675   },
+1791652675   "c": {
+1791652675     "cable": {
+1791652675       "clients": 1000,
+1791652675       "posters": 4,
+1791652675       "subscribed": [
+1791652675         95
+1791652675       ],
+1791652675       "disconnected": [
+1791652675         0
+1791652675       ],
+1791652675       "delivered_to_all": [
+1791652675         "192/48934"
+1791652675       ],
+1791652675       "median_delivered_msgs_per_sec": 12.8,
+1791652675       "median_all_clients_p99_ms": 26.783
+1791652675     },
+1791652675     "cable_heavy": {
+1791652675       "clients": 1000,
+1791652675       "posters": 64,
+1791652675       "subscribed": [
+1791652675         91
+1791652675       ],
+1791652675       "disconnected": [
+1791652675         0
+1791652675       ],
+1791652675       "delivered_to_all": [
+1791652675         "59/47411"
+1791652675       ],
+1791652675       "median_delivered_msgs_per_sec": 3.9,
+1791652675       "median_all_clients_p99_ms": 175.103
+1791652675     }
+1791652675   },
+1791652675   "oncrack": {
+1791652675     "cable": {
+1791652675       "clients": 1000,
+1791652675       "posters": 4,
+1791652675       "subscribed": [
+1791652675         1000
+1791652675       ],
+1791652675       "disconnected": [
+1791652675         0
+1791652675       ],
+1791652675       "delivered_to_all": [
+1791652675         "7498/7498"
+1791652675       ],
+1791652675       "median_delivered_msgs_per_sec": 499.3,
+1791652675       "median_all_clients_p99_ms": 63.167
+1791652675     },
+1791652675     "cable_heavy": {
+1791652675       "clients": 1000,
+1791652675       "posters": 64,
+1791652675       "subscribed": [
+1791652675         1000
+1791652675       ],
+1791652675       "disconnected": [
+1791652675         0
+1791652675       ],
+1791652675       "delivered_to_all": [
+1791652675         "13/41198"
+1791652675       ],
+1791652675       "median_delivered_msgs_per_sec": 0.9,
+1791652675       "median_all_clients_p99_ms": 74.175
+1791652675     }
+1791652675   },
+1791652675   "oncrack-cached": {
+1791652675     "cable": {
+1791652675       "clients": 1000,
+1791652675       "posters": 4,
+1791652675       "subscribed": [
+1791652675         1000
+1791652675       ],
+1791652675       "disconnected": [
+1791652675         0
+1791652675       ],
+1791652675       "delivered_to_all": [
+1791652675         "8780/8780"
+1791652675       ],
+1791652675       "median_delivered_msgs_per_sec": 584.9,
+1791652675       "median_all_clients_p99_ms": 47.167
+1791652675     },
+1791652675     "cable_heavy": {
+1791652675       "clients": 1000,
+1791652675       "posters": 64,
+1791652675       "subscribed": [
+1791652675         1000
+1791652675       ],
+1791652675       "disconnected": [
+1791652675         0
+1791652675       ],
+1791652675       "delivered_to_all": [
+1791652675         "43/67129"
+1791652675       ],
+1791652675       "median_delivered_msgs_per_sec": 2.9,
+1791652675       "median_all_clients_p99_ms": 332.799
+1791652675     }
+1791652675   }
+1791652675 }

@@ -213,6 +213,18 @@ module Boot =
                         match Int64.TryParse(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_LAG_BYTES") with
                         | true, bytes when bytes > 0L -> bytes
                         | _ -> Campfire.Cable.Config.defaults.LagBytes
+                    // onCrack (unit R4.5): posts wait while most of their room's subscribers are this many frames behind (`CAMPFIRE_CABLE_PRESSURE=off`: never), at most this long.
+                    PressureFrames =
+                        if String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_PRESSURE", "off", StringComparison.OrdinalIgnoreCase) then
+                            0
+                        else
+                            match Int32.TryParse(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_PRESSURE_FRAMES") with
+                            | true, frames when frames > 0 -> frames
+                            | _ -> Campfire.Cable.Config.defaults.PressureFrames
+                    PressureWait =
+                        match Int32.TryParse(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_PRESSURE_MS") with
+                        | true, ms when ms > 0 -> TimeSpan.FromMilliseconds(float ms)
+                        | _ -> Campfire.Cable.Config.defaults.PressureWait
                     // `CAMPFIRE_CABLE_LOG=ring` keeps rounds 1-4's fixed ring of 256 frames.
                     RingLog = String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_LOG", "ring", StringComparison.OrdinalIgnoreCase)
                     // onCrack (unit R4.5): a connection's streams are read in publish order; `CAMPFIRE_CABLE_ORDER=stream` reads a stream at a time.

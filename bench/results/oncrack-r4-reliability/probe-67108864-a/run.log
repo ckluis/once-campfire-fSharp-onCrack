@@ -1,0 +1,36 @@
+1791655486 oncrack round 1: cable 1000/1000 subscribed, 0 disconnected, 6756/6756 delivered to all, 450.0 msgs/s
+1791655572 oncrack round 1: cable_heavy 1000/1000 subscribed, 900 disconnected, 655/56825 delivered to all, 43.6 msgs/s
+1791655572 {
+1791655572   "oncrack": {
+1791655572     "cable": {
+1791655572       "clients": 1000,
+1791655572       "posters": 4,
+1791655572       "subscribed": [
+1791655572         1000
+1791655572       ],
+1791655572       "disconnected": [
+1791655572         0
+1791655572       ],
+1791655572       "delivered_to_all": [
+1791655572         "6756/6756"
+1791655572       ],
+1791655572       "median_delivered_msgs_per_sec": 450.0,
+1791655572       "median_all_clients_p99_ms": 106.303
+1791655572     },
+1791655572     "cable_heavy": {
+1791655572       "clients": 1000,
+1791655572       "posters": 64,
+1791655572       "subscribed": [
+1791655572         1000
+1791655572       ],
+1791655572       "disconnected": [
+1791655572         900
+1791655572       ],
+1791655572       "delivered_to_all": [
+1791655572         "655/56825"
+1791655572       ],
+1791655572       "median_delivered_msgs_per_sec": 43.6,
+1791655572       "median_all_clients_p99_ms": 3004.415
+1791655572     }
+1791655572   }
+1791655572 }
