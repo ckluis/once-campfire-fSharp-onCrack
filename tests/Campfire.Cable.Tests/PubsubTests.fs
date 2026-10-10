@@ -660,3 +660,69 @@ let ``congested (verifier): subscribers whose connections wait on their sockets 
         wake.WriteWaitSince <- longAgo
     settle ()
     Assert.False(hub.Congested("room", 2048))
+
+// Round 4 verifier: each group's byte budget bounds one backlog, not how many there are. Every room, private stream and channel
+// identifier (a client writes its own) is a group with its own copy of the frames, so the hub holds all of them to `TotalBudget`
+// (`CAMPFIRE_CABLE_HUB_BYTES`), cutting the subscribers furthest behind, anywhere, first.
+
+/// Polls `condition` for up to 5 s, calling the heartbeat's `Trim` between looks.
+let private eventually (hub: Hub) (condition: unit -> bool) : bool =
+    let deadline = DateTime.UtcNow.AddSeconds 5.0
+    let mutable ok = condition ()
+    while not ok && DateTime.UtcNow < deadline do
+        Threading.Thread.Sleep 20
+        hub.Trim()
+        ok <- condition ()
+    ok
+
+[<Fact>]
+let ``hub budget (verifier): slow subscribers in many rooms and groups are held to the hub's total, the readers untouched`` () =
+    let run (total: int64) =
+        let hub = Hub(8, 1024L * 1024L, false)
+        hub.TotalBudget <- total
+        let rooms = [| for r in 0..9 -> $"room-{r}" |]
+        let keepers = rooms |> Array.map (fun room -> hub.Subscribe(room, null, Wake()))
+        // A slow subscriber in each room, and nine more in room-0 under identifiers of their own: nineteen groups, each under 1 MB.
+        let slow = [ for room in rooms -> hub.Subscribe(room, "\"a\"", Wake()) ] @ [ for k in 1..9 -> hub.Subscribe("room-0", $"\"id{k}\"", Wake()) ]
+        let seen = Array.init keepers.Length (fun _ -> Collections.Generic.List<string>())
+        for i in 0..599 do
+            for room in rooms do
+                hub.Broadcast(room, $"\"{i}:{String('p', 1000)}\"") |> ignore
+            if i % 50 = 0 then
+                keepers |> Array.iteri (fun k keeper -> seen[k].AddRange(drainAll keeper))
+        keepers |> Array.iteri (fun k keeper -> seen[k].AddRange(drainAll keeper))
+        for k in 0 .. keepers.Length - 1 do
+            Assert.Equal(600, seen[k].Count)
+            seen[k] |> Seq.iteri (fun i text -> Assert.StartsWith($"\"{i}:", text))
+        hub, slow
+    // Without a total, nobody is cut: each group is within its own budget, and together they hold about 11 MB.
+    let unbounded, slowU = run Int64.MaxValue
+    Assert.Equal(0L, unbounded.CutCount)
+    Assert.True(unbounded.RetainedBytes > 10L * 1024L * 1024L, $"{unbounded.RetainedBytes}")
+    ignore slowU
+    // With a 2 MB total, the slow ones are cut until the hub holds about that (plus the groups' newest chunks of 8 frames).
+    let hub, slow = run (2L * 1024L * 1024L)
+    Assert.True(eventually hub (fun () -> hub.RetainedBytes <= 2L * 1024L * 1024L + 20L * 8L * 1100L), $"retained {hub.RetainedBytes}")
+    Assert.True(hub.CutCount >= 15L, $"cut {hub.CutCount}")
+    let lagged = slow |> List.filter (fun s -> (recv s) = Error RecvStatus.Lagged) |> List.length
+    Assert.Equal(int hub.CutCount, lagged)
+
+[<Fact>]
+let ``hub budget (verifier): the subscriber furthest behind is cut first, wherever it is`` () =
+    let hub = Hub(8, 64L * 1024L * 1024L, false)
+    hub.TotalBudget <- 1024L * 1024L
+    let old = hub.Subscribe("a", null, Wake())
+    let frame = String('q', 1000)
+    for i in 0..599 do
+        hub.Broadcast("a", $"\"{i}{frame}\"") |> ignore
+    let young = hub.Subscribe("b", null, Wake())
+    for i in 0..299 do
+        hub.Broadcast("b", $"\"{i}{frame}\"") |> ignore
+    Assert.Equal(0L, hub.CutCount)
+    for i in 300..499 do
+        hub.Broadcast("b", $"\"{i}{frame}\"") |> ignore
+    Assert.True(eventually hub (fun () -> hub.CutCount = 1L && hub.RetainedBytes <= 1024L * 1024L), $"cut {hub.CutCount}, retained {hub.RetainedBytes}")
+    Assert.Equal(Error RecvStatus.Lagged, recv old)
+    let got = drainAll young
+    Assert.Equal(500, got.Length)
+    got |> List.iteri (fun i text -> Assert.StartsWith($"\"{i}q", text))

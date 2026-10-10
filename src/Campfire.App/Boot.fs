@@ -213,6 +213,11 @@ module Boot =
                         match Int64.TryParse(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_LAG_BYTES") with
                         | true, bytes when bytes > 0L -> bytes
                         | _ -> Campfire.Cable.Config.defaults.LagBytes
+                    // Round 4 verifier: all broadcastings' logs together hold at most this many bytes; over it the furthest behind are cut.
+                    HubBytes =
+                        match Int64.TryParse(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_HUB_BYTES") with
+                        | true, bytes when bytes > 0L -> bytes
+                        | _ -> Campfire.Cable.Config.defaults.HubBytes
                     // onCrack (unit R4.5): posts wait while most of their room's subscribers are this many frames behind (`CAMPFIRE_CABLE_PRESSURE=off`: never), at most this long.
                     PressureFrames =
                         if String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_PRESSURE", "off", StringComparison.OrdinalIgnoreCase) then

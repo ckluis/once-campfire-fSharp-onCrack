@@ -53,6 +53,7 @@ type Server<'U>
                     budget
                 ))
         )
+    do hub.TotalBudget <- config.HubBytes
     let stop = new CancellationTokenSource()
     let beacons = List<Beacon>()
     let mutable heartbeatStarted = 0

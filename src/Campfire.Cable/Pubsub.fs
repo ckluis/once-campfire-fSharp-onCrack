@@ -332,25 +332,31 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
             if not retired then stats.Add(-(oldest.Start - head.Start))
             head <- oldest
 
+    /// Cuts the subscribers in the oldest chunk, adding their wakes to `cut` (made when needed). Under `gate`; `trim` after.
+    let cutHead (cut: Collections.Generic.List<Wake> | null) : Collections.Generic.List<Wake> | null =
+        let mutable cut = cut
+        let mutable i = count - 1
+        while i >= 0 do
+            let subscriber = receivers[i]
+            if obj.ReferenceEquals(subscriber.Chunk, head) then
+                subscriber.MarkOverrun()
+                receivers[i] <- receivers[count - 1]
+                receivers[count - 1] <- Unchecked.defaultof<_>
+                Volatile.Write(&count, count - 1)
+                match cut with
+                | null -> cut <- Collections.Generic.List<Wake>()
+                | _ -> ()
+                (nonNull cut).Add subscriber.Wake
+            i <- i - 1
+        cut
+
     /// Cuts the subscribers in the oldest chunk until the log is within its budget (or only the tail's chunk is left, which is
     /// at most `chunkSize` frames). Returns the cut subscribers' wakes, for a thread pool item to close. Under `gate`.
     let enforce () : Collections.Generic.List<Wake> | null =
         let mutable cut: Collections.Generic.List<Wake> | null = null
         trim ()
         while written - head.Start > budget && not (obj.ReferenceEquals(head, tail)) do
-            let mutable i = count - 1
-            while i >= 0 do
-                let subscriber = receivers[i]
-                if obj.ReferenceEquals(subscriber.Chunk, head) then
-                    subscriber.MarkOverrun()
-                    receivers[i] <- receivers[count - 1]
-                    receivers[count - 1] <- Unchecked.defaultof<_>
-                    Volatile.Write(&count, count - 1)
-                    match cut with
-                    | null -> cut <- Collections.Generic.List<Wake>()
-                    | _ -> ()
-                    (nonNull cut).Add subscriber.Wake
-                i <- i - 1
+            cut <- cutHead cut
             trim ()
         cut
 
@@ -380,19 +386,22 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
                 struct (cut, count))
         match cut with
         | null -> ()
-        | wakes ->
-            stats.NoteCuts wakes.Count
-            ThreadPool.UnsafeQueueUserWorkItem(
-                WaitCallback(fun _ ->
-                    for wake in wakes do
-                        wake.Cut()
-                    match onCut with
-                    | null -> ()
-                    | onCut -> onCut.Invoke(wakes.Count, budget)),
-                null
-            )
-            |> ignore
+        | wakes -> LogGroup.CutLater(wakes, stats, onCut, budget)
         shared
+
+    /// Counts `wakes` as cut and closes their connections from a thread pool item.
+    static member internal CutLater(wakes: Collections.Generic.List<Wake>, stats: LogStats, onCut: Action<int, int64> | null, budget: int64) : unit =
+        stats.NoteCuts wakes.Count
+        ThreadPool.UnsafeQueueUserWorkItem(
+            WaitCallback(fun _ ->
+                for wake in wakes do
+                    wake.Cut()
+                match onCut with
+                | null -> ()
+                | onCut -> onCut.Invoke(wakes.Count, budget)),
+            null
+        )
+        |> ignore
 
     override this.Add(wake: Wake, hub: Hub, broadcasting: string) : Subscriber =
         lock gate (fun () ->
@@ -446,6 +455,21 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
 
     /// Bytes this log holds now (from its oldest chunk).
     member _.Retained = lock gate (fun () -> written - head.Start)
+
+    /// Round 4 verifier: bytes the log holds before its newest chunk, which cutting the subscribers behind it would free.
+    member _.Sheddable = lock gate (fun () -> trim (); tail.Start - head.Start)
+
+    /// Round 4 verifier: cuts the subscribers in the oldest chunk, for the hub's budget across groups (`Hub.TotalBudget`). Their
+    /// wakes, or null when only the newest chunk is held.
+    member _.ShedOldest() : Collections.Generic.List<Wake> | null =
+        lock gate (fun () ->
+            trim ()
+            if obj.ReferenceEquals(head, tail) then
+                null
+            else
+                let cut = cutHead null
+                trim ()
+                cut)
 
     /// Finds `subscriber`'s next slot, following the link out of a chunk it has read to the end.
     static member private Locate(subscriber: Subscriber, chunk: byref<Chunk>, index: byref<int>) : bool =
@@ -594,6 +618,9 @@ and [<Sealed>] Hub(capacity: int, lagBytes: int64, ring: bool, onCut: Action<int
     let streams = ConcurrentDictionary<string, GroupBase[]>(StringComparer.Ordinal)
     let gate = obj ()
     let stats = LogStats()
+    let mutable totalBudget: int64 = 1024L * 1024L * 1024L
+    let mutable shedding = 0
+    let mutable shedAt: int64 = 0L
 
     new(capacity: int) = Hub(capacity, Hub.DefaultLagBytes, false, null)
     new(capacity: int, lagBytes: int64, ring: bool) = Hub(capacity, lagBytes, ring, null)
@@ -608,14 +635,63 @@ and [<Sealed>] Hub(capacity: int, lagBytes: int64, ring: bool, onCut: Action<int
 
     /// Publishes to every current subscriber of `broadcasting`; `payload` is encoded JSON as UTF-8.
     /// Returns how many received it.
-    member _.Broadcast(broadcasting: string, payload: ReadOnlySpan<byte>) : int =
+    member this.Broadcast(broadcasting: string, payload: ReadOnlySpan<byte>) : int =
         match streams.TryGetValue broadcasting with
         | true, groups ->
             let mutable receivers = 0
             for group in groups do
                 receivers <- receivers + group.Publish(group.Frame payload)
+            if stats.Retained > Volatile.Read(&totalBudget) then this.ShedLater()
             receivers
         | _ -> 0
+
+    /// Round 4 verifier: the most all of the hub's logs hold together (`CAMPFIRE_CABLE_HUB_BYTES`). Each group's own budget bounds one
+    /// room's backlog, but not how many there are: every room, private stream and channel identifier (a client writes its own; each
+    /// is a group with its own copy of the frames) can hold its budget. Over this, the furthest-behind subscribers anywhere are cut.
+    member _.TotalBudget
+        with get () = Volatile.Read(&totalBudget)
+        and set (bytes: int64) = Volatile.Write(&totalBudget, bytes)
+
+    static member DefaultTotalBytes = 1024L * 1024L * 1024L
+
+    /// One thread pool item at a time, at most every 10 ms, sheds (`Shed`).
+    member private this.ShedLater() : unit =
+        let now = Diagnostics.Stopwatch.GetTimestamp()
+        if now - Volatile.Read(&shedAt) >= Diagnostics.Stopwatch.Frequency / 100L && Interlocked.CompareExchange(&shedding, 1, 0) = 0 then
+            Volatile.Write(&shedAt, now)
+            ThreadPool.UnsafeQueueUserWorkItem(
+                WaitCallback(fun _ ->
+                    try
+                        this.Shed()
+                    finally
+                        Volatile.Write(&shedding, 0)),
+                null
+            )
+            |> ignore
+
+    /// Round 4 verifier: while the logs hold more than `TotalBudget`, cuts the subscribers in the oldest chunk of the log that could
+    /// free the most (its subscribers are the furthest behind, in bytes), one chunk at a time. The newest chunk of every log is
+    /// never shed: what is left over the budget then is the groups' newest chunks.
+    member internal _.Shed() : unit =
+        let mutable going = true
+        while going && stats.Retained > Volatile.Read(&totalBudget) do
+            let mutable largest: LogGroup | null = null
+            let mutable most = 0L
+            for groups in streams.Values do
+                for group in groups do
+                    match group with
+                    | :? LogGroup as log ->
+                        let sheddable = log.Sheddable
+                        if sheddable > most then
+                            most <- sheddable
+                            largest <- log
+                    | _ -> ()
+            match largest with
+            | null -> going <- false
+            | log ->
+                match log.ShedOldest() with
+                | null -> ()
+                | wakes -> LogGroup.CutLater(wakes, stats, onCut, Volatile.Read(&totalBudget))
 
     member this.Broadcast(broadcasting: string, payload: string) : int =
         let bytes = Encoding.UTF8.GetBytes payload
@@ -678,12 +754,14 @@ and [<Sealed>] Hub(capacity: int, lagBytes: int64, ring: bool, onCut: Action<int
     static member val ReaderBoundAfter = TimeSpan.FromMilliseconds 250.0 with get, set
 
     /// Frees the log behind the oldest subscriber of every group (the heartbeat calls it).
-    member _.Trim() : unit =
+    member this.Trim() : unit =
         for groups in streams.Values do
             for group in groups do
                 match group with
                 | :? LogGroup as log -> log.Trim()
                 | _ -> ()
+        // Round 4 verifier: a hub over its total that nobody publishes to any more is shed on the beat.
+        if stats.Retained > Volatile.Read(&totalBudget) then this.ShedLater()
 
     member internal _.Release(subscriber: Subscriber) : unit =
         lock gate (fun () ->

@@ -19,6 +19,9 @@ type Config =
       /// onCrack (unit R4.5): the most a broadcasting's log holds behind its oldest subscriber. A subscriber further behind is
       /// disconnected with `reconnect: true`; anything nearer loses nothing. `CAMPFIRE_CABLE_LAG_BYTES`.
       LagBytes: int64
+      /// Round 4 verifier: the most all broadcastings' logs hold together; over it the furthest-behind subscribers are cut
+      /// (`Hub.TotalBudget`). `CAMPFIRE_CABLE_HUB_BYTES` (1 GiB).
+      HubBytes: int64
       /// onCrack (unit R4.5): a post waits (`Broadcasts.AwaitRoom`) while more than half of its room's subscribers are more than this many frames
       /// behind, so a room fed faster than it can be fanned out holds a bounded backlog instead of cutting its clients; 0 never waits.
       /// `CAMPFIRE_CABLE_PRESSURE_FRAMES` (2048; `CAMPFIRE_CABLE_PRESSURE=off` is 0).
@@ -57,6 +60,7 @@ module Config =
           AssumeSsl = true
           StreamCapacity = 256
           LagBytes = 256L * 1024L * 1024L
+          HubBytes = 1024L * 1024L * 1024L
           RingLog = false
           PressureFrames = 2048
           PressureWait = TimeSpan.FromSeconds 2.0

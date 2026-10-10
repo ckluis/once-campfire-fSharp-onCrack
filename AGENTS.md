@@ -98,6 +98,12 @@ one shared log, with a bound.
   `MessagesController#create` wait, before it writes, while more than half of the room's subscribers are more than `CAMPFIRE_CABLE_PRESSURE_FRAMES` (2,048) frames
   behind, at most `CAMPFIRE_CABLE_PRESSURE_MS` (2,000) per post; `CAMPFIRE_CABLE_PRESSURE=off` never waits. Nothing waits unless the fan-out is seconds behind (the cable suite at
   window 128 never does). On by default, unlike the plan: with it off, `bin/reliability`'s cable_heavy ends with posts undelivered when the harness stops waiting.
+  Round 4's verifier (`bench/results/oncrack-r4-verifier.md`): the verdict counts all of the room's groups together (a client writes its own identifier, so a group can be
+  one client) and leaves out subscribers whose connection has waited `Hub.ReaderBoundAfter` (250 ms) on one socket write (`Wake.WriteWaitSince`): those are slow readers,
+  which waiting posters cannot help. `CablePressureTests` (App) are the gate's tests.
+- **The hub's total** (round 4 verifier): a group's budget bounds one backlog, not how many there are (every room, private stream and identifier is a group with its own
+  copy of the frames). `CAMPFIRE_CABLE_HUB_BYTES` (1 GiB, `Hub.TotalBudget`) bounds all logs together: over it a pool item (`Hub.Shed`, at most every 10 ms, and from the
+  heartbeat's `Trim`) cuts the subscribers in the oldest chunk of the log that would free the most, until under. Each group's newest chunk (up to 256 frames) is never shed.
 - **Measuring it:** `bench/reliability/run OUT --apps oncrack --profiles cable --rounds 1` runs upstream's `bin/reliability` (the verification repo's
   `oncrack-reliability-working` branch, its tmpfs copy at `/mnt/cfv` in colima, `--workspace /mnt/cfv/ws`) with the descriptor limit raised (a login shell's 1,024 refused the 64
   posters of cable_heavy beside 1,000 clients: every app's first baseline row said 13 posts and 18 million refusals), a Pss sampler and the Mac's load beside it;
