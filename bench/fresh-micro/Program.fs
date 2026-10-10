@@ -1,7 +1,7 @@
 // Tier 1 for the fresh authorization check (onCrack unit R4.3). See FreshMicro.fsproj.
 //
 //   dotnet run -c Release --project bench/fresh-micro -- [--seed crowd] [--room hq] [--route room|messages|sidebar] [--conc 16]
-//       [--secs 3] [--rounds 5] [--warmup 10] [--variants "hold;nohold"]
+//       [--post-rate 0] [--secs 3] [--rounds 5] [--warmup 10] [--variants "hold;nohold"]
 //
 // A variant is `hold` (`FreshHold.Enabled` true: the checks keep a read transaction while the WAL index proves nothing
 // committed) or `nohold` (R3.2: one read transaction per check). Every window sets one variant, reads the route for --secs
@@ -75,6 +75,17 @@ let getRequest (path: string) (p: Poster) : byte[] =
         $"GET {path} HTTP/1.1\r\nhost: 127.0.0.1\r\naccept: text/html,application/xhtml+xml\r\naccept-encoding: gzip\r\nuser-agent: fresh-micro\r\ncookie: {p.Cookie}\r\n\r\n"
     Encoding.ASCII.GetBytes head
 
+let mutable private nonce = 0L
+
+let postRequest (room: int64) (p: Poster) : byte[] =
+    let id = Interlocked.Increment(&nonce)
+    let body =
+        "message%5Bbody%5D=bench+write+" + string id + "&message%5Bclient_message_id%5D=fm-" + Guid.NewGuid().ToString("N")
+        + "&authenticity_token=" + Uri.EscapeDataString p.Csrf
+    let head =
+        $"POST /rooms/{room}/messages HTTP/1.1\r\nhost: 127.0.0.1\r\naccept: text/vnd.turbo-stream.html, text/html, application/xhtml+xml\r\naccept-encoding: gzip\r\ncookie: {p.Cookie}\r\nx-csrf-token: {p.Csrf}\r\ncontent-type: application/x-www-form-urlencoded\r\ncontent-length: {body.Length}\r\n\r\n"
+    Encoding.ASCII.GetBytes(head + body)
+
 /// Posts answered (2xx), and anything else.
 type Counts() =
     [<DefaultValue>]
@@ -91,7 +102,7 @@ type Counts() =
     val mutable MaxUs: int64
 
 /// One keep-alive connection posting until `stop`; reads each response to its end (Content-Length or chunked).
-let poster (port: int) (path: string) (who: Poster) (counts: Counts) (stop: CancellationToken) : Task =
+let poster (port: int) (mk: unit -> byte[]) (pauseMs: int) (counts: Counts) (stop: CancellationToken) : Task =
     task {
         use client = new TcpClient(NoDelay = true)
         do! client.ConnectAsync(IPAddress.Loopback, port)
@@ -100,7 +111,8 @@ let poster (port: int) (path: string) (who: Poster) (counts: Counts) (stop: Canc
         let mutable have = 0
         while not stop.IsCancellationRequested do
             let t0 = Stopwatch.GetTimestamp()
-            do! s.WriteAsync(getRequest path who)
+            if pauseMs > 0 then do! Task.Delay pauseMs
+            do! s.WriteAsync(mk ())
             // headers
             let mutable headEnd = -1
             while headEnd < 0 do
@@ -158,6 +170,7 @@ let main argv =
     let variants = (arg argv "--variants" "hold;nohold").Split(';') |> Array.map (fun v -> v.Trim())
     let postersN = 1
     let route = arg argv "--route" "room"
+    let postRate = int (arg argv "--post-rate" "0")
     let seed = Path.Combine(root, "parity/.seed", seedName)
     let labels = JsonDocument.Parse(File.ReadAllText(Path.Combine(seed, "labels.json"))).RootElement
     let room = labels.GetProperty("rooms." + roomLabel).GetInt64()
@@ -221,10 +234,23 @@ let main argv =
             [| for i in 0 .. conc - 1 ->
                    (task {
                        try
-                           do! poster port path posters[i % posters.Length] counts stop.Token
+                           let who = posters[i % posters.Length]
+                           do! poster port (fun () -> getRequest path who) 0 counts stop.Token
                        with e ->
                            if Interlocked.Increment(&counts.Bad) <= 3L then eprintfn "client failed: %s" (e.Message.Split('\n')[0])
                    }) :> Task |]
+        // --post-rate N: one connection posting N messages a second (0: none) beside the readers.
+        let wcounts = Counts()
+        let writer =
+            if postRate > 0 then
+                let who = posters[0]
+                task {
+                    try
+                        do! poster port (fun () -> postRequest room who) (1000 / postRate) wcounts stop.Token
+                    with e ->
+                        eprintfn "poster failed: %s" (e.Message.Split('\n')[0])
+                } :> Task
+            else Task.CompletedTask
         Thread.Sleep 300
         let ok0, c0, a0 = Volatile.Read(&counts.Ok), cpu (), GC.GetTotalAllocatedBytes false
         let sw = Stopwatch.StartNew()
@@ -232,7 +258,8 @@ let main argv =
         let ok1, c1, a1 = Volatile.Read(&counts.Ok), cpu (), GC.GetTotalAllocatedBytes false
         let el = sw.Elapsed.TotalSeconds
         stop.Cancel()
-        (try Task.WaitAll(tasks, 5000) |> ignore with _ -> ())
+        (try Task.WaitAll(Array.append tasks [| writer |], 5000) |> ignore with _ -> ())
+        if postRate > 0 then eprintfn "  %s: %d posts answered, %d other" variant wcounts.Ok wcounts.Bad
         let n = float (ok1 - ok0)
         let all = Campfire.Db.WriterStats.All
         if all.Restarts > 0L then eprintfn "  %s c=%d: WAL restarts so far %d, longest %d ms, deferred %d" variant conc all.Restarts (all.LongestRestartUs / 1000L) all.Deferrals

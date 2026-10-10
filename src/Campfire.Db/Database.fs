@@ -940,10 +940,35 @@ type WriterStats() =
 /// transaction open between checks while the WAL index proves nothing has been committed (`CheckerPool`).
 [<AbstractClass; Sealed>]
 type FreshHold private () =
+    static let mutable poller: Timer | null = null
+
     static member val Enabled: bool =
         (match Environment.GetEnvironmentVariable "CAMPFIRE_FRESH_HOLD" with
          | "0" | "off" | "false" -> false
          | _ -> true) with get, set
+
+    /// Benches only: with `CAMPFIRE_FRESH_HOLD_FILE` set, the file's text ("0" or "1") sets `Enabled` within 20 ms, so that one
+    /// running app can be measured with the setting alternating by window (`bench/fresh-ab`). Inert otherwise.
+    static member StartControl() : unit =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_FRESH_HOLD_FILE" with
+        | null | "" -> ()
+        | file ->
+            lock typeof<FreshHold> (fun () ->
+                if isNull poller then
+                    poller <-
+                        new Timer(
+                            (fun _ ->
+                                try
+                                    match IO.File.ReadAllText(file).Trim() with
+                                    | "0" -> FreshHold.Enabled <- false
+                                    | "1" -> FreshHold.Enabled <- true
+                                    | _ -> ()
+                                with _ ->
+                                    ()),
+                            null,
+                            20,
+                            20
+                        ))
 
 /// One connection of the fresh authorization checks (`CheckerPool`). `State` is 0 when idle and 1 while a thread, or the reaper,
 /// owns it: only the owner touches the connection and the fields below.
@@ -1210,6 +1235,7 @@ type Database
         let mutable writerThread: Thread option = None
         let mutable processInline: ResizeArray<WriteJob> -> unit = ignore
         let checkerPool = CheckerPool(config.Path, versions)
+        FreshHold.StartControl()
         try
             if config.Prepare then Schema.prepare conn config.Environment env.Clock |> ignore
             let cp = Checkpoints config.Path

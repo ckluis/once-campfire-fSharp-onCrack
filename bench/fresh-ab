@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# onCrack R4.3: CPU per request of one running app with the fresh authorization checks' setting alternating by window (A/B in one warm
+# container: no restart, no re-warm-up, host drift cancels). Run inside colima:
+#
+#   bench/fresh-ab [--secs 4] [--warmup 20] [--rounds 6] [--conc 16] [--mounted DIR] [--env "K=V ..."] [--a hold --b nohold] PATH
+#
+# Variants: hold and nohold (CAMPFIRE_FRESH_HOLD_FILE, flipped by `docker exec` between windows, taking effect within 20 ms). PATH may use @ROOM@
+# and @BEFORE@ as bench/paths does. The app is started as bench/run starts it (same image, seed copy, pinning, cgroup accounting).
+set -euo pipefail
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+export SERVER_CPUS=${SERVER_CPUS:-0-3} LOADGEN_CPUS=${LOADGEN_CPUS:-4-7}
+export WORK=${WORK:-/var/tmp/campfire-bench-work}
+SECS=4 WARM=20 ROUNDS=6 CONC=16 ENVX="" MOUNT="" A=hold B=nohold
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --secs) SECS=$2; shift 2 ;;
+    --warmup) WARM=$2; shift 2 ;;
+    --rounds) ROUNDS=$2; shift 2 ;;
+    --conc) CONC=$2; shift 2 ;;
+    --env) ENVX=$2; shift 2 ;;
+    --mounted) MOUNT=$2; shift 2 ;;
+    --a) A=$2; shift 2 ;;
+    --b) B=$2; shift 2 ;;
+    *) break ;;
+  esac
+done
+P=$1
+set --
+[ -z "$MOUNT" ] || export ONCRACK_MOUNT=$MOUNT
+export ONCRACK_EXTRA_ENV="CAMPFIRE_FRESH_HOLD_FILE=/tmp/fresh-hold ${ENVX}"
+BENCH_RUN_LIB=1 source "$ROOT/bench/run"
+wait_for_quiet
+start_app oncrack >/dev/null
+CG=$(cgroup_dir)
+sleep 5
+COOKIE=$(lg login --base "$BASE" --email "$EMAIL" --password "$PASSWORD" | python3 -c 'import json,sys; print(json.load(sys.stdin)["cookie"])')
+P=${P//@ROOM@/$ROOM}; P=${P//@BEFORE@/$BEFORE}
+flip() { case $1 in hold) v=1 ;; nohold) v=0 ;; *) echo "unknown variant $1" >&2; exit 2 ;; esac; docker exec "$CONTAINER" sh -c "echo $v > /tmp/fresh-hold"; sleep 0.1; }
+window() {  # variant -> "rps us"
+  flip "$1"
+  res=$(lgc "$CG" http --base "$BASE" --cookie "$COOKIE" --path "$P" --conc "$CONC" --duration "$SECS")
+  python3 -c 'import json,sys; r=json.loads(sys.argv[1]); c=r["cost"]; print("%.0f %.2f %s" % (r["rps"], c["server_cpu_us_per_req"], r["errors"]))' "$res"
+}
+flip "$A"
+WARMUP_SECS=$WARM WARMUP_MAX_SECS=$WARM warm_up "$COOKIE" "$CONC" --path "$P" >/dev/null
+echo "load $(cut -d' ' -f1-3 /proc/loadavg); path $P; c=$CONC; $SECS s windows; $A/$B alternating, order flips each round"
+declare -a RA RB UA UB
+for r in $(seq 1 "$ROUNDS"); do
+  if [ $((r % 2)) = 1 ]; then first=$A second=$B; else first=$B second=$A; fi
+  o1=$(window "$first"); o2=$(window "$second")
+  echo "round $r: $first $o1 | $second $o2   load $(cut -d' ' -f1 /proc/loadavg)"
+  if [ "$first" = "$A" ]; then a=$o1; b=$o2; else a=$o2; b=$o1; fi
+  RA+=("${a%% *}"); UA+=("$(echo "$a" | cut -d' ' -f2)"); RB+=("${b%% *}"); UB+=("$(echo "$b" | cut -d' ' -f2)")
+done
+python3 - "$A" "$B" "${RA[*]}" "${UA[*]}" "${RB[*]}" "${UB[*]}" <<'PY'
+import sys, statistics as st
+A, B = sys.argv[1:3]
+ra, ua, rb, ub = [[float(x) for x in s.split()] for s in sys.argv[3:7]]
+d = [100 * (a - b) / b for a, b in zip(ua, ub)]
+print(f"{A:7s} median {st.median(ra):9.0f} rps  {st.median(ua):6.2f} us/req   {B:7s} median {st.median(rb):9.0f} rps  {st.median(ub):6.2f} us/req")
+print(f"CPU per request, {A} vs {B}: median of round differences {st.median(d):+.1f}%  (rounds: {' '.join('%+.1f' % x for x in d)})")
+PY
+docker rm -f "$CONTAINER" >/dev/null; rm -rf "${WORK:?}/oncrack"
