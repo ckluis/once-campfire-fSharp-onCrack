@@ -24,6 +24,10 @@ type Config =
       /// onCrack (unit R4.5): a connection takes the frames of its streams in the order they were published, across the streams
       /// (`Connection.Merge`); off: a stream at a time, in the order they were subscribed (rounds 1-4). `CAMPFIRE_CABLE_ORDER=stream`.
       PublishOrder: bool
+      /// onCrack (unit R4.5): how long a socket write may go without the peer taking any bytes before the connection is cut:
+      /// 30 s, five times the browser's own 6 s threshold for abandoning a connection that has gone quiet. A peer that is
+      /// reading, however slowly, is not cut. `CAMPFIRE_CABLE_STALL_MS`.
+      StallTimeout: TimeSpan
       /// Frames coalesced into one socket write at most, which also bounds what a connection
       /// buffers beyond the socket.
       MaxWriteBatch: int
@@ -49,6 +53,7 @@ module Config =
           LagBytes = 64L * 1024L * 1024L
           RingLog = false
           PublishOrder = true
+          StallTimeout = TimeSpan.FromSeconds 30.0
           MaxWriteBatch = 64
           CloseTimeout = TimeSpan.FromSeconds 5.0
           DirectWrites = true

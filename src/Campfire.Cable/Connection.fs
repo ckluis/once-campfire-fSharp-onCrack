@@ -409,7 +409,7 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
         wake.Abort <- abort
         let channel = Channels.Channel.CreateBounded<Received>(Channels.BoundedChannelOptions(IncomingCapacity, SingleReader = true, SingleWriter = true))
         let incoming = channel.Reader
-        let sink = Writer(stream, deflate, WriteTimeout, abort, direct, config.GatherWrites)
+        let sink = Writer(stream, deflate, config.StallTimeout, abort, direct, config.GatherWrites)
         // A ring has no publish numbers.
         let ordered = config.PublishOrder && not config.RingLog
         let merge = if ordered then Merge() else Unchecked.defaultof<Merge>

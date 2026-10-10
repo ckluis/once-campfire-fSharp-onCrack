@@ -564,6 +564,21 @@ module private Sendmsg =
 /// Whether this platform gathers writes (Linux; elsewhere `Writer` copies).
 let GatherAvailable = Sendmsg.available
 
+/// Unit R4.5: the bytes the peer of `socket` has acknowledged since it connected (Linux `TCP_INFO`'s `tcpi_bytes_acked`, at
+/// offset 120 of `struct tcp_info`), or -1 where the kernel does not say. It moves while a peer takes data and stands still
+/// once a peer that reads nothing has a full receive window.
+let AckedBytes (socket: Net.Sockets.Socket) : int64 =
+    if not (OperatingSystem.IsLinux()) then
+        -1L
+    else
+        try
+            let info: byte[] = Array.zeroCreate 256
+            // IPPROTO_TCP = 6, TCP_INFO = 11
+            let length = socket.GetRawSocketOption(6, 11, Span<byte>(info))
+            if length >= 128 then BitConverter.ToInt64(info, 120) else -1L
+        with _ ->
+            -1L
+
 /// How many gathered writes the socket did not take whole (tests check that they forced the partial path).
 let mutable private partialGathers = 0L
 
@@ -604,26 +619,49 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
     member _.Detach() : unit = if not (isNull direct) then detached <- true
 
     /// The rest of a send to the socket that didn't complete in place (the socket's buffer was full): waits for it, sending
-    /// what is left, and cuts the connection after the timeout.
+    /// what is left, and cuts the connection when it makes no progress for `timeout`.
+    ///
+    /// Unit R4.5: progress, not the whole write: a peer that is reading, however slowly, is never cut. A send of megabytes to a
+    /// reader at a few KB/s is one pending send, so the wait looks at the kernel's count of bytes the peer has acknowledged
+    /// (Linux `TCP_INFO`, `AckedBytes`) every eighth of the timeout and gives it a new `timeout` whenever that moved.
+    /// A peer that has stopped reading acknowledges nothing once its receive window is full. Where the count is not available
+    /// (macOS), a send's completion is the only progress, as before.
     member private _.FinishSend(first: Task<int>, bytes: ReadOnlyMemory<byte>, pooled: byte[] | null) : Task =
         task {
             let socket = nonNull direct
-            use gave = new CancellationTokenSource()
-            let expiry = Task.Delay(timeout, gave.Token)
+            let tick = TimeSpan.FromTicks(max (timeout.Ticks / 8L) (TimeSpan.FromMilliseconds(20.0).Ticks))
+            let ticks = int64 (timeout.TotalSeconds * float Diagnostics.Stopwatch.Frequency)
+            let mutable deadline = Diagnostics.Stopwatch.GetTimestamp() + ticks
+            let mutable acked = AckedBytes socket
             // `pending` is the send of `rest`'s start.
             let mutable rest = bytes
             let mutable pending: Task<int> | null = first
             while not (isNull pending) do
-                let! winner = Task.WhenAny(nonNull pending, expiry)
-                if not (obj.ReferenceEquals(winner, pending)) then
-                    // The stalled send still holds its buffer, so that one isn't returned to the pool.
-                    abort ()
-                    raise (TimeoutException "a socket write timed out")
+                let mutable waiting = true
+                while waiting do
+                    if (nonNull pending).IsCompleted then
+                        waiting <- false
+                    else
+                        use gave = new CancellationTokenSource()
+                        let! winner = Task.WhenAny(nonNull pending, Task.Delay(tick, gave.Token))
+                        gave.Cancel()
+                        if obj.ReferenceEquals(winner, pending) then
+                            waiting <- false
+                        else
+                            let now = Diagnostics.Stopwatch.GetTimestamp()
+                            let seen = AckedBytes socket
+                            if seen > acked then
+                                acked <- seen
+                                deadline <- now + ticks
+                            elif now >= deadline then
+                                // The stalled send still holds its buffer, so that one isn't returned to the pool.
+                                abort ()
+                                raise (TimeoutException "a socket write timed out")
                 let! n = nonNull pending
                 if n <= 0 then raise (IOException "the socket took no bytes")
                 rest <- rest.Slice n
+                deadline <- Diagnostics.Stopwatch.GetTimestamp() + ticks
                 pending <- if rest.IsEmpty then null else socket.SendAsync(rest, Net.Sockets.SocketFlags.None).AsTask()
-            gave.Cancel()
             match pooled with
             | null -> ()
             | pooled -> ArrayPool<byte>.Shared.Return pooled

@@ -220,6 +220,11 @@ module Boot =
                     PublishOrder =
                         not (String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_ORDER", "stream", StringComparison.OrdinalIgnoreCase))
                         && not (String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_LOG", "ring", StringComparison.OrdinalIgnoreCase))
+                    // onCrack (unit R4.5): a socket write is cut after this long without the peer taking a byte (default 30,000 ms).
+                    StallTimeout =
+                        match Int32.TryParse(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_STALL_MS") with
+                        | true, ms when ms > 0 -> TimeSpan.FromMilliseconds(float ms)
+                        | _ -> Campfire.Cable.Config.defaults.StallTimeout
                     // onCrack (unit R2.1): Turbo Stream frames without Active Support's `<`, `>`, `&` escapes; `CAMPFIRE_CABLE_COMPACT_JSON=off` keeps them.
                     CompactJson = not (String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_COMPACT_JSON", "off", StringComparison.OrdinalIgnoreCase)) }
             let deps: Deps = { Db = db; Secrets = secrets; Clock = clock }

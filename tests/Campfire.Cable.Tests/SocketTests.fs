@@ -308,3 +308,70 @@ let ``a gathered write to a peer that never reads returns at once and times out`
         let! _ = Assert.ThrowsAsync<TimeoutException>(fun () -> pending.AsTask())
         Assert.True aborted.Value
     }
+
+// Unit R4.5 change 3: a write is cut when the peer takes no bytes for the stall time, not because it takes long. The kernel's
+// count of acknowledged bytes (`AckedBytes`, Linux) is the progress; elsewhere only a completed send is.
+
+let private stalledPair (buffer: int) =
+    let server, client = socketPair ()
+    server.SendBufferSize <- buffer
+    client.ReceiveBufferSize <- buffer
+    server, client
+
+/// A peer that reads nothing is cut once the stall time has passed, no sooner.
+[<Fact>]
+let ``a peer that reads nothing is cut at the stall time`` () =
+    task {
+        if not GatherAvailable then Assert.Skip "needs Linux's sendmsg and TCP_INFO (bin/linux-tests Cable)"
+        let server, client = stalledPair 4096
+        use _ = server
+        use _ = client
+        let aborted = ref false
+        let writer = Writer(Stream.Null, false, TimeSpan.FromMilliseconds 500.0, (fun () -> aborted.Value <- true; server.Close()), server)
+        writer.Detach()
+        let started = Diagnostics.Stopwatch.StartNew()
+        let! pending = Task.Run(fun () -> writer.Send [| Frame.OfString(String('x', 4 * 1024 * 1024)) |]).WaitAsync(TimeSpan.FromSeconds 10.0)
+        let! _ = Assert.ThrowsAsync<TimeoutException>(fun () -> pending.AsTask())
+        let cutAt = started.Elapsed
+        Assert.True aborted.Value
+        Assert.True(cutAt >= TimeSpan.FromMilliseconds 450.0 && cutAt < TimeSpan.FromMilliseconds 1500.0, $"cut after {cutAt.TotalMilliseconds} ms")
+    }
+
+/// A peer that reads slowly, a send that takes ten times the stall time, is never cut, and gets every byte.
+[<Fact>]
+let ``a peer that reads slowly is never cut and gets every byte`` () =
+    task {
+        if not GatherAvailable || not (AckedBytes(fst (socketPair ())) >= 0L) then
+            Assert.Skip "needs Linux's sendmsg and TCP_INFO (bin/linux-tests Cable)"
+        // Loopback has a 64 KB segment size: a receive buffer smaller than a few of them keeps its window shut for long stretches.
+        let server, client = stalledPair (64 * 1024)
+        use _ = server
+        use _ = client
+        let aborted = ref false
+        let writer = Writer(Stream.Null, false, TimeSpan.FromMilliseconds 600.0, (fun () -> aborted.Value <- true; server.Close()), server)
+        writer.Detach()
+        let size = 2 * 1024 * 1024
+        let frame = Frame.OfString(String('y', size))
+        let started = Diagnostics.Stopwatch.StartNew()
+        let sending = Task.Run(fun () -> writer.Send [| frame |]).WaitAsync(TimeSpan.FromSeconds 60.0)
+        // 16 KB every 25 ms (about 640 KB/s): the 2 MB take over 3 s, five times the stall time.
+        let received = Array.zeroCreate<byte> (size + 16)
+        let mutable got = 0
+        let buffer = Array.zeroCreate<byte> 16384
+        let samples = Collections.Generic.List<string>()
+        try
+            while got < size + 10 do
+                let! n = client.ReceiveAsync(Memory<byte>(buffer))
+                if n <= 0 then failwith "closed before every byte"
+                Array.blit buffer 0 received got (min n (received.Length - got))
+                got <- got + n
+                if samples.Count < 40 then samples.Add $"{int started.ElapsedMilliseconds}ms got={got} acked={AckedBytes server}"
+                do! Task.Delay 25
+        with e ->
+            let joined = String.Join(" | ", samples)
+            failwith $"after {started.ElapsedMilliseconds} ms, {got} of {size + 10} bytes, aborted={aborted.Value}: {e.Message}; samples: {joined}"
+        let! pending = sending
+        do! pending.AsTask()
+        Assert.False aborted.Value
+        Assert.True(started.Elapsed > TimeSpan.FromMilliseconds 1500.0, $"took {started.Elapsed.TotalMilliseconds} ms")
+    }
