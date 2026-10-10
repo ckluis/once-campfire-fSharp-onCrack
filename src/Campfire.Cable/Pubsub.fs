@@ -587,8 +587,9 @@ and [<Sealed>] Hub(capacity: int, lagBytes: int64, ring: bool, onCut: Action<int
     new(capacity: int) = Hub(capacity, Hub.DefaultLagBytes, false, null)
     new(capacity: int, lagBytes: int64, ring: bool) = Hub(capacity, lagBytes, ring, null)
 
-    /// A group's log may hold this much behind its oldest subscriber (`CAMPFIRE_CABLE_LAG_BYTES`): about 45,000 Campfire messages.
-    static member DefaultLagBytes = 64L * 1024L * 1024L
+    /// A group's log may hold this much behind its oldest subscriber (`CAMPFIRE_CABLE_LAG_BYTES`): about 26,000 Campfire messages, whose
+    /// frames are about 10 KB (64 MB was 6,500 of them, which a few slow clients of a saturated room passed).
+    static member DefaultLagBytes = 256L * 1024L * 1024L
 
     /// onCrack: whether `broadcasting` has a subscriber now, so that a broadcast nobody would receive needn't be
     /// encoded. One that subscribes after this answer misses the broadcast, as it would one sent a moment earlier.

@@ -264,8 +264,10 @@ let ``log: a subscriber over the byte budget is cut, the others read on, and its
     }
 
 [<Fact>]
-let ``log: a subscriber that never reads is cut once 70 MB have been published past it`` () =
-    let hub = Hub(256)
+let ``log: a subscriber that never reads is cut once 70 MB have been published past a 64 MB budget`` () =
+    Assert.Equal(256L * 1024L * 1024L, Hub.DefaultLagBytes)
+    let budget = 64L * 1024L * 1024L
+    let hub = Hub(256, budget, false)
     let never = hub.Subscribe("room", null, Wake())
     let steady = hub.Subscribe("room", null, Wake())
     let payload = String('x', 1400)
@@ -278,7 +280,7 @@ let ``log: a subscriber that never reads is cut once 70 MB have been published p
     Assert.Equal(50000, steadyCount)
     Assert.Equal(1L, hub.CutCount)
     Assert.Equal(Error RecvStatus.Lagged, recv never)
-    Assert.True(hub.RetainedPeakBytes <= Hub.DefaultLagBytes + 256L * 1410L, $"{hub.RetainedPeakBytes}")
+    Assert.True(hub.RetainedPeakBytes <= budget + 256L * 1410L, $"{hub.RetainedPeakBytes}")
 
 [<Fact>]
 let ``a broadcast sets the wake of every subscriber`` () =
