@@ -184,6 +184,12 @@ REVIEW = R1 + '/review'
 R42 = 'bench/results/oncrack-r4-fanout/t3'
 CABLE_APPS = ['rust', 'fsharp', 'oncrack']
 CABLE_COUNTS = (100, 500, 1000, 2000)
+# Reliability under load: unit R4.5 (bench/results/oncrack-r4-reliability.md). Upstream's bin/reliability cable profiles, 1,000 clients; Rails, Rust, C and onCrack
+# before the unit in one session (REL_BEFORE), onCrack after it in another (REL_AFTER); each directory's summary.json is bench/reliability/summarize --write.
+REL_BEFORE = 'bench/results/oncrack-r4-reliability/before-r1'
+REL_AFTER = 'bench/results/oncrack-r4-reliability/after-r1'
+REL_APPS = [('reference', 'rails', REL_BEFORE), ('rust', 'rust', REL_BEFORE), ('c', 'c', REL_BEFORE), ('oncrack-before', 'oncrack', REL_BEFORE), ('oncrack', 'oncrack', REL_AFTER)]
+REL_NAME = {'reference': 'Rails', 'rust': 'Rust', 'c': 'C', 'oncrack-before': 'onCrack before this unit', 'oncrack': 'onCrack'}
 R3PIX = 'bench/results/oncrack-r3-pixels'   # the full pixel gate on the final code (round 3, unit R3.1)
 NAME = {'reference': 'Rails', 'rust': 'Rust', 'fsharp': 'F# port', 'oncrack': 'onCrack'}
 APPS = ['reference', 'rust', 'fsharp', 'oncrack']
@@ -240,6 +246,24 @@ def cable(app, clients, what):
     field = {'msgs': 'throughput.delivered_msgs_per_sec', 'frames': 'throughput.frames_per_sec', 'p50': 'latency.all_clients.p50_ms',
              'pss': 'process_memory.saturated.peak_total_pss_mb'}[what]
     return per_rep(app, label, get, 'cable[clients=%d].%s' % (clients, field), d=R42)
+
+
+def relnum(key, directory, app, profile, field):
+    """A reliability number: the median over the session's rounds (bench/reliability/summarize), with the rounds' own values in the derivation."""
+    d = jload(directory + '/summary.json')[app][profile]
+    vals = d['rounds'][field]
+    what = {'ready': 'clients subscribed', 'disconnected': 'clients the server closed mid-run', 'posted': 'messages posted', 'complete': 'messages delivered to every client',
+            'msgs': 'messages a second delivered to every client', 'p99': 'p99 ms from a post to the last client', 'pss': 'peak app Pss MB',
+            'drain': 'seconds from the last post to the last delivery'}[field]
+    files = [directory + '/summary.json', directory + '/harness-output/%s-1.json' % app, directory + '/run.log']
+    if field == 'pss':
+        files.append(directory + '/memory.jsonl')
+    shown = [v for v in vals if v is not None]
+    if not shown:
+        return None
+    return V(statistics.median(shown), '%s, %s, %s (%s)' % (REL_NAME[key], 'Cable with %d closed-loop posters' % d['posters'] if profile == 'cable_heavy' else 'Cable with %d posters' % d['posters'], what,
+                                                              directory.replace('bench/results/', '')),
+             files, 'median of %d rounds: %s (summary.json %s.%s.rounds.%s)' % (len(shown), ', '.join(g(float(v)) for v in shown), app, profile, field))
 
 
 def env_field(pattern, label, rel=R1 + '/env.txt'):
@@ -422,6 +446,13 @@ def facts():
         for r in ('static_css', 'avatar', 'up'):
             for m in ('rps', 'cpu'):
                 F['w'][a, r, 16, m] = http(a, r, 16, m)
+    for key, app, directory in REL_APPS:
+        for profile in ('cable', 'cable_heavy'):
+            for field in ('ready', 'disconnected', 'posted', 'complete', 'msgs', 'p99', 'pss'):
+                F["rel", key, profile, field] = relnum(key, directory, app, profile, field)
+    F['rel_clients'] = param(jload(REL_AFTER + '/summary.json')['oncrack']['cable_heavy']['clients'], 'Reliability profile: Cable clients', REL_AFTER + '/summary.json', 'oncrack.cable_heavy.clients')
+    F['rel_posters'] = param(jload(REL_AFTER + '/summary.json')['oncrack']['cable_heavy']['posters'], 'Reliability profile: closed-loop posters of cable_heavy', REL_AFTER + '/summary.json', 'oncrack.cable_heavy.posters')
+    F['rel_posters_light'] = param(jload(REL_AFTER + '/summary.json')['oncrack']['cable']['posters'], 'Reliability profile: posters of cable', REL_AFTER + '/summary.json', 'oncrack.cable.posters')
     F['window'] = param(jload(R42 + '/oncrack-1.json')['cable'][0]['throughput']['window'], 'Cable suite: messages posted and not yet delivered to every client, at most',
                         R42 + '/oncrack-1.json', 'cable[].throughput.window')
     F['clients'] = {n: param(n, 'Cable clients', R42 + '/oncrack-1.json', 'cable[].clients') for n in CABLE_COUNTS}
@@ -765,10 +796,10 @@ def fanout(F):
             '<p class="line reveal">A post goes out over Action Cable to everyone in the room. onCrack now delivers %s Rust&#39;s messages a second at %s clients, '
             '%s at %s, %s at %s and %s at %s: the lead narrows as the room fills, because the kernel&#39;s cost of sending each frame is the same for both.</p>'
             '<div class="fan reveal">%s<div class="fan-tabs" role="presentation">%s</div><div class="fan-panes">%s</div></div>'
-            '<p class="links reveal">%s %s</p></div></section>'
+            '<p class="links reveal">%s %s %s</p></div></section>'
             % (L.x(ratio[100]), L.n(F['clients'][100]), L.x(ratio[500]), L.n(F['clients'][500]), L.x(ratio[1000]), L.n(F['clients'][1000]),
                L.x(ratio[2000]), L.n(F['clients'][2000]), ''.join(radios), ''.join(tabs), ''.join(panes),
-               details('p-fanout', 'How the fan-out was measured'), details('p-rust', 'What Rust still wins')))
+               details('p-fanout', 'How the fan-out was measured'), details('p-reliability', 'Under load, nobody is cut'), details('p-rust', 'What Rust still wins')))
 
 
 def proof(F):
@@ -1127,6 +1158,41 @@ def p_rust(F):
         srcline(R1 + '/rust-1.json', R1 + '/oncrack-1.json', 'bench/results/oncrack-c4/boot.jsonl', 'bench/results/oncrack-round1-final.md', lead='Sources'),
     ])
     return panel('p-rust', 'What Rust still wins', 'Not ahead on these', body, 'fanout')
+
+
+def p_reliability(F):
+    """Unit R4.5: bench/reliability's cable profiles beside Rails, Rust and C."""
+    head = [('App', False), ('Subscribed', True), ('Disconnected', True), ('Delivered to every client', True), ('Posted', True), ('Messages a second', True), (P99 + ' ms', True), ('Pss MB', True)]
+
+    def cell(v, fmt=I):
+        return L.n(v, fmt) if v is not None else '&ndash;'
+
+    def rows(profile):
+        out = []
+        for key, _, _ in REL_APPS:
+            g_ = lambda f: F['rel', key, profile, f]
+            out.append([REL_NAME[key], cell(g_('ready')), cell(g_('disconnected')), cell(g_('complete')), cell(g_('posted')), cell(g_('msgs'), D1), cell(g_('p99'), I), cell(g_('pss'))])
+        return out
+    body = ''.join([
+        '<p class="lead">Upstream&#39;s <code>bin/reliability</code> opens %s signed-in Action Cable clients, each with the room&#39;s subscriptions, and posts into the busy room. '
+        '<b>cable_heavy</b> posts from %s closed-loop posters with no limit, then waits up to a minute for every client to have every message; <b>cable</b> posts from %s. '
+        '&ldquo;Disconnected&rdquo; counts clients the server closed mid-run. The harness&#39;s clients do not reconnect, so a closed client misses everything after.</p>' % (
+            L.n(F['rel_clients']), L.n(F['rel_posters']), L.n(F['rel_posters_light'])),
+        tbl(head, rows('cable_heavy'), 'cable_heavy: posters with no limit'),
+        tbl(head, rows('cable'), 'cable: the default posting load'),
+        '<h3>What each does with a client that cannot keep up</h3>'
+        '<p>Action Cable never cuts a client for being slow: whatever the socket will not take waits in a queue of that connection&#39;s own, with no bound, which is what Rails&#39; memory above is; '
+        'its posters are slow enough that the queues stay short. Rust and onCrack (before this unit) post far faster than they can send to a thousand clients, ran past a ring of a few hundred frames, and closed the clients that fell behind: '
+        'the harness counts them as disconnected and they miss everything after. onCrack now keeps what the slowest client has not read once, in a log its clients share, '
+        'cuts a client only when the log it pins passes a byte budget or its socket takes no byte for half a minute, and makes a post wait (at most two seconds) while most of a room is seconds behind, '
+        'so it takes fewer posts than the cut run did and delivers every one of them. A browser that is cut reconnects and fetches what it missed. Rails&#39; memory is the price of its unbounded queues; '
+        'onCrack&#39;s is the .NET heap that the posters&#39; renderings leave behind.</p>',
+        '<p>A row with disconnected clients has a small %s because it counts only the few messages every client received before the cut; onCrack&#39;s counts every message posted, each waiting behind the posts ahead of it in the slowest client&#39;s socket.</p>' % P99,
+        '<p>The Pss column is the container&#39;s peak, sampled twice a second from <code>/proc/PID/smaps_rollup</code> over the profile. One session each, the median of its rounds; the host was shared with other work (its load is in each directory). '
+        'C&#39;s Cable server did not take the clients in this setup (see the notes in the results file), so its row says only that.</p>',
+        srcline(REL_BEFORE + '/summary.json', REL_AFTER + '/summary.json', 'bench/reliability/run', 'bench/reliability/summarize', 'bench/results/oncrack-r4-reliability.md', lead='Sources (the harness output, the memory samples and the run logs sit beside them)'),
+    ])
+    return panel('p-reliability', 'Cable reliability', 'Nobody is cut for being slow', body, 'fanout')
 
 
 def p_fanout(F):
@@ -1992,7 +2058,7 @@ def build():
     nav = ''.join('<li><a href="%s">%s</a></li>' % h for h in
                   [('#upstream', 'Upstream'), ('#sbs', 'Same software'), ('#mix', 'Reads &amp; writes'), ('#does', 'What it does'), ('#fanout', 'Fan-out'), ('#check', 'Check it')])
     main = ''.join([hero(F, cl), same_software(F, sp), mix_beat(F), does_beat(F), fanout(F), proof(F), cta(F), more_row()])
-    panels = [p_five(F), p_sbs(F, sp), p_mix(F), p_does(F), p_correct(F), p_durability(F), p_pixels(F), p_ceiling(F), p_rust(F), p_fanout(F), p_repro(F),
+    panels = [p_five(F), p_sbs(F, sp), p_mix(F), p_does(F), p_correct(F), p_durability(F), p_pixels(F), p_ceiling(F), p_rust(F), p_fanout(F), p_reliability(F), p_repro(F),
               p_fresh(F), p_upstream(F), p_climb_chart(cl), p_climb(cl), p_rules(), p_port_era()]
     panels.append(p_ledger())          # last: it lists every row the others issued
     main = main.replace('__NROWS__', str(len(L.rows)))

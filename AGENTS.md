@@ -64,7 +64,7 @@ client side). A tier 2 cable loop is about 2.5 minutes: `bin/publish-mounted`, t
 no WebSocket library (`bench/loadgen/src/rawcable.rs`, `--threads` 3; `--client tungstenite` is what rounds 1-3 measured with and their stored cable
 numbers are not comparable). At 1,000 clients it uses 1.8-2.7 of the 4 cores and the servers are the limit (3.8-3.9 cores). The saturated phase keeps at
 most `--window` (128) messages posted and not yet delivered to every client: without it a client that keeps up lets the posters outrun the fan-out, the
-256-frame stream rings lap the slowest subscribers and the server closes them, so messages go missing; check `posted == complete` and `client.closed_midrun
+256-frame stream rings (rounds 1-4; R4.5 replaced them with a byte-bounded log, `CAMPFIRE_CABLE_LOG=ring` keeps them) lap the slowest subscribers and the server closes them, so messages go missing; check `posted == complete` and `client.closed_midrun
 == 0` in any cable result. `bench/cable/ab` alternates load generator variants against one running app; `CABLE_ARGS` passes loadgen arguments from
 `bench/run`; `CABLE_SENDS=1` counts the app's send syscalls (a pass of its own); `bench/run` raises the soft descriptor limit (2,000 clients). The baseline
 for R4.2 (100/500/1,000/2,000 clients, Rust f9dca47, the port, onCrack, one session) is in that file; the host drifts 25-30% over 20 minutes, so judge a
@@ -78,6 +78,31 @@ server's CPU at 1,000 clients). What the socket does not take (`EAGAIN`, a parti
 .NET's own `Socket.Send(IList<ArraySegment>)` was tried first and discarded: it makes a GC handle per segment per call (about 9% of the CPU, as much as
 the copy), and on macOS with `Blocking <- false` it made an unrelated test flake. `bench/cable/perf` takes `KEEP_SCRIPT=1` (keeps the call chains);
 `bench/results/oncrack-r4-fanout/breakdown.py` splits them by layer; `pair.sh` and `table.py` there run and print one tier 2 A/B run.
+
+**Cable reliability** (unit R4.5, `bench/results/oncrack-r4-reliability.md`, plan `plans/r4-reliability.md`): a slow reader is never silently dropped, and
+memory stays bounded. Action Cable queues without bound per connection and cuts nobody for being slow; onCrack keeps what one group's subscribers have not read in
+one shared log, with a bound.
+- **The log** (`Pubsub.fs`, `LogGroup`): an append-only list of chunks (`Config.StreamCapacity`, 256 frames each) shared by a group's subscribers; each subscriber
+  is a cursor (chunk, index) and a chunk nobody is in is left to the GC. The group's head is the oldest chunk any subscriber is in (one pass over the subscribers
+  per chunk, or when over budget, and the heartbeat calls `Hub.Trim`). When the log held behind the head is over `CAMPFIRE_CABLE_LAG_BYTES` (256 MB, about 26,000
+  messages: a message's frame is about 10 KB, not 1.4 KB; 64 MB cut 90% of a saturated room) the subscribers in the oldest chunk are marked lagged and removed, and a
+  thread pool item wakes their connections (they send `reconnect: true` and close; the browser treats it as a dropped network and refreshes the room through
+  `/rooms/:id/refresh?since=`) and aborts the socket a second later if it has not finished. Gauges: `Hub.RetainedBytes`, `RetainedPeakBytes`, `CutCount`.
+  `CAMPFIRE_CABLE_LOG=ring` is rounds 1-4's fixed 256-frame ring (the A/B switch; it also turns the publish order off).
+- **Order across streams:** every frame has a hub-wide number from the group's publish; `Connection.Merge` takes the lowest next number among a connection's streams,
+  so a deep stream does not starve the others. `CAMPFIRE_CABLE_ORDER=stream` is the old stream-at-a-time order.
+- **Stall, not slowness:** a socket write is cut when the peer takes no bytes for `CAMPFIRE_CABLE_STALL_MS` (30,000); on Linux the progress is the kernel's
+  acknowledged-byte count (`TCP_INFO`, `Socket.AckedBytes`), looked at every eighth of the time, so a slow reader of a multi-megabyte backlog is never cut; on macOS only a
+  completed send counts. A peer that reads nothing is cut at the stall time.
+- **Pressure on posters:** a server that takes posts faster than it can fan them out has to slow the posters or cut the clients. `Broadcasts.AwaitRoom` makes
+  `MessagesController#create` wait, before it writes, while more than half of the room's subscribers are more than `CAMPFIRE_CABLE_PRESSURE_FRAMES` (2,048) frames
+  behind, at most `CAMPFIRE_CABLE_PRESSURE_MS` (2,000) per post; `CAMPFIRE_CABLE_PRESSURE=off` never waits. Nothing waits unless the fan-out is seconds behind (the cable suite at
+  window 128 never does). On by default, unlike the plan: with it off, `bin/reliability`'s cable_heavy ends with posts undelivered when the harness stops waiting.
+- **Measuring it:** `bench/reliability/run OUT --apps oncrack --profiles cable --rounds 1` runs upstream's `bin/reliability` (the verification repo's
+  `oncrack-reliability-working` branch, its tmpfs copy at `/mnt/cfv` in colima, `--workspace /mnt/cfv/ws`) with the descriptor limit raised (a login shell's 1,024 refused the 64
+  posters of cable_heavy beside 1,000 clients: every app's first baseline row said 13 posts and 18 million refusals), a Pss sampler and the Mac's load beside it;
+  `bench/reliability/summarize DIR...` prints the table. Its loadgen must be built from the harness's current `loadgen/` (the first baseline's binary had no `disconnected`
+  counter). The harness's `oncrack-cached` is the same image with `CAMPFIRE_FRESH_AUTH=0` (`reliability.rb` here maps it to `oncrack`'s runtime; local, uncommitted in that repo).
 
 **Realistic workloads** (unit R2.0, `bench/results/oncrack-r2-bench.md`): the five classic workloads are a 100%-hit benchmark for the read
 cache (one URL, one user, no writes). `bench/quick --real` runs `mixed` (16 connections read a room while one posts into it), `spread` (2,112

@@ -1,4 +1,22 @@
-# onCrack R4.5 Reliability baseline
+# onCrack R4.5 reliability baseline
+
+**Superseded by `bench/results/oncrack-r4-reliability.md`.** The first session (started 2026-10-10 12:04 EDT, notes below) did not finish and its Cable rows are invalid: it died at 12:19 on the F# port's contract
+preparation, its `cable_heavy` rows ran with a 1,024 descriptor limit (13 posts and 18 million refused ones, for every app), and its load generator predated the `disconnected` counter. The rows to use are
+`bench/results/oncrack-r4-reliability/before-r1/` (Rails, Rust, C and onCrack at `21791e2`, `cable` profile, one round, fixed limit, current load generator) and the overload rows of
+`bench/results/oncrack-r4-reliability/probes/baseline-fdlimit-invalid/` for onCrack (0 errors, 0 invalid at 64 and 256 clients on four routes; those do not depend on the limit).
+
+| app (cable_heavy, 64 closed-loop posters) | subscribed | disconnected | delivered to every client / posted |
+|---|---|---|---|
+| Rails | 1,000 | 0 | 552 / 552 |
+| Rust f9dca47 | 1,000 | 899 | 64 / 65,151 |
+| C cd0cbe4 | 224 | 829 | 15 / 35,967 |
+| onCrack `21791e2` | 1,000 | 945 | 88 / 127,210 |
+| onCrack `21791e2`, cached decision | 1,000 | 869 | 0 / 78,103 |
+
+---
+
+## The first session's notes (kept as they were)
+
 
 **Status: Test in progress (started 2026-10-10 12:04 EDT)**
 

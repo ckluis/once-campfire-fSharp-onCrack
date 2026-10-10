@@ -1,0 +1,222 @@
+{
+  "metadata": {
+    "verification_revision": "eed4105f4f5f38faa0159ce68852e2e0aec0fac1",
+    "started_at": "2026-10-10T18:21:26Z",
+    "seed_sha256": "fef46014007cc69a97517b90ae122e0e043734e3760eb0f292078fefecacb7f4",
+    "server_cpus": "0-3",
+    "client_cpus": "4-7",
+    "network": "host",
+    "rounds": 1,
+    "profiles": [
+      "cable"
+    ],
+    "loadgen_sha256": "4568f79e1ce238f4f48b6ece5327a09d1c37e7087c79117a9970291d08bda0de",
+    "options": {
+      "apps": "rails,rust,c,oncrack,oncrack-cached",
+      "rounds": 1,
+      "port": 25130,
+      "cpus": "0-3",
+      "client_cpus": "4-7",
+      "profiles": "cable",
+      "overload_concurrencies": "64,256",
+      "overload_duration": 8,
+      "overload_routes": "room_show,messages_page,sidebar,search",
+      "cable_clients": 1000,
+      "cable_tput_secs": 15,
+      "cable_posters": 4,
+      "cable_heavy_posters": 64
+    },
+    "images": {
+      "rails": "sha256:13be265cfa59061965425c69ff707358a6caaf5977f898ebbc9daafbb94b7942",
+      "rust": "sha256:63d7de5e36bbc7766d0f160e76208d51ee3841f8b80ce1c710ce870d7cb15b2d",
+      "c": "sha256:cce0f35ccdc1286a0398efed012d4d8dedee635ec8498ca342b0aa9a02ced3cf",
+      "oncrack": "sha256:264415b710199770aea426eb7fa23b67d8b102110fa75c589e399dacba039c27",
+      "oncrack-cached": "sha256:264415b710199770aea426eb7fa23b67d8b102110fa75c589e399dacba039c27"
+    },
+    "source_revisions": {
+      "rails": {
+        "head": "0aa339d81e0501841e3f23f0dd6e9b2e06e6b60d",
+        "dirty": false
+      },
+      "rust": {
+        "head": "f9dca47e592fdcd23a75e4c8b6b97f5d452ccdc1",
+        "dirty": false
+      },
+      "c": {
+        "head": "cd0cbe4b24bcee0aa6ad75e6bc29d4e773628332",
+        "dirty": false
+      },
+      "oncrack": {
+        "head": "f5429fcb9c75bcc06e9a6e2c022daee938d801c5",
+        "dirty": true
+      },
+      "oncrack-cached": {
+        "head": "f5429fcb9c75bcc06e9a6e2c022daee938d801c5",
+        "dirty": true
+      }
+    },
+    "complete": true
+  },
+  "results": {
+    "rails": {
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          0
+        ],
+        "delivered_to_all": [
+          "387/387"
+        ],
+        "median_delivered_msgs_per_sec": 25.4,
+        "median_all_clients_p99_ms": 833.535
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          0
+        ],
+        "delivered_to_all": [
+          "552/552"
+        ],
+        "median_delivered_msgs_per_sec": 21.7,
+        "median_all_clients_p99_ms": 24084.479
+      }
+    },
+    "rust": {
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          0
+        ],
+        "delivered_to_all": [
+          "6770/6770"
+        ],
+        "median_delivered_msgs_per_sec": 450.9,
+        "median_all_clients_p99_ms": 126.847
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          899
+        ],
+        "delivered_to_all": [
+          "64/65151"
+        ],
+        "median_delivered_msgs_per_sec": 4.3,
+        "median_all_clients_p99_ms": 356.607
+      }
+    },
+    "c": {
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          124
+        ],
+        "disconnected": [
+          854
+        ],
+        "delivered_to_all": [
+          "118/40668"
+        ],
+        "median_delivered_msgs_per_sec": 7.9,
+        "median_all_clients_p99_ms": 26.895
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          224
+        ],
+        "disconnected": [
+          829
+        ],
+        "delivered_to_all": [
+          "15/35967"
+        ],
+        "median_delivered_msgs_per_sec": 1.0,
+        "median_all_clients_p99_ms": 39.039
+      }
+    },
+    "oncrack": {
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          0
+        ],
+        "delivered_to_all": [
+          "6586/6586"
+        ],
+        "median_delivered_msgs_per_sec": 438.8,
+        "median_all_clients_p99_ms": 94.271
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          945
+        ],
+        "delivered_to_all": [
+          "88/127210"
+        ],
+        "median_delivered_msgs_per_sec": 5.9,
+        "median_all_clients_p99_ms": 417.023
+      }
+    },
+    "oncrack-cached": {
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          0
+        ],
+        "delivered_to_all": [
+          "9116/9116"
+        ],
+        "median_delivered_msgs_per_sec": 607.3,
+        "median_all_clients_p99_ms": 41.375
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          869
+        ],
+        "delivered_to_all": [
+          "0/78103"
+        ],
+        "median_delivered_msgs_per_sec": 0.0,
+        "median_all_clients_p99_ms": null
+      }
+    }
+  }
+}

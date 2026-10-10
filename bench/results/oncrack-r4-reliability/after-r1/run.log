@@ -1,0 +1,250 @@
+1791657343 oncrack: overload room_show 64 clients 146665.0 valid req/s, 0 errors, 0 invalid
+1791657351 oncrack: overload room_show 256 clients 127098.1 valid req/s, 0 errors, 0 invalid
+1791657361 oncrack: overload messages_page 64 clients 161033.9 valid req/s, 0 errors, 0 invalid
+1791657369 oncrack: overload messages_page 256 clients 160060.1 valid req/s, 0 errors, 0 invalid
+1791657379 oncrack: overload sidebar 64 clients 165768.8 valid req/s, 0 errors, 0 invalid
+1791657387 oncrack: overload sidebar 256 clients 177288.3 valid req/s, 0 errors, 0 invalid
+1791657397 oncrack: overload search 64 clients 184350.5 valid req/s, 0 errors, 0 invalid
+1791657405 oncrack: overload search 256 clients 181034.9 valid req/s, 0 errors, 0 invalid
+1791657433 oncrack round 1: cable 1000/1000 subscribed, 0 disconnected, 7265/7265 delivered to all, 483.9 msgs/s
+1791657463 oncrack round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 10638/10638 delivered to all, 574.1 msgs/s
+1791657477 oncrack-cached: overload room_show 64 clients 165379.2 valid req/s, 0 errors, 0 invalid
+1791657485 oncrack-cached: overload room_show 256 clients 161375.1 valid req/s, 0 errors, 0 invalid
+1791657495 oncrack-cached: overload messages_page 64 clients 187859.0 valid req/s, 0 errors, 0 invalid
+1791657503 oncrack-cached: overload messages_page 256 clients 175550.3 valid req/s, 0 errors, 0 invalid
+1791657513 oncrack-cached: overload sidebar 64 clients 188428.2 valid req/s, 0 errors, 0 invalid
+1791657521 oncrack-cached: overload sidebar 256 clients 220085.6 valid req/s, 0 errors, 0 invalid
+1791657531 oncrack-cached: overload search 64 clients 222331.3 valid req/s, 0 errors, 0 invalid
+1791657539 oncrack-cached: overload search 256 clients 196857.0 valid req/s, 0 errors, 0 invalid
+1791657567 oncrack-cached round 1: cable 1000/1000 subscribed, 0 disconnected, 7104/7104 delivered to all, 473.2 msgs/s
+1791657597 oncrack-cached round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 11689/11689 delivered to all, 633.2 msgs/s
+1791657610 oncrack-cached: overload room_show 64 clients 162807.2 valid req/s, 0 errors, 0 invalid
+1791657618 oncrack-cached: overload room_show 256 clients 181057.5 valid req/s, 0 errors, 0 invalid
+1791657628 oncrack-cached: overload messages_page 64 clients 174399.2 valid req/s, 0 errors, 0 invalid
+1791657636 oncrack-cached: overload messages_page 256 clients 159083.6 valid req/s, 0 errors, 0 invalid
+1791657647 oncrack-cached: overload sidebar 64 clients 232874.5 valid req/s, 0 errors, 0 invalid
+1791657655 oncrack-cached: overload sidebar 256 clients 236842.5 valid req/s, 0 errors, 0 invalid
+1791657665 oncrack-cached: overload search 64 clients 221678.8 valid req/s, 0 errors, 0 invalid
+1791657673 oncrack-cached: overload search 256 clients 209012.2 valid req/s, 0 errors, 0 invalid
+1791657699 oncrack-cached round 2: cable 1000/1000 subscribed, 0 disconnected, 8366/8366 delivered to all, 557.5 msgs/s
+1791657729 oncrack-cached round 2: cable_heavy 1000/1000 subscribed, 0 disconnected, 12520/12520 delivered to all, 670.6 msgs/s
+1791657743 oncrack: overload room_show 64 clients 188932.0 valid req/s, 0 errors, 0 invalid
+1791657751 oncrack: overload room_show 256 clients 176245.1 valid req/s, 0 errors, 0 invalid
+1791657761 oncrack: overload messages_page 64 clients 205471.4 valid req/s, 0 errors, 0 invalid
+1791657769 oncrack: overload messages_page 256 clients 182215.8 valid req/s, 0 errors, 0 invalid
+1791657779 oncrack: overload sidebar 64 clients 188064.0 valid req/s, 0 errors, 0 invalid
+1791657787 oncrack: overload sidebar 256 clients 221039.3 valid req/s, 0 errors, 0 invalid
+1791657797 oncrack: overload search 64 clients 141404.9 valid req/s, 0 errors, 0 invalid
+1791657805 oncrack: overload search 256 clients 174020.0 valid req/s, 0 errors, 0 invalid
+1791657832 oncrack round 2: cable 1000/1000 subscribed, 0 disconnected, 5869/5869 delivered to all, 391.0 msgs/s
+1791657862 oncrack round 2: cable_heavy 1000/1000 subscribed, 0 disconnected, 10521/10521 delivered to all, 566.8 msgs/s
+1791657862 {
+1791657862   "oncrack": {
+1791657862     "overload": [
+1791657862       {
+1791657862         "route": "room_show",
+1791657862         "conc": 64,
+1791657862         "median_valid_rps": 167798.5,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 1.4144999999999999
+1791657862       },
+1791657862       {
+1791657862         "route": "room_show",
+1791657862         "conc": 256,
+1791657862         "median_valid_rps": 151671.6,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 5.677
+1791657862       },
+1791657862       {
+1791657862         "route": "messages_page",
+1791657862         "conc": 64,
+1791657862         "median_valid_rps": 183252.65,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 1.2229999999999999
+1791657862       },
+1791657862       {
+1791657862         "route": "messages_page",
+1791657862         "conc": 256,
+1791657862         "median_valid_rps": 171137.95,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 4.869
+1791657862       },
+1791657862       {
+1791657862         "route": "sidebar",
+1791657862         "conc": 64,
+1791657862         "median_valid_rps": 176916.4,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 1.7525
+1791657862       },
+1791657862       {
+1791657862         "route": "sidebar",
+1791657862         "conc": 256,
+1791657862         "median_valid_rps": 199163.8,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 5.037
+1791657862       },
+1791657862       {
+1791657862         "route": "search",
+1791657862         "conc": 64,
+1791657862         "median_valid_rps": 162877.7,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 2.1175
+1791657862       },
+1791657862       {
+1791657862         "route": "search",
+1791657862         "conc": 256,
+1791657862         "median_valid_rps": 177527.45,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 5.849
+1791657862       }
+1791657862     ],
+1791657862     "cable": {
+1791657862       "clients": 1000,
+1791657862       "posters": 4,
+1791657862       "subscribed": [
+1791657862         1000,
+1791657862         1000
+1791657862       ],
+1791657862       "disconnected": [
+1791657862         0,
+1791657862         0
+1791657862       ],
+1791657862       "delivered_to_all": [
+1791657862         "7265/7265",
+1791657862         "5869/5869"
+1791657862       ],
+1791657862       "median_delivered_msgs_per_sec": 437.45,
+1791657862       "median_all_clients_p99_ms": 117.775
+1791657862     },
+1791657862     "cable_heavy": {
+1791657862       "clients": 1000,
+1791657862       "posters": 64,
+1791657862       "subscribed": [
+1791657862         1000,
+1791657862         1000
+1791657862       ],
+1791657862       "disconnected": [
+1791657862         0,
+1791657862         0
+1791657862       ],
+1791657862       "delivered_to_all": [
+1791657862         "10638/10638",
+1791657862         "10521/10521"
+1791657862       ],
+1791657862       "median_delivered_msgs_per_sec": 570.45,
+1791657862       "median_all_clients_p99_ms": 11706.367
+1791657862     }
+1791657862   },
+1791657862   "oncrack-cached": {
+1791657862     "overload": [
+1791657862       {
+1791657862         "route": "room_show",
+1791657862         "conc": 64,
+1791657862         "median_valid_rps": 164093.2,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 1.565
+1791657862       },
+1791657862       {
+1791657862         "route": "room_show",
+1791657862         "conc": 256,
+1791657862         "median_valid_rps": 171216.3,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 4.457
+1791657862       },
+1791657862       {
+1791657862         "route": "messages_page",
+1791657862         "conc": 64,
+1791657862         "median_valid_rps": 181129.1,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 1.4645000000000001
+1791657862       },
+1791657862       {
+1791657862         "route": "messages_page",
+1791657862         "conc": 256,
+1791657862         "median_valid_rps": 167316.95,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 5.843
+1791657862       },
+1791657862       {
+1791657862         "route": "sidebar",
+1791657862         "conc": 64,
+1791657862         "median_valid_rps": 210651.35,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 1.2375
+1791657862       },
+1791657862       {
+1791657862         "route": "sidebar",
+1791657862         "conc": 256,
+1791657862         "median_valid_rps": 228464.05,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 4.301
+1791657862       },
+1791657862       {
+1791657862         "route": "search",
+1791657862         "conc": 64,
+1791657862         "median_valid_rps": 222005.05,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 0.9179999999999999
+1791657862       },
+1791657862       {
+1791657862         "route": "search",
+1791657862         "conc": 256,
+1791657862         "median_valid_rps": 202934.6,
+1791657862         "errors": 0,
+1791657862         "invalid_responses": 0,
+1791657862         "median_p99_ms": 4.793
+1791657862       }
+1791657862     ],
+1791657862     "cable": {
+1791657862       "clients": 1000,
+1791657862       "posters": 4,
+1791657862       "subscribed": [
+1791657862         1000,
+1791657862         1000
+1791657862       ],
+1791657862       "disconnected": [
+1791657862         0,
+1791657862         0
+1791657862       ],
+1791657862       "delivered_to_all": [
+1791657862         "7104/7104",
+1791657862         "8366/8366"
+1791657862       ],
+1791657862       "median_delivered_msgs_per_sec": 515.35,
+1791657862       "median_all_clients_p99_ms": 58.159
+1791657862     },
+1791657862     "cable_heavy": {
+1791657862       "clients": 1000,
+1791657862       "posters": 64,
+1791657862       "subscribed": [
+1791657862         1000,
+1791657862         1000
+1791657862       ],
+1791657862       "disconnected": [
+1791657862         0,
+1791657862         0
+1791657862       ],
+1791657862       "delivered_to_all": [
+1791657862         "11689/11689",
+1791657862         "12520/12520"
+1791657862       ],
+1791657862       "median_delivered_msgs_per_sec": 651.9000000000001,
+1791657862       "median_all_clients_p99_ms": 10485.759
+1791657862     }
+1791657862   }
+1791657862 }

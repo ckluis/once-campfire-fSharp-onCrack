@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Unit R4.5: the reliability table of one or more bench/reliability/run output directories (medians over rounds).
 
-  bench/reliability/summarize DIR [DIR ...]  [--md]
+  bench/reliability/summarize DIR [DIR ...]  [--write]
+
+`--write` also puts DIR/summary.json beside each directory's output (what site/build.py reads): per app and profile the rounds' values and their medians.
 
 Per app and profile (cable: 4 posters, cable_heavy: 64 closed-loop posters, no window): clients subscribed, disconnected (connections the
 server closed mid-run; absent in the harness's JSON when none), messages delivered to every client over posted, delivered messages a
@@ -47,7 +49,10 @@ def peaks(d, win):
     for key, (a, b) in win.items():
         inside = [s for s in samples if a < s["t"] <= b + 1]
         if inside:
-            res[key] = max(s["pss_mb"] for s in inside)
+            # The window can start while the previous profile's container is still going away: the container with most samples is this one's.
+            ids = [s["id"] for s in inside]
+            mine = max(set(ids), key=ids.count)
+            res[key] = max(s["pss_mb"] for s in inside if s["id"] == mine)
     return res
 
 
@@ -63,7 +68,7 @@ def collect(label, d):
             t = r["throughput"]
             table.setdefault((label or row["app"], prof), []).append({
                 "app": row["app"], "round": row["round"], "ready": r["ready"], "clients": r["clients"], "disconnected": r.get("disconnected", 0),
-                "posted": t["posted"], "complete": t["complete"], "msgs": t["delivered_msgs_per_sec"], "p99": t["all_clients"]["p99_ms"],
+                "posted": t["posted"], "complete": t["complete"], "msgs": t["delivered_msgs_per_sec"], "p99": t["all_clients"].get("p99_ms"),
                 "attempts": t["post_attempts"], "errors": t["post_errors"], "drain": t["drain_secs"], "posters": t["posters"],
                 "pss": pk.get((row["app"], row["round"], prof))})
     return table
@@ -74,12 +79,24 @@ def med(xs):
     return statistics.median(xs) if xs else None
 
 
+def write_summary(d):
+    out = {}
+    for (app, prof), rs in collect("", d).items():
+        keys = ("ready", "disconnected", "posted", "complete", "msgs", "p99", "errors", "drain", "pss", "round")
+        entry = {"posters": rs[0]["posters"], "clients": rs[0]["clients"], "rounds": {k: [r[k] for r in rs] for k in keys}}
+        entry["median"] = {k: med([r[k] for r in rs]) for k in ("ready", "disconnected", "posted", "complete", "msgs", "p99", "errors", "drain", "pss")}
+        out.setdefault(app, {})[prof] = entry
+    json.dump(out, open(os.path.join(d, "summary.json"), "w"), indent=1, sort_keys=True)
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     table = {}
     for a in args:
         label, _, d = a.partition("=") if "=" in a else ("", "", a)
         table.update(collect(label, d))
+        if "--write" in sys.argv:
+            write_summary(d)
     print("| app | profile | posters | subscribed | disconnected | delivered to all | msgs/s | p99 ms | refused posts | drain s | peak Pss MB |")
     print("|---|---|---|---|---|---|---|---|---|---|---|")
     for (app, prof), rs in table.items():
