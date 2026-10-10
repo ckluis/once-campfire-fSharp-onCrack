@@ -70,6 +70,15 @@ most `--window` (128) messages posted and not yet delivered to every client: wit
 for R4.2 (100/500/1,000/2,000 clients, Rust f9dca47, the port, onCrack, one session) is in that file; the host drifts 25-30% over 20 minutes, so judge a
 change against a control from its own session.
 
+**Gather writes** (unit R4.2, `bench/results/oncrack-r4-fanout.md`): on a detached connection (Linux, plain TCP) `Writer.Send` hands the kernel the
+frames' shared payload arrays where they are, one non-blocking `sendmsg` over header and payload pairs (`Socket.fs`: `Sendmsg`, pinned by a `fixed`
+local per payload in a recursion, a thread-static `GatherScratch`), instead of copying them into a pooled send buffer first (that copy was 16% of the
+server's CPU at 1,000 clients). What the socket does not take (`EAGAIN`, a partial send) is copied and finished by `FinishSend`, with the write timeout.
+`CAMPFIRE_CABLE_GATHER=off` copies as before; elsewhere (macOS) the copy is always used, and the gather tests skip: `bin/linux-tests Cable` runs them.
+.NET's own `Socket.Send(IList<ArraySegment>)` was tried first and discarded: it makes a GC handle per segment per call (about 9% of the CPU, as much as
+the copy), and on macOS with `Blocking <- false` it made an unrelated test flake. `bench/cable/perf` takes `KEEP_SCRIPT=1` (keeps the call chains);
+`bench/results/oncrack-r4-fanout/breakdown.py` splits them by layer; `pair.sh` and `table.py` there run and print one tier 2 A/B run.
+
 **Realistic workloads** (unit R2.0, `bench/results/oncrack-r2-bench.md`): the five classic workloads are a 100%-hit benchmark for the read
 cache (one URL, one user, no writes). `bench/quick --real` runs `mixed` (16 connections read a room while one posts into it), `spread` (2,112
 pages of the crowd seed's 525 users), `spread_mixed` (spread plus one connection posting into rooms of 526 members) and `search_spread`

@@ -96,7 +96,12 @@ let testVerifier (signed: string) : string option =
     else
         None
 
-let testConfig: Config = { Config.defaults with AssumeSsl = false; CompactJson = false }
+/// `CAMPFIRE_TEST_GATHER=off` runs the whole suite with copying writes (unit R4.2), as `CAMPFIRE_CABLE_GATHER=off` does the app.
+let testConfig: Config =
+    { Config.defaults with
+        AssumeSsl = false
+        CompactJson = false
+        GatherWrites = not (String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_TEST_GATHER", "off", StringComparison.OrdinalIgnoreCase)) }
 
 /// A self-signed certificate for 127.0.0.1, for the tests that serve TLS.
 let selfSigned () : System.Security.Cryptography.X509Certificates.X509Certificate2 =

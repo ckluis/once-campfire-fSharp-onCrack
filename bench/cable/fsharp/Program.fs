@@ -37,7 +37,10 @@ let html (seq: int) (bytes: int) : string =
 [<EntryPoint>]
 let main argv =
     let port = int argv[0]
-    let config = { Config.defaults with DisableRequestForgeryProtection = true }
+    let config =
+        { Config.defaults with
+            DisableRequestForgeryProtection = true
+            GatherWrites = not (String.Equals(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_GATHER", "off", StringComparison.OrdinalIgnoreCase)) }
     let server =
         Server.builder config (fun _ -> Task.FromResult(Some "bench")) id
         |> ServerBuilder.channel "BenchChannel" (fun () ->

@@ -466,6 +466,113 @@ let private writeHeader (dest: Span<byte>) (opcode: byte) (compressed: bool) (le
         Buffers.Binary.BinaryPrimitives.WriteUInt64BigEndian(dest.Slice(2, 8), uint64 length)
         10
 
+/// Per-thread scratch for gathered writes, reused by every write the thread makes: each frame's header and header length, its
+/// payload array, the segment list for the managed fallback, and (Linux) native memory for the `msghdr` and its iovec table.
+[<Sealed>]
+type GatherScratch() =
+    [<ThreadStatic; DefaultValue>]
+    static val mutable private current: GatherScratch | null
+
+    member val Headers: byte[] = Array.zeroCreate 2560 with get, set
+    member val HeaderLengths: int[] = Array.zeroCreate 256
+    member val Payloads: byte[][] = Array.zeroCreate 256
+    /// 56 bytes of `msghdr` (zeroed, the fields that change are set per call) and then 4 words per frame (header and payload:
+    /// address and length each), 256 frames at most.
+    member val Native: nativeint = 0n with get, set
+
+    static member Get(frames: int) : GatherScratch =
+        let scratch =
+            match GatherScratch.current with
+            | null ->
+                let created = GatherScratch()
+                GatherScratch.current <- created
+                created
+            | existing -> existing
+        if scratch.Headers.Length < frames * 10 then scratch.Headers <- Array.zeroCreate (frames * 10)
+        scratch
+
+#nowarn "9" // `sendmsg` over pinned arrays and a native iovec table
+
+/// `sendmsg` over the frames' own arrays (Linux, glibc's layout of `msghdr`: the same on aarch64 and x86-64). .NET's own gather send
+/// creates a GC handle for every segment of every call (measured in unit R4.2: about 9% of a fan-out's CPU, as much as the copy it
+/// replaced); here each payload is pinned by a `fixed` local in a recursion one frame deep per payload, which costs nothing until
+/// a GC walks the stack.
+module private Sendmsg =
+    open System.Runtime.InteropServices
+    open Microsoft.FSharp.NativeInterop
+
+    [<DllImport("libc.so.6", EntryPoint = "sendmsg", SetLastError = true)>]
+    extern nativeint private sendmsg(int fd, nativeint msg, int flags)
+
+    let available = OperatingSystem.IsLinux() && (RuntimeInformation.ProcessArchitecture = Architecture.Arm64 || RuntimeInformation.ProcessArchitecture = Architecture.X64)
+
+    [<Literal>]
+    let private MSG_DONTWAIT = 0x40
+    [<Literal>]
+    let private MSG_NOSIGNAL = 0x4000
+    [<Literal>]
+    let private EINTR = 4
+
+    let native (scratch: GatherScratch) : nativeint =
+        if scratch.Native = 0n then
+            let size = 56 + 256 * 32
+            let block = NativeMemory.AllocZeroed(unativeint size) |> NativePtr.ofVoidPtr<byte> |> NativePtr.toNativeInt
+            scratch.Native <- block
+        scratch.Native
+
+    /// Pins payload `i` and the ones after it, then makes the call. Returns (bytes sent, errno; 0 when none).
+    let rec private pin (fd: int) (scratch: GatherScratch) (headers: nativeint) (count: int) (i: int) : struct (int64 * int) =
+        let payload = scratch.Payloads[i]
+        use p = fixed payload
+        let table = NativePtr.ofNativeInt<nativeint> (scratch.Native + 56n)
+        NativePtr.set table (4 * i) (headers + nativeint (i * 10))
+        NativePtr.set table (4 * i + 1) (nativeint scratch.HeaderLengths[i])
+        NativePtr.set table (4 * i + 2) (NativePtr.toNativeInt p)
+        NativePtr.set table (4 * i + 3) (nativeint payload.Length)
+        if i + 1 < count then
+            pin fd scratch headers count (i + 1)
+        else
+            let msg = NativePtr.ofNativeInt<nativeint> scratch.Native
+            NativePtr.set msg 2 (scratch.Native + 56n) // msg_iov
+            NativePtr.set msg 3 (nativeint (count * 2)) // msg_iovlen
+            let mutable result = struct (0L, 0)
+            let mutable again = true
+            while again do
+                let sent = sendmsg (fd, scratch.Native, MSG_DONTWAIT ||| MSG_NOSIGNAL)
+                if sent >= 0n then
+                    result <- struct (int64 sent, 0)
+                    again <- false
+                else
+                    let errno = Marshal.GetLastPInvokeError()
+                    if errno <> EINTR then
+                        result <- struct (0L, errno)
+                        again <- false
+            result
+
+    /// One non-blocking `sendmsg` of the `count` header and payload pairs in `scratch`.
+    let send (socket: Net.Sockets.Socket) (scratch: GatherScratch) (count: int) : struct (int64 * int) =
+        native scratch |> ignore
+        let handle = socket.SafeHandle
+        let mutable added = false
+        handle.DangerousAddRef(&added)
+        try
+            use headers = fixed scratch.Headers
+            pin (int (handle.DangerousGetHandle())) scratch (NativePtr.toNativeInt headers) count 0
+        finally
+            if added then handle.DangerousRelease()
+
+/// Whether this platform gathers writes (Linux; elsewhere `Writer` copies).
+let GatherAvailable = Sendmsg.available
+
+/// How many gathered writes the socket did not take whole (tests check that they forced the partial path).
+let mutable private partialGathers = 0L
+
+/// A batch with more frames than this is copied (a gather list that long approaches the kernel's iovec limit).
+let private MaxGatherFrames = 256
+
+/// Gathered writes the socket took only in part, since the process started.
+let PartialGathers () : int64 = Interlocked.Read(&partialGathers)
+
 /// Writes server frames: unmasked, each as its header plus its (shared) payload, a batch to one
 /// write. A write that hasn't completed after `timeout` fails: `abort` is called to cut the
 /// connection and the write raises `TimeoutException`.
@@ -475,12 +582,17 @@ let private writeHeader (dest: Span<byte>) (opcode: byte) (compressed: bool) (le
 /// its transport's send loop: no copy into the pipe's per-connection blocks, no hop to the transport's I/O thread, and the
 /// kernel copies from a buffer the sending thread has just written (unit R2.1). The caller detaches only once nothing it wrote
 /// through the stream can still be in Kestrel's pipe (`Connection.run`'s probe), so the bytes stay in order.
+///
+/// Unit R4.2: on a detached connection `Send` hands the kernel the frames' shared payloads where they are, one `sendmsg` (header,
+/// payload, header, payload ...), instead of copying them into one buffer first (`gather`; `CAMPFIRE_CABLE_GATHER=off` copies).
 [<Sealed>]
-type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, direct: Net.Sockets.Socket | null) =
+type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, direct: Net.Sockets.Socket | null, gather: bool) =
     let mutable detached = false
 
-    new(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit) = Writer(io, deflate, timeout, abort, null)
-    new(io: Stream, deflate: bool) = Writer(io, deflate, WriteTimeout, ignore, null)
+    new(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, direct: Net.Sockets.Socket | null) =
+        Writer(io, deflate, timeout, abort, direct, true)
+    new(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit) = Writer(io, deflate, timeout, abort, null, true)
+    new(io: Stream, deflate: bool) = Writer(io, deflate, WriteTimeout, ignore, null, true)
 
     /// Whether writes can go to the socket itself (after `Detach`).
     member _.CanDetach = not (isNull direct)
@@ -591,6 +703,69 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
 
     /// Writes `frames` as text messages, in order, in one write.
     member this.Send(frames: IReadOnlyList<Frame>) : ValueTask =
+        if detached && gather && Sendmsg.available && frames.Count > 0 && frames.Count <= MaxGatherFrames then
+            this.SendGather frames
+        else
+            this.SendCopy frames
+
+    /// Unit R4.2: one non-blocking `sendmsg` of header and payload pairs, the payloads being the frames' own arrays. What the socket
+    /// does not take at once (its buffer is full) is copied into a pooled buffer and finished like any other send, with the
+    /// write timeout. The scratch headers are thread-static and the call returns before anyone else could use them.
+    member private this.SendGather(frames: IReadOnlyList<Frame>) : ValueTask =
+        let socket = nonNull direct
+        let scratch = GatherScratch.Get frames.Count
+        let count = frames.Count
+        let mutable total = 0
+        for i in 0 .. count - 1 do
+            let frame = frames[i]
+            let payload = this.Payload frame
+            let compressed = deflate && not (obj.ReferenceEquals(payload, frame.Bytes))
+            let used = writeHeader (Span(scratch.Headers, i * 10, 10)) OpText compressed payload.Length
+            scratch.HeaderLengths[i] <- used
+            scratch.Payloads[i] <- payload
+            total <- total + used + payload.Length
+        let mutable sent = 0
+        let mutable failure: exn | null = null
+        try
+            let struct (n, e) = Sendmsg.send socket scratch count
+            sent <- int n
+            // EAGAIN (11 on Linux): the socket's buffer is full, so the rest waits for room.
+            if e <> 0 && e <> 11 then failure <- IOException $"sendmsg failed: errno {e}"
+        finally
+            // Nothing in a thread's scratch keeps a frame alive.
+            if sent = total || not (isNull failure) then Array.Clear(scratch.Payloads, 0, count)
+        match failure with
+        | null -> ()
+        | e -> raise e
+        if sent = total then
+            ValueTask()
+        else
+            Interlocked.Increment(&partialGathers) |> ignore
+            // The rest, from the header or payload that `sent` ends in.
+            let buffer = ArrayPool<byte>.Shared.Rent(total - sent)
+            let mutable skip = sent
+            let mutable at = 0
+            let take (source: byte[]) (offset: int) (length: int) =
+                if skip >= length then
+                    skip <- skip - length
+                else
+                    Buffer.BlockCopy(source, offset + skip, buffer, at, length - skip)
+                    at <- at + length - skip
+                    skip <- 0
+            for i in 0 .. count - 1 do
+                take scratch.Headers (i * 10) scratch.HeaderLengths[i]
+                take scratch.Payloads[i] 0 scratch.Payloads[i].Length
+            Array.Clear(scratch.Payloads, 0, count)
+            let rest = ReadOnlyMemory(buffer, 0, at)
+            let first =
+                try
+                    socket.SendAsync(rest, Net.Sockets.SocketFlags.None).AsTask()
+                with _ ->
+                    ArrayPool<byte>.Shared.Return buffer
+                    reraise ()
+            ValueTask(this.FinishSend(first, rest, buffer))
+
+    member private this.SendCopy(frames: IReadOnlyList<Frame>) : ValueTask =
         let mutable total = 0
         for i in 0 .. frames.Count - 1 do
             total <- total + 10 + this.Payload(frames[i]).Length

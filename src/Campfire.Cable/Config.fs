@@ -24,6 +24,9 @@ type Config =
       /// onCrack (unit R2.1): a connection on plain TCP writes to its socket itself once its probe is answered
       /// (`Connection.run`), instead of through Kestrel's upgraded stream. `CAMPFIRE_CABLE_DIRECT=off` turns it off.
       DirectWrites: bool
+      /// onCrack (unit R4.2): a direct connection sends a batch with one `sendmsg` over the frames' shared payloads instead of
+      /// copying them into a send buffer first. `CAMPFIRE_CABLE_GATHER=off` copies.
+      GatherWrites: bool
       /// onCrack (unit R2.1): Turbo Stream broadcasts leave `<`, `>` and `&` unescaped in their JSON (`JsonStringWriter`'s
       /// compact mode): the same string once parsed, a third fewer bytes. `CAMPFIRE_CABLE_COMPACT_JSON=off` escapes them as Rails.
       CompactJson: bool }
@@ -38,6 +41,7 @@ module Config =
           MaxWriteBatch = 64
           CloseTimeout = TimeSpan.FromSeconds 5.0
           DirectWrites = true
+          GatherWrites = true
           CompactJson = true }
 
 /// What the connection's `connect` sees of the upgrade request: its path and query, and its headers

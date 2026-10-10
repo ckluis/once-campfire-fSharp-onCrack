@@ -1,0 +1,9 @@
+# started on Sat Oct 10 05:23:41 2026
+
+0,,syscalls:sys_enter_sendto,11681938029,100.00,,
+301037,,syscalls:sys_enter_sendmsg,11682053405,100.00,,
+376,,syscalls:sys_enter_write,11681985404,100.00,,
+0,,syscalls:sys_enter_writev,11681698487,100.00,,
+23373,,syscalls:sys_enter_futex,11681508986,100.00,,
+2606,,syscalls:sys_enter_epoll_pwait,11681372487,100.00,,
+18382,,context-switches,11681272235,100.00,,

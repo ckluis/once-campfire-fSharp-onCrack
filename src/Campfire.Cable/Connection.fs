@@ -351,7 +351,7 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
         let wake = Wake()
         let channel = Channels.Channel.CreateBounded<Received>(Channels.BoundedChannelOptions(IncomingCapacity, SingleReader = true, SingleWriter = true))
         let incoming = channel.Reader
-        let sink = Writer(stream, deflate, WriteTimeout, abort, direct)
+        let sink = Writer(stream, deflate, WriteTimeout, abort, direct, config.GatherWrites)
         let readerTask = readLoop (Reader(stream, deflate)) channel.Writer wake stop.Token
 
         // handle_open: connect, subscribe to the internal channel, welcome, then process whatever

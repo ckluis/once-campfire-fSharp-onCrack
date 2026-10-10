@@ -202,3 +202,109 @@ let ``a write that never completes is cut and fails after the timeout`` () =
         ignore ex
         Assert.True aborted.Value
     }
+
+// --- Unit R4.2: gathered writes ---------------------------------------------------------------
+
+/// A connected loopback pair: (server side, client side).
+let private socketPair () : Net.Sockets.Socket * Net.Sockets.Socket =
+    use listener = new Net.Sockets.TcpListener(Net.IPAddress.Loopback, 0)
+    listener.Start()
+    let client = new Net.Sockets.Socket(Net.Sockets.SocketType.Stream, Net.Sockets.ProtocolType.Tcp)
+    client.Connect(Net.IPAddress.Loopback, (listener.LocalEndpoint :?> Net.IPEndPoint).Port)
+    let server = listener.AcceptSocket()
+    server, client
+
+let private gatherSizes = [| 1; 125; 126; 127; 65535; 65536; 70000 |]
+
+/// A random batch: 1 to `maxFrames` frames of the sizes above, half compressible, half not.
+let private randomBatch (random: Random) (maxFrames: int) (sizes: int[]) : Frame[] =
+    Array.init (random.Next(1, maxFrames + 1)) (fun _ ->
+        let size = sizes[random.Next sizes.Length]
+        let text =
+            if random.Next 2 = 0 then
+                String(Array.init size (fun i -> char (97 + i % 7)))
+            else
+                String(Array.init size (fun _ -> char (33 + random.Next 90)))
+        Frame.OfString text)
+
+/// What a gathered writer puts on a loopback socket against what a copying one puts in a stream, for the same batches.
+let private gatherMatchesCopy (deflate: bool) (slow: bool) (seed: int) : Task =
+    task {
+        let random = Random seed
+        let sizes = if slow then [| 1; 125; 126; 127; 4000; 65535; 65536 |] else gatherSizes
+        let batches = Array.init (if slow then 25 else 80) (fun _ -> randomBatch random (if slow then 12 else 80) sizes)
+        let expected = new MemoryStream()
+        let copier = Writer(expected, deflate)
+        for batch in batches do
+            do! copier.Send batch
+        let expected = expected.ToArray()
+
+        let server, client = socketPair ()
+        use _ = server
+        use _ = client
+        if slow then
+            server.SendBufferSize <- 4096
+            client.ReceiveBufferSize <- 4096
+        let writer = Writer(Stream.Null, deflate, TimeSpan.FromSeconds 30.0, ignore, server)
+        writer.Detach()
+        let received = new MemoryStream()
+        let before = PartialGathers()
+        // A thread of its own: a blocking reader on the pool starves the other tests' servers.
+        let reader =
+            Task.Factory.StartNew((fun () ->
+                let buffer = Array.zeroCreate<byte> (if slow then 3000 else 65536)
+                let mutable reads = 0
+                while received.Length < int64 expected.Length do
+                    let n = client.Receive buffer
+                    if n = 0 then failwith "the writer's socket closed early"
+                    received.Write(buffer, 0, n)
+                    reads <- reads + 1
+                    if slow && reads % 3 = 0 then Thread.Sleep 1), TaskCreationOptions.LongRunning)
+        for batch in batches do
+            do! writer.Send batch
+        do! reader.WaitAsync(TimeSpan.FromSeconds 60.0)
+        Assert.Equal(expected.Length, int received.Length)
+        Assert.True((expected = received.ToArray()), "the gathered bytes differ from the copied bytes")
+        if slow then Assert.True(PartialGathers() > before, "the slow reader forced no partial send")
+    }
+
+[<Fact>]
+let ``gathered writes put the copied writes' bytes on the wire`` () =
+    task {
+        for deflate in [ false; true ] do
+            do! gatherMatchesCopy deflate false 1
+            do! gatherMatchesCopy deflate false 2
+    }
+
+[<Fact>]
+let ``gathered writes put the copied writes' bytes on the wire through partial sends`` () =
+    task {
+        if not GatherAvailable then Assert.Skip "gathered writes are Linux-only (bin/linux-tests Cable)"
+        for deflate in [ false; true ] do
+            do! gatherMatchesCopy deflate true 3
+    }
+
+/// A peer that never reads must not hang a send: the write returns a pending task at once and times out as the copy path does.
+[<Fact>]
+let ``a gathered write to a peer that never reads returns at once and times out`` () =
+    task {
+        if not GatherAvailable then Assert.Skip "gathered writes are Linux-only (bin/linux-tests Cable)"
+        let server, client = socketPair ()
+        use _ = server
+        use _ = client
+        server.SendBufferSize <- 4096
+        client.ReceiveBufferSize <- 4096
+        let aborted = ref false
+        let writer =
+            Writer(Stream.Null, false, TimeSpan.FromMilliseconds 300.0, (fun () -> aborted.Value <- true; server.Close()), server)
+        writer.Detach()
+        let big = Frame.OfString(String('x', 8 * 1024 * 1024))
+        let started = Diagnostics.Stopwatch.StartNew()
+        // On another thread: a send that blocks must fail this test, not hang it.
+        let! pending = Task.Run(fun () -> writer.Send [| Frame.OfString "first"; big |]).WaitAsync(TimeSpan.FromSeconds 10.0)
+        let returnedIn = started.Elapsed
+        Assert.True(returnedIn < TimeSpan.FromMilliseconds 100.0, $"Send took {returnedIn.TotalMilliseconds} ms")
+        Assert.False pending.IsCompleted
+        let! _ = Assert.ThrowsAsync<TimeoutException>(fun () -> pending.AsTask())
+        Assert.True aborted.Value
+    }
