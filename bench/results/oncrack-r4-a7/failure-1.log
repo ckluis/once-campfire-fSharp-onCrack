@@ -1,0 +1,21 @@
+xUnit.net v3 In-Process Runner v3.2.0+9e422989c1 (64-bit .NET 10.0.12)
+  Discovering: Attack.Tests
+  Discovered:  Attack.Tests
+  Starting:    Attack.Tests
+A7 round 24: app log follows (210 chars)
+Warning campfire.web_push: Web Push is off: VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY aren't set
+Debug campfire.jobs: enqueued job=Room::PushMessageJob
+Information campfire.jobs: performed job=Room::PushMessageJob
+A7 round 24: session rows 1, user rows 10, session by the vector's token found True, David found True
+A7 round 24: warm 200  / first 302 / second 302
+A7   round 24 first: status 302, 0 bytes, location Some(http://campfire.test/session/new), set-cookie [_campfire_session=H7KZxqK%2BqRM7sNbQ5LTtxs4q0ZSTno%2FmE3bsf72t48KZrbO9sy6282PWCZwBkR%2FmsFV6W%2FAo9UrhF%2BR%2BY1BpMEg86rhNi0Mi8b5wAoAnPdxQCqY8QMShTh4QfoQzaN4a9CEcGCI3OSKErsyTx5oTj5Dd1OB4VpGm0mRQZzAVdWST0jBS3PTmbd3RlQNzQyHtiBis6MpxEgJmDg3I6kywbXSZ1hmEb6qYSwwhbHP96ulUUqe054FFbBuygguxyT834cg8d8gMm94SJyrwZq2t3mMAT%2B81H8wHONqQU7xVZufS4jyQmDxr7dExCNBsv3KYekpPYYuUKttpSxNZn8yi--Lc0k1wXdTiaSplGX--KNxf9lkUq8J4sWYzz%2BfK3g%3D%3D; path=/; expires=Wed, 10 Oct 2046 02:37:14 GMT; httponly; samesite=lax]
+A7   round 24 second: status 302, 0 bytes, location Some(http://campfire.test/session/new), set-cookie []
+    Campfire.Attack.Tests.A7 room page right after a direct post, on fresh apps [FAIL]
+      Assert.Empty() Failure: Collection was not empty
+      Collection: ["round 24 first: status 302, 0 bytes, location Some"···, "round 24 second: status 302, 0 bytes, location Som"···]
+      Stack Trace:
+        bench/results/oncrack-verifier/AttackTests.fs(408,0): at Campfire.Attack.Tests.A7 room page right after a direct post\, on fresh apps@369.MoveNext()
+        --- End of stack trace from previous location ---
+  Finished:    Attack.Tests (ID = '70a08f1d87bbf649f694aae4a91c85c65d8ca83b512d3256f6bc52bb9b97416d')
+=== TEST EXECUTION SUMMARY ===
+   Attack.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 29.664s

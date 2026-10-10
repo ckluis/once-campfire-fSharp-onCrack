@@ -495,6 +495,41 @@ let multipartReq (req: Req) (fields: (string * string) list) (name: string, file
     write $"\r\n--{boundary}--\r\n"
     { req.With("content-type", $"multipart/form-data; boundary={boundary}") with Body = Some(body.ToArray()) }
 
+/// Whether a `Set-Cookie` header deletes the cookie it names: an empty value, a `Max-Age` of zero or less, or an `Expires` that has
+/// passed. Only the attributes say so. (R4.0: this was a substring test for "1970" over the whole header, so a signed cookie whose
+/// hex digest happened to contain "1970", about one in 1,800, was dropped from the jar as if the app had deleted it, and the next
+/// request went out signed out: the verifier's one unexplained A7 failure.)
+let setCookieDeletes (setCookie: string) : bool =
+    let parts = setCookie.Split ';'
+    let value =
+        match parts[0].IndexOf '=' with
+        | -1 -> ""
+        | at -> parts[0].Substring(at + 1).Trim()
+    let attribute (name: string) : string option =
+        parts
+        |> Array.skip 1
+        |> Array.tryPick (fun part ->
+            let part = part.Trim()
+            match part.IndexOf '=' with
+            | -1 -> None
+            | at when part.Substring(0, at).Trim().Equals(name, StringComparison.OrdinalIgnoreCase) -> Some(part.Substring(at + 1).Trim())
+            | _ -> None)
+    let maxAgeGone =
+        match attribute "max-age" with
+        | Some v ->
+            match Int64.TryParse(v, Globalization.NumberStyles.Integer, Globalization.CultureInfo.InvariantCulture) with
+            | true, n -> n <= 0L
+            | _ -> false
+        | None -> false
+    let expiresGone =
+        match attribute "expires" with
+        | Some v ->
+            match DateTimeOffset.TryParse(v, Globalization.CultureInfo.InvariantCulture, Globalization.DateTimeStyles.AssumeUniversal) with
+            | true, at -> at <= DateTimeOffset.UtcNow
+            | _ -> false
+        | None -> false
+    value = "" || maxAgeGone || expiresGone
+
 /// A client that keeps cookies between requests, with a remote IP of its own (the sign-in rate limit is per IP).
 type Browser(test: Test, ip: string option) =
     let cookies = SortedDictionary<string, string>(StringComparer.Ordinal)
@@ -524,8 +559,7 @@ type Browser(test: Test, ip: string option) =
             | -1 -> ()
             | at ->
                 let name, value = pair.Substring(0, at), pair.Substring(at + 1)
-                let lower = cookie.ToLowerInvariant()
-                if value = "" || lower.Contains "max-age=0" || lower.Contains "1970" then cookies.Remove name |> ignore
+                if setCookieDeletes cookie then cookies.Remove name |> ignore
                 else cookies[name] <- value
 
     member this.Send(req: Req) : Task<Reply> =

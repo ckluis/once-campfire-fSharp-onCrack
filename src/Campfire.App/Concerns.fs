@@ -195,7 +195,13 @@ module Concerns =
             | Some session ->
                 do! resumeSession c session
                 return true
-            | None -> return false
+            | None ->
+                // onCrack (R4.0): a request that carried a session cookie and is treated as signed out says why (cold path: A7's one
+                // unexplained failure left nothing in the log). Debug level, so a stale cookie after sign-out costs nothing at Information.
+                if not (isNull (c.Cookies.Get "session_token")) then
+                    let reason = if isNull (c.Cookies.Signed "session_token") then "did not verify" else "verified but names no session"
+                    c.Kit.Logger.LogDebug("session_token cookie {Reason}: {Method} {Path}", reason, c.Request.Method, c.Request.Path)
+                return false
         }
 
     /// `bot_authentication`: `params[:bot_key].present?` and a matching active bot.

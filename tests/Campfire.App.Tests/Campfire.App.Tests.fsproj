@@ -33,6 +33,7 @@
     <Compile Include="FastPathTests.fs" />
     <Compile Include="ForeignWriteTests.fs" />
     <Compile Include="FreshAuthTests.fs" />
+    <Compile Include="CookieJarTests.fs" />
     <Compile Include="PostPathTests.fs" />
     <Compile Include="ChannelsSupport.fs" />
     <Compile Include="ChannelsTests.fs" />

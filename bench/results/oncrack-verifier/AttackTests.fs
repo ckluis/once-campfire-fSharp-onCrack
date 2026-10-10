@@ -368,18 +368,45 @@ let ``A6 headers of a hit equal a miss, HEAD first does not poison GET, ETags st
 let ``A7 room page right after a direct post, on fresh apps`` () =
     task {
         let problems = ResizeArray<string>()
-        for round in 1..30 do
+        // A7_ROUNDS raises the count (30 by default) for a hunt for the one failure round 3 saw.
+        let rounds = match Environment.GetEnvironmentVariable "A7_ROUNDS" with | null | "" -> 30 | n -> int n
+        for round in 1..rounds do
             use! test = bootSeeded "default"
             let david = david test
             let room = $"/rooms/{ALL_TALK}"
             let body = $"echidna{round}"
             write test (fun tx -> Message.create tx { NewMessage.create ALL_TALK JASON with Body = Some $"<div>{body}</div>" }) |> ignore
-            let! _ = david.Get room
+            // A7_SABOTAGE=1 signs David's sessions out first: the diagnostics below must then print (a check of the harness itself).
+            if Environment.GetEnvironmentVariable "A7_SABOTAGE" = "1" && round = 2 then
+                write test (fun tx -> tx.Conn.Execute("DELETE FROM sessions", [||]) |> ignore)
+            let! warm = david.Get room
+            let jarAfterWarm = david.Cookie "session_token"
             let! first = david.Get room
             let! second = david.Get room
-            for r, label in [ first, "first"; second, "second" ] do
-                if not (r.Text.Contains body) then
-                    problems.Add($"round {round} {label}: status {r.Status}, {r.Body.Length} bytes, location {r.Location}")
+            let failed = ResizeArray<string>()
+            for r, label in [ warm, "warm"; first, "first"; second, "second" ] do
+                let bad = if label = "warm" then r.Status <> 200 else not (r.Text.Contains body)
+                if bad then
+                    let cookies = String.Join(" | ", r.SetCookies)
+                    failed.Add($"round {round} {label}: status {r.Status}, {r.Body.Length} bytes, location {r.Location}, set-cookie [{cookies}]")
+            if failed.Count > 0 then
+                problems.AddRange failed
+                // The app's own account of what happened (what it logged), and what its database says about the session the
+                // cookie names, read at the database with every cache bypassed.
+                out $"A7 round {round}: app log follows ({test.Logs.Length} chars)"
+                out (if test.Logs = "" then "(nothing logged)" else test.Logs)
+                let vectorToken =
+                    (Campfire.Tests.Repo.vector "campfire_sessions").RootElement.GetProperty("sessions").EnumerateArray()
+                    |> Seq.find (fun s -> s.GetProperty("user_name").GetString() = "David")
+                    |> fun s -> s.GetProperty("token").GetString()
+                let rows = read test (fun conn -> conn.Count("SELECT COUNT(*) FROM sessions", [||]))
+                let users = read test (fun conn -> conn.Count("SELECT COUNT(*) FROM users", [||]))
+                let found = read test (fun conn -> Campfire.Db.Session.findByToken conn vectorToken)
+                let user = read test (fun conn -> User.findById conn DAVID)
+                out $"A7 round {round}: session rows {rows}, user rows {users}, session by the vector's token found {found.IsSome}, David found {user.IsSome}"
+                out $"A7 round {round}: warm {warm.Status} {warm.Location} / first {first.Status} / second {second.Status}"
+                out $"A7 round {round}: warm's Set-Cookie headers {warm.SetCookies |> List.map (fun c -> c.Split(';')[0])}"
+                out $"A7 round {round}: the jar's session_token after warm: {jarAfterWarm}"
         for p in problems do out ("A7   " + p)
         Assert.Empty problems
     }
