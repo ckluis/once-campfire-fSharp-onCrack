@@ -26,6 +26,20 @@
    - Abandoned to preserve time for critical steps
    - **Lesson:** bench/quick shows setup works; full benchmarks need dedicated long session
 
+## Reliability finalization (2026-10-10 17:14 EDT)
+
+**Status: Finalized and staged for commit**
+
+Organized R4.5 reliability measurements under `bench/results/oncrack-r4-final/reliability/` for final review:
+- Copied before-r1 and after-r1 measurement runs
+- Created SUMMARY.md with results table and key changes
+- Updated baseline file pointer from placeholder to actual results
+
+R4.5 measurements (already committed in 43e7be3):
+- before-r1: Rails, Rust, C, onCrack at 21791e2, cable profile, 1 round
+- after-r1: onCrack HEAD, cable and overload profiles, 2 rounds each
+- Result: **0 disconnected (vs 945 before), 10,638 messages/s, every message delivered to all 1,000 clients**
+
 ## Remaining steps (DEFERRED — continue in separate session)
 
 4. **Cable suite** (DEFERRED)

@@ -1,0 +1,172 @@
+1791656519 rails round 1: cable 1000/1000 subscribed, 0 disconnected, 387/387 delivered to all, 25.4 msgs/s
+1791656561 rails round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 552/552 delivered to all, 21.7 msgs/s
+1791656587 rust round 1: cable 1000/1000 subscribed, 0 disconnected, 6770/6770 delivered to all, 450.9 msgs/s
+1791656673 rust round 1: cable_heavy 1000/1000 subscribed, 899 disconnected, 64/65151 delivered to all, 4.3 msgs/s
+1791656880 c round 1: cable 124/1000 subscribed, 854 disconnected, 118/40668 delivered to all, 7.9 msgs/s
+1791657086 c round 1: cable_heavy 224/1000 subscribed, 829 disconnected, 15/35967 delivered to all, 1.0 msgs/s
+1791657114 oncrack round 1: cable 1000/1000 subscribed, 0 disconnected, 6586/6586 delivered to all, 438.8 msgs/s
+1791657201 oncrack round 1: cable_heavy 1000/1000 subscribed, 945 disconnected, 88/127210 delivered to all, 5.9 msgs/s
+1791657227 oncrack-cached round 1: cable 1000/1000 subscribed, 0 disconnected, 9116/9116 delivered to all, 607.3 msgs/s
+1791657314 oncrack-cached round 1: cable_heavy 1000/1000 subscribed, 869 disconnected, 0/78103 delivered to all, 0.0 msgs/s
+1791657314 {
+1791657314   "rails": {
+1791657314     "cable": {
+1791657314       "clients": 1000,
+1791657314       "posters": 4,
+1791657314       "subscribed": [
+1791657314         1000
+1791657314       ],
+1791657314       "disconnected": [
+1791657314         0
+1791657314       ],
+1791657314       "delivered_to_all": [
+1791657314         "387/387"
+1791657314       ],
+1791657314       "median_delivered_msgs_per_sec": 25.4,
+1791657314       "median_all_clients_p99_ms": 833.535
+1791657314     },
+1791657314     "cable_heavy": {
+1791657314       "clients": 1000,
+1791657314       "posters": 64,
+1791657314       "subscribed": [
+1791657314         1000
+1791657314       ],
+1791657314       "disconnected": [
+1791657314         0
+1791657314       ],
+1791657314       "delivered_to_all": [
+1791657314         "552/552"
+1791657314       ],
+1791657314       "median_delivered_msgs_per_sec": 21.7,
+1791657314       "median_all_clients_p99_ms": 24084.479
+1791657314     }
+1791657314   },
+1791657314   "rust": {
+1791657314     "cable": {
+1791657314       "clients": 1000,
+1791657314       "posters": 4,
+1791657314       "subscribed": [
+1791657314         1000
+1791657314       ],
+1791657314       "disconnected": [
+1791657314         0
+1791657314       ],
+1791657314       "delivered_to_all": [
+1791657314         "6770/6770"
+1791657314       ],
+1791657314       "median_delivered_msgs_per_sec": 450.9,
+1791657314       "median_all_clients_p99_ms": 126.847
+1791657314     },
+1791657314     "cable_heavy": {
+1791657314       "clients": 1000,
+1791657314       "posters": 64,
+1791657314       "subscribed": [
+1791657314         1000
+1791657314       ],
+1791657314       "disconnected": [
+1791657314         899
+1791657314       ],
+1791657314       "delivered_to_all": [
+1791657314         "64/65151"
+1791657314       ],
+1791657314       "median_delivered_msgs_per_sec": 4.3,
+1791657314       "median_all_clients_p99_ms": 356.607
+1791657314     }
+1791657314   },
+1791657314   "c": {
+1791657314     "cable": {
+1791657314       "clients": 1000,
+1791657314       "posters": 4,
+1791657314       "subscribed": [
+1791657314         124
+1791657314       ],
+1791657314       "disconnected": [
+1791657314         854
+1791657314       ],
+1791657314       "delivered_to_all": [
+1791657314         "118/40668"
+1791657314       ],
+1791657314       "median_delivered_msgs_per_sec": 7.9,
+1791657314       "median_all_clients_p99_ms": 26.895
+1791657314     },
+1791657314     "cable_heavy": {
+1791657314       "clients": 1000,
+1791657314       "posters": 64,
+1791657314       "subscribed": [
+1791657314         224
+1791657314       ],
+1791657314       "disconnected": [
+1791657314         829
+1791657314       ],
+1791657314       "delivered_to_all": [
+1791657314         "15/35967"
+1791657314       ],
+1791657314       "median_delivered_msgs_per_sec": 1.0,
+1791657314       "median_all_clients_p99_ms": 39.039
+1791657314     }
+1791657314   },
+1791657314   "oncrack": {
+1791657314     "cable": {
+1791657314       "clients": 1000,
+1791657314       "posters": 4,
+1791657314       "subscribed": [
+1791657314         1000
+1791657314       ],
+1791657314       "disconnected": [
+1791657314         0
+1791657314       ],
+1791657314       "delivered_to_all": [
+1791657314         "6586/6586"
+1791657314       ],
+1791657314       "median_delivered_msgs_per_sec": 438.8,
+1791657314       "median_all_clients_p99_ms": 94.271
+1791657314     },
+1791657314     "cable_heavy": {
+1791657314       "clients": 1000,
+1791657314       "posters": 64,
+1791657314       "subscribed": [
+1791657314         1000
+1791657314       ],
+1791657314       "disconnected": [
+1791657314         945
+1791657314       ],
+1791657314       "delivered_to_all": [
+1791657314         "88/127210"
+1791657314       ],
+1791657314       "median_delivered_msgs_per_sec": 5.9,
+1791657314       "median_all_clients_p99_ms": 417.023
+1791657314     }
+1791657314   },
+1791657314   "oncrack-cached": {
+1791657314     "cable": {
+1791657314       "clients": 1000,
+1791657314       "posters": 4,
+1791657314       "subscribed": [
+1791657314         1000
+1791657314       ],
+1791657314       "disconnected": [
+1791657314         0
+1791657314       ],
+1791657314       "delivered_to_all": [
+1791657314         "9116/9116"
+1791657314       ],
+1791657314       "median_delivered_msgs_per_sec": 607.3,
+1791657314       "median_all_clients_p99_ms": 41.375
+1791657314     },
+1791657314     "cable_heavy": {
+1791657314       "clients": 1000,
+1791657314       "posters": 64,
+1791657314       "subscribed": [
+1791657314         1000
+1791657314       ],
+1791657314       "disconnected": [
+1791657314         869
+1791657314       ],
+1791657314       "delivered_to_all": [
+1791657314         "0/78103"
+1791657314       ],
+1791657314       "median_delivered_msgs_per_sec": 0.0,
+1791657314       "median_all_clients_p99_ms": null
+1791657314     }
+1791657314   }
+1791657314 }
