@@ -55,10 +55,20 @@ Kestrel's pipe is empty (`Connection.run`, `Writer.Detach`; `CAMPFIRE_CABLE_DIRE
 of its broadcasts, and `BroadcastOrder` holds the wakes while later posts in line are still rendering, up to `CAMPFIRE_CABLE_HOLD_US` (1000).
 Turbo Stream frames leave `<`, `>` and `&` unescaped (`Config.CompactJson`, `CAMPFIRE_CABLE_COMPACT_JSON=off`; the Rails-golden tests run with
 it off). Any WebSocket client in a test or a bench must answer pings, as a library does, or the connection waits 2 s and stays on the stream.
-The cable suite reports the server's CPU per delivery and both sides' cores busy (`bench/lib/procmem.py`). At 1,000 clients the load generator is
-the limit (3.85 of 4 cores), so compare servers there by CPU per delivery. `bench/cable/perf` profiles a saturated fan-out (`--loadgen` for the
+The cable suite reports the server's CPU per delivery and both sides' cores busy (`bench/lib/procmem.py`). With round 2's tungstenite client the load generator was
+the limit at 1,000 clients (3.85 of 4 cores); R4.1's raw client (below) is not. `bench/cable/perf` profiles a saturated fan-out (`--loadgen` for the
 client side). A tier 2 cable loop is about 2.5 minutes: `bin/publish-mounted`, then `bench/run` with `SUITES=cable`. The SSE prototype
 (`bench/cable/run --sse`) is measured and left off.
+
+**The cable load generator** (unit R4.1, `bench/results/oncrack-r4-fanout-baseline.md`): `loadgen cable` now defaults to `--client raw`, epoll loops with
+no WebSocket library (`bench/loadgen/src/rawcable.rs`, `--threads` 3; `--client tungstenite` is what rounds 1-3 measured with and their stored cable
+numbers are not comparable). At 1,000 clients it uses 1.8-2.7 of the 4 cores and the servers are the limit (3.8-3.9 cores). The saturated phase keeps at
+most `--window` (128) messages posted and not yet delivered to every client: without it a client that keeps up lets the posters outrun the fan-out, the
+256-frame stream rings lap the slowest subscribers and the server closes them, so messages go missing; check `posted == complete` and `client.closed_midrun
+== 0` in any cable result. `bench/cable/ab` alternates load generator variants against one running app; `CABLE_ARGS` passes loadgen arguments from
+`bench/run`; `CABLE_SENDS=1` counts the app's send syscalls (a pass of its own); `bench/run` raises the soft descriptor limit (2,000 clients). The baseline
+for R4.2 (100/500/1,000/2,000 clients, Rust f9dca47, the port, onCrack, one session) is in that file; the host drifts 25-30% over 20 minutes, so judge a
+change against a control from its own session.
 
 **Realistic workloads** (unit R2.0, `bench/results/oncrack-r2-bench.md`): the five classic workloads are a 100%-hit benchmark for the read
 cache (one URL, one user, no writes). `bench/quick --real` runs `mixed` (16 connections read a room while one posts into it), `spread` (2,112
