@@ -254,6 +254,10 @@ type BroadcastTicket(order: BroadcastOrder) =
 
 [<Sealed>]
 type Broadcasts(server: Cable) =
+    let mutable pressureWaits = 0L
+    let mutable pressureWaitTicks = 0L
+    let mutable pressureLoggedAt = 0L
+
     static member private RoomMessages(room: Room) : string list = [ GlobalId.toParam (Gid.roomGid room); BroadcastNames.Messages ]
 
     static member private UserRooms(userId: int64) : string list = [ GlobalId.toParam (Gid.userGid userId); BroadcastNames.Rooms ]
@@ -299,7 +303,7 @@ type Broadcasts(server: Cable) =
     /// onCrack (unit R4.5): a post waits here, before it writes, while most of its room's subscribers are far behind (`Config.PressureFrames`),
     /// for at most `Config.PressureWait`: a room fed faster than it can be fanned out then holds a bounded backlog instead of cutting its
     /// clients when the log reaches its byte budget. Nothing waits unless the fan-out is behind by seconds; Action Cable queues without bound.
-    member _.AwaitRoom(room: Room) : System.Threading.Tasks.Task =
+    member this.AwaitRoom(room: Room) : System.Threading.Tasks.Task =
         let config = server.Config
         if config.PressureFrames <= 0 then
             System.Threading.Tasks.Task.CompletedTask
@@ -311,10 +315,31 @@ type Broadcasts(server: Cable) =
                     System.Threading.Tasks.Task.CompletedTask
                 else
                     task {
-                        let limit = System.Diagnostics.Stopwatch.GetTimestamp() + int64 (config.PressureWait.TotalSeconds * float System.Diagnostics.Stopwatch.Frequency)
+                        let started = System.Diagnostics.Stopwatch.GetTimestamp()
+                        let limit = started + int64 (config.PressureWait.TotalSeconds * float System.Diagnostics.Stopwatch.Frequency)
                         while server.Hub.Congested(name, config.PressureFrames) && System.Diagnostics.Stopwatch.GetTimestamp() < limit do
                             do! System.Threading.Tasks.Task.Delay 5
+                        this.NoteWait(System.Diagnostics.Stopwatch.GetTimestamp() - started)
                     }
+
+    /// Round 4 verifier: how many posts have waited at the gate, and for how long in all (Stopwatch ticks), since the start.
+    member _.PressureWaits = System.Threading.Interlocked.Read(&pressureWaits)
+    member _.PressureWaitTicks = System.Threading.Interlocked.Read(&pressureWaitTicks)
+
+    /// Counts a wait, and says so in the log at most every 5 s (a warning, like a cut): the gate is quiet unless the fan-out is behind.
+    member private _.NoteWait(ticks: int64) : unit =
+        let waits = System.Threading.Interlocked.Increment(&pressureWaits)
+        let total = System.Threading.Interlocked.Add(&pressureWaitTicks, ticks)
+        let now = System.Diagnostics.Stopwatch.GetTimestamp()
+        let last = System.Threading.Volatile.Read(&pressureLoggedAt)
+        if now - last >= 5L * System.Diagnostics.Stopwatch.Frequency
+           && System.Threading.Interlocked.CompareExchange(&pressureLoggedAt, now, last) = last then
+            Microsoft.Extensions.Logging.LoggerExtensions.LogWarning(
+                server.Logger,
+                "Cable: posts have waited for their rooms' fan-out {Waits} times, {Seconds:F1} s in all, since the start",
+                waits,
+                float total / float System.Diagnostics.Stopwatch.Frequency
+            )
 
     /// `broadcast_unread_room`: `{ roomId: }` to each member's `user_<id>_unreads`.
     member this.UnreadRoom(conn: Conn, room: Room) : unit =

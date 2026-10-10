@@ -607,7 +607,7 @@ let ``congested: a ring has no measure`` () =
 // Round 4 verifier: the pressure gate is about the fan-out falling behind, not about one client. A room's verdict is taken over all of
 // its subscribers, whatever identifier each subscribed with (a client picks its own: key order and spacing make a group of its own),
 // and a subscriber whose connection has been waiting on one socket write for longer than `Hub.ReaderBoundAfter` is limited by its own
-// reader, so it is left out (the byte budget deals with it).
+// reader, so it counts as not behind (the byte budget deals with it).
 
 [<Fact>]
 let ``congested (verifier): one subscriber under an identifier of its own does not make the room congested`` () =
@@ -655,7 +655,7 @@ let ``congested (verifier): subscribers whose connections wait on their sockets 
     wakes[2].WriteWaitSince <- 0L
     settle ()
     Assert.True(hub.Congested("room", 2048), "neither has waited long")
-    // Everyone waiting long: nobody counted, nothing congested.
+    // Everyone waiting long: nobody counts as behind.
     for wake in wakes do
         wake.WriteWaitSince <- longAgo
     settle ()

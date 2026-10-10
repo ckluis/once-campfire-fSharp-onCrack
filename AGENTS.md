@@ -99,8 +99,9 @@ one shared log, with a bound.
   behind, at most `CAMPFIRE_CABLE_PRESSURE_MS` (2,000) per post; `CAMPFIRE_CABLE_PRESSURE=off` never waits. Nothing waits unless the fan-out is seconds behind (the cable suite at
   window 128 never does). On by default, unlike the plan: with it off, `bin/reliability`'s cable_heavy ends with posts undelivered when the harness stops waiting.
   Round 4's verifier (`bench/results/oncrack-r4-verifier.md`): the verdict counts all of the room's groups together (a client writes its own identifier, so a group can be
-  one client) and leaves out subscribers whose connection has waited `Hub.ReaderBoundAfter` (250 ms) on one socket write (`Wake.WriteWaitSince`): those are slow readers,
-  which waiting posters cannot help. `CablePressureTests` (App) are the gate's tests.
+  one client) and counts a subscriber whose connection has waited `Hub.ReaderBoundAfter` (250 ms, `CAMPFIRE_CABLE_PRESSURE_READER_MS`) on one socket write
+  (`Wake.WriteWaitSince`) as not behind: a slow reader, which waiting posters cannot help. (Leaving such subscribers out of the count altogether closed the gate more often
+  under bin/reliability's cable profiles, 10-15% fewer messages a second.) `CablePressureTests` (App) are the gate's tests.
 - **The hub's total** (round 4 verifier): a group's budget bounds one backlog, not how many there are (every room, private stream and identifier is a group with its own
   copy of the frames). `CAMPFIRE_CABLE_HUB_BYTES` (1 GiB, `Hub.TotalBudget`) bounds all logs together: over it a pool item (`Hub.Shed`, at most every 10 ms, and from the
   heartbeat's `Trim`) cuts the subscribers in the oldest chunk of the log that would free the most, until under. Each group's newest chunk (up to 256 frames) is never shed.

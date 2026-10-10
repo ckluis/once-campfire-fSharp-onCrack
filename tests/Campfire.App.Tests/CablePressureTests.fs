@@ -74,6 +74,7 @@ let ``nothing waits when nobody is behind, or nobody listens`` () =
         Assert.Equal(200, reply.Status)
         Assert.True(seconds started < 1.0, $"an uncongested post took {seconds started} s")
         Assert.Equal(1, drain a |> List.filter (fun f -> f.Contains "gate idle post") |> List.length)
+        Assert.Equal(0L, test.App.Broadcasts.PressureWaits)
         ignore b
     }
 
@@ -95,6 +96,9 @@ let ``a post waits while most subscribers are far behind, for at most the limit,
             Assert.Contains("gate bounded post", reply.Text)
             Assert.True(took >= 1.8 && took < 4.0, $"the post waited {took} s, not about 2 s")
             Assert.Equal(1L, stored test "gate bounded post")
+            // The test's own AwaitRoom above, and the post.
+            Assert.Equal(2L, test.App.Broadcasts.PressureWaits)
+            Assert.True(float test.App.Broadcasts.PressureWaitTicks / float Stopwatch.Frequency >= 1.8)
             for subscriber in subscribers do
                 let frames = drain subscriber
                 Assert.Equal(2100, frames |> List.filter (fun f -> f.Contains "filler") |> List.length)

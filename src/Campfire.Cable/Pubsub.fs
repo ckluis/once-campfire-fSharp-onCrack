@@ -276,8 +276,8 @@ type internal GroupBase(identifier: string | null) =
     abstract Retire: unit -> unit
     default _.Retire() = ()
 
-    /// Unit R4.5: of the subscribers whose connections have not waited `waitTicks` or longer on one socket write, how many are more
-    /// than `frames` behind the newest frame (high 32 bits) and how many there are (low 32 bits). A ring has no such measure (0).
+    /// Unit R4.5: how many subscribers are more than `frames` behind the newest frame and whose connections have not waited `waitTicks`
+    /// or longer on one socket write (high 32 bits), and how many subscribers there are (low 32 bits). A ring has no such measure (0).
     abstract Tally: frames: int * waitTicks: int64 -> int64
     default _.Tally(_: int, _: int64) = 0L
 
@@ -434,9 +434,10 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
                 for i in 0 .. count - 1 do
                     let subscriber = receivers[i]
                     let since = subscriber.Wake.WriteWaitSince
-                    if since = 0L || now - since < waitTicks then
-                        counted <- counted + 1L
-                        if newest - (subscriber.Chunk.Id * int64 chunkSize + int64 subscriber.Index) > int64 frames then behind <- behind + 1L
+                    counted <- counted + 1L
+                    if (since = 0L || now - since < waitTicks)
+                       && newest - (subscriber.Chunk.Id * int64 chunkSize + int64 subscriber.Index) > int64 frames then
+                        behind <- behind + 1L
                 let packed = (behind <<< 32) ||| counted
                 Volatile.Write(&tally, packed)
                 Volatile.Write(&tallyAt, now)
@@ -735,8 +736,11 @@ and [<Sealed>] Hub(capacity: int, lagBytes: int64, ring: bool, onCut: Action<int
     /// up with what is posted, and a poster should wait (`Broadcasts.AwaitRoom`) rather than let the backlog grow to the budget.
     ///
     /// Round 4 verifier: counted over all of the broadcasting's groups (a client picks its identifier, so a group of its own is one
-    /// client), and leaving out the subscribers whose connections have waited `ReaderBoundAfter` or longer on one socket write: those
-    /// are behind because they read slowly or not at all, which waiting posters cannot help (the byte budget and the stall cut them).
+    /// client), and a subscriber whose connection has waited `ReaderBoundAfter` or longer on one socket write counts as not behind: it is
+    /// behind because it reads slowly or not at all, which waiting posters cannot help (the byte budget and the stall cut it). It still
+    /// counts among the subscribers: leaving it out of both sides closed the gate more often than R4.5's verdict under bin/reliability's
+    /// saturated cable profiles (10-15% fewer messages a second), because there the connections waiting on their sockets are mostly near
+    /// the head; counted as not behind, the verdict can only be the same as R4.5's or open.
     member _.Congested(broadcasting: string, frames: int) : bool =
         match streams.TryGetValue broadcasting with
         | true, groups ->

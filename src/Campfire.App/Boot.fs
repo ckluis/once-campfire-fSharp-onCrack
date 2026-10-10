@@ -201,6 +201,10 @@ module Boot =
             let storage =
                 Storage.create (DiskService.create config.Storage.Files "local") (RailsCompat.appVerifier secrets "ActiveStorage")
 
+            // Round 4 verifier: how long a Cable write may wait before the posting gate treats its connection as a slow reader (ms).
+            match Int32.TryParse(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_PRESSURE_READER_MS") with
+            | true, ms when ms > 0 -> Campfire.Cable.Hub.ReaderBoundAfter <- TimeSpan.FromMilliseconds(float ms)
+            | _ -> ()
             let cableConfig =
                 { Campfire.Cable.Config.defaults with
                     AssumeSsl = not config.DisableSsl
