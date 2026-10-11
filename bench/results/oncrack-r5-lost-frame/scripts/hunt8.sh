@@ -3,7 +3,7 @@
 # (trace, verify; both off), alternating, the load generator without --trace-dir (as every earlier cable result was measured): the same
 # 500-client phase, 8 each, twice over, in one session. Starts when hunt7 is done.
 cd "$(dirname "$0")/../../../.."
-until [ -f /var/tmp/r5-lost-frame/hunt.done ]; do sleep 5; done
+until [ -f /var/tmp/r5-lost-frame/y3-verify-gc4mb-fresh/loop.exit ]; do sleep 5; done   # hunt7's last block
 exec bench/results/oncrack-r5-lost-frame/scripts/hunt.sh \
  "ab1-r4-image|--app oncrack --runs 8 --clients 500 --server-trace 0 --client-trace 0" \
  "ab2-new-build|--app oncrack --runs 8 --clients 500 --server-trace 0 --client-trace 0" \
