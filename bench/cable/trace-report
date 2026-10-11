@@ -140,8 +140,9 @@ def report(phase, max_seqs):
             entry["examples"] = detail
             L["messages"].append(entry)
         L["verdict_totals"] = dict(tallies)
-        # Every client: the marked messages the server handed to its writes against the messages the client counted.
-        if have_server and clients:
+        # Every client: the marked messages the server handed to its writes against the messages the client counted (an end-of-phase
+        # dump only: a stall or a paced drain is taken mid-run).
+        if have_server and clients and label in ("drain", "final"):
             exp = set()
             rec = []
             for c in open_clients:
@@ -186,11 +187,45 @@ def text(out):
     return "\n".join(s)
 
 
+def selftest():
+    """Three messages that three clients lack, one of each kind of loss, and a fourth client that has everything."""
+    import tempfile
+    d = tempfile.mkdtemp()
+    os.makedirs(d + "/client")
+
+    def w(path, rows):
+        with open(path, "w") as f:
+            for r in rows:
+                f.write(json.dumps(r) + "\n")
+
+    pubs = [{"t": "P", "s": 10 + i, "g": 1, "o": i, "n": 100, "m": 100 + i, "ms": 1000 + i} for i in range(5) if 100 + i != 103]
+    conn = lambda port, runs: {"t": "C", "id": port, "remote": f"127.0.0.1:{port}", "subs": [{"g": 1, "name": "room", "start": 0}], "runs": runs, "events": [[1002, "cross", 1, 1]],
+                               "frames_called": 5, "frames_done": 5, "non_monotone": 0, "crossings": 1, "reason": "closed", "writes": {"n": 3}}
+    w(d + "/server-trace.jsonl", [{"t": "G", "g": 1, "name": "room"}] + pubs + [
+        conn(5001, [[10, 5]]),            # client 5001 was handed 101 (hub 11) and lacks it: SENT_NOT_COUNTED
+        conn(5002, [[10, 1], [12, 3]]),   # client 5002 was never handed 101: SKIPPED_BY_SERVER
+        conn(5003, [[10, 5]]),            # client 5003 lacks 103, which was never published: NOT_PUBLISHED
+        conn(5004, [[10, 5]])])
+    row = lambda port, missing: {"worker": 0, "slot": port, "local_port": port, "missing_n": len(missing), "missing": missing, "receipts": 5 - len(missing), "frames": 9, "text_frames": 8,
+                                 "recent": [{"t_ns": 1, "op": 1, "len": 10000, "seqs": [100]}]}
+    w(d + "/client/drain-w0.jsonl", [row(5001, [101]), row(5002, [101]), row(5003, [103]), row(5004, [])])
+    json.dump({"label": "drain", "clients": 4, "expected": 5, "incomplete": 2, "unix_ms": 1, "start_unix_ms": 0,
+               "first_incomplete": [{"seq": 101, "received_by": 2}, {"seq": 103, "received_by": 3}]}, open(d + "/client/drain-summary.json", "w"))
+    out = report(d, 10)
+    t = out["labels"]["drain"]["verdict_totals"]
+    assert t == {"SENT_NOT_COUNTED": 1, "SKIPPED_BY_SERVER": 1, "NOT_PUBLISHED": 1}, t
+    assert out["labels"]["drain"]["messages"][0]["examples"][1]["runs_around"], out
+    print("selftest ok")
+
+
 if __name__ == "__main__":
     a = sys.argv[1:]
     if not a:
         print(__doc__)
         sys.exit(2)
+    if a[0] == "--selftest":
+        selftest()
+        sys.exit(0)
     mx = 10
     if "--max-seqs" in a:
         mx = int(a[a.index("--max-seqs") + 1])
