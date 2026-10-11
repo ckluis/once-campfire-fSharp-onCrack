@@ -406,10 +406,46 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
         let logger = server.Logger
         use stop = new CancellationTokenSource()
         let wake = Wake()
+        // Unit R5.1: with CAMPFIRE_CABLE_TRACE set, the connection counts what it takes and sends and notes what happens to it.
+        let trace =
+            if not CableTrace.Enabled then
+                null
+            else
+                ConnTraceFactory.openConnection (
+                    match direct with
+                    | null -> ""
+                    | socket ->
+                        try
+                            string socket.RemoteEndPoint
+                        with _ ->
+                            ""
+                )
+        let abort =
+            match trace with
+            | null -> abort
+            | trace ->
+                fun () ->
+                    trace.Event("abort", 0L, 0L)
+                    abort ()
+        wake.Trace <- trace
         wake.Abort <- abort
         let channel = Channels.Channel.CreateBounded<Received>(Channels.BoundedChannelOptions(IncomingCapacity, SingleReader = true, SingleWriter = true))
         let incoming = channel.Reader
         let sink = Writer(stream, deflate, config.StallTimeout, abort, direct, config.GatherWrites)
+        sink.Trace <- trace
+        let note (code: string) (a: int64) =
+            match trace with
+            | null -> ()
+            | trace -> trace.Event(code, a, 0L)
+        let noteFailure (what: string) = note what 0L
+        let writeIssued (completedAtOnce: bool) =
+            match trace with
+            | null -> ()
+            | trace -> trace.WriteIssued completedAtOnce
+        let writeDone (frames: int) =
+            match trace with
+            | null -> ()
+            | trace -> trace.WriteDone frames
         // A ring has no publish numbers.
         let ordered = config.PublishOrder && not config.RingLog
         let merge = if ordered then Merge() else Unchecked.defaultof<Merge>
@@ -462,7 +498,9 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                     let mutable running = true
                     try
                         do! sink.Send [| Frame.OfString(Protocol.welcome ()) |]
+                        writeDone 1
                         if sink.CanDetach then
+                            note "probe" 0L
                             do! sendProbe ()
                             probeDeadline <- Diagnostics.Stopwatch.GetTimestamp() + int64 (ProbeTimeout.TotalSeconds * float Diagnostics.Stopwatch.Frequency)
                             Task.Delay(ProbeTimeout).ContinueWith(fun (_: Task) -> wake.Set()) |> ignore
@@ -472,6 +510,7 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                         let! _ = wake.WaitAsync()
                         if not (isNull probe) && Diagnostics.Stopwatch.GetTimestamp() >= probeDeadline then
                             // No answer in time: stay on the stream, and send what was held.
+                            note "probe-timeout" 0L
                             probe <- null
 
                         // One command, or why the socket stopped; the rest wait for another turn.
@@ -495,6 +534,7 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                                     if ReadOnlySpan<byte>(payload).SequenceEqual(ReadOnlySpan<byte>(expected)) then
                                         probe <- null
                                         sink.Detach()
+                                        note "detached" 0L
                                         server.NoteDetached()
                             // Complete the closing handshake (RFC 6455 section 5.5.1) before letting the socket go.
                             | Ok(Close code) ->
@@ -516,14 +556,18 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                             match internal' with
                             | ValueSome internal' ->
                                 match drainInternal internal' with
-                                | ValueSome remote -> closing <- ValueSome remote
+                                | ValueSome remote ->
+                                    note "revocation" 0L
+                                    closing <- ValueSome remote
                                 | ValueNone -> ()
                             | ValueNone -> ()
 
                             // Whatever is ready goes out in the same write.
                             if closing.IsNone then
                                 match (if ordered then merge.Drain(readers, pending, config.MaxWriteBatch) else drain readers pending config.MaxWriteBatch) with
-                                | Drained.Lagged -> closing <- ValueSome lagged
+                                | Drained.Lagged ->
+                                    note "lagged" 0L
+                                    closing <- ValueSome lagged
                                 | Drained.Full -> if not holding then wake.Set()
                                 | _ -> ()
 
@@ -533,6 +577,7 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                                 pending.Add server.HeartbeatFrame
                             if beacon.RestartSeen <> server.Restarts then
                                 beacon.RestartSeen <- server.Restarts
+                                note "restart" 0L
                                 closing <- ValueSome { Reason = Some ServerRestart; Reconnect = Value.Bool true }
 
                         if running then
@@ -549,22 +594,27 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
                                     let send = sink.Send pending
                                     // Round 4 verifier: a write the socket did not take at once is waited on; `Hub.Congested` reads how long.
                                     if not send.IsCompleted then wake.WriteWaitSince <- Diagnostics.Stopwatch.GetTimestamp()
+                                    writeIssued send.IsCompleted
                                     try
                                         do! send
                                     finally
                                         wake.WriteWaitSince <- 0L
-                                with _ ->
+                                    writeDone pending.Count
+                                with e ->
+                                    noteFailure ("send-failed:" + e.GetType().Name + ":" + e.Message)
                                     running <- false
                                 pending.Clear()
                             if running && closing.IsSome then
                                 let { Reason = reason; Reconnect = reconnect } = closing.Value
                                 closing <- ValueNone
-                                let! _ = attempt ((sink.Send [| Frame.OfString(Protocol.disconnect reason reconnect) |]).AsTask())
+                                let! goodbye = attempt ((sink.Send [| Frame.OfString(Protocol.disconnect reason reconnect) |]).AsTask())
+                                if goodbye then writeDone 1
                                 do! closeSocket sink incoming config.CloseTimeout
                                 running <- false
                 finally
                     server.Unregister beacon
             with e ->
+                noteFailure ("failed:" + e.GetType().Name + ":" + e.Message)
                 logger.LogError(e, "Cable connection failed")
             wake.Retire()
             stop.Cancel()
@@ -577,4 +627,11 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
             match internal' with
             | ValueSome internal' -> (internal' :> IDisposable).Dispose()
             | ValueNone -> ()
+            match trace with
+            | null -> ()
+            | trace ->
+                try
+                    trace.Finish "closed"
+                with _ ->
+                    ()
     }

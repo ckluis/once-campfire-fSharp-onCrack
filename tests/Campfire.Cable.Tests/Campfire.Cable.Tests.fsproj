@@ -16,6 +16,7 @@
     <Compile Include="DirectTests.fs" />
     <Compile Include="GoldenTests.fs" />
     <Compile Include="FanOutTests.fs" />
+    <Compile Include="TraceTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Campfire.Cable/Campfire.Cable.fsproj" />

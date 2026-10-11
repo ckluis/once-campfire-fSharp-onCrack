@@ -76,6 +76,9 @@ type Wake() =
     /// The connection has ended: a late cut leaves its socket alone.
     member _.Retire() : unit = Volatile.Write(&retired, 1)
 
+    /// Unit R5.1: the connection's trace (`CAMPFIRE_CABLE_TRACE`); null without the switch.
+    member val internal Trace: ConnTrace | null = null with get, set
+
     /// Round 4 verifier: when (`Stopwatch` ticks) the connection began waiting on a socket write that has not completed, or 0. A
     /// connection that has waited long on one write is limited by its own reader, not by the fan-out (`Hub.Congested` leaves it out).
     member _.WriteWaitSince
@@ -85,6 +88,9 @@ type Wake() =
     /// Wakes the connection, which finds its subscriber lagged and says goodbye; its socket is aborted after `CutGrace` if it
     /// has not finished (a client that has stopped reading cannot take the goodbye). Called from a thread pool item.
     member this.Cut() : unit =
+        (match this.Trace with
+         | null -> ()
+         | trace -> trace.Event("cut", 0L, 0L))
         this.Set()
         match this.Abort with
         | null -> ()
@@ -251,6 +257,9 @@ type internal GroupBase(identifier: string | null) =
 
     member _.Identifier = identifier
 
+    /// Unit R5.1: the group's number in a trace (`CAMPFIRE_CABLE_TRACE`).
+    member val Id = CableTrace.NextGroupId() with get
+
     /// The frame a payload makes for this group's subscribers.
     member _.Frame(payload: ReadOnlySpan<byte>) : Frame =
         match prefix with
@@ -339,6 +348,9 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
         while i >= 0 do
             let subscriber = receivers[i]
             if obj.ReferenceEquals(subscriber.Chunk, head) then
+                (match subscriber.Wake.Trace with
+                 | null -> ()
+                 | trace -> trace.Event("overrun", int64 subscriber.Group.Id, head.Id))
                 subscriber.MarkOverrun()
                 receivers[i] <- receivers[count - 1]
                 receivers[count - 1] <- Unchecked.defaultof<_>
@@ -362,7 +374,7 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
 
     override _.Count = Volatile.Read(&count)
 
-    override _.Publish(frame: Frame) : int =
+    override this.Publish(frame: Frame) : int =
         let struct (cut, shared) =
             lock gate (fun () ->
                 let mutable chunk = tail
@@ -375,7 +387,11 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
                     fresh <- true
                 let length = int64 frame.Bytes.Length
                 chunk.Frames[chunk.Filled] <- frame
-                chunk.Sequences[chunk.Filled] <- stats.NextSequence()
+                let sequence = stats.NextSequence()
+                chunk.Sequences[chunk.Filled] <- sequence
+                frame.Seq <- sequence
+                if CableTrace.Enabled then
+                    CableTrace.Published(this.Id, chunk.Id * int64 chunkSize + int64 chunk.Filled, sequence, frame.Bytes)
                 written <- written + length
                 chunk.Filled <- chunk.Filled + 1
                 if not retired then stats.Add length
@@ -406,15 +422,21 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
     override this.Add(wake: Wake, hub: Hub, broadcasting: string) : Subscriber =
         lock gate (fun () ->
             let subscriber = new Subscriber(this, hub, broadcasting, wake, 0L, tail, tail.Filled)
+            (match wake.Trace with
+             | null -> ()
+             | trace -> trace.Subscribed(this.Id, broadcasting, tail.Id * int64 chunkSize + int64 tail.Filled))
             if count = receivers.Length then Array.Resize(&receivers, count * 2)
             receivers[count] <- subscriber
             Volatile.Write(&count, count + 1)
             subscriber)
 
-    override _.Remove(subscriber: Subscriber) : unit =
+    override this.Remove(subscriber: Subscriber) : unit =
         lock gate (fun () ->
             let at = Array.IndexOf(receivers, subscriber, 0, count)
             if at >= 0 then
+                (match subscriber.Wake.Trace with
+                 | null -> ()
+                 | trace -> trace.Event("unsubscribed", int64 this.Id, 0L))
                 receivers[at] <- receivers[count - 1]
                 receivers[count - 1] <- Unchecked.defaultof<_>
                 Volatile.Write(&count, count - 1)
@@ -485,6 +507,9 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
                 index <- 0
                 subscriber.MoveTo next
                 subscriber.Index <- 0
+                (match subscriber.Wake.Trace with
+                 | null -> ()
+                 | trace -> trace.Cross(subscriber.Group.Id, next.Id))
         index < chunk.Filled
 
     override _.TryRead(subscriber: Subscriber, frame: byref<Frame>) : RecvStatus =
@@ -525,8 +550,12 @@ and [<Sealed>] internal RingGroup(identifier: string | null, capacity: int) =
 
     override _.Count = Volatile.Read(&count)
 
-    override _.Publish(frame: Frame) : int =
+    override this.Publish(frame: Frame) : int =
         lock slots (fun () ->
+            if CableTrace.Enabled then
+                let sequence = CableTrace.RingSeq()
+                frame.Seq <- sequence
+                CableTrace.Published(this.Id, tail, sequence, frame.Bytes)
             Volatile.Write(&slots[int (tail % int64 slots.Length)], frame)
             Volatile.Write(&tail, tail + 1L)
             GroupBase.WakeAll(receivers, count)
@@ -535,6 +564,9 @@ and [<Sealed>] internal RingGroup(identifier: string | null, capacity: int) =
     override this.Add(wake: Wake, hub: Hub, broadcasting: string) : Subscriber =
         lock slots (fun () ->
             let subscriber = new Subscriber(this, hub, broadcasting, wake, tail, Chunk.None, 0)
+            (match wake.Trace with
+             | null -> ()
+             | trace -> trace.Subscribed(this.Id, broadcasting, tail))
             if count = receivers.Length then Array.Resize(&receivers, count * 2)
             receivers[count] <- subscriber
             Volatile.Write(&count, count + 1)
@@ -714,6 +746,7 @@ and [<Sealed>] Hub(capacity: int, lagBytes: int64, ring: bool, onCut: Action<int
                     let group: GroupBase =
                         if ring then RingGroup(identifier, capacity) else LogGroup(identifier, capacity, lagBytes, stats, onCut)
                     streams[broadcasting] <- Array.append groups [| group |]
+                    if CableTrace.Enabled then CableTrace.GroupCreated(group.Id, broadcasting, identifier)
                     group
             group.Add(wake, this, broadcasting))
 

@@ -107,6 +107,10 @@ let internal deflate (input: ReadOnlySpan<byte>) : byte[] =
 type Frame(bytes: byte[]) =
     let mutable deflated: byte[] | null = null
 
+    /// Unit R5.1: the hub-wide publish number of a published frame (0: not published, as a welcome or the heartbeat is not), for
+    /// `CAMPFIRE_CABLE_TRACE`. Set once, under the group's lock, before any subscriber can read the frame.
+    member val Seq = 0L with get, set
+
     /// The text, as UTF-8.
     member _.Bytes: byte[] = bytes
 
@@ -604,6 +608,9 @@ let PartialGathers () : int64 = Interlocked.Read(&partialGathers)
 type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, direct: Net.Sockets.Socket | null, gather: bool) =
     let mutable detached = false
 
+    /// Unit R5.1: the connection's trace (`CAMPFIRE_CABLE_TRACE`); null without the switch.
+    member val internal Trace: ConnTrace | null = null with get, set
+
     new(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, direct: Net.Sockets.Socket | null) =
         Writer(io, deflate, timeout, abort, direct, true)
     new(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit) = Writer(io, deflate, timeout, abort, null, true)
@@ -741,6 +748,14 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
 
     /// Writes `frames` as text messages, in order, in one write.
     member this.Send(frames: IReadOnlyList<Frame>) : ValueTask =
+        match this.Trace with
+        | null -> ()
+        | trace ->
+            trace.BeginBatch detached
+            for i in 0 .. frames.Count - 1 do
+                let frame = frames[i]
+                trace.Frame(frame.Seq, (this.Payload frame).Length)
+            trace.EndBatch()
         if detached && gather && Sendmsg.available && frames.Count > 0 && frames.Count <= MaxGatherFrames then
             this.SendGather frames
         else
@@ -750,6 +765,9 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
     /// does not take at once (its buffer is full) is copied into a pooled buffer and finished like any other send, with the
     /// write timeout. The scratch headers are thread-static and the call returns before anyone else could use them.
     member private this.SendGather(frames: IReadOnlyList<Frame>) : ValueTask =
+        (match this.Trace with
+         | null -> ()
+         | trace -> trace.Gather())
         let socket = nonNull direct
         let scratch = GatherScratch.Get frames.Count
         let count = frames.Count
@@ -779,6 +797,9 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
             ValueTask()
         else
             Interlocked.Increment(&partialGathers) |> ignore
+            (match this.Trace with
+             | null -> ()
+             | trace -> trace.Partial(sent, total))
             // The rest, from the header or payload that `sent` ends in.
             let buffer = ArrayPool<byte>.Shared.Rent(total - sent)
             let mutable skip = sent
@@ -804,6 +825,9 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
             ValueTask(this.FinishSend(first, rest, buffer))
 
     member private this.SendCopy(frames: IReadOnlyList<Frame>) : ValueTask =
+        (match this.Trace with
+         | null -> ()
+         | trace -> trace.Copy())
         let mutable total = 0
         for i in 0 .. frames.Count - 1 do
             total <- total + 10 + this.Payload(frames[i]).Length
@@ -819,6 +843,9 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
         this.Write(ReadOnlyMemory(buffer, 0, at), buffer)
 
     member private this.Control(opcode: byte, payload: byte[]) : Task =
+        (match this.Trace with
+         | null -> ()
+         | trace -> trace.Control(opcode, payload.Length))
         let buffer = Array.zeroCreate<byte> (10 + payload.Length)
         let used = writeHeader (Span buffer) opcode false payload.Length
         Buffer.BlockCopy(payload, 0, buffer, used, payload.Length)

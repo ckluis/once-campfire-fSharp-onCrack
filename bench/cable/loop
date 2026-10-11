@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+# Unit R5.1: loop the cable load generator at one client count and keep the evidence of any phase that does not deliver every message
+# to every client. Run inside colima, like bench/cable/ab and bench/run:
+#
+#   bench/cable/loop --app oncrack|rust|fsharp --out DIR [--runs 15] [--clients 500] [--prefix "100"] [--fresh 1]
+#                    [--env "K=V K=V"] [--lg-args "--tail-window 0"] [--server-trace 1] [--client-trace 1] [--secs 15]
+#
+# A "run" is one app container and, in it, the loadgen phases `--prefix` (if any) and then `--clients`, one `loadgen cable` each, as
+# the cable suite of bench/run does. With --fresh 1 every run starts a new container (a round-4 session's shape: cold start, 100
+# clients, then 500); with --fresh 0 (the default) one container serves all the runs, each a phase at --clients. `--env` is added to
+# the app's environment (CAMPFIRE_CABLE_LOG=ring, CAMPFIRE_CABLE_ORDER=stream, the controls). Switches that change nothing by default:
+#   --client-trace 1 (default): loadgen --trace-dir, so that a stall or a drain timeout dumps which clients lack which messages
+#   --server-trace 1 (default for oncrack): the app's CAMPFIRE_CABLE_TRACE, appended to DIR/servertrace/cable.jsonl
+#
+# Per phase DIR/runNN-cCLIENTS/ holds result.json, stderr, verdict.json and app-errors.log (the app's ERROR/WARN lines in the phase). A
+# phase that is clean loses its trace files; one that is not (a message missing, a window stall, a client closed or not subscribed, a
+# loadgen error) keeps client/ (the dumps), server-trace.jsonl (this phase's part of the app's trace) and app.log, and is listed in
+# DIR/misses.txt. DIR/phases.jsonl has a line per phase. DIR/loop.exit is written last (the exit status), so a detached run can be waited on.
+set -euo pipefail
+ARGS=("$@")
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+set --
+export SERVER_CPUS=${SERVER_CPUS:-0-3} LOADGEN_CPUS=${LOADGEN_CPUS:-4-7}
+export WORK=${WORK:-/var/tmp/campfire-bench-work}
+export LOG_MAX_SIZE=${LOG_MAX_SIZE:-200m}
+BENCH_RUN_LIB=1 source "$ROOT/bench/run"
+set -- "${ARGS[@]}"
+APP=oncrack CLIENTS=500 PREFIX="" RUNS=15 FRESH=0 ENVS="" LGARGS="" SECS=15 OUT="" SERVER_TRACE="" CLIENT_TRACE=1
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --app) APP=$2; shift 2 ;;
+    --clients) CLIENTS=$2; shift 2 ;;
+    --prefix) PREFIX=$2; shift 2 ;;
+    --runs) RUNS=$2; shift 2 ;;
+    --fresh) FRESH=$2; shift 2 ;;
+    --env) ENVS=$2; shift 2 ;;
+    --lg-args) LGARGS=$2; shift 2 ;;
+    --secs) SECS=$2; shift 2 ;;
+    --out) OUT=$2; shift 2 ;;
+    --server-trace) SERVER_TRACE=$2; shift 2 ;;
+    --client-trace) CLIENT_TRACE=$2; shift 2 ;;
+    *) echo "unknown option $1" >&2; exit 2 ;;
+  esac
+done
+[ -n "$OUT" ] || { echo "--out DIR is required" >&2; exit 2; }
+[ -n "$SERVER_TRACE" ] || { [ "$APP" = oncrack ] && SERVER_TRACE=1 || SERVER_TRACE=0; }
+mkdir -p "$OUT"; OUT=$(cd "$OUT" && pwd)
+rm -f "$OUT/loop.exit"
+trap 'echo $? > "$OUT/loop.exit"; teardown' EXIT
+
+# The app's environment: the controls, and the trace file (in the directory the container mounts at /trace).
+extra=$ENVS
+if [ "$SERVER_TRACE" = 1 ] && [ "$APP" = oncrack ]; then
+  export TRACE_DIR=$OUT/servertrace
+  mkdir -p "$TRACE_DIR"; chmod 777 "$TRACE_DIR"
+  extra="$extra CAMPFIRE_CABLE_TRACE=/trace/cable.jsonl"
+fi
+case "$APP" in
+  oncrack) ONCRACK_EXTRA_ENV="${ONCRACK_EXTRA_ENV-} $extra" ;;
+  fsharp) FSHARP_EXTRA_ENV="${FSHARP_EXTRA_ENV-} $extra" ;;
+  rust) RUST_EXTRA_ENV="${RUST_EXTRA_ENV-} $extra" ;;
+  *) echo "unknown app $APP" >&2; exit 2 ;;
+esac
+{ echo "date: $(date -Is)"; echo "app: $APP, clients: $CLIENTS, prefix: ${PREFIX:-none}, runs: $RUNS, fresh: $FRESH, secs: $SECS"
+  echo "app env: $extra"; echo "loadgen args: $LGARGS (client trace $CLIENT_TRACE)"
+  echo "server trace: $SERVER_TRACE"; echo "image: $(image_for "$APP") $(docker image inspect -f '{{.Id}} {{.Created}}' "$(image_for "$APP")")"
+  [ -z "$ONCRACK_MOUNT" ] || echo "oncrack build: MOUNTED $ONCRACK_MOUNT ($(cat "$ONCRACK_MOUNT/.built-from" 2>/dev/null || echo no .built-from))"
+  echo "repo HEAD: $(git -C "$ROOT" rev-parse --short HEAD)"
+  echo "loadgen: $LOADGEN ($(stat -c %y "$LOADGEN" | cut -d. -f1))"
+  echo "host: $(uname -r), $(nproc) threads; server cpus $SERVER_CPUS, loadgen cpus $LOADGEN_CPUS"; } > "$OUT/env.txt"
+cat "$OUT/env.txt" >&2
+
+cookie="" csrf="" streams="" CG=""
+begin_container() {
+  local cold; cold=$(start_app "$APP")
+  CG=$(cgroup_dir)
+  sleep 3
+  cookie=$(lg login --base "$BASE" --email "$EMAIL" --password "$PASSWORD" | python3 -c 'import json,sys; print(json.load(sys.stdin)["cookie"])')
+  local scrape; scrape=$(lg scrape --base "$BASE" --cookie "$cookie" --room "$ROOM")
+  csrf=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["csrf"] or "")' "$scrape")
+  streams=$(python3 -c 'import json,sys; print(",".join(json.loads(sys.argv[1])["streams"]))' "$scrape")
+  log "$APP: container up, cold start ${cold}ms"
+  [ -n "${TRACE_DIR-}" ] && : > "$TRACE_DIR/cable.jsonl" || true
+}
+
+# One loadgen phase. Prints nothing; appends to phases.jsonl and (on a miss) misses.txt.
+phase() {
+  local run=$1 n=$2 shape=$3 tag; tag=$(printf 'run%02d-c%s' "$run" "$n")
+  local td=$OUT/$tag; mkdir -p "$td"
+  local tr=(); [ "$CLIENT_TRACE" = 1 ] && tr=(--trace-dir "$td/client")
+  local off=0; [ -n "${TRACE_DIR-}" ] && off=$(stat -c %s "$TRACE_DIR/cable.jsonl" 2>/dev/null || echo 0)
+  local t0; t0=$(date +%s); local started; started=$(date +%T)
+  lg cable --base "$BASE" --cookie "$cookie" --room "$ROOM" --csrf "$csrf" --streams "$streams" \
+    --clients "$n" --tput-secs "$SECS" --posters "$CABLE_POSTERS" "${tr[@]}" $LGARGS > "$td/result.json" 2> "$td/stderr" || echo "loadgen exit $?" >> "$td/stderr"
+  sleep 3   # the app notices the closed sockets and writes its connection lines
+  docker logs --since "$t0" "$CONTAINER" 2>&1 | grep -E 'ERROR|WARN|Unhandled|Exception' | head -200 > "$td/app-errors.log" || true
+  local ok=0
+  python3 - "$td" "$run" "$n" "$shape" "$APP" "$started" "$OUT/phases.jsonl" <<'PY' || ok=$?
+import json, sys
+td, run, n, shape, app, started, phases = sys.argv[1:]
+n = int(n)
+v = {"run": int(run), "clients": n, "shape": shape, "app": app, "started": started, "dir": td.rsplit("/", 1)[-1], "problems": []}
+try:
+    r = json.load(open(td + "/result.json"))
+    t, l, c = r["throughput"], r["latency"], r.get("client", {})
+    v.update(ready=r["ready"], failed=r["failed"], posted=t["posted"], complete=t["complete"], window_stalls=t["window_stalls"],
+             closed_midrun=c.get("closed_midrun"), paced_complete=l["complete"], paced_messages=l["messages"],
+             msgs_per_sec=t["delivered_msgs_per_sec"], drain_secs=t["drain_secs"], max_ms=t["all_clients"].get("max_ms"))
+    if r["ready"] != n: v["problems"].append(f"ready {r['ready']} of {n}")
+    if r["failed"]: v["problems"].append(f"{r['failed']} failed to connect")
+    if t["posted"] != t["complete"]: v["problems"].append(f"{t['posted'] - t['complete']} of {t['posted']} posted messages did not reach every client")
+    if l["complete"] != l["messages"]: v["problems"].append(f"{l['messages'] - l['complete']} of {l['messages']} paced messages did not reach every client")
+    if t["window_stalls"]: v["problems"].append(f"{t['window_stalls']} window stalls")
+    if c.get("closed_midrun"): v["problems"].append(f"{c['closed_midrun']} clients closed mid-run")
+    if c.get("odd_frames"): v["problems"].append(f"{c['odd_frames']} odd frames")
+    if c.get("markers_past_cap"): v["problems"].append(f"{c['markers_past_cap']} markers past the cap")
+except Exception as e:
+    v["problems"].append(f"no usable result: {e}")
+errs = [x for x in open(td + "/app-errors.log").read().splitlines() if x.strip()]
+v["app_error_lines"] = len(errs)
+if errs: v["problems"].append(f"{len(errs)} ERROR/WARN lines in the app's log")
+v["miss"] = bool(v["problems"])
+json.dump(v, open(td + "/verdict.json", "w"), indent=1)
+open(phases, "a").write(json.dumps(v) + "\n")
+print(("MISS " if v["miss"] else "ok   ") + f"run {run} {n} clients ({shape}): " + (", ".join(v["problems"]) or
+      f"{v.get('complete')}/{v.get('posted')} messages, {v.get('msgs_per_sec')} msg/s, drain {v.get('drain_secs')} s"), file=sys.stderr)
+sys.exit(1 if v["miss"] else 0)
+PY
+  if [ "$ok" != 0 ]; then
+    [ -n "${TRACE_DIR-}" ] && tail -c +$((off + 1)) "$TRACE_DIR/cable.jsonl" > "$td/server-trace.jsonl" || true
+    docker logs --since "$t0" "$CONTAINER" 2>&1 | grep -v 'Request path=' | head -c 2000000 > "$td/app.log" || true
+    echo "$tag $(date +%T)" >> "$OUT/misses.txt"
+  else
+    rm -rf "$td/client" "$td/stderr.keep"
+    gzip -f "$td/stderr" || true
+  fi
+  [ -n "${TRACE_DIR-}" ] && : > "$TRACE_DIR/cable.jsonl" || true
+}
+
+wait_for_quiet
+begin_container
+for run in $(seq 1 "$RUNS"); do
+  if [ "$FRESH" = 1 ] && [ "$run" -gt 1 ]; then docker rm -f "$CONTAINER" >/dev/null; begin_container; fi
+  for p in $PREFIX; do phase "$run" "$p" prefix; sleep 2; done
+  for n in $CLIENTS; do phase "$run" "$n" target; sleep 2; done
+done
+docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+rm -rf "${WORK:?}/${APP:?}"
+log "done: $(wc -l < "$OUT/phases.jsonl") phases, $( [ -s "$OUT/misses.txt" ] && wc -l < "$OUT/misses.txt" || echo 0) with a problem"

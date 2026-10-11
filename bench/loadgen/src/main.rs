@@ -9,6 +9,7 @@
 //!                  [--sources 127.0.0.2,127.0.0.3 --hold-secs 60 --deflate 1]
 //!                  [--latency-msgs 30 --interval-ms 200 --tput-secs 15 --posters 4]
 //!                  [--window 128] [--client raw|tungstenite --threads 3]       (raw, the default: epoll loops, rawcable.rs)
+//!                  [--trace-dir DIR [--trace-always 1]]   (evidence for a message that does not reach every client, below)
 //!   loadgen upload --base URL --cookie C --room ID --csrf T --file PATH [--reps 5]
 //!   loadgen fetch  --base URL --cookie C --path P --out FILE     -> saves an uncompressed body
 //!   loadgen gzip   --file F [--iters 200]                         -> CPU per compression, by backend/level
@@ -968,6 +969,21 @@ async fn wait_drain(delivery: &Delivery, seqs: &[u64], clients: usize, timeout: 
     }
 }
 
+/// `--trace-dir`: after a drain, when a message did not reach every client (or with `--trace-always`), has every client write what it
+/// lacks and last received, and waits for them (a few seconds at most). Nothing without the raw client's trace.
+async fn drain_dump(delivery: &Delivery, label: &str, seqs: &[u64], clients: usize, always: bool) {
+    let Some(r) = &delivery.raw else { return };
+    if !r.tracing() || (!always && delivery.all_received(seqs, clients)) {
+        return;
+    }
+    let id = r.request_dump(label, seqs.to_vec(), clients);
+    let until = Instant::now() + Duration::from_secs(10);
+    while !r.dump_finished(id) && Instant::now() < until {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    eprintln!("TRACE {label} written{}", if delivery.all_received(seqs, clients) { "" } else { " (a message is missing)" });
+}
+
 fn phase(name: &str) {
     let ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
     // The load generator's own CPU so far (user + system, ms, from /proc/self/stat), so that a phase's cost can be
@@ -1057,7 +1073,16 @@ async fn cable(a: &Args) -> Res<Value> {
     let client = a.opt("client").unwrap_or_else(|| "raw".into());
     let raw_threads: usize = a.num("threads", 3usize).max(1);
     let use_raw = client == "raw" && !deflate;
-    let raw = use_raw.then(|| Arc::new(rawcable::RawShared::new(raw_threads, hist)));
+    // `--trace-dir DIR` (or LOADGEN_TRACE_DIR; the raw client only; nothing changes without it): on the first window stall and on a drain
+    // that times out, every client writes which of the acknowledged messages it lacks and its last frames (rawcable.rs, `request_dump`);
+    // `--trace-always` also writes one at the end of a phase that lost nothing, for counts to compare with the server's trace.
+    let trace_dir = a.opt("trace-dir").or_else(|| std::env::var("LOADGEN_TRACE_DIR").ok()).filter(|d| !d.is_empty());
+    if trace_dir.is_some() && !use_raw {
+        eprintln!("--trace-dir needs the raw client: ignored");
+    }
+    let trace_dir = trace_dir.filter(|_| use_raw).map(std::path::PathBuf::from);
+    let trace_always = a.num("trace-always", 0u8) != 0;
+    let raw = use_raw.then(|| Arc::new(rawcable::RawShared::with_trace(raw_threads, hist, trace_dir.clone())));
     let delivery = Arc::new(Delivery {
         sent: Mutex::new(HashMap::new()),
         got: Mutex::new(HashMap::new()),
@@ -1182,6 +1207,7 @@ async fn cable(a: &Args) -> Res<Value> {
         }
     }
     wait_drain(&delivery, &seqs, ready, Duration::from_secs(20)).await;
+    drain_dump(&delivery, "paced-drain", &seqs, ready, trace_always).await;
     phase("paced_drained");
     let (all_h, complete, _) = fanout_stats(&delivery, &seqs, ready);
     let client_h = delivery.take_client_hist(0, Some(1));
@@ -1198,6 +1224,7 @@ async fn cable(a: &Args) -> Res<Value> {
     let wire_before = delivery.wire_bytes.load(Ordering::Relaxed);
     let next = Arc::new(AtomicU64::new(seq + 1));
     let stalls = Arc::new(AtomicU64::new(0));
+    let stall_dumped = Arc::new(AtomicBool::new(false));
     phase("saturated");
     let tput_start = Instant::now();
     let tput_deadline = tput_start + Duration::from_secs_f64(tput_secs);
@@ -1205,7 +1232,7 @@ async fn cable(a: &Args) -> Res<Value> {
     for _ in 0..posters {
         let (addr, room, cookie, csrf, delivery, next) =
             (addr.clone(), room.clone(), cookie.clone(), csrf.clone(), delivery.clone(), next.clone());
-        let (first, stalls) = (seq + 1, stalls.clone());
+        let (first, stalls, stall_dumped) = (seq + 1, stalls.clone(), stall_dumped.clone());
         ptasks.push(tokio::spawn(async move {
             let mut conn = None;
             let mut mine = Vec::new();
@@ -1221,6 +1248,12 @@ async fn cable(a: &Args) -> Res<Value> {
                     while !delivery.all_received(&[s - window], ready) {
                         if Instant::now() >= until {
                             stalls.fetch_add(1, Ordering::Relaxed);
+                            // Evidence while the connections are still open: who lacks the message, and the last frames they read.
+                            if let Some(r) = &delivery.raw {
+                                if r.tracing() && !stall_dumped.swap(true, Ordering::Relaxed) {
+                                    r.request_dump("stall", vec![s - window], ready);
+                                }
+                            }
                             break;
                         }
                         tokio::time::sleep(Duration::from_micros(200)).await;
@@ -1244,6 +1277,10 @@ async fn cable(a: &Args) -> Res<Value> {
     let posting_secs = tput_start.elapsed().as_secs_f64();
     phase("saturated_posted");
     wait_drain(&delivery, &tseqs, ready, Duration::from_secs(60)).await;
+    drain_dump(&delivery, "drain", &tseqs, ready, trace_always).await;
+    if let Some(r) = &delivery.raw {
+        r.write_slow(&tseqs);
+    }
     phase("saturated_drained");
     let (tall_h, tcomplete, last) = fanout_stats(&delivery, &tseqs, ready);
     let span = last.map(|l| l.duration_since(tput_start).as_secs_f64()).unwrap_or(posting_secs).max(posting_secs);
