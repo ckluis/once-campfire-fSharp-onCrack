@@ -5,7 +5,7 @@ The closing measurement of round 4, on the code the round ends with (`ea1f85b`; 
 - Report: `/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r4-final.md`
 - Data and scripts: `/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r4-final/`
 - The rules were fixed before any session: `oncrack-r4-final/PLAN.md` (commit `ea1f85b`).
-- Page: `/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/index.html`, from `python3 site/build.py`. Its sourcing check passes (989 numbers in the ledger).
+- Page: `/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/index.html`, from `python3 site/build.py`. Its sourcing check passes (991 numbers in the ledger after the review).
 
 ## Verdict
 
@@ -21,8 +21,8 @@ The closing measurement of round 4, on the code the round ends with (`ea1f85b`; 
 - **Do not read 3.29x as an improvement over round 3's 2.59x.** Round 3's two normal sessions alone read 2.68x and 3.33x over Rust on a busy host; this one session, on a quieter afternoon, reads 3.29x. The measure that does not swing with the host, server CPU per request from the cgroup, shows onCrack at 24.8 us for a room page (round 3: 23.0), Rust at 80.6 (62.6) and C at 50.1 (43.5), so the ratios are 3.25x Rust and 2.02x C (round 3: 2.72x and 1.89x). Round 4.3's held read transaction measured 7-10% on its own alternating A/B; that is inside the spread this host gives, and I do not claim it here. The honest summary is "about 3x Rust and 2x C on a room page, per CPU", with the harness multiples a range of 2.6x-3.3x over Rust and 1.85x-2.4x over C across the three normal sessions now on record.
 - **Everything was validated.** 92,644,910 timed responses passed the full content contract, 1,373,284 acknowledged writes were audited against the messages, rich-text and search-index rows (and 3,084,803 more in the hand re-runs), and there were 0 errors or invalid responses across 324 raw samples.
 - **The cable suite shows no lead over Rust at 2,000 clients.** onCrack delivers 1.59x, 1.24x and 1.16x Rust's messages a second at 100, 500 and 1,000 clients, and **0.94x at 2,000** (ranges overlap). Round 4.2's own session had 1.84x, 1.35x, 1.17x and 1.14x. The page said fan-out was ahead of Rust at every client count; that sentence is withdrawn (section 3). The F# port is 0.80x, 0.37x, 0.28x and 0.16x of Rust.
-- **One message in the cable suite did not reach every client** (onCrack, 500 clients, rep 1: 34,740 of 34,741 complete, nobody disconnected, 15 of 16 onCrack phases complete). Unexplained; open item 1.
-- **PR #6's reliability profiles are incomplete.** The disk floor stopped the session in round 2 of 3, on a host that was NOISY by the plan's rule (85% of samples at 150% or more); I did not re-run it (open item 2). What exists: onCrack at HEAD disconnects 0 of 1,000 clients and delivers every posted message in `cable_heavy` (64 unlimited posters) in both of its rounds, fresh and cached; Rust, C and onCrack before R4.5 disconnect 83-99% of them in the same profile; Rails and the F# port lose nobody (the port lost 4 once). Messages a second in these runs are far below R4.5's own (402 against 574 for onCrack) and are not comparable with them.
+- **One message in the cable suite did not reach every client** (onCrack, 500 clients, rep 1: 34,740 of 34,741 complete, nobody disconnected, 15 of 16 onCrack phases complete). The load generator waited its full 60 s drain for it (the phase took 85 s against about 25 s for every other phase), so at least one client went a minute without an acknowledged post while receiving later ones. That is a possible lost frame in the default configuration, which the rules forbid; it stays open until it is reproduced or explained (open item 1).
+- **PR #6's reliability profiles are incomplete.** The disk floor stopped the session in round 2 of 3, on a host that was NOISY by the plan's rule (85% of samples at 150% or more); I did not re-run it (open item 2). What exists: onCrack at HEAD disconnects 0 of 1,000 clients and delivers every posted message in `cable_heavy` (64 unlimited posters) in both of its rounds, fresh and cached; Rust and onCrack before R4.5 disconnect 83-99% of their 1,000 subscribed clients in the same profile; C never had more than 252 of 1,000 clients subscribed in either profile (its `disconnected` count includes clients closed while connecting), so its rows say nothing about cutting slow clients; Rails and the F# port lose nobody (the port lost 4 once). Messages a second in these runs are far below R4.5's own (402 against 574 for onCrack) and are not comparable with them.
 
 ## 0. What was in the directory, and what I re-ran
 
@@ -60,8 +60,6 @@ Run on `ea1f85b` before the sessions, and nothing in `src/` changed after. The u
 
 ### Normal profile
 
-### Normal profile
-
 Median requests/sec of 3 rounds (1 session x 3) [min-max], 16 clients. Sessions: normal-1
 
 | Implementation | Room page | Messages page | Sidebar | Search | Post a message |
@@ -84,8 +82,6 @@ Median requests/sec of 3 rounds (1 session x 3) [min-max], 16 clients. Sessions:
 | oncrack-cached / c | 2.18x | 2.75x | 2.47x | 2.40x | 2.55x | **2.47x** |
 | oncrack-cached / fsharp | 5.24x | 5.04x | 5.21x | 5.64x | 1.53x | **4.12x** |
 | c / rust | 1.55x | 1.54x | 1.51x | 1.43x | 0.93x | **1.37x** |
-
-### Mixed profile
 
 ### Mixed profile (16 readers plus a writer at 10 posts/s)
 
@@ -114,11 +110,9 @@ Median requests/sec of 3 rounds (1 session x 3) [min-max], 16 clients. Sessions:
 
 The cached decision reads **lower** than fresh on the mixed profile in this session (fresh over cached 1.15x), and level on the normal one (0.97x). That is not a result: the two share an image and differ in one lookup, and the mixed-1 cached rounds ran in a worse stretch of the host (their room-page range is 121,212-146,277 against fresh's 120,556-157,618). The hand re-runs below, where the two alternate within a set, put fresh at 1.08x the cached decision's CPU for a room page (24.8 against 23.0 us).
 
-### Hand re-runs: room page, mixed and post
+### Hand re-runs: room page, mixed and post (review.py: 15 s warm-up, 10 s window, 16 clients, server CPU from the cgroup)
 
 `review.py`, outside `bin/benchmark`: one container per app for the three phases, a 15 s warm-up then a 10 s window at 16 clients, every response validated, every acknowledged post audited, server CPU read from the container's cgroup. Four sets, each running fresh, cached, Rust and C in one order: forward (set 1), reversed (2), forward (3), reversed (4).
-
-### Hand re-runs (review.py: 15 s warm-up, 10 s window, 16 clients, server CPU from the cgroup)
 
 | App | phase | req/s per run | CPU us/request per run | median req/s | median CPU us/request |
 |---|---|---|---|---:|---:|
@@ -260,7 +254,10 @@ Reading:
 - **The F# port** is 0.80x, 0.37x, 0.28x and 0.16x of Rust; onCrack is 1.99x to 5.69x the port.
 - **Memory**: onCrack's saturated Pss is 2.7x Rust's at every count (307 against 113 MB at 1,000 clients); the port's is 661 MB.
 - **Sends**: onCrack makes 0.33, 0.16, 0.11 and 0.10 sends per delivery; Rust 0.59, 0.19, 0.08 and 0.04. Rust batches more as clients grow.
-- **One incomplete phase**: onCrack rep 1 at 500 clients, 34,740 of 34,741 messages complete and one window stall (a poster waited the full 2 s for the message 128 places back). Nobody was disconnected and the other 15 onCrack phases, and all 32 phases of Rust and the port, completed every message. Open item 1.
+- **One incomplete phase**: onCrack rep 1 at 500 clients, 34,740 of 34,741 messages complete and one window stall (a poster waited the full 2 s for the message 128 places back). Nobody was disconnected and the other 15 onCrack phases, and all 32 phases of Rust and the port, completed every message. The phase took 85 s (18:33:42 to 18:35:07 in `logs/session-cable.log`) against about 25 s for the others: `wait_drain` in `bench/loadgen/src/main.rs` waited its full 60 s and the message never arrived. Each client also received 20 more non-message frames than in any other phase (frames per client minus twice the messages: 35 against 14-16), which is about a minute of heartbeats. `markers_past_cap`, `odd_frames` and `receipts_without_post_time` are all 0. Open item 1.
+- **The two parts of the session**: the port's and onCrack's third reps ran at 19:04-19:09, 15-20 minutes after Rust's third rep, starting on a quiet host (load 0.02). Rep 3 is onCrack's best at 100, 500 and 2,000 clients, but none of onCrack's medians comes from it (they are rep 1 at 100 and rep 2 at 500, 1,000 and 2,000); the port's 2,000-client median is its rep 3.
+- **Against rounds 1 and 2 at 1,000 clients.** Round 1 stored 356 messages a second for onCrack against Rust's 579 (0.61x); round 2 stored 747 against 752 (0.99x). Both used the tungstenite client, which R4.1 found at 3.84-3.89 of its 4 cores: those numbers measure the load generator, and with no window the posters were throttled by it unseen. This session's 1,500 is about 2x round 2 and 4x round 1, but almost none of that is the server: on the same raw client and window, onCrack read 1,507 at R4.1's baseline (before R4.2 and R4.5), 1,214 in R4.2's session and 1,500 here, and over Rust 1.23x, 1.17x and 1.16x. Round 4's server work did not measurably move 1,000-client fan-out; the comparable statement is "about 1.2x Rust", against 0.61x in round 1 on the old client.
+- **CPU per delivery and throughput agree.** With both servers at 2.98-3.89 cores, the throughput ratio should be about the inverse of the CPU-per-delivery ratio: 1/0.63 = 1.59 (measured 1.59x), 1/0.80 = 1.25 (1.24x), 1/0.92 = 1.09 (1.16x), 1/1.05 = 0.95 (0.94x).
 
 ## 4. PR #6 reliability profiles
 
@@ -303,7 +300,7 @@ Reading:
 
 p99 for a row with disconnected clients is over the few messages every client received before most were cut (the 532 ms of Rust); onCrack's is over every message posted, each waiting behind the posts ahead of it in the slowest client's socket (12-13 s).
 
-- **Nobody is cut.** onCrack at HEAD (fresh and cached): 0 clients disconnected in `cable_heavy` and `cable`, every posted message delivered to every client, in all four runs of each (two rounds, two profiles). `oncrack-prev` (R4.5 undone): 833 and 930 disconnected in `cable_heavy` (110 and 99 of 46,265 and 64,865 delivered to everyone), 0 in `cable`. Rust: 994 and 908 disconnected, 67 and 45 delivered of 78,355 and 31,629. C: 204 and 95 of 1,000 subscribed at all, 934 and 869 of those disconnected (cause not investigated, as the plan says).
+- **Nobody is cut.** onCrack at HEAD (fresh and cached): 0 clients disconnected in `cable_heavy` and `cable`, every posted message delivered to every client, in all four runs of each (two rounds, two profiles). `oncrack-prev` (R4.5 undone): 833 and 930 disconnected in `cable_heavy` (110 and 99 of 46,265 and 64,865 delivered to everyone), 0 in `cable`. Rust: 994 and 908 disconnected, 67 and 45 delivered of 78,355 and 31,629. C: 204 and 95 of 1,000 were subscribed when posting began, and its `disconnected` count (934 and 869) is larger than that because it also counts clients closed while connecting (the harness spent its full 120 s connecting, `connect_secs` 120.16 in `c-1.json`). C does the same in the 4-poster `cable` profile (252 and 96 subscribed), so this is C failing to hold 1,000 connections in this setup, not C cutting slow clients; cause not investigated, as the plan says. The correction is the review's; the first version of this section said "934 and 869 of those disconnected".
 - **R4.5's finding reproduces** on the rebuilt "before" image, in a new session, with the verifier's gate fixes in HEAD.
 - **Rails and the port**: Rails loses nobody (11 messages a second in `cable_heavy`, 2.7 GB Pss); the port lost nobody in 5 of 6 runs, and 4 clients in one `cable_heavy` round (4,769 of 5,154 delivered to everyone), with 2.6 GB Pss.
 - **Throughput is not comparable with R4.5's**: HEAD's `cable_heavy` is 402 and 399 messages a second here against 574 and 567 in R4.5's own run, on a host at 247% median. The verifier's changes (the posting gate now counts all of a room's subscribers; a hub-wide budget) were measured level with R4.5 by their author on a quieter host (`oncrack-r4-verifier.md`); I cannot resolve a 30% difference under this noise.
@@ -349,6 +346,30 @@ Median requests/sec at 256 clients, 8 s per route, over the rounds that ran [rou
 5. **KLOC was not recounted**; the page uses round 3's count.
 6. **The "before" image was rebuilt**, not the builder's original; its Cable behaviour (cuts in `cable_heavy`) reproduces the baseline, which is the evidence it is the same code.
 7. **Disk**: the Mac fell under the 12 GB floor during the reliability session because of another session's cache; nothing of mine was pushed or deleted outside this repo's build output and the VM's images (the parity and reference images; rebuild them with `bin/pixel-parity` before the next pixel gate).
+8. **The memory bound has a known gap** (the verifier's deferred item): the hub-wide 1 GiB total never trims a group's newest chunk, so one client subscribing with 64 identifier variants can hold about 160 MB per connection outside it. The reliability runs above (910-938 MB peak Pss for onCrack in `cable_heavy`) did not exercise that path.
+
+## Review (round 4 final)
+
+A skeptical read of round 4's commits and of every `oncrack-r4-*.md`, after the run. No session was re-run; one cell was spot-checked against the raw harness output (`reliability/session/harness-output/oncrack-{1,2}.json`, `oncrack-cached-{1,2}.json` and `rust-1.json`: posted, complete, ready, disconnected and messages a second match the tables above).
+
+**Correctness of the changes.**
+- *Fresh checks holding a read transaction (R4.3).* The held snapshot is reused only while the WAL index header's `iChange` (mapped from `-shm`, moved by every commit of any process) reads what it read before the transaction began; a commit between that read and the snapshot only makes the next check restart. A revocation committed before a request starts is seen. The weakness is in the tests, not the code: the verifier showed the end-to-end foreign-write test passes even with the hold check broken, so only the Db-level `CheckHoldTests` guard it.
+- *Cable (R4.2, R4.5, the verifier).* Frames now go out in publish order per connection (previously per stream), a revoked connection reads its revocation first (verifier fix 3, which closed a real leak of up to 64 frames posted after a revocation), and slow clients are cut by a byte budget rather than a ring. The posting gate delays a post (at most 2 s) before it is written, so it does not touch durability; the group-commit default is unchanged.
+- *Durability by default:* unchanged. R4.4 shipped only an opt-in, and kill -9 lost or duplicated no acknowledged post in the verifier's four runs.
+- *Open:* the one message missing at 500 clients (open item 1) is the only observation in round 4 that could be a lost frame, and it is in the default configuration on the final code. Until it is reproduced or traced to the load generator, "no lost messages" is unproven for fan-out at that load. The memory bound has the gap in open item 8.
+
+**Measurement.**
+- Fan-out is server-bound (servers at 3.80-3.89 of 4 cores at 1,000 and 2,000 clients, the load generator at most 2.82 of its 4) and one session, in two parts (section 3); CPU per delivery and throughput agree. Ranges and host load are reported for every table.
+- The PR #6 result holds as far as it ran: 0 disconnected and every posted message delivered for onCrack at HEAD, fresh and cached, in all eight runs (two rounds, two profiles, two modes), against 908-994 cut for Rust and 833-930 for onCrack before R4.5. It is two rounds of three, on a host the plan calls NOISY.
+
+**What I corrected** (this commit): C's reliability rows, which the report read as C cutting slow clients (C never held 1,000 connections, and its `disconnected` count includes clients closed while connecting); the missing-message item, which now says the generator waited a full minute for it; the cable session's two parts; and, on the page, the hero tile that showed this one session's 3.29x without round three's 2.68x and 3.33x, the pixel tiles and panel that called the round-two full gate "the final code" and said nothing in `src/` had changed since, two unmeasured sentences about the kernel's send cost being the same for Rust, a "same session" caption over rows from two sessions, "disconnected counts do not depend on speed", and no mention of the missing message in the fan-out panel. `python3 site/build.py` passes (991 numbers in the ledger).
+
+**Verdict.**
+- *Against current Rust f9dca47:* about 3x on upstream's harness and contract with fresh authorization, the default (3.29x this session; 2.68x and 3.33x in round three's two). The steadier figure is CPU per room-page request: Rust spends 3.25x onCrack's (3.13x in the two quiet sets). Not an improvement over round three's on this evidence.
+- *Against C cd0cbe4:* about 2x (2.40x this session; CPU per room page 2.02x, 2.16x in the quiet sets).
+- *Fan-out at 1,000 clients:* 1,500 messages a second against Rust's 1,293 (1.16x, ranges not overlapping). Against round 1's 356 and round 2's 747 that looks like 4x and 2x, but those were measured by a load generator that was itself the limit; on the same client, round 4 started at 1,507 (1.23x Rust) and ends at 1,500 (1.16x). The round fixed the measurement, not the fan-out speed. At 2,000 clients onCrack is level with Rust or a little behind (0.94x).
+- *Reliability under overload:* the real round-4 win. onCrack is the only implementation that kept all 1,000 clients and delivered every posted message in every run under 64 unlimited posters, at about 400 messages a second here (570-670 in R4.5's quieter runs), at the cost of 12-13 s p99 to the last client and about 0.9 GB Pss. Rails keeps everyone at 11 messages a second and 2.7 GB; the F# port at about 310 and 2.6 GB, but lost 4 clients in one round; Rust and onCrack before R4.5 cut most of them.
+- *Ship state:* sound on correctness except the one unexplained missing message, which should be chased before anyone quotes "no lost messages" for fan-out.
 
 ## Commits
 

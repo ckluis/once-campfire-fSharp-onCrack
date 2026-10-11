@@ -628,14 +628,20 @@ def tbl(head, rows, caption=None, cls=''):
 
 # ================================================================ the page
 
+def _r3geo(session):
+    return geo([up3_at(R3_OLD, session, 'oncrack', r).over(up3_at(R3_OLD, session, 'rust', r)) for r, _ in ROUTES],
+               'onCrack over Rust, geometric mean of the five workloads, %s session of round three&#39;s final run' % ('first normal' if session == 'normal-1' else 'second normal'))
+
+
 def hero(F, cl):
     c16 = F['up_conc']
     tiles = [
-        ('p-fresh', counter(F['up3_geo', 'oncrack', 'rust'], 2, '×'), 'current upstream Rust, all five workloads, their harness and their contract'),
+        ('p-fresh', counter(F['up3_geo', 'oncrack', 'rust'], 2, '×'), 'current upstream Rust, all five workloads, their harness and their contract; one session (round three&#39;s two read %s and %s)'
+         % (L.x(_r3geo('normal-1'), link=False), L.x(_r3geo('normal-2'), link=False))),
         ('p-fresh', counter(F['up3_geo', 'oncrack', 'c'], 2, '×'), 'current upstream C, same sessions'),
         ('p-fresh', counter(F['up3_geo', 'oncrack', 'fsharp'], 2, '×'), 'the F# port it was forked from, same sessions'),
         ('p-pixels', '<span class="num-big">%s<i class="sl">/</i>%s</span>' % (L.n(F['pp_total']['equal'], link=False), L.n(F['pp_total']['screenshots'], link=False)),
-         'screenshots pixel-equal to Rails'),
+         'screenshots pixel-equal to Rails, the last full gate (round two&#39;s code)'),
     ]
     th = ''.join('<a class="ht" href="#%s">%s<span>%s</span></a>' % t for t in tiles)
     rows = []
@@ -801,8 +807,7 @@ def fanout(F):
     return ('<section class="beat fanout" id="fanout" aria-labelledby="fan-h"><div class="wrap">'
             '<p class="kicker reveal">Fan-out</p><h2 id="fan-h" class="reveal">One message, a thousand clients.</h2>'
             '<p class="line reveal">A post goes out over Action Cable to everyone in the room. onCrack delivers %s Rust&#39;s messages a second at %s clients, '
-            '%s at %s, %s at %s and %s at %s: the lead narrows as the room fills and is gone at the largest, where the two are level within the spread and onCrack is a little behind. '
-            'The kernel&#39;s cost of sending each frame is the same for both.</p>'
+            '%s at %s, %s at %s and %s at %s: the lead narrows as the room fills and is gone at the largest, where the two are level within the spread and onCrack is a little behind.</p>'
             '<div class="fan reveal">%s<div class="fan-tabs" role="presentation">%s</div><div class="fan-panes">%s</div></div>'
             '<p class="links reveal">%s %s %s</p></div></section>'
             % (L.x(ratio[100]), L.n(F['clients'][100]), L.x(ratio[500]), L.n(F['clients'][500]), L.x(ratio[1000]), L.n(F['clients'][1000]),
@@ -820,7 +825,7 @@ def proof(F):
         ('p-durability', L.n(F['kill']['lost'], link=False), 'posts lost',
          'of %s acknowledged, with the server killed mid-run. Durability is Rails&#39;, by default.' % L.n(F['kill']['acked'], link=False)),
         ('p-pixels', '%s<i class="sl">/</i>%s' % (L.n(F['pp_total']['equal'], link=False), L.n(F['pp_total']['screenshots'], link=False)), 'screenshots',
-         'pixel-equal to Rails on all %s seeds.' % L.n(F['pp_seeds'], link=False)),
+         'pixel-equal to Rails on all %s seeds, in the last full gate (round two&#39;s code); the targeted gate on the final code passed %s of %s.' % (L.n(F['pp_seeds'], link=False), L.n(F['r3f_equal'], link=False), L.n(F['r3f_total'], link=False))),
         ('p-ceiling', L.n(lg, D2, link=False), 'of %s cores' % L.n(F['ncores'], link=False),
          'the load generator used at onCrack&#39;s fastest workload. Not the rig&#39;s ceiling.'),
         ('p-repro', '<span class="pt-g" aria-hidden="true">$_</span>', 'Reproduce it', 'The commands, the seed, the CPU pinning and the image digests.'),
@@ -1085,15 +1090,15 @@ def p_pixels(F):
     rows.append(['<b>all</b>', '<b>%s</b>' % L.n(t['equal']), '<b>%s</b>' % L.n(t['screenshots']), L.n(t['different']), L.n(t['not_captured']), L.n(t['flaky']), ''])
     body = ''.join([
         '<p class="lead">The rule onCrack works under: every parity screen&#39;s pixels must match Rails&#39;. The server&#39;s HTML, the live DOM and Cable frames may differ; what a person sees may not.</p>',
-        tbl([('Seed', False), ('Equal', True), ('Screenshots', True), ('Different', True), ('Not captured', True), ('Flaky', True), ('By engine', False)], rows, 'The full gate on the final code, per seed'),
+        tbl([('Seed', False), ('Equal', True), ('Screenshots', True), ('Different', True), ('Not captured', True), ('Flaky', True), ('By engine', False)], rows, 'The full gate on round two&#39;s final code, per seed'),
         '<h3>How it was run</h3><ul class="caveats">'
         '<li><code>bin/pixel-parity</code> against the Rails reference, the harness&#39;s lean matrix: every state on Chromium (desktop and phone, light and dark), the smoke states on Firefox and WebKit, '
-        'and the breakpoint sweep, on all %s seeds. Image <code>campfire-candidate-oncrack</code> rebuilt from %s, the final code of round two: nothing in <code>src/</code> has changed since the gate ran.</li>'
+        'and the breakpoint sweep, on all %s seeds. Image <code>campfire-candidate-oncrack</code> rebuilt from %s, the final code of round two.</li>'
         '<li>The default seed ran in twelve <code>--only</code> slices so each fit one call, and the four small seeds in one run; the slices partition the default seed&#39;s states, and <code>pixel_parity.py</code> checks that no cell ran in two of them. '
         'A cell that could not be captured (a stylesheet wait that ran out at %s ms on freshly started servers, older than onCrack) was captured again and counts by its last attempt, as <code>bin/pixel-parity</code> counts it.</li>'
         '<li>Round one ran the same gate on the code before the verifier&#39;s fixes; the verifier ran it in one piece on the pre-fix image, in %s s. The Native AOT image passed the fast matrix on the default seed: %s screenshots.</li></ul>'
         % (L.n(F['pp_seeds']), lit('d708910', 'commit'), L.n(F['ready_ms']), L.n(F['ver_pp_secs']), L.n(F['aot_pp'])),
-        '<p><b>After the gate:</b> three units changed <code>src/</code>: fresh authorization (<span data-lit="name">R3.2</span>), the order of a search&#39;s results (<span data-lit="name">R3.3</span>, by message id, as upstream) and the writer&#39;s WAL (<span data-lit="name">R3.4</span>). The full gate above is for the code before them. '
+        '<p><b>After the gate:</b> round three changed <code>src/</code> in three units: fresh authorization (<span data-lit="name">R3.2</span>), the order of a search&#39;s results (<span data-lit="name">R3.3</span>, by message id, as upstream) and the writer&#39;s WAL (<span data-lit="name">R3.4</span>); round four changed the Cable server (gather writes, the shared log, the posting gate), the fresh checks&#39; read transactions and an opt-in WAL setting, and no markup. The full gate above is for the code before all of them. '
         'The search states ran again against the Rails reference with upstream&#39;s order given to it (<code>parity/docker/parity_search_order.rb</code>): %s of %s screenshots pixel-equal, including a new state, <code>search/results/order</code>, '
         'whose results differ by time and by id. The port, which keeps the old order, differs from that reference in %s of its %s cells; so the gate can now tell the orders apart. It is a targeted gate, not the full %s.</p>'
         '<p>The final run repeated the targeted gate on the image built from round four&#39;s final code (<code>bin/pixel-parity --fast</code>, the realtime, messages and search states, Chromium, light, desktop and phone): %s of %s screenshots pixel-equal. '
@@ -1157,15 +1162,15 @@ def p_rust(F):
         ['peak anon memory over the run, MB', L.n(F['anon', 'rust']), L.n(F['anon', 'oncrack']), L.x(r(F['anon', 'oncrack'], F['anon', 'rust'])), 'GC heaps plus the page store.'],
         ['Cable, %s clients saturated, Pss MB' % L.n(F['clients'][1000]), L.n(F['cable', 'rust', 1000, 'pss']), L.n(F['cable', 'oncrack', 1000, 'pss']), L.x(r(F['cable', 'oncrack', 1000, 'pss'], F['cable', 'rust', 1000, 'pss'])), 'The .NET runtime and the heap the posts leave behind; a connection itself costs about what Rust&#39;s does. Rust here is upstream ' + lit('f9dca47', 'commit') + '.'],
         ['Cable, %s clients saturated, messages a second to every client (higher is better)' % L.n(F['clients'][2000]), L.n(F['cable', 'rust', 2000, 'msgs']), L.n(F['cable', 'oncrack', 2000, 'msgs']), L.x(r(F['cable', 'oncrack', 2000, 'msgs'], F['cable', 'rust', 2000, 'msgs'])),
-         'Behind by a little, inside the spread of the reps. Both are held back by the kernel&#39;s cost of each send; Rust batches more of them at this size.'],
+         'Behind by a little, inside the spread of the reps. Rust makes fewer sends per delivery at this size (the results file).'],
         ['cold start, ms', L.n(F['cold', 'rust']), L.n(F['cold', 'oncrack']), L.x(r(F['cold', 'oncrack'], F['cold', 'rust'])),
          'The JIT. The opt-in AOT image starts in %s ms.' % L.n(F['boot', 'aot-image', 'up_ms'])],
     ]
     body = ''.join([
-        '<p class="lead">onCrack is ahead of Rust on every benchmarked HTTP workload at every concurrency. Here is everything it is not ahead on, from the same session.</p>',
-        tbl([('', False), ('Rust', True), ('onCrack', True), ('onCrack / Rust', True), ('Why', False)], rows, 'Same session, medians of the reps', 'dense'),
+        '<p class="lead">onCrack is ahead of Rust on every benchmarked HTTP workload at every concurrency. Here is everything it is not ahead on.</p>',
+        tbl([('', False), ('Rust', True), ('onCrack', True), ('onCrack / Rust', True), ('Why', False)], rows, 'Medians of the reps: round one&#39;s final session, and round four&#39;s cable session for the two Cable rows', 'dense'),
         '<p>Memory is the .NET runtime&#39;s and the heap the posts leave behind; fan-out is on this list only at the largest room (above); it is ahead of Rust at the smaller ones, see the fan-out panel.</p>',
-        srcline(R1 + '/rust-1.json', R1 + '/oncrack-1.json', 'bench/results/oncrack-c4/boot.jsonl', 'bench/results/oncrack-round1-final.md', lead='Sources'),
+        srcline(R1 + '/rust-1.json', R1 + '/oncrack-1.json', 'bench/results/oncrack-c4/boot.jsonl', 'bench/results/oncrack-round1-final.md', R42 + '/rust-1.json', R42 + '/oncrack-1.json', 'bench/results/oncrack-r4-final.md', lead='Sources'),
     ])
     return panel('p-rust', 'What Rust still wins', 'Not ahead on these', body, 'fanout')
 
@@ -1199,12 +1204,18 @@ def p_reliability(F):
         'onCrack&#39;s is the .NET heap that the posters&#39; renderings leave behind.</p>',
         '<p>A row with disconnected clients has a small %s because it counts only the few messages every client received before the cut; onCrack&#39;s counts every message posted, each waiting behind the posts ahead of it in the slowest client&#39;s socket.</p>' % P99,
         '<p>The Pss column is the container&#39;s peak, sampled twice a second from <code>/proc/PID/smaps_rollup</code> over the profile. One session, the median of its rounds. <b>It is incomplete:</b> it stopped in the second of three planned rounds '
-        '(the Mac&#39;s disk floor), so Rails has one round, the others two and the F# port, which ran on its own, three; and the host was busy for most of it, so read the disconnected counts, which do not depend on speed, and not the messages a second '
+        '(the Mac&#39;s disk floor), so Rails has one round, the others two and the F# port, which ran on its own, three; and the host was busy for most of it, so read the disconnected counts, which the host moves far less, and not the messages a second '
         '(onCrack&#39;s are well below the figures from the unit that built the log, measured on a quieter host). The F# port cannot take the overload profile, so only its Cable profiles ran; its cable_heavy row takes each column&#39;s median separately, and in one of its rounds four clients were closed, which is why its delivered count is below its posted count while its disconnected count reads zero. '
-        'C&#39;s Cable server did not take most of the clients in this setup (see the notes in the results file), so its row says only that.</p>',
+        'C&#39;s Cable server did not take most of the clients in this setup, in either profile, so its row says only that: its disconnected count also counts clients closed while still connecting, which is why it is larger than its subscribed count, and it says nothing about cutting slow clients (see the notes in the results file).</p>',
         srcline(REL_SESSION + '/summary.json', REL_PORT + '/summary.json', 'bench/reliability/run', 'bench/reliability/summarize', 'bench/results/oncrack-r4-reliability.md', 'bench/results/oncrack-r4-final.md', lead='Sources (the harness output, the memory samples and the run logs sit beside them)'),
     ])
     return panel('p-reliability', 'Cable reliability', 'Nobody is cut for being slow', body, 'fanout')
+
+
+def _miss(field):
+    ph = next(x for x in jload(R42 + '/oncrack-1.json')['cable'] if x['clients'] == 500)
+    return V(ph['throughput'][field], 'onCrack, Cable, 500 clients, rep 1 of the final session, saturated phase: messages %s' % ('every client received' if field == 'complete' else 'posted'),
+             [R42 + '/oncrack-1.json'], 'cable[clients=500].throughput.%s' % field)
 
 
 def p_fanout(F):
@@ -1215,11 +1226,16 @@ def p_fanout(F):
     body = ''.join([
         '<p class="lead"><code>bench/run</code>&#39;s Cable suite: N signed-in clients each hold a WebSocket with the room&#39;s subscriptions, and four posters post into the room, '
         'never more than %s messages ahead of what every client has received. A message counts when the last client has it. The clients are one epoll-driven program with no WebSocket library '
-        '(<code>bench/loadgen/src/rawcable.rs</code>), so it is the server that runs out of cores, not the load generator. One session, three reps; Rails was not run in it, and Cable numbers '
+        '(<code>bench/loadgen/src/rawcable.rs</code>), so it is the server that runs out of cores, not the load generator. One session, three reps, in two parts: the port&#39;s and onCrack&#39;s third reps ran about twenty minutes after Rust&#39;s, on a quieter host, '
+        'and none of onCrack&#39;s medians is a third rep. Rails was not run in it, and Cable numbers '
         'from before this client are not comparable.</p>' % L.n(F['window']),
         tbl(head, rows_m, 'Messages a second delivered to every client (median of the reps)'),
         tbl(head, rows_f, 'Deliveries a second: messages times clients, as frames on the wire'),
         tbl(head, rows_l, 'Paced: one message at a time, %s ms until the last client has it' % P50),
+        '<h3>One message missing</h3><p>One saturated phase did not complete: onCrack&#39;s first rep at %s clients, where %s of %s posted messages reached every client. '
+        'No client was closed, and the load generator waited its full minute for the last one before giving up. Every other phase of the three apps delivered every message. '
+        'Whether the server dropped one frame or the load generator missed one is not known yet; the results file keeps it open.</p>'
+        % (L.n(F['clients'][500]), L.n(_miss('complete')), L.n(_miss('posted'))),
         '<h3>How the picture is drawn</h3><p>Each lane sends pulses from its hub at a rate in proportion to its measured messages a second; at a given N one pulse stands for the same number of '
         'messages in every lane, and each dot for ten clients. The pulses are CSS animations, so they run without JavaScript; with JavaScript each lane also counts what it has delivered '
         'since you opened the page, and how far behind Rust that leaves it. With reduced motion nothing moves and the rates are what you read.</p>',
