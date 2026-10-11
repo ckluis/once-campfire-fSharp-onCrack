@@ -9,6 +9,7 @@ open System.Threading.Tasks
 open Xunit
 open Campfire.RailsCompat
 open Campfire.Cable
+open Campfire.Cable.Socket
 open Campfire.Cable.Tests.Support
 
 let private room1 = identifier (object' [ "channel", Value.String "RoomChannel"; "room_id", Value.Int 1L ])
@@ -102,3 +103,26 @@ let ``off, a connection has no trace; on, the file names every frame it was hand
             with _ ->
                 ()
     }
+
+[<Fact>]
+let ``the verify switch notices a published array that was zeroed before a send`` () =
+    CableVerify.Configure true
+    try
+        let bytes = Array.init 10_298 (fun i -> byte (1 + i % 200))
+        let frame = Frame bytes
+        CableVerify.Stamp frame
+        Assert.NotEqual(0UL, frame.Probe)
+        let before = CableVerify.Failures
+        CableVerify.Check(frame, bytes, "unit test", "none")
+        Assert.Equal<int64>(before, CableVerify.Failures)
+        // The whole array reads as zeros, as the client of round 5's miss saw it: the probe of a zeroed array differs from any text's.
+        Array.Clear bytes
+        CableVerify.Check(frame, bytes, "unit test", "none")
+        Assert.Equal<int64>(before + 1L, CableVerify.Failures)
+        // A frame that was not stamped, and a deflated payload, are not checked.
+        let plain = Frame(Array.zeroCreate 100)
+        CableVerify.Check(plain, plain.Bytes, "unit test", "none")
+        CableVerify.Check(frame, Array.zeroCreate 5, "unit test", "none")
+        Assert.Equal<int64>(before + 1L, CableVerify.Failures)
+    finally
+        CableVerify.Configure false

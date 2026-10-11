@@ -111,6 +111,19 @@ type Frame(bytes: byte[]) =
     /// `CAMPFIRE_CABLE_TRACE`. Set once, under the group's lock, before any subscriber can read the frame.
     member val Seq = 0L with get, set
 
+    /// Unit R5.1 (`CAMPFIRE_CABLE_VERIFY`): a probe of the payload taken when the frame is published (0: not taken), so that each send can
+    /// check that the array still holds the bytes it was made with. Never 0 once taken.
+    member val Probe = 0UL with get, set
+
+    /// Four words of the array (its start, quarter, middle and end) mixed, with the low bit set: a zeroed array gives 1.
+    static member ProbeOf(bytes: byte[]) : uint64 =
+        if bytes.Length < 32 then
+            1UL ||| (uint64 bytes.Length <<< 1)
+        else
+            let word (at: int) = System.Runtime.CompilerServices.Unsafe.ReadUnaligned<uint64>(&bytes[at])
+            let rotl (v: uint64) (n: int) = (v <<< n) ||| (v >>> (64 - n))
+            1UL ||| (word 0 ^^^ rotl (word (bytes.Length / 4)) 13 ^^^ rotl (word (bytes.Length / 2)) 29 ^^^ rotl (word (bytes.Length - 8)) 41)
+
     /// The text, as UTF-8.
     member _.Bytes: byte[] = bytes
 
@@ -134,6 +147,57 @@ type Frame(bytes: byte[]) =
     static member OfString(text: string) : Frame = Frame(Encoding.UTF8.GetBytes text)
 
     override this.ToString() = $"Frame({this.Text})"
+
+/// Unit R5.1: `CAMPFIRE_CABLE_VERIFY=1` makes each published frame take a probe of its array (`Frame.Probe`) and each send check it,
+/// before and after the `sendmsg` that reads the array, and say on stderr when it no longer matches: whether the array was already
+/// wrong when this connection came to send it, or changed during the call, or (no message, and a client that still lacks the bytes) was
+/// right throughout. Three or four loads a frame; off, one test of a static.
+[<AbstractClass; Sealed>]
+type internal CableVerify private () =
+    static let mutable enabled =
+        match Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_VERIFY" with
+        | null
+        | ""
+        | "0"
+        | "off" -> false
+        | _ -> true
+
+    static let mutable failures = 0L
+    static let mutable checks = 0L
+
+    static member Enabled = enabled
+
+    /// For tests.
+    static member Configure(on: bool) : unit = enabled <- on
+
+    /// Frames found changed since they were published, and frames checked.
+    static member Failures = Interlocked.Read(&failures)
+    static member Checks = Interlocked.Read(&checks)
+
+    /// At publish.
+    static member Stamp(frame: Frame) : unit = if enabled then frame.Probe <- Frame.ProbeOf frame.Bytes
+
+    /// At send: `payload` is what goes to the socket (the frame's own array, or its deflated form, which is not checked).
+    static member Check(frame: Frame, payload: byte[], where: string, tag: string) : unit =
+        if frame.Probe <> 0UL && obj.ReferenceEquals(payload, frame.Bytes) then
+            Interlocked.Increment(&checks) |> ignore
+            if Frame.ProbeOf payload <> frame.Probe then
+                let n = Interlocked.Increment(&failures)
+                if n <= 50L then
+                    let zeros = payload |> Array.forall (fun b -> b = 0uy)
+                    eprintfn
+                        "ERROR campfire: cable verify: frame seq %d (%d bytes) no longer matches its probe %s: all zero %b, generation %d, GCs %d/%d/%d, thread %d, connection %s, failure %d"
+                        frame.Seq
+                        payload.Length
+                        where
+                        zeros
+                        (GC.GetGeneration payload)
+                        (GC.CollectionCount 0)
+                        (GC.CollectionCount 1)
+                        (GC.CollectionCount 2)
+                        Environment.CurrentManagedThreadId
+                        tag
+                        n
 
 // --- Handshake ---------------------------------------------------------------------------------
 
@@ -611,6 +675,9 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
     /// Unit R5.1: the connection's trace (`CAMPFIRE_CABLE_TRACE`); null without the switch.
     member val internal Trace: ConnTrace | null = null with get, set
 
+    /// Unit R5.1: what `CAMPFIRE_CABLE_VERIFY` says about this connection when a frame fails (its client's address).
+    member val internal Tag = "" with get, set
+
     new(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, direct: Net.Sockets.Socket | null) =
         Writer(io, deflate, timeout, abort, direct, true)
     new(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit) = Writer(io, deflate, timeout, abort, null, true)
@@ -775,6 +842,7 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
         for i in 0 .. count - 1 do
             let frame = frames[i]
             let payload = this.Payload frame
+            if CableVerify.Enabled then CableVerify.Check(frame, payload, "before sendmsg", this.Tag)
             let compressed = deflate && not (obj.ReferenceEquals(payload, frame.Bytes))
             let used = writeHeader (Span(scratch.Headers, i * 10, 10)) OpText compressed payload.Length
             scratch.HeaderLengths[i] <- used
@@ -784,6 +852,9 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
         let mutable failure: exn | null = null
         try
             let struct (n, e) = Sendmsg.send socket scratch count
+            if CableVerify.Enabled then
+                for i in 0 .. count - 1 do
+                    CableVerify.Check(frames[i], scratch.Payloads[i], "after sendmsg", this.Tag)
             sent <- int n
             // EAGAIN (11 on Linux): the socket's buffer is full, so the rest waits for room.
             if e <> 0 && e <> 11 then failure <- IOException $"sendmsg failed: errno {e}"
@@ -830,6 +901,7 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
          | trace -> trace.Copy())
         let mutable total = 0
         for i in 0 .. frames.Count - 1 do
+            if CableVerify.Enabled then CableVerify.Check(frames[i], this.Payload(frames[i]), "before the copy", this.Tag)
             total <- total + 10 + this.Payload(frames[i]).Length
         let buffer = ArrayPool<byte>.Shared.Rent total
         let mutable at = 0

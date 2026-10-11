@@ -390,6 +390,7 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
                 let sequence = stats.NextSequence()
                 chunk.Sequences[chunk.Filled] <- sequence
                 frame.Seq <- sequence
+                CableVerify.Stamp frame
                 if CableTrace.Enabled then
                     CableTrace.Published(this.Id, chunk.Id * int64 chunkSize + int64 chunk.Filled, sequence, frame.Bytes)
                 written <- written + length
@@ -552,6 +553,7 @@ and [<Sealed>] internal RingGroup(identifier: string | null, capacity: int) =
 
     override this.Publish(frame: Frame) : int =
         lock slots (fun () ->
+            CableVerify.Stamp frame
             if CableTrace.Enabled then
                 let sequence = CableTrace.RingSeq()
                 frame.Seq <- sequence

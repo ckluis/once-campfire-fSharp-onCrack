@@ -433,6 +433,15 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
         let incoming = channel.Reader
         let sink = Writer(stream, deflate, config.StallTimeout, abort, direct, config.GatherWrites)
         sink.Trace <- trace
+        if CableVerify.Enabled then
+            sink.Tag <-
+                (match direct with
+                 | null -> ""
+                 | socket ->
+                     try
+                         string socket.RemoteEndPoint
+                     with _ ->
+                         "")
         let note (code: string) (a: int64) =
             match trace with
             | null -> ()
