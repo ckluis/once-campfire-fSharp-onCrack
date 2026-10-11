@@ -10,6 +10,7 @@
 # clients, then 500); with --fresh 0 (the default) one container serves all the runs, each a phase at --clients. `--env` is added to
 # the app's environment (CAMPFIRE_CABLE_LOG=ring, CAMPFIRE_CABLE_ORDER=stream, the controls). Switches that change nothing by default:
 #   --client-trace 1 (default): loadgen --trace-dir, so that a stall or a drain timeout dumps which clients lack which messages
+#   --keep-all 1: keep every phase's evidence (a smoke run with --lg-args "--trace-always 1")
 #   --server-trace 1 (default for oncrack): the app's CAMPFIRE_CABLE_TRACE, appended to DIR/servertrace/cable.jsonl
 #
 # Per phase DIR/runNN-cCLIENTS/ holds result.json, stderr, verdict.json and app-errors.log (the app's ERROR/WARN lines in the phase). A
@@ -25,7 +26,7 @@ export WORK=${WORK:-/var/tmp/campfire-bench-work}
 export LOG_MAX_SIZE=${LOG_MAX_SIZE:-200m}
 BENCH_RUN_LIB=1 source "$ROOT/bench/run"
 set -- "${ARGS[@]}"
-APP=oncrack CLIENTS=500 PREFIX="" RUNS=15 FRESH=0 ENVS="" LGARGS="" SECS=15 OUT="" SERVER_TRACE="" CLIENT_TRACE=1
+APP=oncrack CLIENTS=500 PREFIX="" RUNS=15 FRESH=0 ENVS="" LGARGS="" SECS=15 OUT="" SERVER_TRACE="" CLIENT_TRACE=1 KEEP=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --app) APP=$2; shift 2 ;;
@@ -39,6 +40,7 @@ while [ $# -gt 0 ]; do
     --out) OUT=$2; shift 2 ;;
     --server-trace) SERVER_TRACE=$2; shift 2 ;;
     --client-trace) CLIENT_TRACE=$2; shift 2 ;;
+    --keep-all) KEEP=$2; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
@@ -126,10 +128,10 @@ print(("MISS " if v["miss"] else "ok   ") + f"run {run} {n} clients ({shape}): "
       f"{v.get('complete')}/{v.get('posted')} messages, {v.get('msgs_per_sec')} msg/s, drain {v.get('drain_secs')} s"), file=sys.stderr)
 sys.exit(1 if v["miss"] else 0)
 PY
-  if [ "$ok" != 0 ]; then
+  if [ "$ok" != 0 ] || [ "$KEEP" = 1 ]; then
     [ -n "${TRACE_DIR-}" ] && tail -c +$((off + 1)) "$TRACE_DIR/cable.jsonl" > "$td/server-trace.jsonl" || true
     docker logs --since "$t0" "$CONTAINER" 2>&1 | grep -v 'Request path=' | head -c 2000000 > "$td/app.log" || true
-    echo "$tag $(date +%T)" >> "$OUT/misses.txt"
+    [ "$ok" = 0 ] || echo "$tag $(date +%T)" >> "$OUT/misses.txt"
   else
     rm -rf "$td/client" "$td/stderr.keep"
     gzip -f "$td/stderr" || true
