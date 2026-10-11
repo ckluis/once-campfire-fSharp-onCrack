@@ -1,5 +1,5 @@
 {
- "_about": "bin/pixel-parity --fast on campfire-candidate-oncrack built from 191c468 (label), against the Rails reference with the dbc7620 search order; screenshot layer only.",
+ "_about": "bin/pixel-parity --fast (Chromium, light, desktop and phone) on campfire-oncrack:app, built from ea1f85b (src/ at HEAD is identical: git diff ea1f85b HEAD -- src is empty), against the Rails reference with the dbc7620 search order; screenshot layer only. States: realtime and messages (default seed, 86), search (default 14, custom_styles 2). Corrected 2026-10-10: the first text said 'built from 191c468', copied from round 3's script.",
  "runs": {
   "a/default": {
    "equal": 86,

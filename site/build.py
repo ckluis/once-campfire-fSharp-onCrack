@@ -181,15 +181,20 @@ R1 = 'bench/results/oncrack-round1-final'
 REVIEW = R1 + '/review'
 # Cable fan-out: unit R4.2's session (bench/results/oncrack-r4-fanout.md), the raw epoll client and a window of 128; Rails was not run in it, and the
 # round-1 Cable numbers (a different client, a different load shape) are not comparable, so the picture has three apps.
-R42 = 'bench/results/oncrack-r4-fanout/t3'
+R4F = 'bench/results/oncrack-r4-final'
+R42 = R4F + '/cable/t3'   # round four's final run: the cable suite, one session, three reps (earlier: oncrack-r4-fanout/t3)
 CABLE_APPS = ['rust', 'fsharp', 'oncrack']
 CABLE_COUNTS = (100, 500, 1000, 2000)
 # Reliability under load: unit R4.5 (bench/results/oncrack-r4-reliability.md). Upstream's bin/reliability cable profiles, 1,000 clients; Rails, Rust, C and onCrack
 # before the unit in one session (REL_BEFORE), onCrack after it in another (REL_AFTER); each directory's summary.json is bench/reliability/summarize --write.
+# The final run re-measures all of it in one session (REL_SESSION: Rails, Rust, C, onCrack, onCrack cached, onCrack before R4.5; rounds 1-2 of a planned 3, stopped by the disk floor)
+# and the port's cable profiles (REL_PORT, 3 rounds): bench/results/oncrack-r4-final.md, section 4.
 REL_BEFORE = 'bench/results/oncrack-r4-reliability/before-r1'
-REL_AFTER = 'bench/results/oncrack-r4-reliability/after-r1'
-REL_APPS = [('reference', 'rails', REL_BEFORE), ('rust', 'rust', REL_BEFORE), ('c', 'c', REL_BEFORE), ('oncrack-before', 'oncrack', REL_BEFORE), ('oncrack', 'oncrack', REL_AFTER)]
-REL_NAME = {'reference': 'Rails', 'rust': 'Rust', 'c': 'C', 'oncrack-before': 'onCrack before this unit', 'oncrack': 'onCrack'}
+REL_AFTER = REL_SESSION = R4F + '/reliability/session'
+REL_PORT = R4F + '/reliability/session-fsharp'
+REL_APPS = [('reference', 'rails', REL_SESSION), ('rust', 'rust', REL_SESSION), ('c', 'c', REL_SESSION), ('fsharp', 'fsharp', REL_PORT), ('oncrack-before', 'oncrack-prev', REL_SESSION),
+            ('oncrack', 'oncrack', REL_SESSION), ('oncrack-cached', 'oncrack-cached', REL_SESSION)]
+REL_NAME = {'reference': 'Rails', 'rust': 'Rust', 'c': 'C', 'fsharp': 'F# port', 'oncrack-before': 'onCrack before the shared log', 'oncrack': 'onCrack', 'oncrack-cached': 'onCrack, cached decision'}
 R3PIX = 'bench/results/oncrack-r3-pixels'   # the full pixel gate on the final code (round 3, unit R3.1)
 NAME = {'reference': 'Rails', 'rust': 'Rust', 'fsharp': 'F# port', 'oncrack': 'onCrack'}
 APPS = ['reference', 'rust', 'fsharp', 'oncrack']
@@ -299,10 +304,11 @@ UPREADS = ['room_show', 'messages_page', 'sidebar', 'search']
 
 
 # ---- round 3's final run: fresh authorization on every hit (the default since R3.2), the same harness, current Rust and C, on the final code (bench/results/oncrack-r3-final).
-# Each profile pools its two sessions' six rounds per cell, by a plan fixed before any session ran (PLAN.md there); no session is dropped.
-R3 = 'bench/results/oncrack-r3-final'
-R3N = [R3 + '/normal-1', R3 + '/normal-2']
-R3M = [R3 + '/mixed-1', R3 + '/mixed-2']
+# Round four's final run: each profile is one session of three rounds per cell, by a plan fixed before any session ran (PLAN.md there); no session is dropped.
+R3_OLD = 'bench/results/oncrack-r3-final'   # round three's final run: two sessions per profile; its kloc.json is still the size count
+R3 = R4F                                   # the names below now point at round four's final run: one session per profile (PLAN.md there)
+R3N = [R3 + '/normal-1']
+R3M = [R3 + '/mixed-1']
 R3APPS = ['oncrack', 'oncrack-cached', 'rust', 'c', 'fsharp']
 UPBASE['oncrack-cached'] = 'onCrack, cached decision'
 
@@ -313,10 +319,10 @@ def up3(app, route, mixed=False, stat='median'):
     files = sorted(os.path.relpath(f, REPO) for d in dirs for f in glob.glob(os.path.join(REPO, d, app + '-[0-9].json')))
     key = 'mixed_http' if mixed else 'http'
     vals = [x['rps'] for f in files for x in jload(f)[key] if x['route'] == route and x['conc'] == 16]
-    if len(vals) != 6 or len(vals) != len(files):
+    if len(vals) != 3 * len(dirs) or len(vals) != len(files):
         raise SystemExit('build: %s %s: %d samples in %d rounds' % (app, route, len(vals), len(files)))
     v = {'median': statistics.median, 'min': min, 'max': max}[stat](vals)
-    what = 'mixed profile, 10 posts/s writer, two sessions pooled' if mixed else 'normal profile, two sessions pooled'
+    what = 'mixed profile, 10 posts/s writer, one session' if mixed else 'normal profile, one session'
     return V(v, '%s, %s, c=16, req/s, %s of %d rounds (verification harness, %s)' % (UPBASE[app] + (' ' + UPREV[app] if app in UPREV else ''), RNAME[route], stat, len(vals), what),
              files, '%s of %s (%s[route=%s, conc=16].rps)' % (stat, ', '.join(g(float(x)) for x in vals), key, route))
 
@@ -370,7 +376,7 @@ def facts():
             if b == num:
                 continue
             F['up3_geo', num, b] = geo([F['up3'][num, r, 'median'].over(F['up3'][b, r, 'median']) for r, _ in ROUTES],
-                                       '%s over %s, geometric mean of the five workloads, c=16, verification harness, two sessions pooled' % (UPBASE[num], UPBASE[b]))
+                                       '%s over %s, geometric mean of the five workloads, c=16, verification harness, one session' % (UPBASE[num], UPBASE[b]))
             F['up3m_geo', num, b] = geo([F['up3m'][num, r, 'median'].over(F['up3m'][b, r, 'median']) for r in UPREADS],
                                         '%s over %s, geometric mean of the four mixed-profile reads, c=16, verification harness' % (UPBASE[num], UPBASE[b]))
     rv = [json.loads(l) for l in open(os.path.join(REPO, R3, 'review.jsonl')) if '"window"' in l]
@@ -386,17 +392,17 @@ def facts():
     vraw = [os.path.relpath(f, REPO) for d in sess for f in sorted(glob.glob(os.path.join(REPO, d, 'raw', 'http-*.json')))]
     def r3_timed(f):
         return sum(x['ok'] for x in jload(f)['mixed_http' if '/mixed-' in f else 'http'])
-    F['r3_val']['timed'] = V(sum(r3_timed(f) for f in vfiles), 'timed responses validated, the four sessions of the final run', vfiles, 'sum of ok over every timed sample')
-    F['r3_val']['writes'] = V(sum(jload(f)['post_write_audit']['acknowledged'] for f in vfiles), 'acknowledged writes audited against the database and FTS, warm-ups included, the four sessions of the final run',
+    F['r3_val']['timed'] = V(sum(r3_timed(f) for f in vfiles), 'timed responses validated, the two sessions of the final run', vfiles, 'sum of ok over every timed sample')
+    F['r3_val']['writes'] = V(sum(jload(f)['post_write_audit']['acknowledged'] for f in vfiles), 'acknowledged writes audited against the database and FTS, warm-ups included, the two sessions of the final run',
                               vfiles, 'sum of post_write_audit.acknowledged (each verified)')
-    F['r3_val']['bad'] = V(sum(jload(f)['errors'] + jload(f)['invalid_responses'] for f in vraw), 'errors and invalid responses, the four sessions of the final run', vraw, 'sum over every raw sample')
-    F['r3_val']['gen'] = V(max(jload(f)['generator_cpu_percent'] for f in vraw), 'peak load generator CPU, % (400% available), the four sessions of the final run', vraw, 'max of generator_cpu_percent over every raw sample')
-    F['r3_val']['samples'] = V(len(vraw), 'raw samples reconciled against the per-app rows, the four sessions of the final run', vraw, 'count of raw/http-*.json')
+    F['r3_val']['bad'] = V(sum(jload(f)['errors'] + jload(f)['invalid_responses'] for f in vraw), 'errors and invalid responses, the two sessions of the final run', vraw, 'sum over every raw sample')
+    F['r3_val']['gen'] = V(max(jload(f)['generator_cpu_percent'] for f in vraw), 'peak load generator CPU, % (400% available), the two sessions of the final run', vraw, 'max of generator_cpu_percent over every raw sample')
+    F['r3_val']['samples'] = V(len(vraw), 'raw samples reconciled against the per-app rows, the two sessions of the final run', vraw, 'count of raw/http-*.json')
     pf = jload(R3 + '/pixels-fast.json')
     F['r3f_equal'] = V(pf['total']['equal'], 'targeted pixel gate on the final code (search and posting states): screenshots pixel-equal', [R3 + '/pixels-fast.json'], 'total.equal')
     F['r3f_total'] = V(pf['total']['screenshots'], 'targeted pixel gate on the final code (search and posting states): screenshots', [R3 + '/pixels-fast.json'], 'total.screenshots')
     F['up3_rounds'] = V(len(F['up3']['oncrack', 'room_show', 'median'].files), 'rounds per app and workload, two normal sessions pooled (verification harness)',
-                        F['up3']['oncrack', 'room_show', 'median'].files, 'oncrack-N.json files over both sessions')
+                        F['up3']['oncrack', 'room_show', 'median'].files, 'oncrack-N.json files of the session')
     F['up_c_rust'] = geo([F['up']['c', r, 'median'].over(F['up']['rust', r, 'median']) for r, _ in ROUTES], 'C over Rust, geometric mean of the five workloads, c=16, verification harness')
     sm = jload(UPN + '/summary.json')['metadata']
     F['up_conc'] = param(16, 'concurrent clients (verification harness)', UPN + '/summary.json', 'metadata.concurrencies "%s"' % sm['concurrencies'])
@@ -412,9 +418,9 @@ def facts():
         raws = [os.path.relpath(f, REPO) for f in glob.glob(os.path.join(REPO, d, 'raw', 'http-*.json'))]
         F['up_val'][d, 'gen'] = V(max(jload(f)['generator_cpu_percent'] for f in raws), 'peak load generator CPU, %% (400%% available; %s)' % d.split('/')[-1], sorted(raws), 'max of generator_cpu_percent over every raw sample')
         F['up_val'][d, 'bad'] = V(sum(jload(f)['errors'] + jload(f)['invalid_responses'] for f in raws), 'errors and invalid responses (%s)' % d.split('/')[-1], sorted(raws), 'sum over every raw sample')
-    K = jload(R3 + '/kloc.json')
+    K = jload(R3_OLD + '/kloc.json')
     for a in ('oncrack', 'fsharp'):
-        F['kloc', a] = V(K[a]['code'] / 1000, '%s backend KLOC (cloc 2.10, upstream rules)' % UPBASE[a], [R3 + '/kloc.json'], '%d code lines in %d F# files / 1000' % (K[a]['code'], K[a]['files']))
+        F['kloc', a] = V(K[a]['code'] / 1000, '%s backend KLOC (cloc 2.10, upstream rules)' % UPBASE[a], [R3_OLD + '/kloc.json'], '%d code lines in %d F# files / 1000' % (K[a]['code'], K[a]['files']))
     for a in ('rails', 'rust', 'c'):
         F['kloc', a] = md(R2 + '/upstream-performance-review.md', r'\| %s \| \[`[0-9a-f]{7}`\]\([^)]*\) \| [\d,]+ \| [\d,]+ \| ([\d.]+) \|' % {'rails': 'Rails', 'rust': 'Rust', 'c': 'C'}[a],
                           '%s backend KLOC as upstream published it' % UPBASE[a])
@@ -647,10 +653,10 @@ def hero(F, cl):
             'and the F# port it was forked from. <em>Every number on this page links to the file it came from.</em></p>'
             '<div class="htiles hero-in">%s</div>'
             '<figure class="climb hero-in" id="upstream" aria-labelledby="up-cap">%s'
-            '<figcaption id="up-cap"><span><b>Current upstream, their method, their contract.</b> <code>once-campfire-verification</code>&#39;s <code>bin/benchmark</code>: median of %s rounds (two sessions of three) of %s s at %s clients, '
+            '<figcaption id="up-cap"><span><b>Current upstream, their method, their contract.</b> <code>once-campfire-verification</code>&#39;s <code>bin/benchmark</code>: median of %s rounds (one session of three) of %s s at %s clients, '
             'every response validated against the seed, every acknowledged post audited in the database and its search index; four server CPUs and four for the load generator, on this '
             'project&#39;s VM, not their Ryzen. <b>onCrack re-reads the session and the room membership on every cache hit</b>, as upstream&#39;s implementations do (the default since round three); '
-            'its older cached decision, faster and not comparable, is the last column and an opt-in. Other work on the Mac moved every engine&#39;s samples during these sessions, so read the ranges in the details; '
+            'its older cached decision, faster and not comparable, is the last column and an opt-in. Other work on the Mac moves every engine&#39;s samples from one session to the next, so read the ranges in the details; '
             'per room page, Rust spends %s and C %s of onCrack&#39;s CPU (hand re-runs). onCrack&#39;s search lists the newest matches by message id, as upstream&#39;s does and its contract checks (round three, unit <span data-lit="name">R3.3</span>); the port keeps Rails <span data-lit="commit">90b3300</span>&#39;s order.</span>%s</figcaption></figure>'
             '<p class="btw" id="btw"><a href="#p-climb-chart">The climb against pinned Rust</a> <span>Every logged version over Rust <span data-lit="commit">ccece30</span>&#39;s stored medians, now in a panel.</span></p>'
             '</div></section>' % (th, table, L.n(F['up3_rounds']), L.n(F['up_secs']), L.n(c16),
@@ -789,12 +795,14 @@ def fanout(F):
                      'leaving at the app&#39;s measured rate.</p></div>'
                      % (n, ''.join(lanes), L.n(dotv), L.n(kv)))
     ratio = {n: F['cable', 'oncrack', n, 'msgs'].over(F['cable', 'rust', n, 'msgs']) for n in CABLE_COUNTS}
-    if not all(x.v >= 1 for x in ratio.values()):
-        raise SystemExit('build: onCrack is behind Rust at some client count; the fan-out copy says it leads at all of them')
+    # The copy below says: ahead at every count but the largest, where it is level or a little behind. It refuses to build if the data says anything else.
+    if not (all(ratio[n].v >= 1 for n in CABLE_COUNTS[:-1]) and ratio[CABLE_COUNTS[-1]].v < 1):
+        raise SystemExit('build: the fan-out copy says onCrack leads at every count but the last and trails there; the data says otherwise: rewrite it')
     return ('<section class="beat fanout" id="fanout" aria-labelledby="fan-h"><div class="wrap">'
             '<p class="kicker reveal">Fan-out</p><h2 id="fan-h" class="reveal">One message, a thousand clients.</h2>'
-            '<p class="line reveal">A post goes out over Action Cable to everyone in the room. onCrack now delivers %s Rust&#39;s messages a second at %s clients, '
-            '%s at %s, %s at %s and %s at %s: the lead narrows as the room fills, because the kernel&#39;s cost of sending each frame is the same for both.</p>'
+            '<p class="line reveal">A post goes out over Action Cable to everyone in the room. onCrack delivers %s Rust&#39;s messages a second at %s clients, '
+            '%s at %s, %s at %s and %s at %s: the lead narrows as the room fills and is gone at the largest, where the two are level within the spread and onCrack is a little behind. '
+            'The kernel&#39;s cost of sending each frame is the same for both.</p>'
             '<div class="fan reveal">%s<div class="fan-tabs" role="presentation">%s</div><div class="fan-panes">%s</div></div>'
             '<p class="links reveal">%s %s %s</p></div></section>'
             % (L.x(ratio[100]), L.n(F['clients'][100]), L.x(ratio[500]), L.n(F['clients'][500]), L.x(ratio[1000]), L.n(F['clients'][1000]),
@@ -1088,8 +1096,8 @@ def p_pixels(F):
         '<p><b>After the gate:</b> three units changed <code>src/</code>: fresh authorization (<span data-lit="name">R3.2</span>), the order of a search&#39;s results (<span data-lit="name">R3.3</span>, by message id, as upstream) and the writer&#39;s WAL (<span data-lit="name">R3.4</span>). The full gate above is for the code before them. '
         'The search states ran again against the Rails reference with upstream&#39;s order given to it (<code>parity/docker/parity_search_order.rb</code>): %s of %s screenshots pixel-equal, including a new state, <code>search/results/order</code>, '
         'whose results differ by time and by id. The port, which keeps the old order, differs from that reference in %s of its %s cells; so the gate can now tell the orders apart. It is a targeted gate, not the full %s.</p>'
-        '<p>The final run repeated the targeted gate on the image built from the final code (<code>bin/pixel-parity --fast</code>, the search and posting states, Chromium, light, desktop and phone): %s of %s screenshots pixel-equal. '
-        'The state list is in <code>pixels-fast.json</code>; it covers what the WAL work could touch (a posted message and the room page after it) and the search states.</p>'
+        '<p>The final run repeated the targeted gate on the image built from round four&#39;s final code (<code>bin/pixel-parity --fast</code>, the realtime, messages and search states, Chromium, light, desktop and phone): %s of %s screenshots pixel-equal. '
+        'The state list is in <code>pixels-fast.json</code>; it covers what the Cable work could touch (the room page and its live updates, the messages) and the search states. The full gate was not repeated.</p>'
         % (L.n(F['r33_equal']), L.n(F['r33_total']), L.n(F['r33_port_diff']), L.n(F['r33_port_cells']), L.n(F['pp_total']['screenshots']), L.n(F['r3f_equal']), L.n(F['r3f_total'])),
         '<p>The reports themselves (every screenshot and diff) are gitignored under <code>parity/out/pixel-parity-r3-final/</code>; <code>pixel_parity.py</code> keeps what they say.</p>',
         srcline(R3PIX + '/pixel-parity.json', R3PIX + '/pixel_parity.py', R3 + '/pixels-fast.json', 'bin/pixel-parity', 'bin/pixel-parity-report', lead='Sources'),
@@ -1148,13 +1156,15 @@ def p_rust(F):
         ['idle memory, MB', L.n(F['idle', 'rust']), L.n(F['idle', 'oncrack']), L.x(r(F['idle', 'oncrack'], F['idle', 'rust'])), 'The .NET runtime.'],
         ['peak anon memory over the run, MB', L.n(F['anon', 'rust']), L.n(F['anon', 'oncrack']), L.x(r(F['anon', 'oncrack'], F['anon', 'rust'])), 'GC heaps plus the page store.'],
         ['Cable, %s clients saturated, Pss MB' % L.n(F['clients'][1000]), L.n(F['cable', 'rust', 1000, 'pss']), L.n(F['cable', 'oncrack', 1000, 'pss']), L.x(r(F['cable', 'oncrack', 1000, 'pss'], F['cable', 'rust', 1000, 'pss'])), 'The .NET runtime and the heap the posts leave behind; a connection itself costs about what Rust&#39;s does. Rust here is upstream ' + lit('f9dca47', 'commit') + '.'],
+        ['Cable, %s clients saturated, messages a second to every client (higher is better)' % L.n(F['clients'][2000]), L.n(F['cable', 'rust', 2000, 'msgs']), L.n(F['cable', 'oncrack', 2000, 'msgs']), L.x(r(F['cable', 'oncrack', 2000, 'msgs'], F['cable', 'rust', 2000, 'msgs'])),
+         'Behind by a little, inside the spread of the reps. Both are held back by the kernel&#39;s cost of each send; Rust batches more of them at this size.'],
         ['cold start, ms', L.n(F['cold', 'rust']), L.n(F['cold', 'oncrack']), L.x(r(F['cold', 'oncrack'], F['cold', 'rust'])),
          'The JIT. The opt-in AOT image starts in %s ms.' % L.n(F['boot', 'aot-image', 'up_ms'])],
     ]
     body = ''.join([
         '<p class="lead">onCrack is ahead of Rust on every benchmarked HTTP workload at every concurrency. Here is everything it is not ahead on, from the same session.</p>',
         tbl([('', False), ('Rust', True), ('onCrack', True), ('onCrack / Rust', True), ('Why', False)], rows, 'Same session, medians of the reps', 'dense'),
-        '<p>Memory is the .NET runtime&#39;s and the heap the posts leave behind; fan-out is no longer on this list (it is ahead of Rust at every client count measured, see the fan-out panel).</p>',
+        '<p>Memory is the .NET runtime&#39;s and the heap the posts leave behind; fan-out is on this list only at the largest room (above); it is ahead of Rust at the smaller ones, see the fan-out panel.</p>',
         srcline(R1 + '/rust-1.json', R1 + '/oncrack-1.json', 'bench/results/oncrack-c4/boot.jsonl', 'bench/results/oncrack-round1-final.md', lead='Sources'),
     ])
     return panel('p-rust', 'What Rust still wins', 'Not ahead on these', body, 'fanout')
@@ -1182,15 +1192,17 @@ def p_reliability(F):
         tbl(head, rows('cable'), 'cable: the default posting load'),
         '<h3>What each does with a client that cannot keep up</h3>'
         '<p>Action Cable never cuts a client for being slow: whatever the socket will not take waits in a queue of that connection&#39;s own, with no bound, which is what Rails&#39; memory above is; '
-        'its posters are slow enough that the queues stay short. Rust and onCrack (before this unit) post far faster than they can send to a thousand clients, ran past a ring of a few hundred frames, and closed the clients that fell behind: '
+        'its posters are slow enough that the queues stay short. Rust and onCrack before the shared log post far faster than they can send to a thousand clients, ran past a ring of a few hundred frames, and closed the clients that fell behind: '
         'the harness counts them as disconnected and they miss everything after. onCrack now keeps what the slowest client has not read once, in a log its clients share, '
         'cuts a client only when the log it pins passes a byte budget or its socket takes no byte for half a minute, and makes a post wait (at most two seconds) while most of a room is seconds behind, '
         'so it takes fewer posts than the cut run did and delivers every one of them. A browser that is cut reconnects and fetches what it missed. Rails&#39; memory is the price of its unbounded queues; '
         'onCrack&#39;s is the .NET heap that the posters&#39; renderings leave behind.</p>',
         '<p>A row with disconnected clients has a small %s because it counts only the few messages every client received before the cut; onCrack&#39;s counts every message posted, each waiting behind the posts ahead of it in the slowest client&#39;s socket.</p>' % P99,
-        '<p>The Pss column is the container&#39;s peak, sampled twice a second from <code>/proc/PID/smaps_rollup</code> over the profile. One session each, the median of its rounds; the host was shared with other work (its load is in each directory). '
-        'C&#39;s Cable server did not take the clients in this setup (see the notes in the results file), so its row says only that.</p>',
-        srcline(REL_BEFORE + '/summary.json', REL_AFTER + '/summary.json', 'bench/reliability/run', 'bench/reliability/summarize', 'bench/results/oncrack-r4-reliability.md', lead='Sources (the harness output, the memory samples and the run logs sit beside them)'),
+        '<p>The Pss column is the container&#39;s peak, sampled twice a second from <code>/proc/PID/smaps_rollup</code> over the profile. One session, the median of its rounds. <b>It is incomplete:</b> it stopped in the second of three planned rounds '
+        '(the Mac&#39;s disk floor), so Rails has one round, the others two and the F# port, which ran on its own, three; and the host was busy for most of it, so read the disconnected counts, which do not depend on speed, and not the messages a second '
+        '(onCrack&#39;s are well below the figures from the unit that built the log, measured on a quieter host). The F# port cannot take the overload profile, so only its Cable profiles ran; its cable_heavy row takes each column&#39;s median separately, and in one of its rounds four clients were closed, which is why its delivered count is below its posted count while its disconnected count reads zero. '
+        'C&#39;s Cable server did not take most of the clients in this setup (see the notes in the results file), so its row says only that.</p>',
+        srcline(REL_SESSION + '/summary.json', REL_PORT + '/summary.json', 'bench/reliability/run', 'bench/reliability/summarize', 'bench/results/oncrack-r4-reliability.md', 'bench/results/oncrack-r4-final.md', lead='Sources (the harness output, the memory samples and the run logs sit beside them)'),
     ])
     return panel('p-reliability', 'Cable reliability', 'Nobody is cut for being slow', body, 'fanout')
 
@@ -1268,54 +1280,63 @@ def p_fresh(F):
     names = {'oncrack': 'onCrack (fresh, default)', 'oncrack-cached': 'onCrack, cached decision (opt-in)'}
     nm = lambda a: names.get(a) or upname(a)
     normal = tbl([('Implementation', False)] + [(rn, True) for _, rn in ROUTES], [[nm(a)] + [rng(F['up3'], a, r) for r, _ in ROUTES] for a in R3APPS],
-                 'Normal profile, two sessions pooled: median [observed min&ndash;max] of %s rounds, requests/sec at %s clients' % (L.n(F['up3_rounds']), L.n(F['up_conc'])))
+                 'Normal profile, one session: median [observed min&ndash;max] of %s rounds, requests/sec at %s clients' % (L.n(F['up3_rounds']), L.n(F['up_conc'])))
     mixed = tbl([('Implementation', False)] + [(RNAME[r], True) for r in UPREADS], [[nm(a)] + [rng(F['up3m'], a, r) for r in UPREADS] for a in R3APPS],
-                'Mixed profile, two sessions pooled: median [observed min&ndash;max] of %s rounds, reads/sec at %s clients while one writer posts up to %s messages/s into HQ' % (L.n(F['up3_rounds']), L.n(F['up_conc']), L.n(F['up_rate'])))
+                'Mixed profile, one session: median [observed min&ndash;max] of %s rounds, reads/sec at %s clients while one writer posts up to %s messages/s into HQ' % (L.n(F['up3_rounds']), L.n(F['up_conc']), L.n(F['up_rate'])))
     ratios = tbl([('Over', False), ('onCrack, five workloads', True), ('onCrack, four mixed reads', True), ('cached decision, five workloads', True)],
                  [[upname(b), L.x(F['up3_geo', 'oncrack', b]), L.x(F['up3m_geo', 'oncrack', b]), L.x(F['up3_geo', 'oncrack-cached', b])] for b in ('rust', 'c', 'fsharp')],
                  'Geometric means of the medians')
     cpu = tbl([('Server CPU per request, &micro;s', False), ('Room page', True), ('Mixed reads', True)],
               [[nm(a), L.n(F['cpu3', a, 'room_show'], D1), L.n(F['cpu3', a, 'mixed'], D1)] for a in ('oncrack', 'oncrack-cached', 'rust', 'c')],
               'Hand re-runs (a warm-up, then a timed window at the same clients, CPU from the container&#39;s cgroup): medians')
-    val = tbl([('Final run, four sessions', False), ('Timed responses validated', True), ('Writes audited', True), ('Errors or invalid', True), ('Raw samples reconciled', True), ('Peak generator CPU, %', True)],
-              [['Normal (two) and mixed (two)', L.n(F['r3_val']['timed']), L.n(F['r3_val']['writes']), L.n(F['r3_val']['bad']), L.n(F['r3_val']['samples']), L.n(F['r3_val']['gen'], D1)]])
+    val = tbl([('Final run, two sessions', False), ('Timed responses validated', True), ('Writes audited', True), ('Errors or invalid', True), ('Raw samples reconciled', True), ('Peak generator CPU, %', True)],
+              [['Normal and mixed', L.n(F['r3_val']['timed']), L.n(F['r3_val']['writes']), L.n(F['r3_val']['bad']), L.n(F['r3_val']['samples']), L.n(F['r3_val']['gen'], D1)]])
     body = ''.join([
         '<p class="lead">Upstream&#39;s contract re-reads the session and the room membership on every cache hit; until round three onCrack kept the decision its first request made and dropped it on any commit. '
         'Now, by default, every request reads its session and user rows, a kept room or messages page is served after a membership query finds the row, and the front server&#39;s replay first runs one narrow query '
         'for the session, its user and the membership. A room page hit then costs %s the CPU of the cached decision, and it is the number to compare: <code>CAMPFIRE_FRESH_AUTH=0</code> keeps the cached decision as an opt-in.</p>' % L.x(F['cpu3', 'oncrack', 'room_show'].over(F['cpu3', 'oncrack-cached', 'room_show'])),
         normal, mixed, ratios, cpu, val,
         '<h3>Read with care</h3><ul class="caveats">'
-        '<li><b>A busy host.</b> Another session on the Mac was compiling (Erlang and Go builds, more than a core at times) while these ran. The VM&#39;s CPUs are not pinned to cores, so every engine&#39;s samples swung: '
-        'the two normal sessions put onCrack over Rust at %s and %s. The headline pools both sessions of each profile, by a plan fixed before any ran, and drops none. '
-        'The pooled normal multiple is lower than either session&#39;s: the second session ran every engine at about half speed, and a median of six rounds lands at a different point between the two regimes for each engine, so here it understates. '
-        'The pooled mixed multiples lean the other way: the quieter mixed session alone puts onCrack at %s over Rust and %s over C. The hand re-runs&#39; CPU per request is the steadier comparison.</li>'
-        '<li><b>Mixed is pooled too.</b> Its first session was noisy by the plan&#39;s rule (the host&#39;s other work was above the plan&#39;s load limit for more than a quarter of its samples) and was run again; both are in the medians. Rust&#39;s and C&#39;s mixed medians sit under round two&#39;s on the same images, so the mixed multiples are less certain than the normal ones.</li>'
-        '<li><b>The final code.</b> These sessions ran the image built from the final code, with the search order and the WAL work of units <span data-lit="name">R3.3</span> and <span data-lit="name">R3.4</span>; the targeted pixel gate on it passed %s of %s screenshots (<a href="#p-pixels">Pixel parity</a>).</li>'
+        '<li><b>One session per profile.</b> The plan fixed before any session ran repeats a session only when more than a quarter of its host samples show other work at a core and a half or more; '
+        'neither session did, so each profile is one session of three rounds a cell, not round three&#39;s two. Round three&#39;s two normal sessions put onCrack over Rust at %s and %s and its pooled figure was %s; this session puts it at %s, '
+        'on a quieter afternoon. That is the host, not a speed-up: the server CPU for a room page request, which moves less, reads %s &micro;s in these hand re-runs and %s in round three&#39;s. '
+        'The CPU ratios (Rust spends %s and C %s of onCrack&#39;s) are the ones to quote.</li>'
+        '<li><b>The hand re-runs.</b> Four sets, forward then reversed, twice; the last two ran while the host&#39;s other work was above the limit. The medians are over all four and none is dropped; the two quiet sets alone read the same way.</li>'
+        '<li><b>The final code.</b> These sessions ran the image built from round four&#39;s final code; the targeted pixel gate on it passed %s of %s screenshots (<a href="#p-pixels">Pixel parity</a>).</li>'
         '<li><b>Not their machine.</b> Four of this VM&#39;s CPUs per side, not the Ryzen&#39;s; compare ratios, not absolute numbers, with their report.</li></ul>'
-        % (L.x(geo([up3s('normal-1', 'oncrack', r).over(up3s('normal-1', 'rust', r)) for r, _ in ROUTES], 'onCrack over Rust, geometric mean of the five workloads, first normal session of the final run')),
-           L.x(geo([up3s('normal-2', 'oncrack', r).over(up3s('normal-2', 'rust', r)) for r, _ in ROUTES], 'onCrack over Rust, geometric mean of the five workloads, second normal session of the final run')),
-           L.x(geo([up3ms('mixed-2', 'oncrack', r).over(up3ms('mixed-2', 'rust', r)) for r in UPREADS], 'onCrack over Rust, geometric mean of the four mixed reads, second (quieter) mixed session of the final run')),
-           L.x(geo([up3ms('mixed-2', 'oncrack', r).over(up3ms('mixed-2', 'c', r)) for r in UPREADS], 'onCrack over C, geometric mean of the four mixed reads, second (quieter) mixed session of the final run')),
+        % (L.x(geo([up3_at(R3_OLD, 'normal-1', 'oncrack', r).over(up3_at(R3_OLD, 'normal-1', 'rust', r)) for r, _ in ROUTES], 'onCrack over Rust, geometric mean of the five workloads, first normal session of round three&#39;s final run')),
+           L.x(geo([up3_at(R3_OLD, 'normal-2', 'oncrack', r).over(up3_at(R3_OLD, 'normal-2', 'rust', r)) for r, _ in ROUTES], 'onCrack over Rust, geometric mean of the five workloads, second normal session of round three&#39;s final run')),
+           L.x(geo([up3_pool(R3_OLD, ('normal-1', 'normal-2'), 'oncrack', r).over(up3_pool(R3_OLD, ('normal-1', 'normal-2'), 'rust', r)) for r, _ in ROUTES], 'onCrack over Rust, geometric mean of the five workloads, round three&#39;s two normal sessions pooled')),
+           L.x(F['up3_geo', 'oncrack', 'rust']),
+           L.n(F['cpu3', 'oncrack', 'room_show'], D1), L.n(r3_old_cpu('oncrack', 'room_show'), D1),
+           L.x(F['cpu3', 'rust', 'room_show'].over(F['cpu3', 'oncrack', 'room_show'])), L.x(F['cpu3', 'c', 'room_show'].over(F['cpu3', 'oncrack', 'room_show'])),
            L.n(F['r3f_equal']), L.n(F['r3f_total'])),
-        srcline(R3N[0] + '/', R3N[1] + '/', R3M[0] + '/', R3M[1] + '/', R3 + '/review.jsonl', R3 + '/PLAN.md', R3 + '/totals.md', 'bench/results/oncrack-r3-final.md', lead='Sources'),
+        srcline(R3N[0] + '/', R3M[0] + '/', R3 + '/review.jsonl', R3 + '/PLAN.md', R3 + '/totals.md', R3_OLD + '/normal-1/', R3_OLD + '/normal-2/', R3_OLD + '/review.jsonl', 'bench/results/oncrack-r4-final.md', lead='Sources'),
     ])
-    return panel('p-fresh', 'Round three: their contract', 'Fresh authorization, against Rust, C and the port', body, 'upstream')
+    return panel('p-fresh', 'Round four: their contract', 'Fresh authorization, against Rust, C and the port', body, 'upstream')
 
 
-def up3s(session, app, route):
-    """One round 3 normal session's median for one app and route at c=16."""
-    files = sorted(os.path.relpath(f, REPO) for f in glob.glob(os.path.join(REPO, R3, session, app + '-[0-9].json')))
+def up3_at(base, session, app, route):
+    """One normal session's median for one app and route at c=16 (base: the final run's directory, round three's or round four's)."""
+    files = sorted(os.path.relpath(f, REPO) for f in glob.glob(os.path.join(REPO, base, session, app + '-[0-9].json')))
     vals = [x['rps'] for f in files for x in jload(f)['http'] if x['route'] == route and x['conc'] == 16]
-    return V(statistics.median(vals), '%s, %s, c=16, req/s, median of %d rounds (verification harness, %s)' % (UPBASE[app], RNAME[route], len(vals), session), files,
+    return V(statistics.median(vals), '%s, %s, c=16, req/s, median of %d rounds (verification harness, %s/%s)' % (UPBASE[app], RNAME[route], len(vals), base.split('/')[-1], session), files,
              'median of ' + ', '.join(g(float(x)) for x in vals))
 
 
-def up3ms(session, app, route):
-    """One round 3 mixed session's median for one app and read route at c=16."""
-    files = sorted(os.path.relpath(f, REPO) for f in glob.glob(os.path.join(REPO, R3, session, app + '-[0-9].json')))
-    vals = [x['rps'] for f in files for x in (jload(f)['mixed_http'] or []) if x['route'] == route and x['conc'] == 16]
-    return V(statistics.median(vals), '%s, %s, mixed profile, c=16, reads/sec, median of %d rounds (verification harness, %s)' % (UPBASE[app], RNAME[route], len(vals), session), files,
+def up3_pool(base, sessions, app, route):
+    """Several normal sessions pooled, as the plan of that run pooled them: the median over all their rounds."""
+    files = sorted(os.path.relpath(f, REPO) for ss in sessions for f in glob.glob(os.path.join(REPO, base, ss, app + '-[0-9].json')))
+    vals = [x['rps'] for f in files for x in jload(f)['http'] if x['route'] == route and x['conc'] == 16]
+    return V(statistics.median(vals), '%s, %s, c=16, req/s, median of %d rounds (verification harness, %s, %s pooled)' % (UPBASE[app], RNAME[route], len(vals), base.split('/')[-1], ' and '.join(sessions)), files,
              'median of ' + ', '.join(g(float(x)) for x in vals))
+
+
+def r3_old_cpu(app, phase):
+    """Round three's hand re-runs: the median server CPU per request of an app in a phase (bench/results/oncrack-r3-final/review.jsonl)."""
+    rv = [json.loads(l) for l in open(os.path.join(REPO, R3_OLD, 'review.jsonl')) if '"window"' in l]
+    xs = [d['server_cpu_us_per_req'] for d in rv if d['app'] == app and d['phase'] == phase and ('cached' in d['tag']) == (app == 'oncrack-cached')]
+    return V(statistics.median(xs), '%s, server CPU us per request, %s, median of %d hand re-runs of round three (review.py)' % (UPBASE[app], phase, len(xs)), [R3_OLD + '/review.jsonl'], 'median of ' + ', '.join('%.1f' % x for x in xs))
 
 
 def p_upstream(F):
@@ -1342,7 +1363,7 @@ def p_upstream(F):
         'the round&#39;s verifier attacked that with foreign writers and it held, but a hit was not the same work as theirs. Round three made fresh authorization the default; its numbers are the headline.</li>'
         '<li><b>Search order.</b> Rails <span data-lit="commit">90b3300</span> lists a search&#39;s matches by time; upstream has listed them by message id since <span data-lit="commit">dbc7620</span>. onCrack now lists them by id and passes upstream&#39;s contract unchanged. The port still renders the old order, so the harness checks it against that one.</li>'
         '<li><b>One viewer, one URL.</b> Their read workloads are a cache-hit benchmark; the appendix of the results file keeps this project&#39;s realistic workloads.</li></ul>',
-        srcline(UPN + '/', UPM + '/', R3 + '/kloc.json', R2 + '/upstream-performance-review.md', 'bench/results/oncrack-r2-final.md', lead='Sources'),
+        srcline(UPN + '/', UPM + '/', R3_OLD + '/kloc.json', R2 + '/upstream-performance-review.md', 'bench/results/oncrack-r2-final.md', lead='Sources'),
     ])
     return panel('p-upstream', 'Round two: the cached decision', 'onCrack against Rust, C, Rails and the port', body, 'upstream')
 
