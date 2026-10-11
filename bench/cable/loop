@@ -13,6 +13,9 @@
 #   --keep-all 1: keep every phase's evidence (a smoke run with --lg-args "--trace-always 1")
 #   --procmem 1: run bench/lib/procmem.py beside each phase on PROCMEM_CPUS (0, a server CPU), as bench/run's cable suite does: it reads
 #     the server's /proc/PID/smaps every few hundred ms, which can stall a process with a big heap (round 4's miss had it, the first loops did not)
+#   --freeze-ms N: a provocation, not a measurement. In every target phase, 3 to 9 s into the saturated phase, `docker pause` the app for N ms
+#     (the cgroup freezer: every thread stops and the container uses no CPU, as in round 4's phase with the missing message, whose
+#     container used under one core for 1.8 s in the posting window) to see what a freeze does to the messages in flight
 #   --server-trace 1 (default for oncrack): the app's CAMPFIRE_CABLE_TRACE, appended to DIR/servertrace/cable.jsonl
 #
 # Per phase DIR/runNN-cCLIENTS/ holds result.json, stderr, verdict.json and app-errors.log (the app's ERROR/WARN lines in the phase). A
@@ -28,7 +31,7 @@ export WORK=${WORK:-/var/tmp/campfire-bench-work}
 export LOG_MAX_SIZE=${LOG_MAX_SIZE:-200m}
 BENCH_RUN_LIB=1 source "$ROOT/bench/run"
 set -- "${ARGS[@]}"
-APP=oncrack CLIENTS=500 PREFIX="" RUNS=15 FRESH=0 ENVS="" LGARGS="" SECS=15 OUT="" SERVER_TRACE="" CLIENT_TRACE=1 KEEP=0 PROCMEM_ON=0
+APP=oncrack CLIENTS=500 PREFIX="" RUNS=15 FRESH=0 ENVS="" LGARGS="" SECS=15 OUT="" SERVER_TRACE="" CLIENT_TRACE=1 KEEP=0 PROCMEM_ON=0 FREEZE_MS=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --app) APP=$2; shift 2 ;;
@@ -44,6 +47,7 @@ while [ $# -gt 0 ]; do
     --client-trace) CLIENT_TRACE=$2; shift 2 ;;
     --keep-all) KEEP=$2; shift 2 ;;
     --procmem) PROCMEM_ON=$2; shift 2 ;;
+    --freeze-ms) FREEZE_MS=$2; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
@@ -98,8 +102,17 @@ phase() {
   if [ "$PROCMEM_ON" = 1 ]; then
     taskset -c "$PROCMEM_CPUS" python3 "$BENCH/lib/procmem.py" sample "$CG" "$td/procmem.jsonl" & pm=$!
   fi
+  local fz=""
+  if [ "$FREEZE_MS" -gt 0 ] && [ "$shape" = target ]; then
+    ( for _ in $(seq 1 600); do grep -q 'PHASE saturated ' "$td/stderr" 2>/dev/null && break; sleep 0.1; done
+      sleep "$(python3 -c 'import random; print(round(random.uniform(3, 9), 2))')"
+      echo "freeze: pause at $(date +%s.%N) for ${FREEZE_MS} ms" > "$td/freeze.txt"
+      docker pause "$CONTAINER" >/dev/null; sleep "$(python3 -c "print($FREEZE_MS / 1000)")"; docker unpause "$CONTAINER" >/dev/null
+      echo "freeze: unpaused at $(date +%s.%N)" >> "$td/freeze.txt" ) & fz=$!
+  fi
   lg cable --base "$BASE" --cookie "$cookie" --room "$ROOM" --csrf "$csrf" --streams "$streams" \
     --clients "$n" --tput-secs "$SECS" --posters "$CABLE_POSTERS" "${tr[@]}" $LGARGS > "$td/result.json" 2> "$td/stderr" || echo "loadgen exit $?" >> "$td/stderr"
+  if [ -n "$fz" ]; then wait "$fz" 2>/dev/null || true; fi
   if [ -n "$pm" ]; then kill "$pm" 2>/dev/null || true; wait "$pm" 2>/dev/null || true; fi
   sleep 3   # the app notices the closed sockets and writes its connection lines
   # (The WAL checkpoint warning is the database saying a passive checkpoint was not finished: not a cable matter.)
@@ -162,6 +175,9 @@ if os.path.exists(td + "/procmem.jsonl"):
     # stretches of a phase are its connect and its drain.
     cpu_gaps = [{"from_ms": g[0] - rows[0]["t"], "ms": g[1] - g[0]} for g in cpu_gaps[1:-1] if g[1] - g[0] >= 400]
 v["cpu_idle_stretches"] = cpu_gaps[:10]
+if os.path.exists(td + "/freeze.txt"):
+    v["freeze"] = open(td + "/freeze.txt").read().strip().splitlines()
+    v["problems"].append("a provoked freeze: " + v["freeze"][0])
 if gaps and max(g["gap_ms"] for g in gaps) >= 600:
     v["problems"].append(f"the server published nothing for {max(g['gap_ms'] for g in gaps)} ms inside the phase (a freeze)")
 if cpu_gaps and max(g["ms"] for g in cpu_gaps) >= 600:
