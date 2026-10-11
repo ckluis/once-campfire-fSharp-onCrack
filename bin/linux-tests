@@ -5,6 +5,7 @@
 #
 #   bin/linux-tests Kit                                   all of Campfire.Kit.Tests
 #   bin/linux-tests Kit --filter-method "*resume*"        extra arguments go to dotnet test
+#   LINUX_TESTS_ENV="K=V K=V" bin/linux-tests Cable ...  environment for the tests (the gated pin-stress reproducer of TraceTests.fs)
 #
 # The build runs on a private copy of the sources (without bin/, obj/, target/, rust/ and the parity seeds,
 # which the tests still read from the real repository through CAMPFIRE_ROOT), so it can't clash with the
@@ -14,7 +15,7 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 
 if [ "$(uname)" = Darwin ]; then
-  exec colima ssh -- bash -c "cd '$root' && bin/linux-tests $(printf '%q ' "$@")"
+  exec colima ssh -- bash -c "cd '$root' && LINUX_TESTS_ENV='${LINUX_TESTS_ENV:-}' bin/linux-tests $(printf '%q ' "$@")"
 fi
 
 [ $# -ge 1 ] || { echo "usage: bin/linux-tests <Project> [dotnet test arguments]" >&2; exit 2; }
@@ -28,6 +29,7 @@ exec docker run --rm \
   --env NUGET_PACKAGES=/nuget \
   --env CAMPFIRE_ROOT=/repo \
   --env CAMPFIRE_REQUIRE_SEED \
+  $(for e in ${LINUX_TESTS_ENV:-}; do printf -- '--env %s ' "$e"; done) \
   "$image" \
   bash -c 'set -euo pipefail
     mkdir -p /work

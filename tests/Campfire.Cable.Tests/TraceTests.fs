@@ -126,3 +126,55 @@ let ``the verify switch notices a published array that was zeroed before a send`
         Assert.Equal<int64>(before + 1L, CableVerify.Failures)
     finally
         CableVerify.Configure false
+
+/// Round 5's finding, as a reproducer. With `CAMPFIRE_PIN_STRESS=1` (Linux: `LINUX_TESTS_ENV=CAMPFIRE_PIN_STRESS=1 bin/linux-tests Cable
+/// --filter-method "*pinned*"`), frames are sent in gathered writes (`Sendmsg.pin`: one `sendmsg` over the frames' own arrays, each pinned by
+/// a `fixed` local) while another thread runs compacting collections as fast as it can. The verify switch reports an array that is
+/// not where the kernel was given its address once the `sendmsg` has returned, with every payload supposedly still pinned. Today it does:
+/// the test FAILS, with the count; when the gathered write holds its arrays, it passes. Off, it does nothing.
+[<Fact>]
+let ``gathered writes keep their arrays where the kernel was told while compacting collections run`` () =
+    if Environment.GetEnvironmentVariable "CAMPFIRE_PIN_STRESS" = "1" && GatherAvailable then
+        CableVerify.Configure true
+        try
+            use listener = new Net.Sockets.TcpListener(Net.IPAddress.Loopback, 0)
+            listener.Start()
+            use client = new Net.Sockets.Socket(Net.Sockets.SocketType.Stream, Net.Sockets.ProtocolType.Tcp)
+            client.Connect(Net.IPAddress.Loopback, (listener.LocalEndpoint :?> Net.IPEndPoint).Port)
+            use server = listener.AcceptSocket()
+            let writer = Writer(IO.Stream.Null, false, TimeSpan.FromSeconds 30.0, ignore, server)
+            writer.Detach()
+            let stop = ref false
+            let reader =
+                Threading.Thread(
+                    (fun () ->
+                        let buffer = Array.zeroCreate<byte> 65536
+                        while not stop.Value do
+                            try
+                                client.Receive buffer |> ignore
+                            with _ ->
+                                ()),
+                    IsBackground = true
+                )
+            reader.Start()
+            let collector =
+                Threading.Thread(
+                    (fun () ->
+                        while not stop.Value do
+                            GC.Collect(0, GCCollectionMode.Forced, true, true)),
+                    IsBackground = true
+                )
+            collector.Start()
+            let before = CableVerify.Failures
+            for i in 1..4000 do
+                let frames =
+                    Array.init 32 (fun j ->
+                        let frame = Frame(Array.create 10_000 (byte (1 + (i + j) % 200)))
+                        frame.Probe <- Frame.ProbeOf frame.Bytes
+                        frame)
+                (writer.Send frames).AsTask().Wait()
+            stop.Value <- true
+            let failures = CableVerify.Failures - before
+            Assert.True((failures = 0L), $"{failures} arrays were not where the kernel was told when sendmsg returned (of {CableVerify.Checks} checks)")
+        finally
+            CableVerify.Configure false
