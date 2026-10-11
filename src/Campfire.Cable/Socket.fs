@@ -148,6 +148,8 @@ type Frame(bytes: byte[]) =
 
     override this.ToString() = $"Frame({this.Text})"
 
+#nowarn "9" // `CableVerify.CheckAddress` reads an array's address
+
 /// Unit R5.1: `CAMPFIRE_CABLE_VERIFY=1` makes each published frame take a probe of its array (`Frame.Probe`) and each send check it,
 /// before and after the `sendmsg` that reads the array, and say on stderr when it no longer matches: whether the array was already
 /// wrong when this connection came to send it, or changed during the call, or (no message, and a client that still lacks the bytes) was
@@ -176,6 +178,32 @@ type internal CableVerify private () =
 
     /// At publish.
     static member Stamp(frame: Frame) : unit = if enabled then frame.Probe <- Frame.ProbeOf frame.Bytes
+
+    /// After a gathered `sendmsg`: the address the iovec table gave the kernel for `payload` against where the array is now. Different
+    /// means the array moved while the kernel was reading it (it was not pinned), and what the kernel read was whatever was left there.
+    static member CheckAddress(payload: byte[], given: nativeint, index: int) : unit =
+        if payload.Length > 0 then
+            let now =
+                NativeInterop.NativePtr.toNativeInt (
+                    NativeInterop.NativePtr.ofVoidPtr<byte> (
+                        System.Runtime.CompilerServices.Unsafe.AsPointer(&System.Runtime.InteropServices.MemoryMarshal.GetArrayDataReference payload)
+                    )
+                )
+            if now <> given then
+                let n = Interlocked.Increment(&failures)
+                if n <= 50L then
+                    eprintfn
+                        "ERROR campfire: cable verify: payload %d of the batch (%d bytes) MOVED before sendmsg returned: the kernel was given %x, the array is at %x now, generation %d, GCs %d/%d/%d, thread %d, failure %d"
+                        index
+                        payload.Length
+                        (int64 given)
+                        (int64 now)
+                        (GC.GetGeneration payload)
+                        (GC.CollectionCount 0)
+                        (GC.CollectionCount 1)
+                        (GC.CollectionCount 2)
+                        Environment.CurrentManagedThreadId
+                        n
 
     /// At send: `payload` is what goes to the socket (the frame's own array, or its deflated form, which is not checked).
     static member Check(frame: Frame, payload: byte[], where: string, tag: string) : unit =
@@ -615,6 +643,10 @@ module private Sendmsg =
                     if errno <> EINTR then
                         result <- struct (0L, errno)
                         again <- false
+            // Unit R5.1 (`CAMPFIRE_CABLE_VERIFY`): every payload is still pinned here; the address the kernel was given is where it is.
+            if CableVerify.Enabled then
+                for j in 0 .. count - 1 do
+                    CableVerify.CheckAddress(scratch.Payloads[j], NativePtr.get table (4 * j + 2), j)
             result
 
     /// One non-blocking `sendmsg` of the `count` header and payload pairs in `scratch`.
