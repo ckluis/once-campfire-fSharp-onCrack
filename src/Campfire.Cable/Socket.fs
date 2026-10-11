@@ -166,11 +166,22 @@ type internal CableVerify private () =
 
     static let mutable failures = 0L
     static let mutable checks = 0L
+    static let mutable lastReport = 0L
 
     static member Enabled = enabled
 
     /// For tests.
     static member Configure(on: bool) : unit = enabled <- on
+
+    /// The first 20 failures are described, then one a second (with the running count in the line): a flood in the first phase of a
+    /// container must not use up what a later phase would say.
+    static member ShouldReport(n: int64) : bool =
+        if n <= 20L then
+            true
+        else
+            let now = Environment.TickCount64
+            let last = Interlocked.Read(&lastReport)
+            now - last >= 1000L && Interlocked.CompareExchange(&lastReport, now, last) = last
 
     /// Frames found changed since they were published, and frames checked.
     static member Failures = Interlocked.Read(&failures)
@@ -191,7 +202,7 @@ type internal CableVerify private () =
                 )
             if now <> given then
                 let n = Interlocked.Increment(&failures)
-                if n <= 50L then
+                if CableVerify.ShouldReport n then
                     eprintfn
                         "ERROR campfire: cable verify: payload %d of the batch (%d bytes) MOVED before sendmsg returned: the kernel was given %x, the array is at %x now, generation %d, GCs %d/%d/%d, thread %d, failure %d"
                         index
@@ -211,7 +222,7 @@ type internal CableVerify private () =
             Interlocked.Increment(&checks) |> ignore
             if Frame.ProbeOf payload <> frame.Probe then
                 let n = Interlocked.Increment(&failures)
-                if n <= 50L then
+                if CableVerify.ShouldReport n then
                     let zeros = payload |> Array.forall (fun b -> b = 0uy)
                     eprintfn
                         "ERROR campfire: cable verify: frame seq %d (%d bytes) no longer matches its probe %s: all zero %b, generation %d, GCs %d/%d/%d, thread %d, connection %s, failure %d"
