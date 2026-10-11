@@ -16,7 +16,7 @@ mkdir -p /var/tmp/r5-lost-frame
 for spec in "$@"; do
   # spec: NAME|loop arguments
   name=${spec%%|*}; args=${spec#*|}
-  # shellcheck disable=SC2086
-  run "$name" $args || break
+  # The arguments are shell words (a value with spaces is quoted in the spec).
+  eval "run \"\$name\" $args" || break
 done
 touch /var/tmp/r5-lost-frame/hunt.done

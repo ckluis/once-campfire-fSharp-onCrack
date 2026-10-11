@@ -12,7 +12,8 @@ sample() { local t=$(date +%T) l=$(sysctl -n vm.loadavg | tr -d '{}'); local top
 t=0
 # EF "pid:NAME" waits for the VM process whose command line matches NAME to end (pgrep -f, checked every 30 s); any other EF is a file.
 # Every 30 s it also reads the Mac's free space and stops waiting under 12 GiB (the disk rule), saying so in the file.
-done_p() { case "$ef" in pid:*) ! colima ssh -- pgrep -f "${ef#pid:}" >/dev/null 2>&1 ;; *) [ -f "$ef" ] ;; esac; }
+# EF "vm:PATH" waits for that file inside the VM.
+done_p() { case "$ef" in vm:*) colima ssh -- test -f "${ef#vm:}" >/dev/null 2>&1 ;; pid:*) ! colima ssh -- pgrep -f "${ef#pid:}" >/dev/null 2>&1 ;; *) [ -f "$ef" ] ;; esac; }
 while [ $t -lt $max ]; do
   sample >> "$out"
   if [ $((t % 30)) -eq 0 ]; then

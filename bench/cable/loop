@@ -82,7 +82,6 @@ begin_container() {
   csrf=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["csrf"] or "")' "$scrape")
   streams=$(python3 -c 'import json,sys; print(",".join(json.loads(sys.argv[1])["streams"]))' "$scrape")
   log "$APP: container up, cold start ${cold}ms"
-  [ -n "${TRACE_DIR-}" ] && : > "$TRACE_DIR/cable.jsonl" || true
 }
 
 # One loadgen phase. Prints nothing; appends to phases.jsonl and (on a miss) misses.txt.
@@ -95,7 +94,9 @@ phase() {
   lg cable --base "$BASE" --cookie "$cookie" --room "$ROOM" --csrf "$csrf" --streams "$streams" \
     --clients "$n" --tput-secs "$SECS" --posters "$CABLE_POSTERS" "${tr[@]}" $LGARGS > "$td/result.json" 2> "$td/stderr" || echo "loadgen exit $?" >> "$td/stderr"
   sleep 3   # the app notices the closed sockets and writes its connection lines
-  docker logs --since "$t0" "$CONTAINER" 2>&1 | grep -E 'ERROR|WARN|Unhandled|Exception' | head -200 > "$td/app-errors.log" || true
+  # (The WAL checkpoint warning is the database saying a passive checkpoint was not finished: not a cable matter.)
+  docker logs --since "$t0" "$CONTAINER" 2>&1 | grep -E 'ERROR|WARN|Unhandled|Exception' | grep -v "WAL checkpoint couldn't finish" | head -200 > "$td/app-errors.log" || true
+  local end=0; [ -n "${TRACE_DIR-}" ] && end=$(stat -c %s "$TRACE_DIR/cable.jsonl" 2>/dev/null || echo 0)
   local ok=0
   python3 - "$td" "$run" "$n" "$shape" "$APP" "$started" "$OUT/phases.jsonl" <<'PY' || ok=$?
 import json, sys
@@ -129,14 +130,18 @@ print(("MISS " if v["miss"] else "ok   ") + f"run {run} {n} clients ({shape}): "
 sys.exit(1 if v["miss"] else 0)
 PY
   if [ "$ok" != 0 ] || [ "$KEEP" = 1 ]; then
-    [ -n "${TRACE_DIR-}" ] && tail -c +$((off + 1)) "$TRACE_DIR/cable.jsonl" > "$td/server-trace.jsonl" || true
+    # This phase's part of the app's trace (the app appends at its own offset, so the file is never truncated from outside: that made a
+    # sparse file whose copy was gigabytes of zeros).
+    [ -n "${TRACE_DIR-}" ] && tail -c +$((off + 1)) "$TRACE_DIR/cable.jsonl" | head -c $((end - off)) > "$td/server-trace.jsonl" || true
     docker logs --since "$t0" "$CONTAINER" 2>&1 | grep -v 'Request path=' | head -c 2000000 > "$td/app.log" || true
     [ "$ok" = 0 ] || echo "$tag $(date +%T)" >> "$OUT/misses.txt"
   else
     rm -rf "$td/client" "$td/stderr.keep"
     gzip -f "$td/stderr" || true
   fi
-  [ -n "${TRACE_DIR-}" ] && : > "$TRACE_DIR/cable.jsonl" || true
+  # Room on the VM's disk for the next phase (a phase's evidence is 15 to 200 MB).
+  local free; free=$(df -k "$OUT" | awk 'NR==2 {printf "%d", $4/1024/1024}')
+  if [ "$free" -lt 3 ]; then echo "STOP: only ${free} GB free on the VM" >&2; exit 3; fi
 }
 
 wait_for_quiet
@@ -148,4 +153,5 @@ for run in $(seq 1 "$RUNS"); do
 done
 docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 rm -rf "${WORK:?}/${APP:?}"
+[ -z "${TRACE_DIR-}" ] || rm -f "$TRACE_DIR/cable.jsonl"
 log "done: $(wc -l < "$OUT/phases.jsonl") phases, $( [ -s "$OUT/misses.txt" ] && wc -l < "$OUT/misses.txt" || echo 0) with a problem"
