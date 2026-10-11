@@ -369,13 +369,19 @@ impl ConnTrace {
         (seq as usize) < RAW_SEQ_CAP && self.full[(seq >> 6) as usize] & (1u64 << (seq & 63)) != 0
     }
 
-    fn suspect(&mut self, t_ns: u64, why: &str, payload: &[u8]) {
+    fn suspect(&mut self, t_ns: u64, why: &str, payload: &[u8], frame_index: u64) {
         if self.suspects.len() < MAX_SUSPECTS {
             let head = &payload[..payload.len().min(96)];
             let tail = &payload[payload.len().saturating_sub(192)..];
+            // A frame of the right length whose bytes are not text (round 5 found one made of NULs): how much of it is zero, and where the
+            // first and last bytes that are not.
+            let nul = payload.iter().filter(|b| **b == 0).count();
+            let first_nonzero = payload.iter().position(|b| *b != 0);
+            let last_nonzero = payload.iter().rposition(|b| *b != 0);
             self.suspects.push(serde_json::json!({
-                "t_ns": t_ns, "why": why, "len": payload.len(),
-                "head": String::from_utf8_lossy(head), "tail": String::from_utf8_lossy(tail),
+                "t_ns": t_ns, "why": why, "len": payload.len(), "frames_walked_before": frame_index,
+                "nul_bytes": nul, "first_nonzero": first_nonzero, "last_nonzero": last_nonzero,
+                "head": String::from_utf8_lossy(head).replace('\0', "<NUL>"), "tail": String::from_utf8_lossy(tail).replace('\0', "<NUL>"),
             }));
         }
     }
@@ -526,10 +532,12 @@ impl Worker<'_> {
         if op == 0x1 && self.found.is_empty() {
             if self.bad {
                 t.bad += 1;
-                t.suspect(now, "a marker that did not parse", payload);
+                let idx = t.frames;
+                t.suspect(now, "a marker that did not parse", payload, idx);
             } else if payload.len() > 1024 && !confirm {
                 t.unmarked_big += 1;
-                t.suspect(now, "a text frame over 1 KB with no marker", payload);
+                let idx = t.frames;
+                t.suspect(now, "a text frame over 1 KB with no marker", payload, idx);
             }
         }
         if t.recent.len() == RECENT_FRAMES {
@@ -981,7 +989,7 @@ mod tests {
     /// A server in a thread: each connection gets the 101, `nsubs` confirmations, a ping (and must answer it with the same payload),
     /// then `messages` frames of about 10 KB with the marker 1 KB from the end (plus an unmarked small frame and one marker early in
     /// a frame), written in uneven pieces so that reads cut headers, payloads and markers. Returns the pongs it saw.
-    fn serve(listener: TcpListener, nsubs: usize, messages: u64, skip: Option<(usize, u64)>, hold: Arc<AtomicBool>) -> std::thread::JoinHandle<usize> {
+    fn serve(listener: TcpListener, nsubs: usize, messages: u64, skip: Option<(usize, u64)>, zero: Option<(usize, u64)>, hold: Arc<AtomicBool>) -> std::thread::JoinHandle<usize> {
         std::thread::spawn(move || {
             let mut conns = Vec::new();
             let mut pongs = 0;
@@ -1009,6 +1017,10 @@ mod tests {
                     let marker = format!("fanout bmk{seq}z");
                     let at = if seq % 17 == 0 { 100 } else { body.len() - 1037 };
                     body[at..at + marker.len()].copy_from_slice(marker.as_bytes());
+                    if zero == Some((conns.len(), seq)) {
+                        // Round 5's miss: the frame is all there, with the right length, and its payload is NULs.
+                        body.iter_mut().for_each(|b| *b = 0);
+                    }
                     if skip != Some((conns.len(), seq)) {
                         out.extend(text_frame(&body));
                     }
@@ -1048,7 +1060,7 @@ mod tests {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let addr = listener.local_addr().unwrap().to_string();
         let (nsubs, messages) = (3usize, 400u64);
-        let server = serve(listener, nsubs, messages, None, Arc::new(AtomicBool::new(false)));
+        let server = serve(listener, nsubs, messages, None, None, Arc::new(AtomicBool::new(false)));
         let shared = Arc::new(RawShared::new(2, hist));
         let counters = || Counters {
             confirmed: Arc::new(AtomicUsize::new(0)),
@@ -1107,7 +1119,7 @@ mod tests {
         let addr = listener.local_addr().unwrap().to_string();
         let (nsubs, messages) = (3usize, 60u64);
         let hold = Arc::new(AtomicBool::new(true));
-        let server = serve(listener, nsubs, messages, Some((1, 7)), hold.clone());
+        let server = serve(listener, nsubs, messages, Some((1, 7)), None, hold.clone());
         let dir = std::env::temp_dir().join(format!("rawcable-dump-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let shared = Arc::new(RawShared::with_trace(1, hist, Some(dir.clone())));
@@ -1168,6 +1180,65 @@ mod tests {
         // found by the whole-frame search.
         assert!(lines.iter().all(|l| l.get("suspects").is_none()), "{lines:?}");
         assert!(lines.iter().all(|l| l["tail_miss"].as_u64().unwrap() >= 3));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Round 5's miss: a frame of the right length whose payload is NULs. The client counts the frame and the bytes as any other, does not
+    /// have the message, and the dump names the frame as a suspect with how much of it is zero.
+    #[test]
+    fn a_dump_shows_a_frame_made_of_nuls() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap().to_string();
+        let (nsubs, messages) = (3usize, 40u64);
+        let hold = Arc::new(AtomicBool::new(true));
+        let server = serve(listener, nsubs, messages, None, Some((2, 9)), hold.clone());
+        let dir = std::env::temp_dir().join(format!("rawcable-nul-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let shared = Arc::new(RawShared::with_trace(1, hist, Some(dir.clone())));
+        let stop = Arc::new(AtomicBool::new(false));
+        let cfg = Arc::new(RawConfig {
+            addr,
+            request: b"GET /cable HTTP/1.1\r\nHost: x\r\n\r\n".to_vec(),
+            subscribes: Vec::new(),
+            nsubs,
+            handshakes_in_flight: 3,
+            tail_window: 4096,
+        });
+        let counters = Counters {
+            confirmed: Arc::new(AtomicUsize::new(0)),
+            connected: Arc::new(AtomicUsize::new(0)),
+            failed: Arc::new(AtomicUsize::new(0)),
+            stop: stop.clone(),
+        };
+        let (cfg2, shared2, stats) = (cfg.clone(), shared.clone(), shared.stats[0].clone());
+        let worker = std::thread::spawn(move || run_worker(cfg2, counters, shared2, stats, vec![None; 3]).unwrap());
+        let until = Instant::now() + Duration::from_secs(20);
+        while !((1..=messages).filter(|s| *s != 9).all(|s| shared.received(s) == 3) && shared.received(9) == 2) && Instant::now() < until {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        let id = shared.request_dump("t", (1..=messages).collect(), 3);
+        while !shared.dump_finished(id) && Instant::now() < until {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        stop.store(true, Ordering::Relaxed);
+        hold.store(false, Ordering::Relaxed);
+        worker.join().unwrap();
+        server.join().unwrap();
+        let lines: Vec<serde_json::Value> = std::fs::read_to_string(dir.join("t-w0.jsonl"))
+            .unwrap()
+            .lines()
+            .map(|l| serde_json::from_str(l).unwrap())
+            .collect();
+        let lacking: Vec<_> = lines.iter().filter(|l| l["missing_n"] == 1).collect();
+        assert_eq!(lacking.len(), 1, "{lines:?}");
+        assert_eq!(lacking[0]["missing"][0], 9);
+        // As many frames and bytes as the clients that have it.
+        let others: Vec<_> = lines.iter().filter(|l| l["missing_n"] == 0).collect();
+        assert!(others.iter().all(|o| o["frames"] == lacking[0]["frames"] && o["bytes"] == lacking[0]["bytes"]), "{lines:?}");
+        let suspect = &lacking[0]["suspects"][0];
+        assert_eq!(suspect["len"], 10_000);
+        assert_eq!(suspect["nul_bytes"], 10_000);
+        assert!(suspect["first_nonzero"].is_null());
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
