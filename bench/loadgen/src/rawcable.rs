@@ -89,6 +89,7 @@ fn unix_ms() -> u64 {
 }
 
 impl RawShared {
+    #[allow(dead_code)] // the tests' constructor; `cable` always says whether it traces
     pub fn new(threads: usize, hist: impl Fn() -> Histogram<u64>) -> Self {
         Self::with_trace(threads, hist, None)
     }
