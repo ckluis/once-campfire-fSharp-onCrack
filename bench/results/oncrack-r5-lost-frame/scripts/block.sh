@@ -11,6 +11,8 @@ export SERVER_CPUS=0-3 LOADGEN_CPUS=4-7 WORK=/var/tmp/campfire-bench-work
 export RUST_IMAGE=${RUST_IMAGE:-campfire-rust-upstream:f9dca47}
 # ONCRACK_MOUNT="" runs the image's own build (round 4's final).
 export ONCRACK_MOUNT=${ONCRACK_MOUNT-/var/tmp/campfire-r5-trace}
+# A block named *r4-image* runs the image's own build; one named *new-build* the build with every switch (verify build), whatever the caller set.
+case "$name" in *r4-image*) export ONCRACK_MOUNT="" ;; *new-build*) export ONCRACK_MOUNT=/var/tmp/campfire-r5-verify ;; esac
 export HTTP_ROUTES=up SUITES=cable LOAD_WAIT_SECS=120 CABLE_CLIENTS="500"
 out=/var/tmp/r5-lost-frame/$name
 rm -rf "$out"; mkdir -p "$out"
