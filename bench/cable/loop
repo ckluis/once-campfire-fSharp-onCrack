@@ -11,6 +11,8 @@
 # the app's environment (CAMPFIRE_CABLE_LOG=ring, CAMPFIRE_CABLE_ORDER=stream, the controls). Switches that change nothing by default:
 #   --client-trace 1 (default): loadgen --trace-dir, so that a stall or a drain timeout dumps which clients lack which messages
 #   --keep-all 1: keep every phase's evidence (a smoke run with --lg-args "--trace-always 1")
+#   --procmem 1: run bench/lib/procmem.py beside each phase on PROCMEM_CPUS (0, a server CPU), as bench/run's cable suite does: it reads
+#     the server's /proc/PID/smaps every few hundred ms, which can stall a process with a big heap (round 4's miss had it, the first loops did not)
 #   --server-trace 1 (default for oncrack): the app's CAMPFIRE_CABLE_TRACE, appended to DIR/servertrace/cable.jsonl
 #
 # Per phase DIR/runNN-cCLIENTS/ holds result.json, stderr, verdict.json and app-errors.log (the app's ERROR/WARN lines in the phase). A
@@ -26,7 +28,7 @@ export WORK=${WORK:-/var/tmp/campfire-bench-work}
 export LOG_MAX_SIZE=${LOG_MAX_SIZE:-200m}
 BENCH_RUN_LIB=1 source "$ROOT/bench/run"
 set -- "${ARGS[@]}"
-APP=oncrack CLIENTS=500 PREFIX="" RUNS=15 FRESH=0 ENVS="" LGARGS="" SECS=15 OUT="" SERVER_TRACE="" CLIENT_TRACE=1 KEEP=0
+APP=oncrack CLIENTS=500 PREFIX="" RUNS=15 FRESH=0 ENVS="" LGARGS="" SECS=15 OUT="" SERVER_TRACE="" CLIENT_TRACE=1 KEEP=0 PROCMEM_ON=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --app) APP=$2; shift 2 ;;
@@ -41,6 +43,7 @@ while [ $# -gt 0 ]; do
     --server-trace) SERVER_TRACE=$2; shift 2 ;;
     --client-trace) CLIENT_TRACE=$2; shift 2 ;;
     --keep-all) KEEP=$2; shift 2 ;;
+    --procmem) PROCMEM_ON=$2; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
@@ -91,12 +94,20 @@ phase() {
   local tr=(); [ "$CLIENT_TRACE" = 1 ] && tr=(--trace-dir "$td/client")
   local off=0; [ -n "${TRACE_DIR-}" ] && off=$(stat -c %s "$TRACE_DIR/cable.jsonl" 2>/dev/null || echo 0)
   local t0; t0=$(date +%s); local started; started=$(date +%T)
+  local pm=""
+  if [ "$PROCMEM_ON" = 1 ]; then
+    taskset -c "$PROCMEM_CPUS" python3 "$BENCH/lib/procmem.py" sample "$CG" "$td/procmem.jsonl" & pm=$!
+  fi
   lg cable --base "$BASE" --cookie "$cookie" --room "$ROOM" --csrf "$csrf" --streams "$streams" \
     --clients "$n" --tput-secs "$SECS" --posters "$CABLE_POSTERS" "${tr[@]}" $LGARGS > "$td/result.json" 2> "$td/stderr" || echo "loadgen exit $?" >> "$td/stderr"
+  if [ -n "$pm" ]; then kill "$pm" 2>/dev/null || true; wait "$pm" 2>/dev/null || true; fi
   sleep 3   # the app notices the closed sockets and writes its connection lines
   # (The WAL checkpoint warning is the database saying a passive checkpoint was not finished: not a cable matter.)
   docker logs --since "$t0" "$CONTAINER" 2>&1 | grep -E 'ERROR|WARN|Unhandled|Exception' | grep -v "WAL checkpoint couldn't finish" | head -200 > "$td/app-errors.log" || true
   local end=0; [ -n "${TRACE_DIR-}" ] && end=$(stat -c %s "$TRACE_DIR/cable.jsonl" 2>/dev/null || echo 0)
+  # This phase's part of the app's trace (the app appends at its own offset, so the file is never truncated from outside: that made a
+  # sparse file whose copy was gigabytes of zeros); the verdict reads its publish times for gaps.
+  if [ -n "${TRACE_DIR-}" ]; then tail -c +$((off + 1)) "$TRACE_DIR/cable.jsonl" | head -c $((end - off)) > "$td/server-trace.jsonl" || true; fi
   local ok=0
   python3 - "$td" "$run" "$n" "$shape" "$APP" "$started" "$OUT/phases.jsonl" <<'PY' || ok=$?
 import json, sys
@@ -119,6 +130,42 @@ try:
     if c.get("markers_past_cap"): v["problems"].append(f"{c['markers_past_cap']} markers past the cap")
 except Exception as e:
     v["problems"].append(f"no usable result: {e}")
+# Server-wide freezes: gaps between publishes of 300 ms or more inside the phase (the paced messages are 200 ms apart), from the server's trace;
+# and, with the sampler, stretches of 400 ms or more in which the container used under one core.
+import os
+gaps = []
+if os.path.exists(td + "/server-trace.jsonl"):
+    ts = []
+    for line in open(td + "/server-trace.jsonl", errors="replace"):
+        if line.startswith('{"t":"P"'):
+            try:
+                ts.append(json.loads(line)["ms"])
+            except ValueError:
+                pass
+    ts.sort()
+    t0 = ts[0] if ts else 0
+    gaps = [{"at_ms": a - t0, "gap_ms": b - a} for a, b in zip(ts, ts[1:]) if b - a >= 300]
+    v["publishes_traced"] = len(ts)
+v["publish_gaps"] = gaps[:10]
+cpu_gaps = []
+if os.path.exists(td + "/procmem.jsonl"):
+    rows = [json.loads(l) for l in open(td + "/procmem.jsonl") if l.strip()]
+    cur = None
+    for a, b in zip(rows, rows[1:]):
+        dt = b["t"] - a["t"]
+        if dt > 0 and b.get("cpu_us") is not None and a.get("cpu_us") is not None and (b["cpu_us"] - a["cpu_us"]) / 1000 / dt < 1.0:
+            cur = [a["t"], b["t"]] if cur is None else [cur[0], b["t"]]
+        elif cur:
+            cpu_gaps.append(cur); cur = None
+    if cur: cpu_gaps.append(cur)
+    # The idle stretches that matter are inside the posting window: after the paced phase and before the drain; the first and last
+    # stretches of a phase are its connect and its drain.
+    cpu_gaps = [{"from_ms": g[0] - rows[0]["t"], "ms": g[1] - g[0]} for g in cpu_gaps[1:-1] if g[1] - g[0] >= 400]
+v["cpu_idle_stretches"] = cpu_gaps[:10]
+if gaps and max(g["gap_ms"] for g in gaps) >= 600:
+    v["problems"].append(f"the server published nothing for {max(g['gap_ms'] for g in gaps)} ms inside the phase (a freeze)")
+if cpu_gaps and max(g["ms"] for g in cpu_gaps) >= 600:
+    v["problems"].append(f"the container used under one core for {max(g['ms'] for g in cpu_gaps)} ms inside the phase (a freeze)")
 errs = [x for x in open(td + "/app-errors.log").read().splitlines() if x.strip()]
 v["app_error_lines"] = len(errs)
 if errs: v["problems"].append(f"{len(errs)} ERROR/WARN lines in the app's log")
@@ -130,13 +177,10 @@ print(("MISS " if v["miss"] else "ok   ") + f"run {run} {n} clients ({shape}): "
 sys.exit(1 if v["miss"] else 0)
 PY
   if [ "$ok" != 0 ] || [ "$KEEP" = 1 ]; then
-    # This phase's part of the app's trace (the app appends at its own offset, so the file is never truncated from outside: that made a
-    # sparse file whose copy was gigabytes of zeros).
-    [ -n "${TRACE_DIR-}" ] && tail -c +$((off + 1)) "$TRACE_DIR/cable.jsonl" | head -c $((end - off)) > "$td/server-trace.jsonl" || true
     docker logs --since "$t0" "$CONTAINER" 2>&1 | grep -v 'Request path=' | head -c 2000000 > "$td/app.log" || true
     [ "$ok" = 0 ] || echo "$tag $(date +%T)" >> "$OUT/misses.txt"
   else
-    rm -rf "$td/client" "$td/stderr.keep"
+    rm -rf "$td/client" "$td/stderr.keep" "$td/procmem.jsonl" "$td/server-trace.jsonl"
     gzip -f "$td/stderr" || true
   fi
   # Room on the VM's disk for the next phase (a phase's evidence is 15 to 200 MB).
