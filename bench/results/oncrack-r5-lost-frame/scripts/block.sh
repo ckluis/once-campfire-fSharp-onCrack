@@ -9,7 +9,8 @@ ROOT=/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack
 cd "$ROOT"
 export SERVER_CPUS=0-3 LOADGEN_CPUS=4-7 WORK=/var/tmp/campfire-bench-work
 export RUST_IMAGE=${RUST_IMAGE:-campfire-rust-upstream:f9dca47}
-export ONCRACK_MOUNT=${ONCRACK_MOUNT:-/var/tmp/campfire-r5-trace}
+# ONCRACK_MOUNT="" runs the image's own build (round 4's final).
+export ONCRACK_MOUNT=${ONCRACK_MOUNT-/var/tmp/campfire-r5-trace}
 export HTTP_ROUTES=up SUITES=cable LOAD_WAIT_SECS=120 CABLE_CLIENTS="500"
 out=/var/tmp/r5-lost-frame/$name
 rm -rf "$out"; mkdir -p "$out"
