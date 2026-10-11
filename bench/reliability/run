@@ -19,7 +19,7 @@ out=$(cd "$out" && pwd)
 harness=${CFV:-/mnt/cfv/once-campfire-verification}
 here=$(cd "$(dirname "$0")" && pwd)
 exports=""
-for v in ONCRACK_IMAGE ONCRACK_BENCH_ENV ONCRACK_CACHED_IMAGE ONCRACK_CACHED_BENCH_ENV RUST_IMAGE C_IMAGE FSHARP_IMAGE RAILS_IMAGE RAILS_BENCH_ENV; do
+for v in ONCRACK_IMAGE ONCRACK_BENCH_ENV ONCRACK_CACHED_IMAGE ONCRACK_CACHED_BENCH_ENV ONCRACK_PREV_IMAGE ONCRACK_PREV_BENCH_ENV FSHARP_BENCH_ENV RUST_IMAGE C_IMAGE FSHARP_IMAGE RAILS_IMAGE RAILS_BENCH_ENV; do
   if [ -n "${!v:-}" ]; then exports="$exports export $v=$(printf %q "${!v}");"; fi
 done
 args=$(printf '%q ' "$@")

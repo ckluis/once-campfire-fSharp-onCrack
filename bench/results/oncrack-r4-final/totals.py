@@ -6,6 +6,7 @@
 Reads bin/benchmark's own output (APP-N.json, raw/) in normal-N/ and mixed-N/, and review.jsonl for the hand re-runs.
 """
 import glob
+import re
 import json
 import os
 import statistics
@@ -46,12 +47,12 @@ print('| Session | Timed responses validated | Acknowledged writes audited | Err
 print('|---|---:|---:|---:|---:|---:|')
 tot = [0, 0, 0, 0]
 ratios = {}
-for d in ['normal-1', 'normal-2', 'mixed-1', 'mixed-2']:
+for d in sorted(x for x in os.listdir(HERE) if re.match(r'(normal|mixed)-\d+$', x) and os.path.isdir(os.path.join(HERE, x))):
     ok, au, bad, n, peak, r = session(d)
     ratios[d] = r
     tot = [tot[0] + ok, tot[1] + au, tot[2] + bad, tot[3] + n]
     print('| %s | %s | %s | %d | %d | %.1f |' % (d, format(ok, ','), format(au, ','), bad, n, peak))
-print('| **all four** | **%s** | **%s** | **%d** | **%d** | |' % (format(tot[0], ','), format(tot[1], ','), tot[2], tot[3]))
+print('| **all** | **%s** | **%s** | **%d** | **%d** | |' % (format(tot[0], ','), format(tot[1], ','), tot[2], tot[3]))
 print('\n| Geometric mean of the medians | ' + ' | '.join(ratios['normal-1']) + ' |')
 print('|---|' + '---:|' * len(ratios['normal-1']))
 for d, r in ratios.items():

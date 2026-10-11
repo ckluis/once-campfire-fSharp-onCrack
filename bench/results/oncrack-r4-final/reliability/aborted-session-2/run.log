@@ -1,0 +1,62 @@
+1791677389 rails: overload room_show 64 clients 1992.3 valid req/s, 0 errors, 0 invalid
+1791677398 rails: overload room_show 256 clients 2901.4 valid req/s, 0 errors, 0 invalid
+1791677408 rails: overload messages_page 64 clients 3015.7 valid req/s, 0 errors, 0 invalid
+1791677416 rails: overload messages_page 256 clients 4462.2 valid req/s, 0 errors, 0 invalid
+1791677426 rails: overload sidebar 64 clients 3782.6 valid req/s, 0 errors, 0 invalid
+1791677434 rails: overload sidebar 256 clients 4688.2 valid req/s, 0 errors, 0 invalid
+1791677444 rails: overload search 64 clients 5282.9 valid req/s, 0 errors, 0 invalid
+1791677452 rails: overload search 256 clients 4239.6 valid req/s, 0 errors, 0 invalid
+1791677484 rails round 1: cable 1000/1000 subscribed, 0 disconnected, 384/384 delivered to all, 25.1 msgs/s
+1791677517 rails round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 363/363 delivered to all, 19.6 msgs/s
+1791677531 rust: overload room_show 64 clients 40389.4 valid req/s, 0 errors, 0 invalid
+1791677539 rust: overload room_show 256 clients 48021.6 valid req/s, 0 errors, 0 invalid
+1791677549 rust: overload messages_page 64 clients 33787.4 valid req/s, 0 errors, 0 invalid
+1791677557 rust: overload messages_page 256 clients 31925.4 valid req/s, 0 errors, 0 invalid
+1791677567 rust: overload sidebar 64 clients 33333.2 valid req/s, 0 errors, 0 invalid
+1791677575 rust: overload sidebar 256 clients 36056.8 valid req/s, 0 errors, 0 invalid
+1791677585 rust: overload search 64 clients 38434.6 valid req/s, 0 errors, 0 invalid
+1791677593 rust: overload search 256 clients 37636.2 valid req/s, 0 errors, 0 invalid
+1791677620 rust round 1: cable 1000/1000 subscribed, 0 disconnected, 6615/6615 delivered to all, 440.8 msgs/s
+1791677706 rust round 1: cable_heavy 1000/1000 subscribed, 947 disconnected, 51/57299 delivered to all, 3.4 msgs/s
+1791677720 c: overload room_show 64 clients 56382.2 valid req/s, 0 errors, 0 invalid
+1791677728 c: overload room_show 256 clients 83980.2 valid req/s, 0 errors, 7 invalid
+1791677738 c: overload messages_page 64 clients 79071.5 valid req/s, 0 errors, 0 invalid
+1791677746 c: overload messages_page 256 clients 54868.4 valid req/s, 0 errors, 14 invalid
+1791677756 c: overload sidebar 64 clients 67101.3 valid req/s, 0 errors, 0 invalid
+1791677764 c: overload sidebar 256 clients 68708.6 valid req/s, 0 errors, 3 invalid
+1791677774 c: overload search 64 clients 58820.4 valid req/s, 0 errors, 0 invalid
+1791677782 c: overload search 256 clients 78354.1 valid req/s, 0 errors, 11 invalid
+1791677989 c round 1: cable 71/1000 subscribed, 792 disconnected, 127/53135 delivered to all, 8.5 msgs/s
+1791678195 c round 1: cable_heavy 253/1000 subscribed, 914 disconnected, 125/78926 delivered to all, 8.3 msgs/s
+1791678209 oncrack: overload room_show 64 clients 175729.8 valid req/s, 0 errors, 0 invalid
+1791678217 oncrack: overload room_show 256 clients 155665.2 valid req/s, 0 errors, 0 invalid
+1791678227 oncrack: overload messages_page 64 clients 187361.8 valid req/s, 0 errors, 0 invalid
+1791678235 oncrack: overload messages_page 256 clients 122072.9 valid req/s, 0 errors, 0 invalid
+1791678245 oncrack: overload sidebar 64 clients 206945.3 valid req/s, 0 errors, 0 invalid
+1791678253 oncrack: overload sidebar 256 clients 221673.5 valid req/s, 0 errors, 0 invalid
+1791678263 oncrack: overload search 64 clients 209901.8 valid req/s, 0 errors, 0 invalid
+1791678271 oncrack: overload search 256 clients 198942.0 valid req/s, 0 errors, 0 invalid
+1791678298 oncrack round 1: cable 1000/1000 subscribed, 0 disconnected, 7380/7380 delivered to all, 491.8 msgs/s
+1791678328 oncrack round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 10756/10756 delivered to all, 580.6 msgs/s
+1791678342 oncrack-cached: overload room_show 64 clients 182428.0 valid req/s, 0 errors, 0 invalid
+1791678350 oncrack-cached: overload room_show 256 clients 117022.6 valid req/s, 0 errors, 0 invalid
+1791678360 oncrack-cached: overload messages_page 64 clients 123597.7 valid req/s, 0 errors, 0 invalid
+1791678368 oncrack-cached: overload messages_page 256 clients 113976.7 valid req/s, 0 errors, 0 invalid
+1791678378 oncrack-cached: overload sidebar 64 clients 71670.5 valid req/s, 0 errors, 0 invalid
+1791678386 oncrack-cached: overload sidebar 256 clients 152368.5 valid req/s, 0 errors, 0 invalid
+1791678396 oncrack-cached: overload search 64 clients 230707.5 valid req/s, 0 errors, 0 invalid
+1791678404 oncrack-cached: overload search 256 clients 153697.5 valid req/s, 0 errors, 0 invalid
+1791678431 oncrack-cached round 1: cable 1000/1000 subscribed, 0 disconnected, 7890/7890 delivered to all, 525.7 msgs/s
+1791678461 oncrack-cached round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 12151/12151 delivered to all, 656.3 msgs/s
+1791678462 /mnt/cfv/rel/bench/comparison_support.rb:12:in `run': git failed (128): fatal: not a git repository: reference/../.git/modules/reference (RuntimeError)
+1791678462 	from /mnt/cfv/rel/bench/reliability.rb:74:in `block in <top (required)>'
+1791678462 	from /mnt/cfv/rel/bench/reliability.rb:102:in `block in <top (required)>'
+1791678462 	from /mnt/cfv/rel/bench/reliability.rb:141:in `block (3 levels) in <top (required)>'
+1791678462 	from /mnt/cfv/rel/bench/reliability.rb:138:in `each'
+1791678462 	from /mnt/cfv/rel/bench/reliability.rb:138:in `block (2 levels) in <top (required)>'
+1791678462 	from /mnt/cfv/rel/bench/reliability.rb:136:in `each'
+1791678462 	from /mnt/cfv/rel/bench/reliability.rb:136:in `block in <top (required)>'
+1791678462 	from /mnt/cfv/rel/bench/reliability.rb:135:in `times'
+1791678462 	from /mnt/cfv/rel/bench/reliability.rb:135:in `<top (required)>'
+1791678462 	from bin/reliability:5:in `require_relative'
+1791678462 	from bin/reliability:5:in `<main>'

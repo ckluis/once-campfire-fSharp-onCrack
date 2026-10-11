@@ -10,6 +10,18 @@ sample() { local t=$(date +%T) l=$(sysctl -n vm.loadavg | tr -d '{}'); local top
 [ -n "$FIRST" ] && echo "# host load during $name (ps -A, non-VM processes: top 4 by %CPU and the sum of all, every 10 s; loadavg)" > "$out"
 [ -n "$FIRST" ] && echo "# quiet after 0s; session starts" >> "$out"
 t=0
-while [ ! -f "$ef" ] && [ $t -lt $max ]; do sample >> "$out"; sleep 10; t=$((t+10)); done
-[ -f "$ef" ] && echo "# session ended $(date +%T), exit $(cat $ef)" >> "$out"
+# EF "pid:NAME" waits for the VM process whose command line matches NAME to end (pgrep -f, checked every 30 s); any other EF is a file.
+# Every 30 s it also reads the Mac's free space and stops waiting under 12 GiB (the disk rule), saying so in the file.
+done_p() { case "$ef" in pid:*) ! colima ssh -- pgrep -f "${ef#pid:}" >/dev/null 2>&1 ;; *) [ -f "$ef" ] ;; esac; }
+while [ $t -lt $max ]; do
+  sample >> "$out"
+  if [ $((t % 30)) -eq 0 ]; then
+    done_p && break
+    free=$(df -k /Users/clank | awk 'NR==2 {printf "%.1f", $4/1024/1024}')
+    echo "# mac_free_gib=$free" >> "$out"
+    if awk -v f="$free" 'BEGIN {exit !(f < 12)}'; then echo "# UNDER THE FLOOR: free $free GiB" >> "$out"; echo "UNDER THE FLOOR $free"; exit 3; fi
+  fi
+  sleep 10; t=$((t+10))
+done
+done_p && echo "# session ended $(date +%T)" >> "$out"
 exit 0
