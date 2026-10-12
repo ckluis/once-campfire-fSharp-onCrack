@@ -71,9 +71,17 @@ for R4.2 (100/500/1,000/2,000 clients, Rust f9dca47, the port, onCrack, one sess
 change against a control from its own session.
 
 **Gather writes** (unit R4.2, `bench/results/oncrack-r4-fanout.md`): on a detached connection (Linux, plain TCP) `Writer.Send` hands the kernel the
-frames' shared payload arrays where they are, one non-blocking `sendmsg` over header and payload pairs (`Socket.fs`: `Sendmsg`, pinned by a `fixed`
-local per payload in a recursion, a thread-static `GatherScratch`), instead of copying them into a pooled send buffer first (that copy was 16% of the
-server's CPU at 1,000 clients). What the socket does not take (`EAGAIN`, a partial send) is copied and finished by `FinishSend`, with the write timeout.
+frames' shared payload arrays where they are, one non-blocking `sendmsg` over header and payload pairs (`Socket.fs`: `Sendmsg`, a thread-static
+`GatherScratch`), instead of copying them into a pooled send buffer first (that copy was 16% of the server's CPU at 1,000 clients). **Each payload is pinned for the
+call by `Sendmsg.pinFrom`** (unit R5.2, `bench/results/oncrack-r5-lost-frame.md`): eight `fixed` locals a stack frame, the recursive call followed by a
+check that reads them, so it is not a tail call. Round 4 pinned with one `fixed` local in a self-tail-recursive function, which F# compiled to a loop with
+one pinned slot: only a batch's last payload was pinned, a compacting gen1 collection moved the others under the kernel, and about one message in 40,000 at
+saturation reached one client as NULs and other objects' bytes. Never hand native code an address that relies on a `fixed` local outliving a tail call or a
+loop. `TraceTests`' "a compacting collection just before a gathered write's sendmsg" (Linux, ungated) holds the gather to it (the tail-call mutation fails it
+with 480 of 640 payloads moved), and `CAMPFIRE_CABLE_VERIFY=1` checks every gathered address after the call in a running server (off by default). Allocating
+the payloads on the pinned object heap instead was built, proven and measured (R5.2's first commit): no CPU difference that 6 rotated rounds could see, +19%
+Pss at 1,000 clients (gen2-only reclaim), so it was replaced. `Frame`'s constructor is private: make frames with `Frame.OfString`, `OfBytes` or `Concat`,
+which fill every byte before the frame exists. What the socket does not take (`EAGAIN`, a partial send) is copied and finished by `FinishSend`, with the write timeout.
 `CAMPFIRE_CABLE_GATHER=off` copies as before; elsewhere (macOS) the copy is always used, and the gather tests skip: `bin/linux-tests Cable` runs them.
 .NET's own `Socket.Send(IList<ArraySegment>)` was tried first and discarded: it makes a GC handle per segment per call (about 9% of the CPU, as much as
 the copy), and on macOS with `Blocking <- false` it made an unrelated test flake. `bench/cable/perf` takes `KEEP_SCRIPT=1` (keeps the call chains);

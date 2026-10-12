@@ -192,7 +192,9 @@ let private distinctFrames (seed: int) (count: int) (size: int) : Frame[] =
 /// heap, pinned by a `fixed` local in a recursion that F# compiled to a loop, so only the last one was pinned) fails it: the verify switch
 /// finds 620 of the 640 payloads elsewhere (all but the last of each batch). In this small process the client still reads the right
 /// bytes, because nothing has reused the vacated memory yet; in the server, under load, something had, and a client read NULs and other
-/// objects' bytes. Now every payload is on the pinned object heap and it passes. Mutation: `Frame.Allocate` with `pinned = false` fails it.
+/// objects' bytes. Now (`Sendmsg.pinFrom`: eight `fixed` locals a level, the recursive call followed by a check that reads them, so it is not a
+/// tail call) it passes. Mutation: the recursive call in tail position again (the check moved to the last level only) fails it with 480 of 640
+/// moved, all but the last level's eight in each batch; so would a future compiler that turned it into a loop.
 [<Fact>]
 let ``a compacting collection just before a gathered write's sendmsg changes nothing the client reads`` () =
     if not GatherAvailable then Assert.Skip "gathered writes are Linux-only (bin/linux-tests Cable)"

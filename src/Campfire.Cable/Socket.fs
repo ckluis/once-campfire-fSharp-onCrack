@@ -100,19 +100,13 @@ let internal deflate (input: ReadOnlySpan<byte>) : byte[] =
     let mutable length = int output.Length
     let buffer = output.GetBuffer()
     if length >= 4 && buffer.AsSpan(length - 4, 4).SequenceEqual(ReadOnlySpan deflateTail) then length <- length - 4
-    // On the pinned object heap, as every payload a gathered write hands the kernel must be (`Frame`).
-    let pinned = GC.AllocateUninitializedArray<byte>(length, true)
-    buffer.AsSpan(0, length).CopyTo(Span pinned)
-    pinned
+    buffer.AsSpan(0, length).ToArray()
 
 /// A text frame's payload, shared by every connection that sends it and compressed at most once.
 ///
-/// Unit R5.2: the payload (and its deflated form) is always an array on the pinned object heap, which the GC never moves, so a
-/// gathered write (`Writer.Send`, R4.2) can give the kernel the array's address with nothing pinned for the call. That is why the
-/// constructor is private: a frame is made only by the factories below, which allocate the array there and fill every byte of it
-/// before the frame exists (and so before anyone can publish it). Round 4 pinned each payload with a `fixed` local in a recursion
-/// instead; F# compiled the recursion to a loop with one pinned slot, so only the last payload of a batch was pinned, and a compacting
-/// collection during the `sendmsg` sent a client another object's memory (`bench/results/oncrack-r5-lost-frame.md`).
+/// Unit R5.2: the constructor is private; a frame is made only by the factories below, which fill every byte of its array before the
+/// frame exists (and so before anyone can publish it). A gathered write (`Writer.Send`, R4.2) hands the kernel the array's address, pinned
+/// for the call by `Sendmsg.pinFrom` (`bench/results/oncrack-r5-lost-frame.md`: round 4's pin held only a batch's last payload).
 [<Sealed>]
 type Frame private (bytes: byte[]) =
     let mutable deflated: byte[] | null = null
@@ -154,8 +148,8 @@ type Frame private (bytes: byte[]) =
                     deflated)
             | ready -> ready
 
-    /// An array of `length` bytes on the pinned object heap, its contents undefined: whoever takes it writes every byte.
-    static member private Allocate(length: int) : byte[] = GC.AllocateUninitializedArray<byte>(length, true)
+    /// An array of `length` bytes, its contents undefined: whoever takes it writes every byte.
+    static member private Allocate(length: int) : byte[] = GC.AllocateUninitializedArray<byte>(length)
 
     static member OfString(text: string) : Frame =
         let bytes = Frame.Allocate(Encoding.UTF8.GetByteCount text)
@@ -629,13 +623,14 @@ type GatherScratch() =
         if scratch.Headers.Length < frames * 10 then scratch.Headers <- GC.AllocateArray<byte>(frames * 10, true)
         scratch
 
-#nowarn "9" // `sendmsg` over arrays of the pinned object heap and a native iovec table
+#nowarn "9" // `sendmsg` over pinned arrays and a native iovec table
 
 /// `sendmsg` over the frames' own arrays (Linux, glibc's layout of `msghdr`: the same on aarch64 and x86-64). .NET's own gather send
 /// creates a GC handle for every segment of every call (measured in unit R4.2: about 9% of a fan-out's CPU, as much as the copy it
-/// replaced). Here nothing is pinned for the call: every payload is on the pinned object heap (`Frame`), and so are the scratch headers,
-/// so an address taken before the call is where the bytes are until the arrays die, and `scratch.Payloads` keeps them alive past the call.
+/// replaced). Here each payload is pinned by a `fixed` local, eight to a stack frame (`pinFrom`), which costs nothing unless a collection
+/// walks the stack during the call; the scratch headers are on the pinned object heap.
 module private Sendmsg =
+    open System.Runtime.CompilerServices
     open System.Runtime.InteropServices
     open Microsoft.FSharp.NativeInterop
 
@@ -662,9 +657,62 @@ module private Sendmsg =
             scratch.Native <- block
         scratch.Native
 
-    /// Where `array`'s first element is (an array of the pinned object heap stays there).
-    let inline private address (array: byte[]) : nativeint =
-        NativePtr.toNativeInt (NativePtr.ofVoidPtr<byte> (Runtime.CompilerServices.Unsafe.AsPointer(&MemoryMarshal.GetArrayDataReference array)))
+    [<Literal>]
+    let private PerLevel = 8
+
+    let private none: byte[] = [||]
+
+    /// The call itself, every payload pinned by a caller.
+    let private call (fd: int) (block: nativeint) : struct (int64 * int) =
+        match beforeCall with
+        | null -> ()
+        | hook -> hook ()
+        let mutable result = struct (0L, 0)
+        let mutable again = true
+        while again do
+            let sent = sendmsg (fd, block, MSG_DONTWAIT ||| MSG_NOSIGNAL)
+            if sent >= 0n then
+                result <- struct (int64 sent, 0)
+                again <- false
+            else
+                let errno = Marshal.GetLastPInvokeError()
+                if errno <> EINTR then
+                    result <- struct (0L, errno)
+                    again <- false
+        result
+
+    /// Pins payloads `i` .. `i + 7` with `fixed` locals, puts their addresses in the iovec table, then pins the next eight (or makes the
+    /// call). The recursive call is NOT in tail position: the check after it reads this level's payloads, so F# cannot turn the recursion
+    /// into a loop (round 4's version was a tail call, which F# compiled to a loop with one pinned slot) and the JIT cannot drop this frame;
+    /// every level's pinned locals stay on the stack until the call has returned.
+    [<MethodImpl(MethodImplOptions.NoInlining)>]
+    let rec private pinFrom (fd: int) (scratch: GatherScratch) (block: nativeint) (count: int) (i: int) : struct (int64 * int) =
+        let payloads = scratch.Payloads
+        let n = min PerLevel (count - i)
+        use p0 = fixed (if n > 0 then payloads[i] else none)
+        use p1 = fixed (if n > 1 then payloads[i + 1] else none)
+        use p2 = fixed (if n > 2 then payloads[i + 2] else none)
+        use p3 = fixed (if n > 3 then payloads[i + 3] else none)
+        use p4 = fixed (if n > 4 then payloads[i + 4] else none)
+        use p5 = fixed (if n > 5 then payloads[i + 5] else none)
+        use p6 = fixed (if n > 6 then payloads[i + 6] else none)
+        use p7 = fixed (if n > 7 then payloads[i + 7] else none)
+        let table = NativePtr.ofNativeInt<nativeint> (block + 56n)
+        let slot = 4 * i + 2
+        if n > 0 then NativePtr.set table slot (NativePtr.toNativeInt p0)
+        if n > 1 then NativePtr.set table (slot + 4) (NativePtr.toNativeInt p1)
+        if n > 2 then NativePtr.set table (slot + 8) (NativePtr.toNativeInt p2)
+        if n > 3 then NativePtr.set table (slot + 12) (NativePtr.toNativeInt p3)
+        if n > 4 then NativePtr.set table (slot + 16) (NativePtr.toNativeInt p4)
+        if n > 5 then NativePtr.set table (slot + 20) (NativePtr.toNativeInt p5)
+        if n > 6 then NativePtr.set table (slot + 24) (NativePtr.toNativeInt p6)
+        if n > 7 then NativePtr.set table (slot + 28) (NativePtr.toNativeInt p7)
+        let result = if i + PerLevel < count then pinFrom fd scratch block count (i + PerLevel) else call fd block
+        // Unit R5.1 (`CAMPFIRE_CABLE_VERIFY`): this level's payloads are still pinned here; the addresses the kernel was given are where they are.
+        if CableVerify.Enabled then
+            for j in i .. i + n - 1 do
+                CableVerify.CheckAddress(payloads[j], NativePtr.get table (4 * j + 2), j)
+        result
 
     /// One non-blocking `sendmsg` of the `count` header and payload pairs in `scratch`. Returns (bytes sent, errno; 0 when none).
     let send (socket: Net.Sockets.Socket) (scratch: GatherScratch) (count: int) : struct (int64 * int) =
@@ -673,37 +721,17 @@ module private Sendmsg =
         let mutable added = false
         handle.DangerousAddRef(&added)
         try
-            let headers = address scratch.Headers
+            // The headers are on the pinned object heap.
+            let headers = NativePtr.toNativeInt (NativePtr.ofVoidPtr<byte> (Runtime.CompilerServices.Unsafe.AsPointer(&MemoryMarshal.GetArrayDataReference scratch.Headers)))
             let table = NativePtr.ofNativeInt<nativeint> (block + 56n)
             for i in 0 .. count - 1 do
-                let payload = scratch.Payloads[i]
                 NativePtr.set table (4 * i) (headers + nativeint (i * 10))
                 NativePtr.set table (4 * i + 1) (nativeint scratch.HeaderLengths[i])
-                NativePtr.set table (4 * i + 2) (address payload)
-                NativePtr.set table (4 * i + 3) (nativeint payload.Length)
+                NativePtr.set table (4 * i + 3) (nativeint scratch.Payloads[i].Length)
             let msg = NativePtr.ofNativeInt<nativeint> block
             NativePtr.set msg 2 (block + 56n) // msg_iov
             NativePtr.set msg 3 (nativeint (count * 2)) // msg_iovlen
-            match beforeCall with
-            | null -> ()
-            | hook -> hook ()
-            let fd = int (handle.DangerousGetHandle())
-            let mutable result = struct (0L, 0)
-            let mutable again = true
-            while again do
-                let sent = sendmsg (fd, block, MSG_DONTWAIT ||| MSG_NOSIGNAL)
-                if sent >= 0n then
-                    result <- struct (int64 sent, 0)
-                    again <- false
-                else
-                    let errno = Marshal.GetLastPInvokeError()
-                    if errno <> EINTR then
-                        result <- struct (0L, errno)
-                        again <- false
-            // Unit R5.1 (`CAMPFIRE_CABLE_VERIFY`): the address the kernel was given is still where each array is.
-            if CableVerify.Enabled then
-                for j in 0 .. count - 1 do
-                    CableVerify.CheckAddress(scratch.Payloads[j], NativePtr.get table (4 * j + 2), j)
+            let result = pinFrom (int (handle.DangerousGetHandle())) scratch block count 0
             GC.KeepAlive scratch.Headers
             result
         finally
