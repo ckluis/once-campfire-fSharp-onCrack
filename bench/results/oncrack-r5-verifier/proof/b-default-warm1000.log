@@ -1,0 +1,28 @@
+date: 2026-10-12T16:51:03-04:00
+app: oncrack, clients: 1000, prefix: none, runs: 9, fresh: 0, secs: 15
+app env: 
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5v (6abc183 (dirty files under src/: 0) at 2026-10-12T20:44:42Z)
+repo HEAD: 6abc183
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[16:51:53] load before run: 1.45 2.49 1.57 (waited 50s)
+[16:51:59] host busy: {"spin_ms": 125.9, "spin_ms_max_cpu": 464.7, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 2.266}
+[16:52:13] host busy: {"spin_ms": 66.36, "spin_ms_max_cpu": 92.25, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.194}
+[16:52:26] host busy: {"spin_ms": 62.33, "spin_ms_max_cpu": 65.48, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.122}
+[16:52:38] host busy: {"spin_ms": 61.31, "spin_ms_max_cpu": 63.71, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.103}
+[16:52:51] host probe before run: {"spin_ms": 60.87, "spin_ms_max_cpu": 64.8, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.095} (waited 90s)
+[16:52:55] oncrack: container up, cold start 343ms
+ok   run 1 1000 clients (target): 10419/10419 messages, 672.5 msg/s, drain 0.11 s
+MISS run 2 1000 clients (target): 1 ERROR/WARN lines in the app's log
+ok   run 3 1000 clients (target): 4896/4896 messages, 325.9 msg/s, drain 0.0 s
+ok   run 4 1000 clients (target): 14384/14384 messages, 957.9 msg/s, drain 0.01 s
+ok   run 5 1000 clients (target): 10476/10476 messages, 697.3 msg/s, drain 0.0 s
+ok   run 6 1000 clients (target): 19119/19119 messages, 1273.4 msg/s, drain 0.01 s
+ok   run 7 1000 clients (target): 9961/9961 messages, 660.4 msg/s, drain 0.0 s
+ok   run 8 1000 clients (target): 14150/14150 messages, 942.6 msg/s, drain 0.01 s
+ok   run 9 1000 clients (target): 9577/9577 messages, 626.1 msg/s, drain 0.05 s
+[16:57:09] done: 9 phases, 1 with a problem
+exit 0

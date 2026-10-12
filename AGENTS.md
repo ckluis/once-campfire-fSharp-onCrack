@@ -123,6 +123,10 @@ one shared log, with a bound.
   R5.2's (chunk, index) pair was written in two steps at a crossing, and a look between them (`Collect`, `Tally`) took the reader for a whole chunk further behind (1.2% of looks
   in the crossing test); its index store was not ordered after the frame load (ARM64). `Compact` empties below the lowest `SlotSeen`; a reader that finds its slot empty was
   cut after it looked at its flag, and `TryRead` returns `Lagged` (round 5 handed it a null frame). Never advance the slot before the frame is read: the race test fails it 3 of 3.
+- **Cable tests that switch process-wide state or hold a timing bound run alone** (round 5 verifier): the `fan-out` collection (`DisableParallelization`) holds
+  `FanOutTests`, `TraceTests` (trace, verify switch, `SetBeforeSendmsg`'s forced collections), `GoldenTests`, `DirectTests+ManyConnections` and `ProtocolTests+Heartbeat`.
+  Beside the parallel suite they failed on their bounds in most full Linux runs (and stalled other tests); put any new test of that kind there. A test that sets
+  `Hub.TotalBudget` before broadcasting races the hub's own pool shed (`ShedLater`): set it just before the `Shed` the test calls.
 - **Measuring it:** `bench/reliability/run OUT --apps oncrack --profiles cable --rounds 1` runs upstream's `bin/reliability` (the verification repo's
   `oncrack-reliability-working` branch, its tmpfs copy at `/mnt/cfv` in colima, `--workspace /mnt/cfv/ws`) with the descriptor limit raised (a login shell's 1,024 refused the 64
   posters of cable_heavy beside 1,000 clients: every app's first baseline row said 13 posts and 18 million refusals), a Pss sampler and the Mac's load beside it;
