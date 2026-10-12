@@ -117,8 +117,12 @@ one shared log, with a bound.
   not the chunk it is in; the heartbeat does it too), so a client that reads pins nothing however many streams it has; if the logs still hold more, it cuts the subscribers with the most
   bytes yet to read, in any chunk of any log, until under. Round 4 cut only whole oldest chunks and never a group's newest, so clients
   that read nothing held 160 MB each outside the total. A cut subscriber's group is emptied at once; its connection closes (`reconnect: true`) and its other groups go with it.
-  `PubsubTests` ("total: ...") and `ProtocolTests` (64 variants over real sockets) are the attack tests; "emptying read slots ..." holds Compact to the lock-free readers (a reader
-  writes its index before it moves its chunk; Compact reads the chunk, then the index).
+  `PubsubTests` ("total: ...") and `ProtocolTests` (64 variants over real sockets) are the attack tests; "emptying read slots ..." holds Compact to the lock-free readers.
+  **The reader's place is one number** (round 5 verifier, `bench/results/oncrack-r5-verifier.md`): `Subscriber.Slot`, the next slot over the whole log (chunk id x chunk size + index),
+  written with release (`Advance`) only after the frame is read; crossing into the next chunk is the one write `MoveTo`, since a chunk's last slot + 1 is the next one's first.
+  R5.2's (chunk, index) pair was written in two steps at a crossing, and a look between them (`Collect`, `Tally`) took the reader for a whole chunk further behind (1.2% of looks
+  in the crossing test); its index store was not ordered after the frame load (ARM64). `Compact` empties below the lowest `SlotSeen`; a reader that finds its slot empty was
+  cut after it looked at its flag, and `TryRead` returns `Lagged` (round 5 handed it a null frame). Never advance the slot before the frame is read: the race test fails it 3 of 3.
 - **Measuring it:** `bench/reliability/run OUT --apps oncrack --profiles cable --rounds 1` runs upstream's `bin/reliability` (the verification repo's
   `oncrack-reliability-working` branch, its tmpfs copy at `/mnt/cfv` in colima, `--workspace /mnt/cfv/ws`) with the descriptor limit raised (a login shell's 1,024 refused the 64
   posters of cable_heavy beside 1,000 clients: every app's first baseline row said 13 posts and 18 million refusals), a Pss sampler and the Mac's load beside it;

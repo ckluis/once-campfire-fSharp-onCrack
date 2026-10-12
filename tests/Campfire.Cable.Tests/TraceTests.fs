@@ -132,12 +132,17 @@ let ``the verify switch notices a published array that was zeroed before a send`
 /// A loopback pair with a detached writer on the server side and a thread reading the client side into whole server frames, each
 /// payload compared with the next of `expected` (in order). Returns the writer, a function that waits for every expected payload and
 /// returns how many differed, and the sockets to dispose.
-let private gatherRig (expected: Collections.Concurrent.BlockingCollection<byte[]>) =
+///
+/// Round 5 verifier: `sendBuffer` (bytes, 0: the default) shrinks the server's send buffer and the client's receive buffer, and the client
+/// sleeps a millisecond every `pauseEvery` frames (0: never), so that gathered writes are taken only in part and finish through the copy.
+let private gatherRigWith (expected: Collections.Concurrent.BlockingCollection<byte[]>) (sendBuffer: int) (pauseEvery: int) =
     use listener = new Net.Sockets.TcpListener(Net.IPAddress.Loopback, 0)
     listener.Start()
     let client = new Net.Sockets.Socket(Net.Sockets.SocketType.Stream, Net.Sockets.ProtocolType.Tcp)
+    if sendBuffer > 0 then client.ReceiveBufferSize <- sendBuffer
     client.Connect(Net.IPAddress.Loopback, (listener.LocalEndpoint :?> Net.IPEndPoint).Port)
     let server = listener.AcceptSocket()
+    if sendBuffer > 0 then server.SendBufferSize <- sendBuffer
     let writer = Writer(IO.Stream.Null, false, TimeSpan.FromSeconds 30.0, ignore, server)
     writer.Detach()
     let mutable wrong = 0
@@ -168,7 +173,8 @@ let private gatherRig (expected: Collections.Concurrent.BlockingCollection<byte[
                         if firstWrong = "" then
                             let zeros = payload |> Seq.take length |> Seq.filter ((=) 0uy) |> Seq.length
                             firstWrong <- $"frame {index}: {length} bytes for {want.Length}, {zeros} of them NUL"
-                    index <- index + 1),
+                    index <- index + 1
+                    if pauseEvery > 0 && index % pauseEvery = 0 then Threading.Thread.Sleep 1),
             TaskCreationOptions.LongRunning
         )
     let finish () =
@@ -176,6 +182,8 @@ let private gatherRig (expected: Collections.Concurrent.BlockingCollection<byte[
         if not (reader.Wait(TimeSpan.FromSeconds 60.0)) then failwith "the reader did not get every frame in 60 s"
         wrong, firstWrong
     writer, finish, server, client
+
+let private gatherRig (expected: Collections.Concurrent.BlockingCollection<byte[]>) = gatherRigWith expected 0 0
 
 /// Frames of `size` bytes, each with its own contents, made between short-lived arrays, so that a compacting collection has garbage to
 /// close up and anything movable moves.
@@ -266,3 +274,97 @@ let ``gathered writes keep their payloads where the kernel was told under conten
         eprintfn "pin stress: %d batches of 32 frames in %.1f s beside %d forced gen1 collections; %d moved, %d frames wrong" batches clock.Elapsed.TotalSeconds collections moved wrong
         Assert.True((moved = 0L), $"{moved} payloads were not where the kernel was told when sendmsg returned ({batches} batches, {collections} collections)")
         Assert.True((wrong = 0), $"{wrong} frames reached the client with other bytes than the frame's ({first})")
+
+// --- Round 5 verifier: attacks on the gathered write's pinning -----------------------------------------------------------------
+
+/// `Sendmsg.pinFrom` pins eight payloads a level and fills the rest of a short level with an empty array. Every batch size round the
+/// levels' edges (and the most a gather takes, 256), a frame given twice in one batch (the heartbeat's is shared) and an empty frame,
+/// with a full compacting collection between the iovec table's filling and the `sendmsg`: every payload stays where the kernel was told,
+/// and the client reads every byte of every frame, in order.
+[<Fact>]
+let ``verifier: a compacting collection before sendmsg, at every batch size round the pinning levels, changes nothing the client reads`` () =
+    if not GatherAvailable then Assert.Skip "gathered writes are Linux-only (bin/linux-tests Cable)"
+    let expected = new Collections.Concurrent.BlockingCollection<byte[]>()
+    let writer, finish, server, client = gatherRig expected
+    use _ = server
+    use _ = client
+    CableVerify.Configure true
+    SetBeforeSendmsg(fun () -> GC.Collect(2, GCCollectionMode.Forced, true, true))
+    let before = CableVerify.Failures
+    let mutable sent = 0
+    try
+        for size in [ 1; 2; 7; 8; 9; 15; 16; 17; 63; 64; 65; 127; 255; 256 ] do
+            let frames = distinctFrames size size 2_000
+            // The same frame twice, and an empty one, where the batch has room for them.
+            if size >= 3 then
+                frames[size - 1] <- frames[0]
+                frames[size / 2] <- Frame.OfBytes(ReadOnlySpan<byte>.Empty)
+            for frame in frames do
+                expected.Add frame.Bytes
+            sent <- sent + frames.Length
+            if not ((writer.Send frames).AsTask().Wait(TimeSpan.FromSeconds 30.0)) then failwith $"a gathered write of {size} did not finish"
+    finally
+        SetBeforeSendmsg null
+        CableVerify.Configure false
+    let wrong, first = finish ()
+    let moved = CableVerify.Failures - before
+    Assert.True(
+        (moved = 0L && wrong = 0),
+        $"{moved} of {sent} payloads were not where the kernel was told when sendmsg returned; {wrong} of {sent} frames reached the client with other bytes ({first})"
+    )
+
+/// Partial sends: a send buffer of 16 KB and a client that pauses, so that most gathered writes are taken only in part and their rest is
+/// copied and finished by `FinishSend`, with a full compacting collection before every `sendmsg`. Nothing moves under the kernel, and the
+/// client reads every frame whole and in order across the seam between what the gather sent and what the copy sent.
+[<Fact>]
+let ``verifier: gathered writes taken in part, with a compacting collection before each sendmsg, reach the client whole and in order`` () =
+    if not GatherAvailable then Assert.Skip "gathered writes are Linux-only (bin/linux-tests Cable)"
+    let expected = new Collections.Concurrent.BlockingCollection<byte[]>()
+    let writer, finish, server, client = gatherRigWith expected 16_384 5
+    use _ = server
+    use _ = client
+    CableVerify.Configure true
+    SetBeforeSendmsg(fun () -> GC.Collect(2, GCCollectionMode.Forced, true, true))
+    let before = CableVerify.Failures
+    let partialBefore = PartialGathers()
+    let mutable sent = 0
+    try
+        for batch in 1..40 do
+            let frames = distinctFrames batch (1 + batch % 23) (500 + 997 * batch % 9_000)
+            for frame in frames do
+                expected.Add frame.Bytes
+            sent <- sent + frames.Length
+            if not ((writer.Send frames).AsTask().Wait(TimeSpan.FromSeconds 30.0)) then failwith "a gathered write did not finish"
+    finally
+        SetBeforeSendmsg null
+        CableVerify.Configure false
+    let wrong, first = finish ()
+    let moved = CableVerify.Failures - before
+    let partial = PartialGathers() - partialBefore
+    Assert.True(partial >= 10L, $"only {partial} of 40 writes were taken in part")
+    Assert.True(
+        (moved = 0L && wrong = 0),
+        $"{moved} of {sent} payloads moved; {wrong} of {sent} frames reached the client with other bytes ({first}); {partial} partial"
+    )
+
+/// A gathered write whose `sendmsg` never happens (the socket was closed under it: a cut's abort, a second after the goodbye) must not leave
+/// the batch's payloads in the thread's scratch, where they would be held, outside every bound, until the thread's next gather of as many.
+[<Fact>]
+let ``verifier: a gathered write that fails leaves no payload in the thread's scratch`` () =
+    if not GatherAvailable then Assert.Skip "gathered writes are Linux-only (bin/linux-tests Cable)"
+    let expected = new Collections.Concurrent.BlockingCollection<byte[]>()
+    let writer, _, server, client = gatherRig expected
+    use _ = client
+    server.Dispose()
+    let frames = distinctFrames 1 40 10_000
+    let failed =
+        try
+            (writer.Send frames).AsTask().Wait(TimeSpan.FromSeconds 5.0) |> ignore
+            false
+        with _ ->
+            true
+    Assert.True(failed, "a write to a closed socket did not fail")
+    let scratch = GatherScratch.Get 1
+    let held = scratch.Payloads |> Array.filter (fun p -> not (isNull (box p))) |> Array.length
+    Assert.Equal(0, held)
+    expected.CompleteAdding()

@@ -343,28 +343,38 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
             freedIndex <- 0
             freedBytes <- 0L
 
-    /// Where `chunk`'s slot `index` is in the log, in bytes written before it (`written` for the next frame to come): the chunk's start plus
-    /// the frames ahead of the slot (a head chunk's emptied slots are counted in `freedBytes`). Under `gate`.
-    let position (chunk: Chunk) (index: int) : int64 =
-        if index >= chunk.Filled then
-            match chunk.Next with
-            | null -> written
-            | next -> next.Start
-        else
-            let mutable at = chunk.Start
-            let mutable from = 0
-            if obj.ReferenceEquals(chunk, head) then
-                at <- at + freedBytes
-                from <- freedIndex
-            for k in from .. index - 1 do
-                at <- at + int64 chunk.Frames[k].Bytes.Length
-            at
+    /// The first slot of `chunk`, counted over the whole log (`Subscriber.Slot`).
+    let baseOf (chunk: Chunk) : int64 = chunk.Id * int64 chunkSize
 
-    /// Bytes `subscriber` has yet to read. Under `gate`. The chunk is read before the index, and a reader writes the index before it
-    /// moves the chunk (`Locate`), so the pair is never ahead of the subscriber; an older one only reads as further behind.
+    /// Where slot `slot` is in the log, in bytes written before it (`written` for the next frame to come), looked for from `chunk` on (the
+    /// slot is in it or after it): the chunk's start plus the frames ahead of the slot (a head chunk's emptied slots are counted in
+    /// `freedBytes`). Under `gate`.
+    let position (chunk: Chunk) (slot: int64) : int64 =
+        let mutable chunk = chunk
+        let mutable result = -1L
+        while result < 0L do
+            let index = slot - baseOf chunk
+            if index < int64 chunk.Filled then
+                let mutable at = chunk.Start
+                let mutable from = 0
+                if obj.ReferenceEquals(chunk, head) then
+                    at <- at + freedBytes
+                    from <- freedIndex
+                for k in from .. int index - 1 do
+                    at <- at + int64 chunk.Frames[k].Bytes.Length
+                result <- at
+            else
+                match chunk.Next with
+                | null -> result <- written
+                | next -> chunk <- next
+        result
+
+    /// Bytes `subscriber` has yet to read. Under `gate`. Round 5 verifier: the subscriber's place is one number (`Slot`), written once a frame
+    /// is read; the chunk, read first, only says where to start looking. Round 5's pair (chunk, index) was written in two steps when a reader
+    /// crossed into a new chunk, and a look between them took the reader to be a whole chunk further behind than it was.
     let unread (subscriber: Subscriber) : int64 =
         let chunk = subscriber.Chunk
-        written - position chunk subscriber.IndexSeen
+        written - position chunk subscriber.SlotSeen
 
     /// Cuts the subscribers in the oldest chunk, adding their wakes to `cut` (made when needed). Under `gate`; `trim` after.
     let cutHead (cut: Collections.Generic.List<Wake> | null) : Collections.Generic.List<Wake> | null =
@@ -484,7 +494,7 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
                     let since = subscriber.Wake.WriteWaitSince
                     counted <- counted + 1L
                     if (since = 0L || now - since < waitTicks)
-                       && newest - (subscriber.Chunk.Id * int64 chunkSize + int64 subscriber.Index) > int64 frames then
+                       && newest - subscriber.SlotSeen > int64 frames then
                         behind <- behind + 1L
                 let packed = (behind <<< 32) ||| counted
                 Volatile.Write(&tally, packed)
@@ -503,18 +513,19 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
 
     /// Unit R5.2: moves `head` to the oldest chunk a subscriber is in, then empties the slots of that chunk that every subscriber has
     /// read (a log with no subscribers holds nothing), so the bytes retained are the bytes some subscriber has yet to read, not the
-    /// chunk they are in. Readers take no lock, and this never takes anything from one: it empties slots below the lowest index
-    /// any subscriber in the chunk is seen at, and an index only grows (a stale reading is lower, which empties less).
+    /// chunk they are in. Readers take no lock, and this never takes anything from one: it empties slots below the lowest slot
+    /// any subscriber is seen at, and a slot only grows (a stale reading is lower, which empties less). A subscriber taken out of the group
+    /// whose reader has not yet seen the cut can find its next slot empty, and `TryRead` reads that as the cut.
     member _.Compact() : unit =
         lock gate (fun () ->
             trim ()
             let mutable upTo = head.Filled
+            let first = baseOf head
             for i in 0 .. count - 1 do
-                let subscriber = receivers[i]
-                // The chunk first, then the index: a subscriber moving to the next chunk has written its index 0 before the chunk.
-                if obj.ReferenceEquals(subscriber.Chunk, head) then
-                    let index = subscriber.IndexSeen
-                    if index < upTo then upTo <- index
+                // Round 5 verifier: a slot, read with acquire, is one the reader has finished reading the frame before (`TryRead` writes it with
+                // release); a subscriber past the head chunk has a slot past its end.
+                let index = receivers[i].SlotSeen - first
+                if index < int64 upTo then upTo <- int index
             if upTo > freedIndex then
                 let mutable freed = 0L
                 for i in freedIndex .. upTo - 1 do
@@ -556,7 +567,7 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
     /// Finds `subscriber`'s next slot, following the link out of a chunk it has read to the end.
     static member private Locate(subscriber: Subscriber, chunk: byref<Chunk>, index: byref<int>) : bool =
         chunk <- subscriber.Chunk
-        index <- subscriber.Index
+        index <- int (subscriber.Slot - chunk.Id * int64 chunk.Size)
         if index = chunk.Size then
             // All of this chunk is read; the next may not exist yet.
             match chunk.Next with
@@ -564,8 +575,7 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
             | next ->
                 chunk <- next
                 index <- 0
-                // The index first: a thread looking at where this subscriber is (`Compact`) reads the chunk, then the index.
-                subscriber.Index <- 0
+                // Round 5 verifier: the slot is already the next chunk's first (the slot after a chunk's last), so moving is one write.
                 subscriber.MoveTo next
                 (match subscriber.Wake.Trace with
                  | null -> ()
@@ -579,9 +589,16 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
             let mutable chunk = subscriber.Chunk
             let mutable index = 0
             if LogGroup.Locate(subscriber, &chunk, &index) then
-                frame <- chunk.Frames[index]
-                subscriber.Index <- index + 1
-                RecvStatus.Got
+                let read = chunk.Frames[index]
+                if isNull (box read) then
+                    // Round 5 verifier: emptied by `Compact`, which empties only slots every subscriber of the group has passed, so this one is
+                    // no longer in the group: cut (`CutOne`, `cutHead`) after its reader looked at the flag above. It reads as the cut it is.
+                    RecvStatus.Lagged
+                else
+                    frame <- read
+                    // A release: the frame is read before another thread can see the slot as passed (`Compact`) and empty it.
+                    subscriber.Advance()
+                    RecvStatus.Got
             else
                 RecvStatus.Empty
 
@@ -667,7 +684,8 @@ and [<Sealed>] internal RingGroup(identifier: string | null, capacity: int) =
 /// One subscription's place in a group's log (or ring).
 and [<Sealed>] Subscriber internal (group: GroupBase, hub: Hub, broadcasting: string, wake: Wake, start: int64, chunk0: Chunk, index0: int) =
     let mutable chunk = chunk0
-    let mutable index = index0
+    // Round 5 verifier: the next slot over the whole log (chunk id x chunk size + index), so that one write moves the reader on.
+    let mutable slot = if chunk0.Id < 0L then 0L else chunk0.Id * int64 chunk0.Size + int64 index0
     let mutable stopped = 0
     let mutable overrun = 0
 
@@ -679,14 +697,19 @@ and [<Sealed>] Subscriber internal (group: GroupBase, hub: Hub, broadcasting: st
     /// The ring's place (ring groups).
     member val internal Position = start with get, set
 
-    /// The log's place: the chunk, which the group's `trim` reads from its own thread, and the next slot in it.
+    /// The log's place: the chunk, which the group's `trim` reads from its own thread, and the next slot, counted over the whole log (a
+    /// chunk's slots are its id x the chunk size and on). The chunk moves only once the slot is the next chunk's first, so a slot read after
+    /// the chunk is in that chunk or past it.
     member internal _.Chunk: Chunk = Volatile.Read(&chunk)
-    member internal _.Index
-        with get () = index
-        and set (value: int) = index <- value
 
-    /// The next slot, as another thread sees it (`Compact`, `Collect`): a place at or behind where the reader is.
-    member internal _.IndexSeen = Volatile.Read(&index)
+    /// The next slot, as the reader's own thread sees it.
+    member internal _.Slot = slot
+
+    /// The next slot, as another thread sees it (`Compact`, `Collect`, `Tally`): a place at or behind where the reader is, every slot before it read.
+    member internal _.SlotSeen = Volatile.Read(&slot)
+
+    /// The reader has read the frame in its slot (a release: the read is done before any thread can see the slot as passed).
+    member internal _.Advance() : unit = Volatile.Write(&slot, slot + 1L)
     member internal _.MoveTo(next: Chunk) : unit = Volatile.Write(&chunk, next)
 
     /// The group cut this subscriber for being more than its budget behind; it is out of the group and reads nothing more.

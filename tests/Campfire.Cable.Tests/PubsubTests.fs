@@ -898,3 +898,86 @@ let ``the bench flip file changes nothing unless CAMPFIRE_CABLE_FLIP_FILE names 
     Assert.False BenchFlip.enabled
     for key in [ "order"; "batch"; "log"; "hold" ] do
         Assert.Null(BenchFlip.get key)
+
+// --- Round 5 verifier: attacks on R5.2's emptied slots and on how the total measures a subscriber -----------------------------------
+
+[<Fact>]
+let ``verifier: a reader past its check of the cut when its slots are emptied reads the cut, never an empty slot`` () =
+    // R5.2's `CutOne` (the total) takes a subscriber out of its group and then empties what the others have read. The subscriber's reader
+    // takes no lock: it can have looked at the cut flag a moment before and be about to read a slot that is now empty. The moment is held
+    // still here: the subscriber leaves the group without its flag (what its reader saw), the slots are emptied, and it reads on.
+    let hub = Hub(8)
+    let behind = hub.Subscribe("room", null, Wake())
+    let ahead = hub.Subscribe("room", null, Wake())
+    for i in 0..5 do
+        hub.Broadcast("room", $"{i:D4}") |> ignore
+    Assert.Equal(Ok "0000", recv behind)
+    Assert.Equal(6, (drainAll ahead).Length)
+    let log = behind.Group :?> LogGroup
+    log.Remove behind
+    hub.Trim()
+    Assert.Equal(0L, hub.RetainedBytes)
+    let mutable frame = Unchecked.defaultof<Frame>
+    let status = behind.TryRecv(&frame)
+    Assert.False((status = RecvStatus.Got && isNull (box frame)), "the reader was handed an emptied slot as a frame (null)")
+    Assert.Equal(RecvStatus.Lagged, status)
+
+[<Fact>]
+let ``verifier: a reader crossing from one chunk into the next never reads to the total as further behind than it is`` () =
+    // Chunks of one frame, so every read crosses into a new chunk. The publisher's thread is also the observer: it publishes a frame of
+    // 1,000 bytes, then measures the reader as the total's shed does (`Collect`), again and again, until the reader has the frame. The
+    // reader had read `c` frames before each look, so it has at most (published - c) x 1,000 bytes to read; more is a misreading that
+    // could make the shed cut a client that reads.
+    let hub = Hub(1)
+    let reader = hub.Subscribe("room", null, Wake())
+    let log = reader.Group :?> LogGroup
+    let consumed = ref 0
+    let stop = ref false
+    let failure = ref ""
+    let payload = String('x', 1000)
+    let thread =
+        Thread(
+            (fun () ->
+                while not (Volatile.Read(&stop.contents)) do
+                    let mutable frame = Unchecked.defaultof<Frame>
+                    match reader.TryRecv(&frame) with
+                    | RecvStatus.Got -> Interlocked.Increment(&consumed.contents) |> ignore
+                    | RecvStatus.Empty -> ()
+                    | status ->
+                        failure.Value <- string status
+                        Volatile.Write(&stop.contents, true)),
+            IsBackground = true
+        )
+    thread.Start()
+    let into = Collections.Generic.List<struct (int64 * LogGroup * Subscriber)>()
+    let clock = Diagnostics.Stopwatch.StartNew()
+    let mutable published = 0
+    let mutable looks = 0L
+    let mutable over = 0
+    let mutable worst = 0L
+    try
+        while clock.Elapsed < TimeSpan.FromSeconds 3.0 && failure.Value = "" do
+            hub.Broadcast("room", payload) |> ignore
+            published <- published + 1
+            let mutable c = Volatile.Read(&consumed.contents)
+            while c < published && failure.Value = "" do
+                into.Clear()
+                log.Collect into
+                let measured =
+                    if into.Count = 0 then
+                        0L
+                    else
+                        let struct (bytes, _, _) = into[0]
+                        bytes
+                let bound = int64 (published - c) * 1000L
+                if measured > bound then
+                    over <- over + 1
+                    worst <- max worst (measured - bound)
+                looks <- looks + 1L
+                c <- Volatile.Read(&consumed.contents)
+    finally
+        Volatile.Write(&stop.contents, true)
+        thread.Join()
+    Assert.Equal("", failure.Value)
+    Assert.True(published > 10_000, $"published {published}")
+    Assert.True((over = 0), $"{over} of {looks} looks over {published} crossings measured the reader as further behind than it was (by up to {worst} bytes)")

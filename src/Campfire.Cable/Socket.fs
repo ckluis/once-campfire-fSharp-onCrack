@@ -961,6 +961,7 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
             total <- total + used + payload.Length
         let mutable sent = 0
         let mutable failure: exn | null = null
+        let mutable returned = false
         try
             let struct (n, e) = Sendmsg.send socket scratch count
             if CableVerify.Enabled then
@@ -969,9 +970,11 @@ type Writer(io: Stream, deflate: bool, timeout: TimeSpan, abort: unit -> unit, d
             sent <- int n
             // EAGAIN (11 on Linux): the socket's buffer is full, so the rest waits for room.
             if e <> 0 && e <> 11 then failure <- IOException $"sendmsg failed: errno {e}"
+            returned <- true
         finally
-            // Nothing in a thread's scratch keeps a frame alive.
-            if sent = total || not (isNull failure) then Array.Clear(scratch.Payloads, 0, count)
+            // Nothing in a thread's scratch keeps a frame alive. Round 5 verifier: that includes a send that threw (a socket closed under
+            // it, by a cut's abort), whose payloads were otherwise held until the thread's next gather of as many frames.
+            if not returned || sent = total || not (isNull failure) then Array.Clear(scratch.Payloads, 0, count)
         match failure with
         | null -> ()
         | e -> raise e
