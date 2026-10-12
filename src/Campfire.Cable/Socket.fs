@@ -100,11 +100,21 @@ let internal deflate (input: ReadOnlySpan<byte>) : byte[] =
     let mutable length = int output.Length
     let buffer = output.GetBuffer()
     if length >= 4 && buffer.AsSpan(length - 4, 4).SequenceEqual(ReadOnlySpan deflateTail) then length <- length - 4
-    buffer.AsSpan(0, length).ToArray()
+    // On the pinned object heap, as every payload a gathered write hands the kernel must be (`Frame`).
+    let pinned = GC.AllocateUninitializedArray<byte>(length, true)
+    buffer.AsSpan(0, length).CopyTo(Span pinned)
+    pinned
 
 /// A text frame's payload, shared by every connection that sends it and compressed at most once.
+///
+/// Unit R5.2: the payload (and its deflated form) is always an array on the pinned object heap, which the GC never moves, so a
+/// gathered write (`Writer.Send`, R4.2) can give the kernel the array's address with nothing pinned for the call. That is why the
+/// constructor is private: a frame is made only by the factories below, which allocate the array there and fill every byte of it
+/// before the frame exists (and so before anyone can publish it). Round 4 pinned each payload with a `fixed` local in a recursion
+/// instead; F# compiled the recursion to a loop with one pinned slot, so only the last payload of a batch was pinned, and a compacting
+/// collection during the `sendmsg` sent a client another object's memory (`bench/results/oncrack-r5-lost-frame.md`).
 [<Sealed>]
-type Frame(bytes: byte[]) =
+type Frame private (bytes: byte[]) =
     let mutable deflated: byte[] | null = null
 
     /// Unit R5.1: the hub-wide publish number of a published frame (0: not published, as a welcome or the heartbeat is not), for
@@ -144,7 +154,27 @@ type Frame(bytes: byte[]) =
                     deflated)
             | ready -> ready
 
-    static member OfString(text: string) : Frame = Frame(Encoding.UTF8.GetBytes text)
+    /// An array of `length` bytes on the pinned object heap, its contents undefined: whoever takes it writes every byte.
+    static member private Allocate(length: int) : byte[] = GC.AllocateUninitializedArray<byte>(length, true)
+
+    static member OfString(text: string) : Frame =
+        let bytes = Frame.Allocate(Encoding.UTF8.GetByteCount text)
+        Encoding.UTF8.GetBytes(text, 0, text.Length, bytes, 0) |> ignore
+        Frame bytes
+
+    /// A frame of a copy of `payload`.
+    static member OfBytes(payload: ReadOnlySpan<byte>) : Frame =
+        let bytes = Frame.Allocate payload.Length
+        payload.CopyTo(Span bytes)
+        Frame bytes
+
+    /// A frame of `prefix`, `payload` and `suffix` one after the other (a group's message: the identifier's wrapping around the payload).
+    static member Concat(prefix: ReadOnlySpan<byte>, payload: ReadOnlySpan<byte>, suffix: ReadOnlySpan<byte>) : Frame =
+        let bytes = Frame.Allocate(prefix.Length + payload.Length + suffix.Length)
+        prefix.CopyTo(Span bytes)
+        payload.CopyTo(Span(bytes, prefix.Length, payload.Length))
+        suffix.CopyTo(Span(bytes, prefix.Length + payload.Length, suffix.Length))
+        Frame bytes
 
     override this.ToString() = $"Frame({this.Text})"
 
@@ -580,7 +610,8 @@ type GatherScratch() =
     [<ThreadStatic; DefaultValue>]
     static val mutable private current: GatherScratch | null
 
-    member val Headers: byte[] = Array.zeroCreate 2560 with get, set
+    /// On the pinned object heap: the kernel is given addresses in it.
+    member val Headers: byte[] = GC.AllocateArray<byte>(2560, true) with get, set
     member val HeaderLengths: int[] = Array.zeroCreate 256
     member val Payloads: byte[][] = Array.zeroCreate 256
     /// 56 bytes of `msghdr` (zeroed, the fields that change are set per call) and then 4 words per frame (header and payload:
@@ -595,15 +626,15 @@ type GatherScratch() =
                 GatherScratch.current <- created
                 created
             | existing -> existing
-        if scratch.Headers.Length < frames * 10 then scratch.Headers <- Array.zeroCreate (frames * 10)
+        if scratch.Headers.Length < frames * 10 then scratch.Headers <- GC.AllocateArray<byte>(frames * 10, true)
         scratch
 
-#nowarn "9" // `sendmsg` over pinned arrays and a native iovec table
+#nowarn "9" // `sendmsg` over arrays of the pinned object heap and a native iovec table
 
 /// `sendmsg` over the frames' own arrays (Linux, glibc's layout of `msghdr`: the same on aarch64 and x86-64). .NET's own gather send
 /// creates a GC handle for every segment of every call (measured in unit R4.2: about 9% of a fan-out's CPU, as much as the copy it
-/// replaced); here each payload is pinned by a `fixed` local in a recursion one frame deep per payload, which costs nothing until
-/// a GC walks the stack.
+/// replaced). Here nothing is pinned for the call: every payload is on the pinned object heap (`Frame`), and so are the scratch headers,
+/// so an address taken before the call is where the bytes are until the arrays die, and `scratch.Payloads` keeps them alive past the call.
 module private Sendmsg =
     open System.Runtime.InteropServices
     open Microsoft.FSharp.NativeInterop
@@ -620,6 +651,10 @@ module private Sendmsg =
     [<Literal>]
     let private EINTR = 4
 
+    /// Tests only: runs between the iovec table's filling and the `sendmsg` (a forced compacting collection, so that an array that could
+    /// move does move where the kernel is about to read it).
+    let mutable internal beforeCall: (unit -> unit) | null = null
+
     let native (scratch: GatherScratch) : nativeint =
         if scratch.Native = 0n then
             let size = 56 + 256 * 32
@@ -627,25 +662,36 @@ module private Sendmsg =
             scratch.Native <- block
         scratch.Native
 
-    /// Pins payload `i` and the ones after it, then makes the call. Returns (bytes sent, errno; 0 when none).
-    let rec private pin (fd: int) (scratch: GatherScratch) (headers: nativeint) (count: int) (i: int) : struct (int64 * int) =
-        let payload = scratch.Payloads[i]
-        use p = fixed payload
-        let table = NativePtr.ofNativeInt<nativeint> (scratch.Native + 56n)
-        NativePtr.set table (4 * i) (headers + nativeint (i * 10))
-        NativePtr.set table (4 * i + 1) (nativeint scratch.HeaderLengths[i])
-        NativePtr.set table (4 * i + 2) (NativePtr.toNativeInt p)
-        NativePtr.set table (4 * i + 3) (nativeint payload.Length)
-        if i + 1 < count then
-            pin fd scratch headers count (i + 1)
-        else
-            let msg = NativePtr.ofNativeInt<nativeint> scratch.Native
-            NativePtr.set msg 2 (scratch.Native + 56n) // msg_iov
+    /// Where `array`'s first element is (an array of the pinned object heap stays there).
+    let inline private address (array: byte[]) : nativeint =
+        NativePtr.toNativeInt (NativePtr.ofVoidPtr<byte> (Runtime.CompilerServices.Unsafe.AsPointer(&MemoryMarshal.GetArrayDataReference array)))
+
+    /// One non-blocking `sendmsg` of the `count` header and payload pairs in `scratch`. Returns (bytes sent, errno; 0 when none).
+    let send (socket: Net.Sockets.Socket) (scratch: GatherScratch) (count: int) : struct (int64 * int) =
+        let block = native scratch
+        let handle = socket.SafeHandle
+        let mutable added = false
+        handle.DangerousAddRef(&added)
+        try
+            let headers = address scratch.Headers
+            let table = NativePtr.ofNativeInt<nativeint> (block + 56n)
+            for i in 0 .. count - 1 do
+                let payload = scratch.Payloads[i]
+                NativePtr.set table (4 * i) (headers + nativeint (i * 10))
+                NativePtr.set table (4 * i + 1) (nativeint scratch.HeaderLengths[i])
+                NativePtr.set table (4 * i + 2) (address payload)
+                NativePtr.set table (4 * i + 3) (nativeint payload.Length)
+            let msg = NativePtr.ofNativeInt<nativeint> block
+            NativePtr.set msg 2 (block + 56n) // msg_iov
             NativePtr.set msg 3 (nativeint (count * 2)) // msg_iovlen
+            match beforeCall with
+            | null -> ()
+            | hook -> hook ()
+            let fd = int (handle.DangerousGetHandle())
             let mutable result = struct (0L, 0)
             let mutable again = true
             while again do
-                let sent = sendmsg (fd, scratch.Native, MSG_DONTWAIT ||| MSG_NOSIGNAL)
+                let sent = sendmsg (fd, block, MSG_DONTWAIT ||| MSG_NOSIGNAL)
                 if sent >= 0n then
                     result <- struct (int64 sent, 0)
                     again <- false
@@ -654,23 +700,17 @@ module private Sendmsg =
                     if errno <> EINTR then
                         result <- struct (0L, errno)
                         again <- false
-            // Unit R5.1 (`CAMPFIRE_CABLE_VERIFY`): every payload is still pinned here; the address the kernel was given is where it is.
+            // Unit R5.1 (`CAMPFIRE_CABLE_VERIFY`): the address the kernel was given is still where each array is.
             if CableVerify.Enabled then
                 for j in 0 .. count - 1 do
                     CableVerify.CheckAddress(scratch.Payloads[j], NativePtr.get table (4 * j + 2), j)
+            GC.KeepAlive scratch.Headers
             result
-
-    /// One non-blocking `sendmsg` of the `count` header and payload pairs in `scratch`.
-    let send (socket: Net.Sockets.Socket) (scratch: GatherScratch) (count: int) : struct (int64 * int) =
-        native scratch |> ignore
-        let handle = socket.SafeHandle
-        let mutable added = false
-        handle.DangerousAddRef(&added)
-        try
-            use headers = fixed scratch.Headers
-            pin (int (handle.DangerousGetHandle())) scratch (NativePtr.toNativeInt headers) count 0
         finally
             if added then handle.DangerousRelease()
+
+/// Tests only: `hook` runs in every gathered write between the iovec table's filling and the `sendmsg` (null: none).
+let internal SetBeforeSendmsg (hook: (unit -> unit) | null) : unit = Sendmsg.beforeCall <- hook
 
 /// Whether this platform gathers writes (Linux; elsewhere `Writer` copies).
 let GatherAvailable = Sendmsg.available

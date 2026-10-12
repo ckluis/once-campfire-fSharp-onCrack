@@ -250,6 +250,8 @@ type internal LogStats() =
 /// same encoded channel identifier, or the raw payload when `Identifier` is null.
 [<AbstractClass>]
 type internal GroupBase(identifier: string | null) =
+    static let closingBrace: byte[] = [| byte '}' |]
+
     let prefix: byte[] | null =
         match identifier with
         | null -> null
@@ -263,13 +265,8 @@ type internal GroupBase(identifier: string | null) =
     /// The frame a payload makes for this group's subscribers.
     member _.Frame(payload: ReadOnlySpan<byte>) : Frame =
         match prefix with
-        | null -> Frame(payload.ToArray())
-        | prefix ->
-            let bytes = GC.AllocateUninitializedArray<byte>(prefix.Length + payload.Length + 1)
-            prefix.CopyTo(bytes, 0)
-            payload.CopyTo(Span(bytes, prefix.Length, payload.Length))
-            bytes[bytes.Length - 1] <- byte '}'
-            Frame bytes
+        | null -> Frame.OfBytes payload
+        | prefix -> Frame.Concat(ReadOnlySpan<byte> prefix, payload, ReadOnlySpan<byte> closingBrace)
 
     abstract Count: int
 
