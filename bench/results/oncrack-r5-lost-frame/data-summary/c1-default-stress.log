@@ -1,0 +1,26 @@
+date: 2026-10-11T02:07:27-04:00
+app: oncrack, clients: 500, prefix: none, runs: 6, fresh: 1, secs: 15
+app env: CAMPFIRE_CABLE_VERIFY=1 DOTNET_GCgen0MaxBudget=400000
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-verify2 (6920635 (dirty files under src/: 0) at 2026-10-11T04:57:25Z)
+repo HEAD: 0eaed8f
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[02:08:37] load before run: 1.43 3.12 3.19 (waited 70s)
+[02:08:40] host probe before run: {"spin_ms": 59.46, "spin_ms_max_cpu": 63.45, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.07} (waited 70s)
+[02:08:44] oncrack: container up, cold start 190ms
+MISS run 1 500 clients (target): 33 ERROR/WARN lines in the app's log
+[02:09:15] oncrack: container up, cold start 190ms
+MISS run 2 500 clients (target): 33 ERROR/WARN lines in the app's log
+[02:09:46] oncrack: container up, cold start 192ms
+MISS run 3 500 clients (target): 34 ERROR/WARN lines in the app's log
+[02:10:17] oncrack: container up, cold start 186ms
+MISS run 4 500 clients (target): 34 ERROR/WARN lines in the app's log
+[02:10:49] oncrack: container up, cold start 183ms
+MISS run 5 500 clients (target): 30 ERROR/WARN lines in the app's log
+[02:11:20] oncrack: container up, cold start 179ms
+MISS run 6 500 clients (target): 33 ERROR/WARN lines in the app's log
+[02:11:48] done: 6 phases, 6 with a problem
+exit 0

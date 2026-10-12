@@ -1,0 +1,39 @@
+date: 2026-10-11T02:36:15-04:00
+app: rust, clients: 500, prefix: none, runs: 10, fresh: 1, secs: 15
+app env: 
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-rust-upstream:f9dca47 sha256:b0e047159ee217631110f99c318fcb5c40ace80aa5f9803325b6bd06589454ef 2026-10-10T17:27:34.587605813-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-verify2 (6920635 (dirty files under src/: 0) at 2026-10-11T04:57:25Z)
+repo HEAD: 0eaed8f
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[02:37:15] load before run: 1.33 2.43 2.78 (waited 60s)
+[02:37:28] host busy: {"spin_ms": 286.99, "spin_ms_max_cpu": 289.22, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.164}
+[02:37:50] host busy: {"spin_ms": 281.22, "spin_ms_max_cpu": 288.04, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.061}
+[02:38:13] host busy: {"spin_ms": 281.42, "spin_ms_max_cpu": 297.17, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.064}
+[02:38:35] host busy: {"spin_ms": 284.23, "spin_ms_max_cpu": 292.47, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.115}
+[02:38:57] host busy: {"spin_ms": 283.87, "spin_ms_max_cpu": 287.54, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.108}
+[02:39:10] host probe before run: {"spin_ms": 59.94, "spin_ms_max_cpu": 62.16, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.079} (waited 110s)
+[02:39:13] rust: container up, cold start 135ms
+ok   run 1 500 clients (target): 18364/18364 messages, 1223.5 msg/s, drain 0.0 s
+[02:39:44] rust: container up, cold start 103ms
+ok   run 2 500 clients (target): 16600/16600 messages, 1105.8 msg/s, drain 0.0 s
+[02:40:15] rust: container up, cold start 97ms
+ok   run 3 500 clients (target): 16736/16736 messages, 1115.3 msg/s, drain 0.0 s
+[02:40:46] rust: container up, cold start 103ms
+ok   run 4 500 clients (target): 16649/16649 messages, 1109.6 msg/s, drain 0.0 s
+[02:41:17] rust: container up, cold start 95ms
+ok   run 5 500 clients (target): 14923/14923 messages, 994.4 msg/s, drain 0.0 s
+[02:41:50] rust: container up, cold start 325ms
+ok   run 6 500 clients (target): 9936/9936 messages, 662.1 msg/s, drain 0.0 s
+[02:42:22] rust: container up, cold start 325ms
+ok   run 7 500 clients (target): 8183/8183 messages, 545.2 msg/s, drain 0.01 s
+[02:42:55] rust: container up, cold start 380ms
+ok   run 8 500 clients (target): 9770/9770 messages, 650.9 msg/s, drain 0.0 s
+[02:43:28] rust: container up, cold start 360ms
+ok   run 9 500 clients (target): 10306/10306 messages, 686.7 msg/s, drain 0.0 s
+[02:44:00] rust: container up, cold start 339ms
+ok   run 10 500 clients (target): 10006/10006 messages, 666.7 msg/s, drain 0.0 s
+[02:44:28] done: 10 phases, 0 with a problem
+exit 0

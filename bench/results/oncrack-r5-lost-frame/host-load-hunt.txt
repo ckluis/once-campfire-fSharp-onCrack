@@ -1,0 +1,1452 @@
+# host load during hunt (ps -A, non-VM processes: top 4 by %CPU and the sum of all, every 10 s; loadavg)
+# quiet after 0s; session starts
+22:03:29 load  5.77 4.60 4.58  | sum 125 | 27.8 go, 27.5 XprotectService, 10.9 cmux, 9.7 claude, 
+# mac_free_gib=24.5
+22:03:39 load  6.01 4.69 4.62  | sum 129 | 60.3 (go), 19.9 XprotectService, 17.7 fseventsd, 11.2 syspolicyd, 
+22:03:49 load  5.87 4.70 4.62  | sum 97 | 70.5 go, 6.6 fseventsd, 2.4 tccd, 2.1 com.apple.WebKit.WebContent, 
+22:03:59 load  6.20 4.81 4.66  | sum 78 | 24.7 go, 22.8 XprotectService, 5.4 fseventsd, 4.2 web.test, 
+# mac_free_gib=24.4
+22:04:10 load  5.55 4.72 4.63  | sum 180 | 144.4 go, 11.5 fseventsd, 4.0 syspolicyd, 3.3 XprotectService, 
+22:04:20 load  5.65 4.76 4.65  | sum 192 | 151.1 go, 8.0 fseventsd, 5.3 claude, 4.1 tccd, 
+22:04:30 load  6.01 4.87 4.68  | sum 340 | 260.7 go, 51.3 mediaanalysisd, 11.8 compile, 3.3 fseventsd, 
+# mac_free_gib=24.2
+22:04:40 load  5.31 4.76 4.65  | sum 39 | 6.6 trustd, 6.3 tccd, 6.3 syspolicyd, 6.0 claude, 
+22:04:50 load  5.20 4.75 4.64  | sum 15 | 3.8 tccd, 3.5 trustd, 2.3 syspolicyd, 0.9 claude, 
+22:05:00 load  5.64 4.85 4.68  | sum 60 | 21.8 go, 6.9 loginwindow, 5.3 claude, 4.7 claude, 
+# mac_free_gib=24.0
+22:05:11 load  5.31 4.81 4.67  | sum 59 | 14.0 fseventsd, 11.2 XprotectService, 6.3 tccd, 5.2 syspolicyd, 
+22:05:21 load  6.33 5.06 4.76  | sum 49 | 12.0 XprotectService, 9.8 syspolicyd, 6.5 go, 6.2 tccd, 
+22:05:31 load  6.64 5.17 4.80  | sum 122 | 44.4 mediaanalysisd, 41.8 link, 11.7 go, 7.4 link, 
+# mac_free_gib=23.7
+22:05:41 load  6.57 5.20 4.82  | sum 22 | 6.1 tccd, 5.7 trustd, 4.0 syspolicyd, 1.0 DisplayLinkUserAgent, 
+22:05:51 load  6.87 5.31 4.86  | sum 25 | 6.2 trustd, 6.2 tccd, 3.8 syspolicyd, 2.9 cmux, 
+22:06:01 load  6.05 5.18 4.82  | sum 56 | 7.7 loginwindow, 7.0 trustd, 7.0 tccd, 6.1 syspolicyd, 
+# mac_free_gib=23.6
+22:06:11 load  6.54 5.31 4.87  | sum 11 | 2.1 claude, 2.0 claude, 1.5 tccd, 1.3 trustd, 
+22:06:22 load  6.68 5.38 4.90  | sum 22 | 4.6 claude, 3.4 kluis.test, 1.6 trustd, 1.5 claude, 
+22:06:32 load  5.81 5.24 4.85  | sum 42 | 19.7 claude, 4.9 kluis.test, 2.0 trustd, 2.0 tccd, 
+# mac_free_gib=23.5
+22:06:42 load  6.06 5.31 4.88  | sum 33 | 5.6 tccd, 5.0 trustd, 4.6 claude, 3.5 syspolicyd, 
+22:06:52 load  5.66 5.25 4.87  | sum 32 | 4.3 kluis.test, 3.7 trustd, 3.5 tccd, 3.2 syspolicyd, 
+22:07:02 load  5.18 5.16 4.84  | sum 81 | 51.3 go, 13.0 syspolicyd, 2.8 trustd, 2.5 tccd, 
+# mac_free_gib=23.5
+22:07:12 load  7.47 5.65 5.02  | sum 58 | 21.5 link, 12.2 go, 6.4 tccd, 6.0 trustd, 
+22:07:22 load  7.30 5.67 5.03  | sum 317 | 170.1 go, 86.2 claude, 28.5 compile, 5.0 trustd, 
+22:07:32 load  6.33 5.52 4.98  | sum 31 | 6.2 tccd, 5.6 trustd, 3.9 syspolicyd, 2.5 claude, 
+# mac_free_gib=23.1
+22:07:43 load  6.50 5.58 5.01  | sum 16 | 3.0 claude, 1.9 postgres:, 1.9 engine.test, 1.5 tccd, 
+22:07:53 load  6.39 5.60 5.02  | sum 120 | 63.5 link, 34.0 link, 12.4 go, 2.1 fseventsd, 
+22:08:03 load  6.04 5.54 5.01  | sum 170 | 133.0 go, 13.2 XprotectService, 4.5 fseventsd, 4.4 claude, 
+# mac_free_gib=22.9
+22:08:13 load  6.33 5.62 5.05  | sum 130 | 56.0 go, 40.4 (link), 24.5 launchd, 1.3 tccd, 
+22:08:23 load  5.59 5.49 5.00  | sum 71 | 18.8 XprotectService, 9.8 engine.test, 8.8 cmux, 8.7 syspolicyd, 
+22:08:33 load  5.03 5.37 4.97  | sum 49 | 35.0 go, 3.2 tccd, 3.1 syspolicyd, 2.6 trustd, 
+# mac_free_gib=22.5
+22:08:44 load  5.45 5.46 5.00  | sum 248 | 180.6 go, 28.9 fseventsd, 8.4 launchd, 5.5 mds, 
+22:08:54 load  4.77 5.31 4.96  | sum 24 | 4.7 kluis.test, 3.3 postgres:, 3.3 claude, 2.9 claude, 
+22:09:04 load  4.43 5.22 4.93  | sum 52 | 27.1 go, 14.1 link, 2.3 tccd, 1.0 syspolicyd, 
+# mac_free_gib=22.5
+22:09:14 load  4.72 5.26 4.94  | sum 52 | 25.4 go, 9.9 (compile), 3.1 trustd, 2.9 tccd, 
+22:09:24 load  4.22 5.13 4.90  | sum 8 | 1.7 trustd, 1.6 tccd, 1.5 syspolicyd, 0.8 claude, 
+22:09:34 load  4.16 5.09 4.89  | sum 155 | 105.3 go, 11.6 claude, 10.6 fseventsd, 5.2 compile, 
+# mac_free_gib=22.3
+22:09:44 load  5.25 5.29 4.96  | sum 42 | 24.4 go, 3.8 claude, 2.9 trustd, 2.9 tccd, 
+22:09:54 load  5.58 5.36 4.99  | sum 80 | 39.1 link, 15.2 go, 13.0 link, 2.9 trustd, 
+22:10:04 load  5.19 5.28 4.97  | sum 188 | 86.4 (compile), 49.0 go, 35.1 com.apple.WebKit.WebContent, 3.1 fseventsd, 
+# mac_free_gib=21.9
+22:10:15 load  5.38 5.32 4.99  | sum 117 | 67.8 link, 25.1 link, 7.7 go, 3.8 tccd, 
+22:10:25 load  5.53 5.36 5.00  | sum 63 | 39.2 go, 4.2 claude, 3.3 fseventsd, 3.0 trustd, 
+22:10:35 load  5.12 5.28 4.98  | sum 25 | 13.0 com.apple.WebKit.WebContent, 2.3 trustd, 2.2 tccd, 1.6 syspolicyd, 
+# mac_free_gib=21.6
+22:10:45 load  5.03 5.25 4.97  | sum 107 | 88.3 go, 4.3 fseventsd, 3.2 syspolicyd, 3.0 tccd, 
+22:10:55 load  4.70 5.18 4.95  | sum 35 | 4.4 syspolicyd, 3.9 trustd, 3.8 tccd, 3.1 XprotectService, 
+22:11:05 load  5.29 5.29 4.99  | sum 57 | 30.6 go, 6.5 com.apple.WebKit.WebContent, 3.7 tccd, 3.6 trustd, 
+# mac_free_gib=21.3
+22:11:16 load  7.01 5.66 5.12  | sum 55 | 14.2 compile, 13.4 compile, 9.0 go, 3.3 trustd, 
+22:11:26 load  6.81 5.65 5.13  | sum 230 | 87.7 searchpartyuseragent, 13.9 searchpartyd, 11.1 accountsd, 7.1 locationd, 
+22:11:55 load  5.76 5.50 5.09  | sum 20 | 9.1 claude, 2.8 Finder, 1.7 launchservicesd, 1.4 cmux, 
+# mac_free_gib=21.1
+22:12:05 load  5.59 5.46 5.08  | sum 30 | 14.4 com.apple.WebKit.WebContent, 3.6 claude, 3.2 cmux, 1.9 tccd, 
+22:12:15 load  5.80 5.51 5.10  | sum 44 | 9.6 cmux, 8.8 bash, 4.4 fseventsd, 4.2 claude, 
+22:12:25 load  5.14 5.38 5.06  | sum 118 | 52.6 go, 27.9 fseventsd, 12.4 XprotectService, 4.9 mds, 
+# mac_free_gib=21.1
+22:12:35 load  4.66 5.27 5.02  | sum 249 | 95.2 (compile), 87.4 (compile), 30.5 go, 19.3 com.apple.WebKit.WebContent, 
+22:12:45 load  5.10 5.34 5.05  | sum 147 | 75.2 go, 21.6 compile, 15.9 top, 10.3 claude, 
+22:12:56 load  4.77 5.27 5.03  | sum 74 | 31.7 fseventsd, 10.1 XprotectService, 6.8 claude, 5.6 Finder, 
+# mac_free_gib=20.7
+22:13:06 load  4.56 5.21 5.01  | sum 30 | 5.4 tccd, 5.2 trustd, 4.8 cmux, 3.8 syspolicyd, 
+22:13:16 load  5.01 5.28 5.04  | sum 28 | 5.3 tccd, 4.7 trustd, 3.6 syspolicyd, 1.9 postgres:, 
+22:13:26 load  4.39 5.14 4.99  | sum 45 | 12.9 claude, 6.6 cmux, 5.2 Finder, 4.9 trustd, 
+# mac_free_gib=20.7
+22:13:36 load  4.35 5.10 4.98  | sum 19 | 6.3 cmux, 2.9 syspolicyd, 2.2 trustd, 1.9 tccd, 
+22:13:46 load  4.46 5.10 4.98  | sum 59 | 21.0 fseventsd, 5.7 postgres:, 4.9 tccd, 4.9 mds, 
+22:13:56 load  4.24 5.03 4.95  | sum 92 | 31.4 fseventsd, 16.4 engine.test, 8.7 claude, 6.6 Finder, 
+# mac_free_gib=20.6
+22:14:06 load  4.46 5.05 4.96  | sum 44 | 10.5 fseventsd, 7.4 engine.test, 3.9 postgres:, 3.1 mds, 
+22:14:16 load  5.15 5.18 5.01  | sum 105 | 50.0 fseventsd, 20.9 engine.test, 9.1 Finder, 8.0 mds, 
+22:14:27 load  4.51 5.04 4.96  | sum 32 | 13.0 compile, 9.8 go, 1.6 fseventsd, 1.4 tccd, 
+# mac_free_gib=20.6
+22:14:37 load  4.90 5.10 4.98  | sum 220 | 175.7 go, 12.8 link, 8.7 fseventsd, 3.6 tccd, 
+22:14:47 load  5.45 5.21 5.02  | sum 171 | 104.1 go, 19.6 XprotectService, 12.7 cmux, 10.3 syspolicyd, 
+22:14:57 load  4.85 5.09 4.98  | sum 37 | 8.8 claude, 4.9 trustd, 4.2 tccd, 3.6 kluis.test, 
+# mac_free_gib=20.5
+22:15:07 load  4.81 5.07 4.98  | sum 18 | 4.0 trustd, 3.9 tccd, 2.9 syspolicyd, 1.2 opencode, 
+22:15:17 load  5.13 5.13 5.00  | sum 31 | 6.0 syspolicyd, 4.9 trustd, 4.9 tccd, 3.2 kluis.test, 
+22:15:27 load  4.65 5.03 4.96  | sum 86 | 14.6 mlhostd, 13.6 ODDIExperimentationExtension, 7.4 launchd, 6.7 trustd, 
+# mac_free_gib=20.6
+22:15:37 load  4.57 5.00 4.95  | sum 8 | 1.6 claude, 1.4 trustd, 1.4 tccd, 1.2 syspolicyd, 
+22:15:48 load  4.94 5.06 4.98  | sum 26 | 5.4 claude, 4.7 kluis.test, 3.3 postgres:, 2.5 syspolicyd, 
+22:15:58 load  4.34 4.93 4.93  | sum 24 | 4.5 kluis.test, 3.8 claude, 3.4 postgres:, 2.3 claude, 
+# mac_free_gib=20.4
+22:16:08 load  4.59 4.96 4.94  | sum 23 | 5.7 tccd, 5.3 trustd, 3.2 syspolicyd, 2.0 opencode, 
+22:16:18 load  4.62 4.96 4.94  | sum 299 | 161.9 (compile), 105.8 go, 11.8 fseventsd, 2.8 trustd, 
+22:16:28 load  5.99 5.26 5.05  | sum 358 | 262.9 compile, 86.5 go, 1.6 syspolicyd, 1.5 trustd, 
+# mac_free_gib=20.4
+22:16:38 load  6.11 5.31 5.07  | sum 42 | 21.6 com.apple.WebKit.WebContent, 5.2 trustd, 4.8 tccd, 4.0 syspolicyd, 
+22:16:48 load  6.21 5.36 5.09  | sum 27 | 6.5 syspolicyd, 6.3 trustd, 6.1 tccd, 1.3 claude, 
+22:16:58 load  6.04 5.35 5.09  | sum 22 | 8.8 claude, 3.7 tccd, 3.4 trustd, 2.4 syspolicyd, 
+# mac_free_gib=20.3
+22:17:09 load  6.35 5.44 5.12  | sum 27 | 6.0 claude, 5.1 com.apple.WebKit.WebContent, 4.1 PerfPowerServices, 2.9 claude, 
+22:17:19 load  5.61 5.31 5.08  | sum 39 | 4.6 trustd, 4.4 appleaccountd, 4.2 syspolicyd, 3.5 claude, 
+22:17:29 load  5.38 5.27 5.07  | sum 17 | 4.5 trustd, 4.3 tccd, 3.7 syspolicyd, 1.0 claude, 
+# mac_free_gib=20.3
+22:17:39 load  5.09 5.21 5.05  | sum 8 | 1.9 trustd, 1.8 tccd, 1.3 com.apple.WebKit.WebContent, 0.9 syspolicyd, 
+22:17:49 load  4.70 5.12 5.02  | sum 26 | 7.0 tccd, 6.9 trustd, 6.3 syspolicyd, 0.7 DisplayLinkUserAgent, 
+22:17:59 load  4.93 5.15 5.03  | sum 23 | 5.6 tccd, 5.4 trustd, 3.8 syspolicyd, 2.5 cmux, 
+# mac_free_gib=20.3
+22:18:10 load  5.40 5.24 5.06  | sum 21 | 8.6 claude, 3.3 claude, 1.9 claude, 1.6 tccd, 
+22:18:20 load  4.80 5.12 5.02  | sum 12 | 1.7 claude, 1.6 trustd, 1.6 syspolicyd, 1.5 claude, 
+22:18:30 load  5.07 5.16 5.04  | sum 54 | 39.0 go, 3.1 mdworker_shared, 2.8 mdworker_shared, 1.3 trustd, 
+# mac_free_gib=20.3
+22:18:40 load  5.93 5.34 5.10  | sum 263 | 171.9 compile, 73.5 go, 3.7 cmux, 3.0 tccd, 
+22:18:50 load  5.17 5.20 5.05  | sum 83 | 52.1 link, 18.1 go, 2.8 tccd, 2.7 trustd, 
+22:19:00 load  5.09 5.17 5.05  | sum 56 | 16.8 mdworker_shared, 8.6 loginwindow, 6.8 mediaanalysisd, 5.6 spotlightknowledged.importer, 
+# mac_free_gib=20.0
+22:19:10 load  5.62 5.28 5.09  | sum 364 | 181.3 XprotectService, 58.1 go, 40.3 syspolicyd, 11.5 (postgres), 
+22:19:20 load  5.92 5.36 5.11  | sum 179 | 64.3 kasboek.test, 31.5 fseventsd, 19.1 taal.test, 8.2 Finder, 
+22:19:30 load  6.96 5.60 5.20  | sum 223 | 71.7 fseventsd, 56.9 kasboek.test, 15.9 Finder, 14.1 mds, 
+# mac_free_gib=19.9
+22:19:41 load  6.80 5.62 5.21  | sum 199 | 63.8 kasboek.test, 54.2 fseventsd, 12.6 postgres:, 12.6 Finder, 
+22:19:51 load  6.37 5.56 5.20  | sum 69 | 16.4 kasboek.test, 13.5 postgres:, 11.7 postgres:, 4.1 trustd, 
+22:20:01 load  5.69 5.45 5.16  | sum 132 | 36.4 werk.test, 34.3 fseventsd, 10.8 loginwindow, 8.8 claude, 
+# mac_free_gib=20.0
+22:20:11 load  5.13 5.33 5.12  | sum 54 | 17.8 fseventsd, 5.6 zwerm.test, 4.3 Finder, 3.8 claude, 
+22:20:21 load  4.57 5.20 5.08  | sum 219 | 89.4 com.apple.WebKit.WebContent, 88.7 com.apple.WebKit.WebContent, 14.8 zwerm.test, 6.4 fseventsd, 
+22:20:31 load  4.26 5.12 5.05  | sum 67 | 24.9 spoor.test, 12.9 fseventsd, 6.5 cmux, 4.8 XprotectService, 
+# mac_free_gib=20.0
+22:20:52 load  5.01 5.22 5.09  | sum 84 | 15.5 claude, 14.4 claude, 9.7 bash, 7.5 tccd, 
+# mac_free_gib=20.0
+22:21:03 load  5.66 5.36 5.14  | sum 36 | 12.2 fseventsd, 4.4 XprotectService, 3.1 syspolicyd, 1.9 trustd, 
+22:21:13 load  6.61 5.58 5.22  | sum 25 | 6.0 cmux, 3.2 opencode, 3.1 claude, 2.5 tccd, 
+22:21:23 load  6.82 5.66 5.25  | sum 21 | 3.5 opencode, 2.8 claude, 2.3 networkserviceproxy, 1.9 claude, 
+# mac_free_gib=19.9
+22:21:33 load  5.85 5.49 5.20  | sum 78 | 51.7 claude, 5.4 tccd, 5.3 trustd, 4.5 opencode, 
+22:21:43 load  6.40 5.62 5.25  | sum 44 | 14.4 launchd, 6.4 cmux, 3.5 claude, 3.3 claude, 
+22:21:53 load  6.16 5.60 5.24  | sum 23 | 10.0 claude, 3.0 claude, 2.6 claude, 1.2 syspolicyd, 
+# mac_free_gib=19.9
+22:22:03 load  6.32 5.64 5.26  | sum 166 | 32.9 fseventsd, 22.7 postgres:, 17.6 postgres:, 10.4 web.test, 
+22:22:13 load  7.89 6.00 5.39  | sum 140 | 22.8 kasboek.test, 19.4 fseventsd, 18.4 postgres:, 10.0 launchd, 
+22:22:24 load  9.01 6.30 5.50  | sum 149 | 38.0 kasboek.test, 26.2 fseventsd, 12.3 web.test, 10.1 Finder, 
+# mac_free_gib=19.7
+22:22:34 load  8.85 6.35 5.53  | sum 178 | 29.7 fseventsd, 19.8 postgres:, 16.3 web.test, 15.4 postgres:, 
+22:22:44 load  9.31 6.54 5.61  | sum 142 | 65.6 kasboek.test, 15.5 postgres:, 12.3 fseventsd, 9.6 web.test, 
+22:22:54 load  8.62 6.49 5.60  | sum 95 | 32.5 fseventsd, 13.7 postgres:, 12.8 kasboek.test, 9.6 engine.test, 
+# mac_free_gib=19.8
+22:23:04 load  8.17 6.45 5.60  | sum 87 | 33.9 cmux, 17.1 fseventsd, 6.6 engine.test, 4.5 mds, 
+22:23:14 load  8.53 6.59 5.66  | sum 93 | 24.8 werk.test, 24.5 fseventsd, 5.3 Finder, 4.5 syspolicyd, 
+22:23:24 load  7.52 6.44 5.61  | sum 33 | 4.0 zwerm.test, 3.7 trustd, 3.6 tccd, 3.4 syspolicyd, 
+# mac_free_gib=19.8
+22:23:35 load  6.91 6.34 5.59  | sum 83 | 67.8 com.apple.WebKit.WebContent, 2.7 zwerm.test, 1.8 fseventsd, 1.5 postgres:, 
+22:23:45 load  7.15 6.41 5.62  | sum 25 | 6.2 trustd, 6.0 tccd, 5.8 syspolicyd, 0.7 DisplayLinkUserAgent, 
+22:23:55 load  6.35 6.26 5.58  | sum 144 | 84.8 spoor.test, 26.4 top, 6.9 tccd, 6.4 trustd, 
+# mac_free_gib=19.8
+22:24:05 load  6.92 6.40 5.64  | sum 88 | 51.0 top, 4.5 tccd, 4.0 trustd, 4.0 com.apple.WebKit.WebContent, 
+22:24:15 load  6.32 6.28 5.60  | sum 175 | 134.8 go, 16.4 fseventsd, 4.1 mds, 3.6 claude, 
+22:24:25 load  6.30 6.28 5.61  | sum 18 | 4.1 tccd, 3.7 trustd, 2.2 claude, 2.1 syspolicyd, 
+# mac_free_gib=19.6
+22:24:36 load  6.48 6.32 5.63  | sum 18 | 4.5 tccd, 4.1 trustd, 2.5 syspolicyd, 1.6 com.apple.WebKit.WebContent, 
+22:24:46 load  5.71 6.16 5.58  | sum 35 | 9.3 claude, 5.9 trustd, 5.6 syspolicyd, 4.8 tccd, 
+22:24:56 load  5.98 6.20 5.60  | sum 21 | 3.6 tccd, 3.0 trustd, 2.3 claude, 2.2 syspolicyd, 
+# mac_free_gib=19.6
+22:25:06 load  6.33 6.27 5.64  | sum 55 | 21.2 cmux, 4.6 trustd, 4.5 tccd, 4.0 com.apple.WebKit.WebContent, 
+22:25:16 load  5.51 6.10 5.58  | sum 24 | 6.0 claude, 3.8 syspolicyd, 3.4 trustd, 3.3 tccd, 
+22:25:26 load  5.81 6.14 5.60  | sum 17 | 3.8 claude, 2.5 tccd, 2.1 trustd, 1.7 claude, 
+# mac_free_gib=19.5
+22:25:37 load  5.51 6.07 5.58  | sum 15 | 4.6 syspolicyd, 4.3 tccd, 3.5 trustd, 0.6 opencode, 
+22:25:47 load  5.21 5.99 5.56  | sum 29 | 8.3 claude, 3.7 tccd, 3.6 trustd, 3.1 claude, 
+22:25:57 load  5.72 6.07 5.59  | sum 17 | 3.3 tccd, 3.2 trustd, 2.0 syspolicyd, 1.9 claude, 
+# mac_free_gib=19.4
+22:26:07 load  5.95 6.12 5.62  | sum 38 | 6.4 syspolicyd, 5.8 trustd, 5.8 tccd, 3.9 cmux, 
+22:26:17 load  5.67 6.05 5.60  | sum 19 | 4.2 tccd, 4.0 trustd, 2.3 syspolicyd, 1.4 claude, 
+22:26:27 load  6.10 6.13 5.63  | sum 17 | 5.3 claude, 2.5 tccd, 2.3 trustd, 1.5 syspolicyd, 
+# mac_free_gib=19.3
+22:26:38 load  5.32 5.96 5.57  | sum 39 | 6.4 trustd, 6.3 tccd, 5.9 syspolicyd, 4.0 claude, 
+22:26:48 load  5.45 5.96 5.58  | sum 25 | 9.0 claude, 3.9 tccd, 3.4 trustd, 2.2 syspolicyd, 
+22:26:58 load  5.99 6.06 5.62  | sum 27 | 4.5 claude, 4.1 tccd, 3.6 trustd, 3.0 Finder, 
+# mac_free_gib=19.3
+22:27:08 load  5.53 5.96 5.59  | sum 93 | 64.8 com.apple.WebKit.WebContent, 6.3 trustd, 6.1 tccd, 5.8 syspolicyd, 
+22:27:18 load  5.69 5.98 5.60  | sum 25 | 6.1 trustd, 5.8 tccd, 3.8 syspolicyd, 1.9 claude, 
+22:27:28 load  6.34 6.11 5.65  | sum 33 | 5.7 syspolicyd, 5.6 trustd, 5.6 tccd, 4.1 claude, 
+# mac_free_gib=19.1
+22:27:39 load  5.67 5.97 5.61  | sum 72 | 31.5 com.apple.WebKit.WebContent, 9.6 cmux, 6.3 claude, 5.5 Finder, 
+22:27:49 load  5.18 5.86 5.57  | sum 18 | 5.1 claude, 1.5 tccd, 1.4 trustd, 1.4 syspolicyd, 
+22:27:59 load  4.98 5.79 5.55  | sum 61 | 7.7 claude, 7.2 claude, 6.4 tccd, 6.4 generativeexperiencesd, 
+# mac_free_gib=19.1
+22:28:09 load  4.52 5.67 5.51  | sum 53 | 10.7 claude, 10.5 cmux, 6.4 com.apple.WebKit.WebContent, 4.9 Finder, 
+22:28:19 load  3.90 5.50 5.45  | sum 27 | 5.8 claude, 4.8 syspolicyd, 3.2 trustd, 2.9 tccd, 
+22:28:29 load  3.37 5.33 5.39  | sum 95 | 55.0 mediaanalysisd, 11.3 aned, 5.3 claude, 4.0 textunderstandingd, 
+# mac_free_gib=19.3
+22:28:39 load  3.17 5.22 5.35  | sum 37 | 17.3 com.apple.WebKit.WebContent, 3.6 claude, 2.7 tccd, 2.6 trustd, 
+22:28:50 load  3.31 5.18 5.33  | sum 131 | 84.4 mobileassetd, 6.2 assistantd, 4.7 opencode, 3.8 claude, 
+22:29:00 load  3.10 5.08 5.29  | sum 139 | 47.1 mediaanalysisd, 21.2 mobileassetd, 9.4 siriactionsd, 8.6 mdworker_shared, 
+# mac_free_gib=19.3
+22:29:10 load  2.93 4.98 5.26  | sum 15 | 3.4 tccd, 3.1 trustd, 2.1 syspolicyd, 1.6 opencode, 
+22:29:20 load  3.63 5.06 5.28  | sum 20 | 4.0 claude, 3.6 claude, 3.4 tccd, 3.2 trustd, 
+22:29:30 load  3.52 4.99 5.25  | sum 32 | 7.5 claude, 5.6 nfcd, 2.6 tccd, 2.1 trustd, 
+# mac_free_gib=19.2
+22:30:00 load  3.49 4.86 5.20  | sum 159 | 72.0 ReportCrashService, 18.8 claude, 14.4 loginwindow, 13.9 cmux, 
+# mac_free_gib=18.1
+22:30:10 load  3.90 4.90 5.21  | sum 48 | 22.6 cmux, 6.1 claude, 3.4 tccd, 3.0 trustd, 
+22:30:20 load  4.70 5.03 5.25  | sum 32 | 8.0 claude, 4.7 trustd, 4.5 syspolicyd, 4.3 tccd, 
+22:30:30 load  5.23 5.13 5.28  | sum 79 | 26.2 fseventsd, 10.7 XprotectService, 6.5 mds, 6.4 syspolicyd, 
+# mac_free_gib=18.6
+22:30:40 load  5.88 5.27 5.33  | sum 30 | 13.5 go, 3.4 tccd, 3.4 syspolicyd, 3.1 trustd, 
+22:30:50 load  5.80 5.28 5.33  | sum 164 | 88.2 duetexpertd, 19.5 XprotectService, 10.4 go, 9.0 syspolicyd, 
+22:31:00 load  5.94 5.32 5.35  | sum 46 | 17.9 mediaanalysisd, 8.9 loginwindow, 3.3 trustd, 3.2 WindowServer, 
+# mac_free_gib=18.3
+22:31:11 load  6.16 5.39 5.37  | sum 20 | 5.2 tccd, 5.1 trustd, 3.4 syspolicyd, 0.9 claude, 
+22:31:21 load  5.97 5.38 5.37  | sum 34 | 8.0 claude, 5.3 trustd, 5.1 tccd, 5.1 syspolicyd, 
+22:31:31 load  5.68 5.33 5.35  | sum 23 | 5.4 tccd, 4.8 trustd, 2.7 syspolicyd, 1.4 claude, 
+# mac_free_gib=18.7
+22:31:41 load  5.89 5.39 5.37  | sum 32 | 6.9 claude, 6.6 tccd, 6.1 trustd, 4.1 syspolicyd, 
+22:31:51 load  5.14 5.24 5.32  | sum 28 | 4.8 claude, 4.7 trustd, 4.6 syspolicyd, 4.3 tccd, 
+22:32:01 load  4.98 5.20 5.30  | sum 33 | 7.3 loginwindow, 5.5 tccd, 5.4 trustd, 3.7 syspolicyd, 
+# mac_free_gib=18.7
+22:32:12 load  5.44 5.29 5.33  | sum 30 | 14.8 claude, 2.2 claude, 1.6 trustd, 1.6 tccd, 
+22:32:22 load  4.90 5.18 5.29  | sum 21 | 9.6 claude, 1.6 tccd, 1.6 claude, 1.5 trustd, 
+22:32:32 load  4.78 5.14 5.28  | sum 11 | 3.4 syspolicyd, 1.8 claude, 1.0 tccd, 0.9 trustd, 
+# mac_free_gib=18.6
+22:32:42 load  4.88 5.16 5.28  | sum 15 | 4.8 mdworker_shared, 1.7 trustd, 1.7 tccd, 1.6 syspolicyd, 
+22:32:52 load  4.29 5.02 5.23  | sum 22 | 4.7 opencode, 3.5 trustd, 3.1 tccd, 3.1 syspolicyd, 
+22:33:02 load  4.63 5.07 5.24  | sum 24 | 7.1 cmux, 3.0 syspolicyd, 2.4 trustd, 2.4 tccd, 
+# mac_free_gib=18.6
+22:33:13 load  4.74 5.08 5.24  | sum 25 | 4.8 Finder, 2.4 claude, 2.0 claude, 1.9 claude, 
+22:33:23 load  4.24 4.96 5.20  | sum 30 | 6.6 claude, 4.0 postgres:, 3.9 fseventsd, 3.7 engine.test, 
+22:33:33 load  4.81 5.06 5.23  | sum 23 | 3.2 mdworker_shared, 3.1 mdworker_shared, 3.0 mdworker_shared, 2.9 mdworker_shared, 
+# mac_free_gib=18.5
+22:33:43 load  5.05 5.11 5.25  | sum 28 | 6.1 cmux, 5.2 claude, 3.5 launchd, 2.2 tccd, 
+22:33:53 load  5.29 5.15 5.26  | sum 19 | 6.9 claude, 2.3 tccd, 1.9 trustd, 1.6 claude, 
+22:34:03 load  5.24 5.15 5.26  | sum 37 | 16.2 cmux, 4.8 claude, 2.2 Finder, 2.0 tccd, 
+# mac_free_gib=18.5
+22:34:13 load  4.89 5.07 5.23  | sum 110 | 41.8 top, 26.5 cmux, 12.9 launchd, 9.4 bash, 
+22:34:23 load  5.16 5.12 5.24  | sum 122 | 75.1 go, 16.7 claude, 6.5 syspolicyd, 4.6 fseventsd, 
+22:34:33 load  5.67 5.23 5.28  | sum 14 | 2.3 tccd, 2.0 trustd, 1.8 claude, 1.5 syspolicyd, 
+# mac_free_gib=17.3
+22:34:44 load  5.26 5.16 5.25  | sum 21 | 4.5 launchd, 3.3 trustd, 3.2 tccd, 3.1 syspolicyd, 
+22:34:54 load  5.81 5.27 5.29  | sum 457 | 144.1 compile, 91.2 compile, 31.1 go, 30.2 compile, 
+22:35:04 load  7.20 5.59 5.41  | sum 168 | 29.5 fseventsd, 18.1 postgres:, 15.1 postgres:, 11.7 kasboek, 
+# mac_free_gib=15.5
+22:35:14 load  7.19 5.64 5.42  | sum 96 | 21.3 fseventsd, 13.8 (postgres), 11.8 postgres:, 8.8 postgres:, 
+22:35:25 load  7.18 5.68 5.44  | sum 182 | 68.5 kasboek.test, 24.2 fseventsd, 22.8 postgres:, 8.5 claude, 
+22:35:35 load  7.68 5.84 5.50  | sum 126 | 37.8 fseventsd, 12.6 kasboek.test, 10.4 com.apple.WebKit.WebContent, 10.0 mds, 
+# mac_free_gib=15.6
+22:35:45 load  6.96 5.74 5.47  | sum 102 | 34.4 fseventsd, 13.0 kasboek.test, 7.1 Finder, 6.2 mds, 
+22:35:55 load  6.68 5.72 5.46  | sum 70 | 14.5 fseventsd, 11.1 engine.test, 5.8 tccd, 5.6 trustd, 
+22:36:05 load  6.96 5.81 5.50  | sum 100 | 41.2 fseventsd, 8.7 engine.test, 8.6 com.apple.WebKit.WebContent, 7.6 Finder, 
+# mac_free_gib=15.7
+22:36:16 load  6.56 5.77 5.49  | sum 63 | 15.1 launchd, 11.8 werk.test, 4.5 claude, 3.5 claude, 
+22:36:26 load  5.86 5.64 5.45  | sum 29 | 6.0 fseventsd, 3.9 zwerm.test, 2.8 claude, 1.7 claude, 
+22:36:36 load  5.12 5.49 5.39  | sum 39 | 6.6 tccd, 6.4 syspolicyd, 6.0 trustd, 5.1 claude, 
+# mac_free_gib=14.3
+22:36:46 load  4.94 5.44 5.38  | sum 28 | 3.6 trustd, 3.6 syspolicyd, 3.5 tccd, 3.4 Finder, 
+22:36:56 load  4.72 5.38 5.36  | sum 78 | 27.5 cmux, 11.3 fseventsd, 9.6 zicht.test, 3.6 Finder, 
+22:37:06 load  4.22 5.25 5.31  | sum 10 | 1.6 go, 1.3 Finder, 1.2 trustd, 1.2 syspolicyd, 
+# mac_free_gib=14.3
+22:37:17 load  4.04 5.17 5.28  | sum 21 | 5.4 claude, 2.1 claude, 1.8 claude, 1.7 claude, 
+22:37:27 load  4.91 5.33 5.34  | sum 91 | 52.7 go, 16.9 compile, 6.3 fseventsd, 4.2 launchservicesd, 
+22:37:37 load  4.87 5.30 5.33  | sum 40 | 12.9 XprotectService, 10.0 go, 5.7 syspolicyd, 2.0 claude, 
+# mac_free_gib=13.9
+22:37:47 load  5.20 5.36 5.35  | sum 19 | 3.8 claude, 2.8 claude, 2.4 trustd, 2.4 tccd, 
+22:37:57 load  4.87 5.28 5.32  | sum 38 | 18.2 cmux, 3.4 claude, 2.1 tccd, 1.8 syspolicyd, 
+22:38:07 load  6.52 5.62 5.44  | sum 214 | 29.9 fseventsd, 24.0 taal.test, 15.6 cmux, 13.9 postgres:, 
+# mac_free_gib=13.6
+22:38:18 load  7.19 5.79 5.50  | sum 178 | 40.2 fseventsd, 38.8 kasboek.test, 19.3 taal.test, 17.7 postgres:, 
+22:38:28 load  7.50 5.91 5.55  | sum 229 | 76.2 kasboek.test, 44.2 fseventsd, 14.9 postgres:, 13.2 Finder, 
+22:38:38 load  8.33 6.15 5.63  | sum 154 | 27.4 fseventsd, 16.7 zwerm.test, 15.2 postgres:, 13.1 kasboek.test, 
+# mac_free_gib=13.7
+22:40:39 load  3.97 5.41 5.42  | sum 51 | 16.4 claude, 6.3 cmux, 3.7 com.apple.WebKit.WebContent, 2.6 syspolicyd, 
+# mac_free_gib=19.8
+22:40:49 load  3.90 5.34 5.39  | sum 34 | 6.1 locationd, 5.9 airportd, 2.3 wifip2pd, 2.3 claude, 
+22:40:59 load  3.54 5.22 5.35  | sum 37 | 7.0 trustd, 6.9 tccd, 4.2 claude, 3.9 syspolicyd, 
+22:41:09 load  3.15 5.08 5.30  | sum 15 | 2.8 syspolicyd, 2.7 tccd, 2.6 trustd, 0.8 com.apple.WebKit.WebContent, 
+# mac_free_gib=19.9
+22:41:20 load  3.13 5.01 5.27  | sum 10 | 1.8 claude, 1.7 tccd, 1.5 trustd, 1.0 syspolicyd, 
+22:41:30 load  3.80 5.09 5.29  | sum 10 | 3.1 claude, 1.6 tccd, 1.4 trustd, 0.9 syspolicyd, 
+22:41:40 load  3.37 4.95 5.24  | sum 18 | 2.9 claude, 2.0 workbench-watchdog, 1.4 claude, 1.2 Finder, 
+# mac_free_gib=19.7
+22:41:50 load  3.49 4.92 5.23  | sum 17 | 4.2 claude, 3.3 tccd, 3.2 trustd, 2.1 syspolicyd, 
+22:42:00 load  4.18 5.02 5.26  | sum 159 | 116.1 mediaanalysisd, 14.4 loginwindow, 4.7 WindowServer, 3.3 syspolicyd, 
+22:42:10 load  3.69 4.89 5.21  | sum 14 | 2.3 tccd, 2.2 trustd, 1.5 syspolicyd, 1.3 claude, 
+# mac_free_gib=19.6
+22:42:20 load  4.35 4.99 5.24  | sum 52 | 10.2 go, 7.8 engine.test, 6.3 XprotectService, 5.3 fseventsd, 
+22:42:30 load  4.88 5.09 5.28  | sum 94 | 50.1 go, 22.7 compile, 7.7 fseventsd, 2.5 syspolicyd, 
+22:42:40 load  4.35 4.97 5.23  | sum 51 | 16.4 fseventsd, 6.0 XprotectService, 5.8 mds, 3.5 claude, 
+# mac_free_gib=19.2
+22:42:51 load  5.73 5.25 5.32  | sum 72 | 16.2 postgres:, 13.9 XprotectService, 6.2 syspolicyd, 5.7 trustd, 
+22:43:01 load  5.08 5.12 5.28  | sum 100 | 26.9 cmux, 16.4 cmux, 8.9 loginwindow, 8.8 mediaanalysisd, 
+22:43:11 load  5.30 5.17 5.29  | sum 20 | 6.2 cmux, 3.3 trustd, 3.1 tccd, 2.2 syspolicyd, 
+# mac_free_gib=18.9
+22:43:21 load  5.15 5.15 5.28  | sum 37 | 8.4 claude, 7.8 cmux, 3.6 syspolicyd, 3.5 tccd, 
+22:43:31 load  4.59 5.02 5.24  | sum 23 | 3.9 tccd, 3.8 syspolicyd, 3.7 trustd, 3.6 claude, 
+22:43:41 load  4.51 4.99 5.22  | sum 16 | 3.6 tccd, 3.2 trustd, 2.3 syspolicyd, 2.0 claude, 
+# mac_free_gib=18.7
+22:43:52 load  4.42 4.96 5.21  | sum 23 | 6.4 syspolicyd, 5.9 trustd, 5.6 tccd, 0.7 DisplayLinkUserAgent, 
+22:44:02 load  4.37 4.93 5.19  | sum 48 | 12.3 claude, 6.9 claude, 5.5 tccd, 5.2 trustd, 
+22:44:12 load  4.86 5.01 5.22  | sum 20 | 7.0 claude, 3.2 tccd, 2.8 trustd, 2.1 syspolicyd, 
+# mac_free_gib=18.6
+22:44:22 load  4.26 4.88 5.17  | sum 37 | 12.1 claude, 5.2 tccd, 4.7 trustd, 4.6 syspolicyd, 
+22:44:32 load  4.32 4.87 5.16  | sum 30 | 5.3 tccd, 5.0 trustd, 4.5 cmux, 4.0 syspolicyd, 
+22:44:42 load  4.81 4.95 5.19  | sum 20 | 3.3 tccd, 3.1 claude, 3.0 trustd, 2.0 claude, 
+# mac_free_gib=18.4
+22:44:53 load  4.31 4.84 5.15  | sum 87 | 10.5 engine.test, 6.1 trustd, 5.5 tccd, 5.5 syspolicyd, 
+22:45:03 load  4.36 4.83 5.14  | sum 30 | 6.6 claude, 5.0 tccd, 4.6 trustd, 2.7 syspolicyd, 
+22:45:13 load  4.92 4.93 5.17  | sum 30 | 5.8 trustd, 5.7 syspolicyd, 5.2 tccd, 3.4 claude, 
+# mac_free_gib=18.1
+22:45:23 load  4.46 4.83 5.13  | sum 48 | 15.1 top, 5.9 claude, 4.4 syspolicyd, 4.3 trustd, 
+22:45:33 load  4.76 4.89 5.15  | sum 24 | 6.0 tccd, 5.7 trustd, 3.9 syspolicyd, 1.8 opencode, 
+22:45:43 load  4.62 4.86 5.14  | sum 98 | 58.0 launchd, 6.4 syspolicyd, 6.0 trustd, 6.0 tccd, 
+# mac_free_gib=18.1
+22:45:54 load  4.14 4.75 5.09  | sum 22 | 6.6 claude, 3.5 claude, 2.3 tccd, 2.1 trustd, 
+22:46:04 load  4.58 4.82 5.11  | sum 8 | 1.6 claude, 1.3 tccd, 1.0 trustd, 0.7 claude, 
+22:46:14 load  4.32 4.76 5.09  | sum 24 | 12.1 launchd, 2.1 claude, 2.0 claude, 1.9 claude, 
+# mac_free_gib=17.9
+22:46:24 load  3.96 4.67 5.05  | sum 20 | 7.8 claude, 3.3 tccd, 2.9 trustd, 2.0 syspolicyd, 
+22:46:34 load  4.51 4.76 5.08  | sum 18 | 3.4 tccd, 3.0 trustd, 2.0 syspolicyd, 1.8 claude, 
+22:46:44 load  4.57 4.77 5.08  | sum 22 | 4.5 launchd, 2.5 tccd, 2.3 trustd, 2.2 syspolicyd, 
+# mac_free_gib=17.8
+22:46:54 load  4.65 4.78 5.08  | sum 28 | 5.3 trustd, 5.3 tccd, 5.0 claude, 3.7 syspolicyd, 
+22:47:04 load  4.79 4.80 5.08  | sum 210 | 110.1 compile, 40.6 go, 25.2 com.apple.WebKit.WebContent, 8.3 cmux, 
+22:47:14 load  4.28 4.69 5.04  | sum 36 | 12.6 claude, 5.7 cmux, 3.6 com.apple.WebKit.Networking, 2.4 trustd, 
+# mac_free_gib=17.6
+22:47:25 load  4.26 4.67 5.03  | sum 197 | 113.0 compile, 40.1 go, 6.4 tccd, 5.8 trustd, 
+22:47:35 load  4.82 4.78 5.06  | sum 97 | 42.8 cmux, 28.8 com.apple.WebKit.WebContent, 5.5 trustd, 5.1 tccd, 
+22:47:45 load  4.15 4.63 5.01  | sum 25 | 4.0 tccd, 3.9 trustd, 3.5 syspolicyd, 2.6 opencode, 
+# mac_free_gib=17.5
+22:47:55 load  5.10 4.81 5.07  | sum 27 | 6.2 tccd, 5.7 trustd, 4.0 syspolicyd, 3.1 claude, 
+22:48:05 load  5.89 5.00 5.13  | sum 84 | 19.0 com.apple.WebKit.WebContent, 17.3 link, 16.6 link, 10.2 go, 
+22:48:15 load  5.21 4.88 5.09  | sum 34 | 6.6 claude, 5.4 trustd, 5.4 tccd, 4.9 syspolicyd, 
+# mac_free_gib=17.3
+22:48:25 load  4.49 4.74 5.03  | sum 35 | 5.7 EAUpdaterService, 4.4 claude, 4.2 accessoryupdaterd, 2.8 claude, 
+22:48:36 load  4.03 4.63 4.99  | sum 39 | 12.1 claude, 11.3 com.apple.WebKit.WebContent, 2.5 claude, 2.1 tccd, 
+22:48:46 load  3.79 4.56 4.96  | sum 10 | 1.5 trustd, 1.5 tccd, 1.4 syspolicyd, 1.3 claude, 
+# mac_free_gib=19.1
+22:48:56 load  3.75 4.52 4.94  | sum 36 | 7.5 claude, 5.8 trustd, 5.4 syspolicyd, 5.1 tccd, 
+22:49:06 load  3.48 4.44 4.91  | sum 40 | 9.6 com.apple.WebKit.WebContent, 5.7 com.apple.WebKit.Networking, 3.7 trustd, 3.6 tccd, 
+22:49:16 load  3.26 4.36 4.87  | sum 23 | 6.6 bash, 4.4 syspolicyd, 2.6 opendirectoryd, 1.9 logd, 
+# mac_free_gib=19.1
+22:49:26 load  3.38 4.35 4.86  | sum 25 | 3.9 trustd, 3.9 tccd, 3.8 syspolicyd, 3.2 claude, 
+22:51:46 load  6.35 5.15 5.11  | sum 109 | 36.9 go, 25.0 XprotectService, 12.5 claude, 5.9 syspolicyd, 
+# mac_free_gib=18.8
+22:51:56 load  6.19 5.16 5.11  | sum 203 | 139.2 go, 51.1 compile, 2.7 trustd, 2.7 tccd, 
+22:52:06 load  6.10 5.17 5.11  | sum 167 | 82.1 go, 66.9 compile, 4.8 claude, 2.5 tccd, 
+22:52:16 load  6.23 5.23 5.14  | sum 14 | 4.6 claude, 2.2 trustd, 2.2 tccd, 1.7 syspolicyd, 
+# mac_free_gib=18.5
+22:52:27 load  5.81 5.17 5.12  | sum 62 | 24.4 go, 16.9 compile, 4.6 syspolicyd, 4.5 tccd, 
+22:52:37 load  5.70 5.17 5.11  | sum 36 | 6.9 bash, 6.0 trustd, 6.0 tccd, 5.3 syspolicyd, 
+22:52:47 load  6.12 5.28 5.15  | sum 35 | 8.5 cmux, 5.8 syspolicyd, 5.6 trustd, 5.5 tccd, 
+# mac_free_gib=18.5
+22:52:57 load  5.41 5.15 5.11  | sum 34 | 6.3 claude, 5.1 trustd, 5.1 tccd, 5.1 syspolicyd, 
+22:53:07 load  4.74 5.01 5.06  | sum 259 | 63.8 fseventsd, 27.7 taal.test, 25.8 postgres:, 20.0 Finder, 
+22:53:17 load  4.76 5.01 5.06  | sum 208 | 54.2 fseventsd, 37.0 kasboek.test, 34.1 postgres:, 14.1 Finder, 
+# mac_free_gib=18.4
+22:53:28 load  4.26 4.90 5.02  | sum 193 | 82.6 kasboek.test, 41.3 fseventsd, 19.3 web.test, 9.9 Finder, 
+22:53:38 load  4.37 4.90 5.02  | sum 83 | 20.4 kasboek.test, 19.6 fseventsd, 12.3 postgres:, 4.4 engine.test, 
+22:53:48 load  4.16 4.84 4.99  | sum 55 | 21.7 fseventsd, 10.0 engine.test, 5.9 claude, 4.5 Finder, 
+# mac_free_gib=18.5
+22:53:58 load  4.46 4.88 5.01  | sum 41 | 6.4 fseventsd, 6.0 werk.test, 5.0 tccd, 4.8 trustd, 
+22:54:08 load  5.24 5.03 5.06  | sum 31 | 5.1 com.apple.WebKit.WebContent, 4.6 fseventsd, 2.9 tccd, 2.8 trustd, 
+22:54:18 load  5.12 5.01 5.05  | sum 21 | 3.4 trustd, 3.2 tccd, 3.1 zwerm.test, 2.0 syspolicyd, 
+# mac_free_gib=18.5
+22:54:28 load  4.81 4.94 5.03  | sum 28 | 8.9 go, 7.2 syspolicyd, 3.3 trustd, 3.3 tccd, 
+22:54:38 load  5.85 5.16 5.10  | sum 132 | 36.0 zicht.test, 34.1 com.apple.WebKit.WebContent, 27.2 fseventsd, 5.3 Finder, 
+22:54:48 load  5.34 5.07 5.07  | sum 112 | 55.2 compile, 33.6 go, 7.6 fseventsd, 3.1 syspolicyd, 
+# mac_free_gib=18.4
+22:54:59 load  7.02 5.43 5.20  | sum 137 | 72.0 link, 37.0 go, 5.8 tccd, 5.7 trustd, 
+22:55:09 load  6.61 5.40 5.19  | sum 48 | 9.3 claude, 6.6 com.apple.WebKit.WebContent, 6.0 trustd, 6.0 tccd, 
+22:55:19 load  5.82 5.27 5.15  | sum 19 | 6.3 cmux, 3.0 trustd, 2.9 tccd, 2.0 syspolicyd, 
+# mac_free_gib=18.3
+22:55:29 load  6.00 5.33 5.17  | sum 58 | 14.8 mdworker_shared, 14.5 mdworker_shared, 6.0 tccd, 5.9 trustd, 
+22:55:39 load  5.75 5.30 5.16  | sum 61 | 20.7 claude, 6.9 claude, 6.8 tccd, 6.6 trustd, 
+22:55:49 load  5.82 5.32 5.17  | sum 13 | 3.4 tccd, 3.1 trustd, 2.4 syspolicyd, 0.7 claude, 
+# mac_free_gib=18.3
+22:56:00 load  6.22 5.43 5.21  | sum 34 | 10.0 loginwindow, 6.5 mdworker_shared, 4.4 WindowServer, 2.8 ControlCenter, 
+22:56:10 load  5.57 5.31 5.17  | sum 34 | 13.4 claude, 4.4 claude, 3.4 claude, 1.8 claude, 
+22:56:20 load  5.94 5.40 5.20  | sum 6 | 1.4 claude, 1.1 trustd, 0.9 tccd, 0.8 syspolicyd, 
+# mac_free_gib=18.2
+22:56:30 load  5.63 5.36 5.19  | sum 15 | 3.1 claude, 2.3 syspolicyd, 2.2 trustd, 2.1 tccd, 
+22:56:40 load  5.08 5.25 5.15  | sum 29 | 7.2 syspolicyd, 6.8 trustd, 6.3 tccd, 1.0 sleep, 
+22:56:50 load  4.83 5.20 5.13  | sum 27 | 7.0 syspolicyd, 6.3 trustd, 5.9 tccd, 1.7 claude, 
+# mac_free_gib=18.3
+22:57:00 load  4.21 5.04 5.08  | sum 39 | 13.0 claude, 7.0 loginwindow, 2.6 trustd, 2.6 tccd, 
+22:57:10 load  4.19 5.02 5.07  | sum 58 | 16.6 cmux, 9.5 claude, 5.4 Finder, 4.9 claude, 
+22:57:21 load  3.70 4.89 5.02  | sum 16 | 5.8 claude, 1.5 trustd, 1.5 tccd, 1.5 syspolicyd, 
+# mac_free_gib=18.3
+22:57:31 load  3.29 4.76 4.98  | sum 119 | 55.3 mediaanalysisd, 42.1 com.apple.WebKit.WebContent, 7.2 claude, 5.4 syspolicyd, 
+22:57:41 load  2.93 4.64 4.93  | sum 26 | 5.3 trustd, 5.2 tccd, 4.4 syspolicyd, 2.5 claude, 
+22:57:51 load  2.64 4.52 4.88  | sum 56 | 14.9 claude, 14.5 com.apple.WebKit.WebContent, 4.8 tccd, 4.7 trustd, 
+# mac_free_gib=18.3
+22:58:01 load  2.78 4.48 4.87  | sum 44 | 7.8 cmux, 7.1 loginwindow, 6.6 syspolicyd, 6.5 trustd, 
+22:58:11 load  2.73 4.42 4.84  | sum 18 | 4.7 tccd, 4.4 trustd, 2.5 syspolicyd, 0.8 com.apple.DriverKit-AppleBCMWLAN, 
+22:58:21 load  3.77 4.58 4.89  | sum 39 | 24.5 cmux, 3.8 trustd, 3.6 tccd, 1.5 syspolicyd, 
+# mac_free_gib=18.2
+22:58:32 load  3.70 4.54 4.87  | sum 19 | 5.1 claude, 2.1 claude, 2.1 claude, 1.6 claude, 
+22:58:42 load  4.36 4.65 4.91  | sum 36 | 13.1 bash, 5.0 syspolicyd, 4.6 Finder, 3.6 claude, 
+22:58:52 load  4.52 4.68 4.91  | sum 266 | 170.0 go, 58.8 compile, 12.1 XprotectService, 6.6 syspolicyd, 
+# mac_free_gib=18.1
+22:59:02 load  4.45 4.65 4.90  | sum 91 | 45.3 compile, 21.9 go, 4.9 trustd, 4.7 tccd, 
+22:59:12 load  5.15 4.80 4.95  | sum 162 | 120.2 go, 13.3 compile, 6.9 tccd, 6.3 trustd, 
+22:59:22 load  4.89 4.75 4.93  | sum 74 | 52.5 go, 6.0 trustd, 5.7 tccd, 3.9 syspolicyd, 
+# mac_free_gib=17.8
+22:59:33 load  5.62 4.91 4.98  | sum 31 | 20.5 go, 1.8 claude, 1.5 tccd, 1.4 trustd, 
+22:59:43 load  5.92 5.00 5.01  | sum 7 | 1.2 trustd, 1.1 tccd, 1.1 claude, 0.8 syspolicyd, 
+23:00:40 load  6.01 5.10 5.05  | sum 82 | 37.5 top, 9.7 cmux, 9.0 claude, 3.6 claude, 
+# mac_free_gib=17.6
+23:00:51 load  5.40 5.00 5.01  | sum 26 | 5.1 trustd, 5.1 syspolicyd, 4.0 tccd, 2.6 airportd, 
+23:01:01 load  5.20 4.97 5.00  | sum 38 | 8.3 loginwindow, 5.1 trustd, 5.1 tccd, 3.4 syspolicyd, 
+23:01:11 load  5.24 4.99 5.00  | sum 60 | 25.9 cmux, 5.3 tccd, 5.1 trustd, 4.4 syspolicyd, 
+# mac_free_gib=17.5
+23:01:21 load  4.58 4.85 4.96  | sum 18 | 4.7 claude, 4.1 claude, 1.9 trustd, 1.9 tccd, 
+23:01:31 load  4.11 4.74 4.92  | sum 9 | 2.2 claude, 1.4 tccd, 1.2 trustd, 1.1 mediaanalysisd, 
+23:01:41 load  4.63 4.83 4.95  | sum 22 | 5.4 trustd, 5.3 syspolicyd, 5.2 tccd, 1.6 claude, 
+# mac_free_gib=17.5
+23:01:52 load  4.06 4.71 4.90  | sum 13 | 2.3 claude, 2.0 cmux, 1.8 Finder, 1.7 trustd, 
+23:02:02 load  4.84 4.85 4.95  | sum 17 | 6.4 loginwindow, 2.0 WindowServer, 1.4 trustd, 1.4 tccd, 
+23:02:12 load  4.76 4.83 4.94  | sum 10 | 2.0 claude, 1.5 claude, 1.5 claude, 0.9 trustd, 
+# mac_free_gib=17.4
+23:02:22 load  4.19 4.71 4.89  | sum 21 | 4.5 claude, 3.2 trustd, 3.2 tccd, 2.5 Finder, 
+23:02:32 load  4.62 4.78 4.92  | sum 22 | 4.9 cmux, 3.5 tccd, 3.3 trustd, 2.1 syspolicyd, 
+23:02:42 load  4.59 4.77 4.91  | sum 37 | 13.6 claude, 4.5 cmux, 2.6 tccd, 2.5 trustd, 
+# mac_free_gib=17.4
+23:02:52 load  4.03 4.65 4.87  | sum 34 | 6.9 syspolicyd, 6.6 tccd, 5.7 trustd, 3.8 claude, 
+23:03:02 load  3.72 4.56 4.83  | sum 71 | 8.7 mdworker_shared, 8.5 mdworker_shared, 7.9 mdworker_shared, 7.7 mdworker_shared, 
+23:03:12 load  3.23 4.43 4.78  | sum 26 | 4.2 tccd, 3.7 trustd, 3.7 claude, 3.6 syspolicyd, 
+# mac_free_gib=17.7
+23:03:23 load  2.89 4.31 4.74  | sum 28 | 6.5 claude, 5.9 syspolicyd, 3.2 claude, 1.7 trustd, 
+23:03:33 load  2.67 4.22 4.70  | sum 19 | 3.8 syspolicyd, 3.4 trustd, 3.1 tccd, 2.0 claude, 
+23:03:43 load  2.49 4.13 4.66  | sum 143 | 24.3 cmux, 22.7 engine.test, 6.2 postgres:, 5.2 fseventsd, 
+# mac_free_gib=17.6
+23:03:53 load  2.42 4.06 4.63  | sum 20 | 7.6 claude, 2.2 syspolicyd, 1.8 trustd, 1.8 tccd, 
+23:04:03 load  2.20 3.96 4.59  | sum 14 | 3.2 syspolicyd, 2.9 trustd, 2.5 tccd, 1.3 claude, 
+23:04:13 load  2.01 3.86 4.54  | sum 89 | 57.2 launchd, 7.1 trustd, 6.7 tccd, 6.3 syspolicyd, 
+# mac_free_gib=17.6
+23:04:24 load  4.71 4.36 4.71  | sum 253 | 58.2 fseventsd, 17.1 mds, 14.2 Finder, 13.8 postgres:, 
+23:04:34 load  6.06 4.66 4.81  | sum 237 | 109.7 fseventsd, 18.3 kasboek.test, 15.4 postgres:, 13.1 taal.test, 
+23:04:44 load  6.44 4.79 4.86  | sum 184 | 71.0 kasboek.test, 22.4 fseventsd, 14.9 web.test, 13.5 postgres:, 
+# mac_free_gib=17.3
+23:04:54 load  7.02 5.01 4.93  | sum 155 | 72.3 kasboek.test, 22.4 postgres:, 12.0 fseventsd, 7.5 web.test, 
+23:05:04 load  6.34 4.92 4.91  | sum 63 | 14.7 fseventsd, 5.7 trustd, 5.3 kasboek.test, 5.2 tccd, 
+23:05:14 load  6.16 4.93 4.91  | sum 125 | 22.4 kasboek.test, 18.9 postgres:, 17.9 engine.test, 10.0 postgres:, 
+# mac_free_gib=17.4
+23:05:25 load  6.51 5.04 4.95  | sum 83 | 35.3 fseventsd, 15.5 engine.test, 7.0 Finder, 6.1 mds, 
+23:05:35 load  5.97 4.98 4.92  | sum 265 | 162.8 com.apple.WebKit.WebContent, 24.5 werk.test, 20.1 cmux, 11.2 fseventsd, 
+23:05:45 load  6.36 5.09 4.97  | sum 30 | 4.8 tccd, 4.4 zwerm.test, 4.1 trustd, 3.4 claude, 
+# mac_free_gib=17.3
+23:05:55 load  6.28 5.12 4.98  | sum 34 | 6.3 trustd, 6.1 tccd, 3.6 syspolicyd, 3.5 claude, 
+23:06:05 load  5.55 5.00 4.94  | sum 68 | 15.7 fseventsd, 14.9 zwerm.test, 12.4 com.apple.WebKit.WebContent, 4.0 mds, 
+23:06:15 load  6.17 5.15 4.99  | sum 23 | 11.4 spoor.test, 2.4 tccd, 2.2 trustd, 1.7 claude, 
+# mac_free_gib=17.3
+23:06:26 load  5.89 5.13 4.98  | sum 44 | 5.8 syspolicyd, 5.5 claude, 5.2 claude, 4.4 tccd, 
+23:06:36 load  6.02 5.17 5.00  | sum 29 | 6.8 syspolicyd, 5.8 tccd, 5.5 trustd, 1.5 XprotectService, 
+23:06:46 load  6.32 5.27 5.03  | sum 20 | 3.5 tccd, 3.5 cmux, 3.3 trustd, 1.9 Finder, 
+# mac_free_gib=17.2
+23:06:56 load  5.90 5.21 5.02  | sum 182 | 139.1 go, 8.9 fseventsd, 5.9 syspolicyd, 5.1 trustd, 
+23:07:06 load  6.57 5.37 5.07  | sum 24 | 6.3 com.apple.WebKit.WebContent, 4.6 trustd, 4.1 tccd, 2.4 syspolicyd, 
+23:07:16 load  7.02 5.50 5.12  | sum 57 | 25.7 compile, 17.7 go, 3.3 syspolicyd, 2.8 tccd, 
+# mac_free_gib=16.9
+23:07:27 load  6.32 5.40 5.09  | sum 105 | 52.6 go, 19.5 XprotectService, 10.4 fseventsd, 6.5 syspolicyd, 
+23:07:37 load  6.74 5.52 5.14  | sum 176 | 130.9 go, 16.9 compile, 13.0 claude, 3.6 syspolicyd, 
+23:07:47 load  7.17 5.65 5.19  | sum 248 | 216.6 go, 9.3 fseventsd, 3.5 tccd, 3.3 trustd, 
+# mac_free_gib=16.8
+23:07:57 load  6.29 5.51 5.15  | sum 41 | 25.3 go, 5.4 claude, 2.0 tccd, 1.9 trustd, 
+23:08:07 load  6.99 5.69 5.21  | sum 120 | 30.4 vet, 17.5 go, 11.5 CommCenter, 8.9 link, 
+23:08:17 load  7.10 5.77 5.25  | sum 63 | 9.6 fseventsd, 6.7 syspolicyd, 6.7 engine.test, 6.5 tccd, 
+# mac_free_gib=16.4
+23:08:27 load  6.80 5.74 5.24  | sum 56 | 15.7 fseventsd, 9.7 postgres:, 7.3 engine.test, 4.6 mds, 
+23:08:38 load  8.47 6.14 5.39  | sum 199 | 31.5 kasboek.test, 28.8 fseventsd, 8.8 mds, 7.8 postgres:, 
+23:08:48 load  9.57 6.46 5.51  | sum 174 | 47.5 kasboek.test, 23.7 SafariBookmarksSyncAgent, 23.6 taal.test, 21.0 fseventsd, 
+# mac_free_gib=16.0
+23:08:58 load  9.89 6.63 5.58  | sum 215 | 76.1 kasboek.test, 34.1 fseventsd, 13.7 postgres:, 13.7 postgres:, 
+23:09:47 load  7.41 6.43 5.57  | sum 114 | 35.6 fseventsd, 14.5 engine.test, 13.0 cmux, 10.0 Finder, 
+# mac_free_gib=16.1
+23:09:58 load  7.07 6.38 5.56  | sum 34 | 15.4 werk.test, 3.4 fseventsd, 2.1 tccd, 1.8 trustd, 
+23:10:08 load  7.44 6.49 5.60  | sum 18 | 3.9 zwerm.test, 3.8 claude, 2.1 tccd, 1.8 trustd, 
+23:10:18 load  6.75 6.37 5.57  | sum 77 | 23.1 fseventsd, 8.4 zwerm.test, 5.4 Finder, 4.6 runningboardd, 
+# mac_free_gib=16.1
+23:10:28 load  6.66 6.36 5.58  | sum 57 | 15.4 fseventsd, 10.9 zwerm.test, 4.7 mds, 3.5 Finder, 
+23:10:38 load  6.86 6.41 5.61  | sum 20 | 2.8 trustd, 2.8 syspolicyd, 2.7 tccd, 2.2 claude, 
+23:10:48 load  6.11 6.27 5.56  | sum 55 | 27.1 top, 6.4 bash, 4.4 syspolicyd, 4.2 opendirectoryd, 
+# mac_free_gib=16.0
+23:10:58 load  6.83 6.41 5.62  | sum 82 | 48.1 top, 5.3 syspolicyd, 4.3 claude, 3.7 tccd, 
+23:11:08 load  7.08 6.47 5.65  | sum 75 | 43.3 com.apple.WebKit.WebContent, 7.7 claude, 7.0 claude, 3.1 trustd, 
+23:11:18 load  6.31 6.33 5.61  | sum 251 | 30.3 searchpartyuseragent, 24.4 cloudd, 22.8 contactsd, 18.2 trustd, 
+# mac_free_gib=15.9
+23:11:29 load  6.80 6.43 5.66  | sum 203 | 35.8 fseventsd, 24.3 cmux, 11.4 kasboek.test, 11.3 Finder, 
+23:11:39 load  9.00 6.92 5.84  | sum 360 | 89.8 fseventsd, 40.8 com.apple.WebKit.WebContent, 29.7 postgres:, 27.1 taal.test, 
+23:11:49 load  9.80 7.17 5.94  | sum 216 | 35.4 web.test, 30.9 postgres:, 24.3 kasboek.test, 20.1 fseventsd, 
+# mac_free_gib=15.7
+23:11:59 load  10.05 7.31 6.00  | sum 181 | 70.0 kasboek.test, 21.7 postgres:, 21.3 fseventsd, 7.2 web.test, 
+23:12:09 load  9.47 7.28 6.01  | sum 124 | 70.6 kasboek.test, 14.8 fseventsd, 9.7 postgres:, 4.2 Finder, 
+23:12:19 load  8.69 7.19 5.99  | sum 100 | 22.3 engine.test, 20.9 kasboek.test, 16.5 postgres:, 10.8 fseventsd, 
+# mac_free_gib=15.8
+23:12:30 load  8.11 7.12 5.98  | sum 77 | 30.3 (postgres), 13.8 fseventsd, 4.4 mds, 3.8 trustd, 
+23:12:40 load  7.70 7.06 5.97  | sum 76 | 23.1 fseventsd, 19.5 werk.test, 5.3 Finder, 4.4 cmux, 
+23:12:50 load  6.91 6.91 5.93  | sum 22 | 4.6 fseventsd, 2.0 tccd, 1.7 zwerm.test, 1.6 trustd, 
+# mac_free_gib=15.8
+23:13:00 load  6.99 6.93 5.95  | sum 64 | 12.3 fseventsd, 10.6 zwerm.test, 8.1 loginwindow, 5.5 tccd, 
+23:13:10 load  6.21 6.77 5.90  | sum 88 | 68.5 go, 4.9 fseventsd, 2.6 syspolicyd, 2.5 trustd, 
+23:13:20 load  6.05 6.71 5.89  | sum 74 | 56.1 zicht.test, 4.8 fseventsd, 2.2 tccd, 1.9 trustd, 
+# mac_free_gib=15.7
+23:13:31 load  5.78 6.62 5.88  | sum 39 | 9.2 mediaanalysisd, 7.5 bash, 6.4 syspolicyd, 3.6 trustd, 
+23:13:41 load  5.19 6.47 5.83  | sum 76 | 46.3 go, 8.5 fseventsd, 3.8 syspolicyd, 3.4 XprotectService, 
+23:13:51 load  4.56 6.29 5.77  | sum 57 | 18.2 cmux, 7.8 claude, 6.6 trustd, 6.4 tccd, 
+# mac_free_gib=15.7
+23:14:01 load  4.01 6.12 5.72  | sum 28 | 6.6 loginwindow, 4.7 claude, 2.6 WindowServer, 2.4 claude, 
+23:14:11 load  3.55 5.95 5.66  | sum 27 | 5.0 claude, 4.9 trustd, 4.8 tccd, 4.6 syspolicyd, 
+23:14:21 load  3.39 5.83 5.62  | sum 44 | 14.8 claude, 5.3 trustd, 5.1 tccd, 4.9 syspolicyd, 
+# mac_free_gib=16.2
+23:14:32 load  3.57 5.79 5.61  | sum 21 | 5.1 claude, 3.9 Finder, 1.8 cmux, 1.6 trustd, 
+23:14:42 load  3.34 5.66 5.57  | sum 10 | 1.6 syspolicyd, 1.5 trustd, 1.3 claude, 1.2 tccd, 
+23:14:52 load  3.21 5.56 5.53  | sum 30 | 6.3 trustd, 6.1 syspolicyd, 6.0 tccd, 2.4 opencode, 
+# mac_free_gib=16.2
+23:15:02 load  2.87 5.41 5.48  | sum 36 | 12.2 claude, 3.7 tccd, 3.7 claude, 3.5 trustd, 
+23:15:12 load  3.04 5.36 5.46  | sum 7 | 1.7 trustd, 1.6 tccd, 1.3 syspolicyd, 0.5 Finder, 
+23:15:22 load  3.66 5.42 5.48  | sum 16 | 4.0 Finder, 3.7 claude, 2.3 claude, 1.2 trustd, 
+# mac_free_gib=16.1
+23:15:32 load  3.18 5.25 5.42  | sum 25 | 4.9 claude, 4.0 trustd, 4.0 tccd, 4.0 syspolicyd, 
+23:15:42 load  3.40 5.23 5.41  | sum 19 | 3.5 tccd, 3.5 claude, 3.4 trustd, 3.3 claude, 
+23:15:53 load  4.11 5.32 5.44  | sum 8 | 2.2 claude, 1.3 trustd, 1.3 tccd, 0.9 syspolicyd, 
+# mac_free_gib=16.0
+23:16:03 load  3.71 5.19 5.39  | sum 152 | 115.2 go, 11.8 syspolicyd, 7.4 fseventsd, 2.7 tccd, 
+23:16:13 load  4.67 5.35 5.44  | sum 17 | 2.7 trustd, 2.7 tccd, 2.6 fseventsd, 2.0 syspolicyd, 
+23:16:23 load  4.94 5.39 5.46  | sum 104 | 38.0 compile, 32.9 go, 20.5 cmux, 2.5 fseventsd, 
+# mac_free_gib=15.9
+23:16:34 load  4.64 5.31 5.43  | sum 262 | 90.0 (compile), 80.8 (compile), 29.0 textunderstandingd, 28.5 mediaanalysisd, 
+23:16:44 load  5.31 5.43 5.47  | sum 109 | 54.9 link, 21.1 link, 9.2 go, 5.2 launchd, 
+23:16:54 load  5.57 5.48 5.49  | sum 60 | 41.4 go, 6.6 fseventsd, 2.1 claude, 1.6 claude, 
+# mac_free_gib=15.4
+23:17:04 load  5.25 5.42 5.46  | sum 131 | 107.9 go, 6.8 link, 3.0 syspolicyd, 2.6 trustd, 
+23:17:14 load  5.29 5.42 5.46  | sum 16 | 5.6 com.apple.WebKit.WebContent, 2.6 trustd, 2.4 tccd, 1.6 syspolicyd, 
+23:17:24 load  5.70 5.50 5.49  | sum 33 | 10.9 cmux, 3.1 claude, 3.0 Finder, 2.9 trustd, 
+# mac_free_gib=15.4
+23:17:34 load  4.98 5.35 5.44  | sum 24 | 4.4 syspolicyd, 4.1 trustd, 3.8 tccd, 2.3 com.apple.WebKit.WebContent, 
+23:17:44 load  5.06 5.36 5.44  | sum 13 | 3.4 trustd, 3.2 tccd, 1.4 syspolicyd, 1.1 claude, 
+23:17:54 load  4.95 5.33 5.43  | sum 93 | 69.1 go, 4.5 Finder, 3.7 claude, 3.3 trustd, 
+# mac_free_gib=15.3
+23:18:05 load  5.19 5.37 5.44  | sum 117 | 83.6 com.apple.WebKit.WebContent, 6.6 claude, 5.8 trustd, 5.7 tccd, 
+23:18:15 load  5.11 5.34 5.43  | sum 34 | 13.3 cmux, 4.6 trustd, 4.2 tccd, 3.9 claude, 
+23:18:25 load  5.48 5.41 5.45  | sum 54 | 18.4 cmux, 8.6 claude, 6.4 Finder, 3.9 tccd, 
+# mac_free_gib=15.3
+23:18:50 load  5.16 5.32 5.41  | sum 27 | 10.7 claude, 3.7 Finder, 2.1 tccd, 2.0 trustd, 
+# mac_free_gib=15.3
+23:19:00 load  4.52 5.17 5.36  | sum 28 | 7.4 loginwindow, 3.6 trustd, 3.6 tccd, 3.4 syspolicyd, 
+23:19:10 load  4.44 5.14 5.35  | sum 9 | 2.0 trustd, 1.8 tccd, 1.5 syspolicyd, 0.9 claude, 
+23:19:20 load  4.22 5.07 5.32  | sum 8 | 2.1 trustd, 1.8 tccd, 1.4 syspolicyd, 0.6 claude, 
+# mac_free_gib=15.3
+23:19:31 load  3.73 4.93 5.27  | sum 92 | 34.1 mediaanalysisd, 11.4 com.apple.WebKit.WebContent, 9.4 claude, 6.0 tccd, 
+23:19:41 load  3.79 4.90 5.25  | sum 18 | 3.1 tccd, 2.6 trustd, 2.3 claude, 2.0 syspolicyd, 
+23:19:51 load  4.35 4.99 5.28  | sum 52 | 14.1 claude, 13.7 cmux, 7.4 claude, 3.7 claude, 
+# mac_free_gib=15.3
+23:20:01 load  3.84 4.85 5.23  | sum 31 | 8.1 loginwindow, 3.5 trustd, 3.3 syspolicyd, 3.1 tccd, 
+23:20:11 load  4.28 4.91 5.24  | sum 18 | 6.9 claude, 3.2 trustd, 2.8 tccd, 2.5 syspolicyd, 
+23:20:21 load  4.31 4.90 5.23  | sum 10 | 2.2 claude, 1.9 trustd, 1.7 tccd, 1.6 syspolicyd, 
+# mac_free_gib=15.2
+23:20:32 load  4.28 4.87 5.22  | sum 23 | 9.9 claude, 3.7 cmux, 1.4 tccd, 1.3 trustd, 
+23:20:42 load  4.33 4.85 5.21  | sum 41 | 15.9 mdworker_shared, 5.0 tccd, 4.7 trustd, 2.8 syspolicyd, 
+23:20:52 load  4.90 4.96 5.24  | sum 30 | 6.0 syspolicyd, 5.9 trustd, 5.6 tccd, 2.5 opencode, 
+# mac_free_gib=15.2
+23:21:02 load  4.38 4.84 5.20  | sum 25 | 6.0 syspolicyd, 4.3 opencode, 2.5 claude, 2.1 tccd, 
+23:21:12 load  4.01 4.75 5.16  | sum 18 | 4.8 trustd, 4.6 tccd, 3.7 syspolicyd, 0.8 claude, 
+23:21:22 load  4.16 4.76 5.16  | sum 32 | 6.3 trustd, 6.1 tccd, 6.0 syspolicyd, 2.1 opencode, 
+# mac_free_gib=15.2
+23:21:32 load  3.76 4.65 5.11  | sum 21 | 3.1 Finder, 2.7 tccd, 2.7 syspolicyd, 2.5 trustd, 
+23:21:43 load  3.33 4.53 5.07  | sum 47 | 24.9 com.apple.WebKit.WebContent, 4.5 cmux, 3.4 Finder, 3.1 claude, 
+23:21:53 load  3.90 4.61 5.09  | sum 26 | 11.9 claude, 5.8 cmux, 1.6 trustd, 1.6 tccd, 
+# mac_free_gib=15.2
+23:22:03 load  3.67 4.54 5.06  | sum 27 | 4.7 trustd, 4.5 tccd, 4.5 syspolicyd, 1.8 opencode, 
+23:22:13 load  3.82 4.54 5.05  | sum 40 | 11.8 cmux, 11.5 claude, 4.3 cmux, 2.6 trustd, 
+23:22:23 load  4.30 4.62 5.07  | sum 37 | 11.7 cmux, 5.2 claude, 3.5 tccd, 3.4 trustd, 
+# mac_free_gib=15.2
+23:22:33 load  4.03 4.55 5.04  | sum 28 | 5.8 tccd, 5.3 trustd, 4.9 claude, 2.7 syspolicyd, 
+23:22:43 load  4.56 4.65 5.07  | sum 38 | 19.0 launchd, 4.1 tccd, 3.6 trustd, 2.4 syspolicyd, 
+23:22:53 load  4.39 4.61 5.05  | sum 37 | 10.9 claude, 7.3 Finder, 3.6 trustd, 3.5 tccd, 
+# mac_free_gib=15.2
+23:23:04 load  3.94 4.50 5.01  | sum 25 | 5.0 claude, 3.9 tccd, 3.6 trustd, 3.4 syspolicyd, 
+23:23:14 load  3.73 4.44 4.98  | sum 21 | 4.8 trustd, 4.5 tccd, 3.8 syspolicyd, 2.7 launchd, 
+23:23:24 load  4.07 4.49 4.99  | sum 37 | 6.0 syspolicyd, 5.4 trustd, 5.2 tccd, 4.2 Finder, 
+# mac_free_gib=15.1
+23:23:34 load  3.52 4.36 4.94  | sum 10 | 2.0 trustd, 2.0 tccd, 1.4 opencode, 1.3 syspolicyd, 
+23:23:44 load  4.20 4.48 4.98  | sum 9 | 2.0 tccd, 1.9 trustd, 1.3 syspolicyd, 0.8 launchd, 
+23:23:54 load  4.45 4.52 4.99  | sum 21 | 6.9 claude, 2.4 mdworker_shared, 1.8 tccd, 1.7 trustd, 
+# mac_free_gib=15.2
+23:24:04 load  4.38 4.50 4.97  | sum 30 | 17.5 com.apple.WebKit.WebContent, 2.8 trustd, 2.7 tccd, 2.3 syspolicyd, 
+23:24:14 load  4.56 4.53 4.97  | sum 13 | 2.7 trustd, 2.7 tccd, 2.5 syspolicyd, 1.6 opencode, 
+23:24:24 load  3.93 4.40 4.92  | sum 18 | 3.1 claude, 2.9 trustd, 2.9 tccd, 2.9 syspolicyd, 
+# mac_free_gib=15.1
+23:24:35 load  4.20 4.43 4.93  | sum 45 | 39.4 com.apple.WebKit.WebContent, 1.7 claude, 0.8 claude, 0.7 trustd, 
+23:24:45 load  4.93 4.58 4.98  | sum 22 | 5.2 trustd, 5.0 tccd, 3.6 syspolicyd, 1.8 opencode, 
+23:24:55 load  4.33 4.47 4.93  | sum 69 | 14.9 cmux, 9.8 cmux, 9.5 claude, 7.9 claude, 
+# mac_free_gib=15.5
+23:25:05 load  3.89 4.37 4.89  | sum 42 | 20.0 com.apple.WebKit.WebContent, 3.4 claude, 2.8 trustd, 2.7 tccd, 
+23:25:15 load  3.77 4.32 4.87  | sum 24 | 2.6 tccd, 2.5 com.apple.WebKit.WebContent, 2.4 syspolicyd, 2.3 trustd, 
+23:25:25 load  3.42 4.23 4.83  | sum 42 | 8.5 claude, 6.5 Finder, 6.2 syspolicyd, 4.1 cmux, 
+# mac_free_gib=15.5
+23:25:35 load  3.04 4.12 4.78  | sum 33 | 8.0 com.apple.WebKit.WebContent, 4.1 trustd, 4.1 syspolicyd, 3.8 tccd, 
+23:25:45 load  2.80 4.04 4.74  | sum 25 | 8.2 cmux, 4.4 claude, 3.3 claude, 1.7 syspolicyd, 
+23:25:55 load  3.01 4.04 4.73  | sum 20 | 4.2 claude, 2.5 trustd, 2.5 tccd, 2.5 syspolicyd, 
+# mac_free_gib=15.4
+23:26:06 load  2.70 3.94 4.69  | sum 17 | 3.3 com.apple.WebKit.WebContent, 2.0 claude, 1.6 tccd, 1.4 trustd, 
+23:26:16 load  2.52 3.85 4.65  | sum 51 | 19.1 cmux, 6.4 trustd, 6.2 tccd, 5.7 syspolicyd, 
+23:26:26 load  2.37 3.78 4.61  | sum 21 | 3.9 syspolicyd, 2.9 trustd, 2.6 tccd, 2.6 claude, 
+# mac_free_gib=15.4
+23:26:36 load  3.53 3.98 4.68  | sum 28 | 6.4 tccd, 6.1 trustd, 4.0 syspolicyd, 2.8 claude, 
+23:26:46 load  3.66 4.00 4.67  | sum 182 | 55.3 go, 48.7 link, 46.8 link, 5.0 syspolicyd, 
+23:26:56 load  3.17 3.88 4.62  | sum 27 | 6.2 claude, 4.5 tccd, 4.4 trustd, 3.9 syspolicyd, 
+# mac_free_gib=15.3
+23:27:07 load  2.83 3.79 4.58  | sum 21 | 5.2 claude, 2.7 claude, 2.5 claude, 1.5 trustd, 
+23:27:17 load  2.63 3.71 4.54  | sum 16 | 3.6 claude, 2.2 claude, 1.3 claude, 1.0 trustd, 
+23:27:27 load  2.46 3.64 4.51  | sum 30 | 5.6 trustd, 5.5 tccd, 4.3 syspolicyd, 3.4 claude, 
+# mac_free_gib=15.3
+23:28:05 load  2.73 3.54 4.44  | sum 74 | 22.1 com.apple.WebKit.WebContent, 11.1 claude, 5.3 tccd, 5.2 trustd, 
+# mac_free_gib=15.3
+23:28:15 load  2.98 3.57 4.44  | sum 35 | 12.4 claude, 6.0 trustd, 5.9 tccd, 4.3 syspolicyd, 
+23:28:25 load  2.99 3.55 4.42  | sum 128 | 37.1 link, 30.7 go, 20.9 mdworker_shared, 5.5 trustd, 
+23:28:35 load  4.12 3.77 4.48  | sum 27 | 5.7 com.apple.WebKit.WebContent, 5.5 trustd, 5.5 tccd, 3.8 syspolicyd, 
+# mac_free_gib=15.1
+23:28:46 load  4.75 3.91 4.52  | sum 26 | 5.9 claude, 4.4 claude, 4.0 syspolicyd, 2.8 trustd, 
+23:28:56 load  4.25 3.83 4.49  | sum 33 | 13.1 cmux, 4.6 claude, 4.4 claude, 4.2 Finder, 
+23:29:06 load  4.19 3.83 4.48  | sum 37 | 5.7 opencode, 5.6 claude, 5.2 trustd, 5.2 tccd, 
+# mac_free_gib=15.1
+23:29:16 load  3.70 3.74 4.44  | sum 19 | 2.3 tccd, 2.3 claude, 2.2 trustd, 2.2 syspolicyd, 
+23:29:26 load  3.36 3.66 4.41  | sum 12 | 2.5 tccd, 1.6 claude, 1.6 claude, 1.3 syspolicyd, 
+23:29:36 load  2.99 3.57 4.37  | sum 23 | 4.3 syspolicyd, 3.6 trustd, 3.6 tccd, 3.5 claude, 
+# mac_free_gib=15.1
+23:29:46 load  2.69 3.49 4.33  | sum 59 | 25.1 tipsd, 3.8 trustd, 3.7 tccd, 3.5 syspolicyd, 
+23:29:56 load  2.51 3.42 4.29  | sum 11 | 2.4 tccd, 2.3 trustd, 1.5 syspolicyd, 0.6 DisplayLinkUserAgent, 
+23:30:07 load  3.03 3.51 4.31  | sum 30 | 14.2 claude, 2.4 trustd, 2.4 tccd, 1.8 Finder, 
+# mac_free_gib=15.1
+23:30:17 load  2.80 3.44 4.28  | sum 46 | 10.8 mdworker_shared, 4.8 claude, 4.4 trustd, 4.2 tccd, 
+23:30:27 load  3.11 3.49 4.29  | sum 19 | 3.0 trustd, 3.0 tccd, 2.4 opencode, 2.4 claude, 
+23:30:37 load  3.53 3.57 4.31  | sum 29 | 5.6 claude, 5.0 claude, 3.7 tccd, 3.7 syspolicyd, 
+# mac_free_gib=15.0
+23:30:47 load  3.07 3.47 4.26  | sum 23 | 7.6 cmux, 2.7 claude, 2.1 claude, 1.9 claude, 
+23:30:57 load  2.75 3.39 4.22  | sum 35 | 8.2 claude, 6.4 trustd, 5.7 tccd, 5.5 syspolicyd, 
+23:31:07 load  2.55 3.32 4.19  | sum 36 | 7.9 claude, 6.4 tccd, 6.2 trustd, 3.9 claude, 
+# mac_free_gib=15.0
+23:31:18 load  2.77 3.35 4.19  | sum 17 | 2.5 trustd, 2.5 tccd, 2.4 syspolicyd, 1.8 com.apple.WebKit.WebContent, 
+23:31:28 load  3.14 3.40 4.20  | sum 22 | 6.2 go, 4.7 syspolicyd, 1.6 cmux, 1.5 mds, 
+23:31:38 load  2.96 3.35 4.17  | sum 9 | 1.5 syspolicyd, 1.3 tccd, 1.2 trustd, 0.9 claude, 
+# mac_free_gib=15.0
+23:31:48 load  2.73 3.29 4.14  | sum 15 | 3.1 com.apple.WebKit.WebContent, 2.2 tccd, 2.0 trustd, 1.7 claude, 
+23:31:58 load  3.54 3.45 4.18  | sum 14 | 3.7 claude, 1.9 trustd, 1.9 tccd, 1.5 syspolicyd, 
+23:32:08 load  4.07 3.56 4.21  | sum 168 | 141.1 com.apple.WebKit.WebContent, 6.2 claude, 4.9 claude, 2.2 tccd, 
+# mac_free_gib=15.0
+23:32:19 load  3.83 3.53 4.19  | sum 9 | 1.5 claude, 1.4 trustd, 1.4 tccd, 1.0 com.apple.DriverKit-AppleBCMWLAN, 
+23:32:29 load  4.47 3.67 4.24  | sum 12 | 1.9 claude, 1.7 claude, 1.5 tccd, 1.4 trustd, 
+23:32:39 load  4.08 3.62 4.21  | sum 63 | 25.5 com.apple.WebKit.WebContent, 9.0 (cmux), 6.5 cmux, 4.6 claude, 
+# mac_free_gib=15.0
+23:32:49 load  5.14 3.88 4.29  | sum 15 | 3.9 claude, 2.2 tccd, 2.0 trustd, 1.5 claude, 
+23:32:59 load  5.98 4.11 4.37  | sum 16 | 3.9 claude, 1.6 trustd, 1.5 syspolicyd, 1.4 tccd, 
+23:33:09 load  5.51 4.07 4.36  | sum 159 | 50.8 fseventsd, 17.2 web.test, 11.2 Finder, 10.5 mds, 
+# mac_free_gib=14.8
+23:33:20 load  6.59 4.35 4.45  | sum 30 | 10.5 fseventsd, 4.6 engine.test, 3.0 mds, 2.3 Finder, 
+23:33:30 load  6.39 4.39 4.46  | sum 52 | 11.7 fseventsd, 8.4 engine.test, 7.3 claude, 3.8 mdworker_shared, 
+23:33:40 load  6.12 4.39 4.46  | sum 67 | 14.8 fseventsd, 7.9 engine.test, 6.7 postgres:, 5.2 tccd, 
+# mac_free_gib=14.8
+23:33:50 load  6.10 4.44 4.48  | sum 16 | 3.8 trustd, 3.6 tccd, 2.9 syspolicyd, 1.6 claude, 
+23:34:00 load  5.48 4.36 4.45  | sum 76 | 11.7 cmux, 9.3 loginwindow, 8.6 claude, 6.4 trustd, 
+23:34:10 load  5.35 4.37 4.45  | sum 26 | 4.8 cmux, 4.0 tccd, 3.4 trustd, 3.0 claude, 
+# mac_free_gib=14.8
+23:34:21 load  5.76 4.49 4.49  | sum 10 | 1.4 tccd, 1.3 claude, 1.2 trustd, 1.1 claude, 
+23:34:31 load  5.11 4.39 4.46  | sum 83 | 34.9 XprotectService, 15.9 syspolicyd, 13.5 go, 7.9 trustd, 
+23:34:41 load  5.78 4.56 4.51  | sum 48 | 17.8 fseventsd, 13.8 web.test, 3.9 mds, 2.7 Finder, 
+# mac_free_gib=14.7
+23:34:51 load  5.80 4.60 4.53  | sum 14 | 2.2 trustd, 2.2 syspolicyd, 2.1 tccd, 2.1 claude, 
+23:35:01 load  5.06 4.48 4.49  | sum 40 | 7.3 loginwindow, 7.0 trustd, 6.6 syspolicyd, 6.4 tccd, 
+23:35:17 load  5.55 4.62 4.54  | sum 133 | 86.2 com.apple.WebKit.WebContent, 20.2 claude, 4.6 claude, 3.6 trustd, 
+# mac_free_gib=14.7
+23:35:28 load  4.93 4.52 4.50  | sum 35 | 18.8 cmux, 2.9 claude, 2.6 claude, 2.0 claude, 
+23:35:38 load  4.96 4.54 4.51  | sum 24 | 5.8 tccd, 5.5 trustd, 3.7 syspolicyd, 1.6 claude, 
+23:35:48 load  5.43 4.65 4.55  | sum 26 | 5.1 trustd, 5.0 tccd, 4.3 syspolicyd, 2.3 opencode, 
+# mac_free_gib=14.6
+23:35:58 load  4.82 4.54 4.51  | sum 34 | 6.5 fseventsd, 5.2 syspolicyd, 5.1 trustd, 4.6 tccd, 
+23:36:08 load  4.80 4.54 4.51  | sum 69 | 47.5 com.apple.WebKit.WebContent, 5.9 trustd, 5.7 tccd, 3.7 syspolicyd, 
+23:36:18 load  5.22 4.64 4.54  | sum 19 | 4.1 trustd, 3.9 syspolicyd, 3.8 tccd, 2.8 claude, 
+# mac_free_gib=14.6
+23:36:28 load  4.57 4.52 4.50  | sum 23 | 4.8 claude, 2.3 trustd, 2.3 tccd, 2.1 syspolicyd, 
+23:36:39 load  4.18 4.44 4.47  | sum 45 | 28.1 com.apple.WebKit.WebContent, 5.8 claude, 2.3 trustd, 2.1 tccd, 
+23:36:49 load  3.77 4.34 4.44  | sum 27 | 12.7 claude, 2.8 claude, 1.9 claude, 1.8 PerfPowerServices, 
+# mac_free_gib=14.6
+23:36:59 load  3.34 4.23 4.40  | sum 30 | 5.2 tccd, 5.0 trustd, 4.3 syspolicyd, 2.8 claude, 
+23:37:09 load  3.29 4.19 4.38  | sum 120 | 59.9 go, 16.6 compile, 14.6 compile, 10.9 com.apple.WebKit.WebContent, 
+23:37:19 load  3.84 4.28 4.41  | sum 59 | 16.7 claude, 13.1 cmux, 9.9 com.apple.WebKit.WebContent, 3.1 claude, 
+# mac_free_gib=14.5
+23:37:29 load  3.40 4.17 4.37  | sum 252 | 127.4 compile, 76.2 go, 8.0 spotlightknowledged.importer, 7.0 mediaanalysisd, 
+23:37:39 load  4.52 4.39 4.45  | sum 78 | 27.6 XprotectService, 12.1 go, 11.8 syspolicyd, 4.8 trustd, 
+23:37:49 load  4.99 4.50 4.48  | sum 40 | 9.2 fseventsd, 8.9 XprotectService, 3.9 syspolicyd, 3.1 tccd, 
+# mac_free_gib=14.3
+23:38:00 load  4.82 4.48 4.48  | sum 62 | 10.8 loginwindow, 10.0 cmux, 6.1 claude, 6.0 trustd, 
+23:38:10 load  4.23 4.36 4.44  | sum 58 | 8.2 Keychain, 7.9 bash, 6.0 tccd, 5.3 trustd, 
+23:38:20 load  4.80 4.48 4.48  | sum 29 | 5.2 tccd, 4.8 trustd, 4.8 node, 2.6 syspolicyd, 
+# mac_free_gib=14.3
+23:38:30 load  4.66 4.47 4.47  | sum 175 | 67.5 mobileassetd, 32.5 modelcatalogd, 13.2 cloudd, 12.5 CommCenter, 
+23:38:40 load  4.25 4.38 4.44  | sum 18 | 4.7 trustd, 4.2 tccd, 3.7 syspolicyd, 1.1 claude, 
+23:38:50 load  4.44 4.42 4.45  | sum 21 | 4.9 trustd, 4.5 tccd, 3.8 syspolicyd, 3.0 claude, 
+# mac_free_gib=14.3
+23:39:01 load  4.18 4.37 4.43  | sum 39 | 10.3 loginwindow, 6.6 cmux, 4.6 MenuBarAgent, 3.1 WindowServer, 
+23:39:11 load  5.04 4.54 4.49  | sum 281 | 106.4 XprotectService, 17.7 syspolicyd, 16.5 fseventsd, 13.2 ReportMemoryException, 
+23:39:21 load  7.22 5.03 4.67  | sum 178 | 59.7 taal.test, 18.5 postgres:, 16.1 fseventsd, 12.7 kasboek, 
+# mac_free_gib=13.9
+23:39:31 load  7.98 5.27 4.76  | sum 422 | 66.0 mediaanalysisd, 64.2 kasboek.test, 61.1 fseventsd, 58.0 taal.test, 
+23:39:41 load  8.28 5.42 4.82  | sum 200 | 64.6 mobileassetd, 32.1 modelcatalogd, 21.9 postgres:, 19.1 kasboek.test, 
+23:39:51 load  7.76 5.41 4.82  | sum 32 | 7.9 fseventsd, 3.5 tccd, 3.4 trustd, 2.8 syspolicyd, 
+# mac_free_gib=14.0
+23:40:02 load  6.87 5.30 4.79  | sum 104 | 22.5 fseventsd, 16.4 kasboek.test, 10.0 postgres:, 7.5 engine.test, 
+23:40:12 load  7.28 5.43 4.84  | sum 31 | 7.6 claude, 6.2 node, 3.1 tccd, 3.0 trustd, 
+23:40:22 load  7.69 5.58 4.90  | sum 72 | 32.8 fseventsd, 7.5 engine.test, 6.9 postgres:, 5.7 mds, 
+# mac_free_gib=14.1
+23:40:32 load  7.06 5.52 4.88  | sum 148 | 50.9 com.apple.WebKit.WebContent, 47.8 com.apple.WebKit.WebContent, 11.6 fseventsd, 4.8 trustd, 
+23:40:42 load  7.15 5.58 4.91  | sum 26 | 7.3 zwerm.test, 2.4 postgres:, 2.1 postgres:, 1.9 trustd, 
+23:40:52 load  7.04 5.61 4.93  | sum 20 | 4.7 zwerm.test, 3.7 fseventsd, 1.9 trustd, 1.9 tccd, 
+# mac_free_gib=14.1
+23:41:03 load  6.11 5.46 4.89  | sum 22 | 5.0 trustd, 4.6 syspolicyd, 4.1 tccd, 1.9 cmux, 
+23:41:13 load  5.80 5.41 4.88  | sum 58 | 32.9 zicht.test, 3.7 tccd, 3.5 trustd, 2.4 fseventsd, 
+23:41:23 load  5.91 5.45 4.89  | sum 34 | 7.0 syspolicyd, 6.6 bash, 4.4 trustd, 4.1 tccd, 
+# mac_free_gib=14.0
+23:41:33 load  5.32 5.33 4.86  | sum 43 | 16.6 XprotectService, 13.9 syspolicyd, 2.3 fseventsd, 1.6 Finder, 
+23:41:43 load  4.89 5.24 4.83  | sum 50 | 30.2 launchd, 8.8 claude, 3.8 cmux, 1.7 claude, 
+23:41:53 load  5.36 5.33 4.87  | sum 80 | 28.3 fseventsd, 13.0 XprotectService, 6.3 syspolicyd, 5.7 mds, 
+# mac_free_gib=13.9
+23:42:04 load  5.29 5.32 4.87  | sum 416 | 344.0 compile, 63.1 go, 2.0 node, 1.1 tccd, 
+23:42:14 load  6.18 5.50 4.94  | sum 447 | 399.2 compile, 15.5 go, 7.2 claude, 5.7 tccd, 
+23:42:24 load  6.13 5.52 4.95  | sum 127 | 76.5 go, 15.9 compile, 15.6 compile, 8.2 fseventsd, 
+# mac_free_gib=13.5
+23:42:34 load  5.49 5.40 4.92  | sum 217 | 203.7 go, 5.0 fseventsd, 2.3 syspolicyd, 2.0 trustd, 
+23:42:44 load  5.28 5.36 4.91  | sum 24 | 7.9 bash, 3.7 syspolicyd, 2.1 launchd, 1.9 opendirectoryd, 
+23:42:54 load  5.55 5.41 4.93  | sum 18 | 5.0 claude, 2.7 opencode, 2.4 syspolicyd, 2.0 tccd, 
+# mac_free_gib=13.4
+23:43:04 load  5.09 5.31 4.90  | sum 88 | 34.2 cmux, 18.1 com.apple.WebKit.WebContent, 7.4 claude, 4.3 syspolicyd, 
+23:43:14 load  5.70 5.44 4.95  | sum 18 | 3.8 claude, 3.4 trustd, 3.3 tccd, 2.6 syspolicyd, 
+23:43:24 load  5.26 5.35 4.92  | sum 41 | 5.8 claude, 4.4 go, 4.0 trustd, 4.0 syspolicyd, 
+# mac_free_gib=13.4
+23:43:35 load  6.01 5.51 4.98  | sum 259 | 62.5 fseventsd, 39.3 taal.test, 29.9 com.apple.WebKit.WebContent, 28.8 kasboek.test, 
+23:50:09 load  4.71 4.78 4.84  | sum 63 | 23.4 com.apple.WebKit.WebContent, 17.1 cmux, 8.1 claude, 2.3 Finder, 
+# mac_free_gib=24.7
+23:50:19 load  4.77 4.79 4.84  | sum 42 | 13.7 claude, 13.2 cmux, 2.4 trustd, 2.0 com.apple.DriverKit-AppleBCMWLAN, 
+23:50:29 load  5.19 4.88 4.87  | sum 14 | 6.7 claude, 1.8 trustd, 1.8 tccd, 1.0 claude, 
+23:50:39 load  4.62 4.77 4.83  | sum 53 | 14.1 cmux, 10.4 com.apple.WebKit.WebContent, 5.1 trustd, 4.7 tccd, 
+# mac_free_gib=24.7
+23:50:49 load  6.42 5.14 4.96  | sum 199 | 111.2 compile, 45.0 compile, 22.6 go, 3.4 cmux, 
+23:50:59 load  6.10 5.12 4.96  | sum 13 | 2.9 claude, 2.4 claude, 1.4 trustd, 1.4 tccd, 
+23:51:09 load  5.46 5.01 4.92  | sum 52 | 18.0 com.apple.WebKit.WebContent, 7.0 trustd, 6.9 tccd, 6.4 syspolicyd, 
+# mac_free_gib=24.5
+23:51:19 load  5.85 5.11 4.96  | sum 33 | 17.7 cmux, 3.5 tccd, 3.2 trustd, 2.1 Finder, 
+23:51:29 load  5.62 5.09 4.95  | sum 14 | 3.3 trustd, 3.1 tccd, 2.4 syspolicyd, 1.0 claude, 
+23:51:40 load  5.47 5.07 4.95  | sum 9 | 1.5 tccd, 1.4 trustd, 1.2 claude, 1.1 syspolicyd, 
+# mac_free_gib=24.5
+23:51:50 load  5.56 5.10 4.96  | sum 32 | 11.4 claude, 3.7 trustd, 3.6 tccd, 2.1 syspolicyd, 
+23:52:00 load  4.86 4.96 4.91  | sum 37 | 8.6 loginwindow, 4.5 claude, 3.8 tccd, 3.5 trustd, 
+23:52:10 load  4.66 4.92 4.89  | sum 21 | 7.5 claude, 3.2 claude, 2.1 tccd, 2.0 trustd, 
+# mac_free_gib=24.4
+23:52:20 load  5.10 5.00 4.92  | sum 20 | 4.0 trustd, 4.0 tccd, 2.9 claude, 2.4 syspolicyd, 
+23:52:30 load  4.55 4.88 4.88  | sum 19 | 2.8 claude, 2.5 trustd, 2.5 tccd, 2.5 syspolicyd, 
+23:52:40 load  4.79 4.92 4.90  | sum 10 | 1.9 tccd, 1.8 trustd, 1.2 cmux, 1.1 syspolicyd, 
+# mac_free_gib=24.4
+23:52:51 load  5.13 4.99 4.92  | sum 31 | 7.9 claude, 4.7 tccd, 4.6 trustd, 4.0 syspolicyd, 
+23:53:01 load  4.49 4.86 4.87  | sum 36 | 11.3 claude, 6.8 loginwindow, 3.1 claude, 2.7 WindowServer, 
+23:53:11 load  4.96 4.94 4.90  | sum 23 | 5.7 claude, 3.6 cmux, 3.0 claude, 2.2 tccd, 
+# mac_free_gib=24.3
+23:53:21 load  4.94 4.94 4.91  | sum 50 | 20.1 cmux, 6.8 claude, 4.7 trustd, 4.5 tccd, 
+23:53:31 load  4.41 4.83 4.87  | sum 17 | 2.7 syspolicyd, 2.6 tccd, 2.5 trustd, 2.2 claude, 
+23:53:41 load  5.04 4.95 4.91  | sum 18 | 6.4 claude, 3.1 tccd, 2.9 trustd, 1.7 syspolicyd, 
+# mac_free_gib=24.2
+23:53:52 load  4.86 4.92 4.90  | sum 49 | 15.0 cmux, 6.5 trustd, 6.3 tccd, 6.2 syspolicyd, 
+23:54:02 load  4.56 4.85 4.87  | sum 25 | 5.2 tccd, 4.7 trustd, 3.5 syspolicyd, 2.5 loginwindow, 
+23:54:12 load  5.17 4.97 4.92  | sum 72 | 47.0 go, 4.2 claude, 3.5 trustd, 3.4 tccd, 
+# mac_free_gib=24.2
+23:54:22 load  6.29 5.23 5.01  | sum 19 | 4.4 claude, 3.3 tccd, 1.7 Finder, 1.6 claude, 
+23:54:32 load  6.04 5.21 5.00  | sum 28 | 5.5 trustd, 5.4 tccd, 4.0 syspolicyd, 3.8 claude, 
+23:54:42 load  6.65 5.37 5.06  | sum 109 | 83.8 web.test, 5.5 tccd, 4.9 trustd, 2.9 syspolicyd, 
+# mac_free_gib=24.1
+23:54:53 load  5.86 5.24 5.02  | sum 17 | 3.8 fseventsd, 2.5 claude, 1.8 claude, 1.5 trustd, 
+23:55:03 load  5.91 5.26 5.03  | sum 30 | 5.7 tccd, 5.6 trustd, 5.3 syspolicyd, 3.2 cmux, 
+23:55:13 load  5.30 5.16 4.99  | sum 37 | 6.2 trustd, 6.1 tccd, 5.9 syspolicyd, 4.3 claude, 
+# mac_free_gib=24.1
+23:55:23 load  4.71 5.04 4.95  | sum 20 | 4.6 claude, 3.5 Finder, 2.0 tccd, 1.8 trustd, 
+23:55:33 load  4.36 4.95 4.92  | sum 17 | 4.1 claude, 2.0 Finder, 1.6 syspolicyd, 1.4 claude, 
+23:55:43 load  3.92 4.84 4.88  | sum 129 | 51.8 launchd, 17.8 claude, 12.9 cmux, 12.2 cmux, 
+# mac_free_gib=24.4
+23:55:54 load  3.54 4.73 4.84  | sum 32 | 4.5 mdworker_shared, 4.5 claude, 3.2 claude, 2.3 claude, 
+23:56:04 load  3.23 4.62 4.80  | sum 154 | 143.8 go, 1.9 trustd, 1.7 syspolicyd, 1.6 tccd, 
+23:56:14 load  6.38 5.27 5.03  | sum 273 | 69.8 kasboek.test, 54.3 fseventsd, 23.2 postgres:, 20.7 web.test, 
+# mac_free_gib=23.9
+23:56:24 load  6.64 5.36 5.07  | sum 151 | 50.8 fseventsd, 37.0 kasboek.test, 16.7 postgres:, 10.8 Finder, 
+23:56:34 load  6.33 5.33 5.06  | sum 195 | 71.6 kasboek.test, 58.5 fseventsd, 13.0 Finder, 10.2 mds, 
+23:56:44 load  6.82 5.47 5.11  | sum 107 | 28.0 kasboek.test, 10.3 postgres:, 10.1 claude, 9.9 postgres:, 
+# mac_free_gib=24.0
+23:56:54 load  7.37 5.63 5.17  | sum 69 | 29.7 postgres:, 13.8 fseventsd, 4.9 engine.test, 4.4 mds, 
+23:57:04 load  6.71 5.54 5.15  | sum 199 | 171.2 com.apple.WebKit.WebContent, 7.2 cmux, 3.9 go, 3.7 claude, 
+23:57:15 load  8.82 6.05 5.33  | sum 53 | 16.0 fseventsd, 7.9 claude, 5.1 mds, 4.8 werk.test, 
+# mac_free_gib=23.7
+23:57:25 load  8.78 6.13 5.37  | sum 112 | 46.0 go, 25.6 fseventsd, 7.5 mdworker_shared, 6.3 mds_stores, 
+23:57:35 load  7.81 6.01 5.33  | sum 120 | 41.8 claude, 18.9 com.apple.WebKit.WebContent, 16.1 fseventsd, 11.7 zwerm.test, 
+23:57:45 load  7.98 6.11 5.38  | sum 41 | 25.9 claude, 5.4 claude, 1.8 tccd, 1.7 trustd, 
+# mac_free_gib=23.9
+23:57:55 load  7.35 6.04 5.36  | sum 93 | 65.2 mediaanalysisd, 5.9 claude, 2.5 trustd, 2.3 tccd, 
+23:58:06 load  6.67 5.94 5.33  | sum 14 | 1.8 com.apple.WebKit.WebContent, 1.7 tccd, 1.7 claude, 1.6 trustd, 
+23:58:16 load  6.65 5.95 5.35  | sum 70 | 44.2 top, 10.8 bash, 4.4 syspolicyd, 2.1 opendirectoryd, 
+# mac_free_gib=23.8
+23:58:26 load  6.38 5.92 5.34  | sum 75 | 27.5 XprotectService, 16.7 example, 7.3 syspolicyd, 6.6 claude, 
+00:00:11 load  9.25 6.83 5.74  | sum 275 | 246.3 go, 7.1 cmux, 7.0 claude, 2.7 Finder, 
+# mac_free_gib=23.2
+00:00:21 load  9.80 7.02 5.82  | sum 581 | 101.9 go, 60.2 dasd, 56.5 link, 54.2 link, 
+00:00:31 load  10.75 7.31 5.94  | sum 262 | 51.8 dasd, 23.7 taal.test, 17.2 postgres:, 15.2 launchd, 
+00:00:41 load  13.52 8.01 6.21  | sum 863 | 738.2 spoor.test, 28.8 dasd, 10.3 fseventsd, 8.0 PerfPowerServices, 
+# mac_free_gib=22.9
+00:00:51 load  13.42 8.17 6.28  | sum 310 | 76.4 dasd, 60.7 kasboek.test, 29.7 fseventsd, 21.0 launchd, 
+00:01:01 load  14.33 8.54 6.44  | sum 257 | 63.3 dasd, 29.7 fseventsd, 21.9 zwerm.test, 18.2 launchd, 
+00:01:11 load  13.26 8.51 6.45  | sum 328 | 101.2 dasd, 57.3 fseventsd, 26.1 launchd, 22.5 PerfPowerServices, 
+# mac_free_gib=22.9
+00:01:22 load  12.24 8.50 6.48  | sum 187 | 84.3 dasd, 25.5 launchd, 20.0 engine.test, 12.0 PerfPowerServices, 
+00:01:32 load  11.90 8.55 6.52  | sum 212 | 85.8 dasd, 26.1 launchd, 20.5 engine.test, 17.5 PerfPowerServices, 
+00:01:42 load  11.00 8.47 6.52  | sum 220 | 106.7 dasd, 27.3 launchd, 24.3 PerfPowerServices, 15.6 werk.test, 
+# mac_free_gib=23.0
+00:01:52 load  10.71 8.49 6.54  | sum 185 | 88.5 dasd, 28.2 launchd, 16.6 PerfPowerServices, 10.3 appstoreagent, 
+00:02:03 load  10.85 8.58 6.60  | sum 175 | 97.7 dasd, 29.0 launchd, 18.0 PerfPowerServices, 11.0 appstoreagent, 
+00:02:13 load  9.96 8.47 6.58  | sum 222 | 107.6 dasd, 28.0 launchd, 25.0 PerfPowerServices, 12.3 appstoreagent, 
+# mac_free_gib=23.0
+00:02:23 load  9.56 8.43 6.59  | sum 217 | 80.9 dasd, 25.6 launchd, 20.6 cmux, 17.6 XprotectService, 
+00:02:33 load  9.21 8.40 6.60  | sum 202 | 109.6 dasd, 28.1 launchd, 26.6 PerfPowerServices, 11.8 appstoreagent, 
+00:02:43 load  9.74 8.54 6.67  | sum 219 | 103.1 dasd, 31.7 XprotectService, 25.8 launchd, 24.9 PerfPowerServices, 
+# mac_free_gib=22.9
+00:02:53 load  10.30 8.70 6.75  | sum 179 | 98.8 dasd, 32.1 launchd, 17.2 PerfPowerServices, 11.7 appstoreagent, 
+00:03:03 load  9.86 8.66 6.76  | sum 247 | 107.5 dasd, 38.5 com.apple.WebKit.WebContent, 27.7 launchd, 24.9 PerfPowerServices, 
+00:03:13 load  8.90 8.49 6.72  | sum 263 | 64.1 dasd, 33.9 launchd, 26.2 fseventsd, 12.2 postgres:, 
+# mac_free_gib=22.5
+00:03:24 load  10.23 8.79 6.85  | sum 274 | 57.3 dasd, 28.4 fseventsd, 27.4 taal.test, 16.9 launchd, 
+00:03:34 load  11.25 9.06 6.96  | sum 317 | 103.2 dasd, 28.8 kasboek.test, 27.9 fseventsd, 26.6 launchd, 
+00:03:44 load  9.97 8.85 6.92  | sum 348 | 101.6 dasd, 62.4 fseventsd, 28.9 launchd, 20.7 PerfPowerServices, 
+# mac_free_gib=22.9
+00:03:54 load  8.96 8.68 6.88  | sum 278 | 107.0 dasd, 31.0 fseventsd, 27.2 launchd, 25.2 PerfPowerServices, 
+00:04:04 load  8.12 8.51 6.84  | sum 365 | 128.0 com.apple.WebKit.WebContent, 104.1 dasd, 28.6 launchd, 25.3 fseventsd, 
+00:04:14 load  7.63 8.39 6.81  | sum 240 | 100.2 dasd, 27.4 launchd, 24.1 PerfPowerServices, 23.2 werk.test, 
+# mac_free_gib=23.0
+00:04:25 load  7.07 8.24 6.78  | sum 248 | 102.2 dasd, 30.0 launchd, 23.4 PerfPowerServices, 16.9 mdworker_shared, 
+00:04:35 load  6.74 8.14 6.76  | sum 258 | 106.7 dasd, 27.4 launchd, 25.8 com.apple.WebKit.WebContent, 25.2 PerfPowerServices, 
+00:04:45 load  6.32 8.00 6.73  | sum 271 | 107.2 dasd, 40.5 spoor.test, 27.4 PerfPowerServices, 26.9 launchd, 
+# mac_free_gib=23.0
+00:04:55 load  5.98 7.87 6.69  | sum 202 | 109.7 dasd, 29.3 PerfPowerServices, 26.2 launchd, 11.3 appstoreagent, 
+00:05:05 load  5.82 7.77 6.67  | sum 167 | 76.6 dasd, 19.5 launchd, 19.3 PerfPowerServices, 8.5 go, 
+00:05:15 load  6.03 7.75 6.68  | sum 220 | 92.2 dasd, 34.9 cmux, 29.6 launchd, 16.8 PerfPowerServices, 
+# mac_free_gib=22.9
+00:05:26 load  6.33 7.76 6.69  | sum 214 | 107.1 dasd, 27.6 launchd, 26.8 PerfPowerServices, 12.3 appstoreagent, 
+00:05:36 load  5.67 7.57 6.64  | sum 196 | 102.1 dasd, 30.0 launchd, 21.6 PerfPowerServices, 12.0 appstoreagent, 
+00:05:46 load  5.95 7.56 6.65  | sum 183 | 100.2 dasd, 31.7 launchd, 18.7 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=22.9
+00:05:56 load  6.07 7.54 6.65  | sum 210 | 107.3 dasd, 27.8 launchd, 27.1 PerfPowerServices, 12.3 appstoreagent, 
+00:06:06 load  5.44 7.36 6.60  | sum 180 | 100.4 dasd, 32.0 launchd, 17.0 PerfPowerServices, 11.9 appstoreagent, 
+00:06:16 load  5.82 7.38 6.61  | sum 182 | 99.9 dasd, 31.8 launchd, 18.6 PerfPowerServices, 12.1 appstoreagent, 
+# mac_free_gib=22.9
+00:06:27 load  5.68 7.28 6.59  | sum 205 | 106.7 dasd, 27.6 launchd, 26.3 PerfPowerServices, 12.4 appstoreagent, 
+00:06:37 load  6.35 7.37 6.63  | sum 188 | 98.5 dasd, 32.1 launchd, 18.5 PerfPowerServices, 11.7 appstoreagent, 
+00:06:47 load  6.28 7.32 6.62  | sum 208 | 108.6 dasd, 27.7 launchd, 27.2 PerfPowerServices, 12.1 appstoreagent, 
+# mac_free_gib=22.9
+00:06:57 load  5.86 7.19 6.58  | sum 215 | 106.9 dasd, 27.6 launchd, 25.8 PerfPowerServices, 12.3 appstoreagent, 
+00:07:07 load  6.34 7.25 6.61  | sum 186 | 99.0 dasd, 31.8 launchd, 18.5 PerfPowerServices, 12.0 appstoreagent, 
+00:07:17 load  6.57 7.28 6.62  | sum 211 | 108.4 dasd, 38.9 PerfPowerServices, 27.3 launchd, 12.0 appstoreagent, 
+# mac_free_gib=22.8
+00:07:28 load  6.42 7.22 6.61  | sum 176 | 99.9 dasd, 31.6 launchd, 18.0 PerfPowerServices, 12.2 appstoreagent, 
+00:07:38 load  6.38 7.18 6.60  | sum 179 | 99.6 dasd, 31.9 launchd, 18.8 PerfPowerServices, 12.0 appstoreagent, 
+00:07:48 load  6.26 7.12 6.59  | sum 206 | 108.1 dasd, 27.7 launchd, 27.2 PerfPowerServices, 12.3 appstoreagent, 
+# mac_free_gib=22.8
+00:07:58 load  6.08 7.05 6.57  | sum 192 | 99.4 dasd, 33.5 launchd, 18.7 PerfPowerServices, 11.9 appstoreagent, 
+00:08:08 load  6.30 7.07 6.58  | sum 219 | 98.9 dasd, 41.7 com.apple.WebKit.WebContent, 31.9 launchd, 18.7 PerfPowerServices, 
+00:08:18 load  5.56 6.88 6.52  | sum 209 | 108.3 dasd, 28.3 launchd, 27.0 PerfPowerServices, 12.5 appstoreagent, 
+# mac_free_gib=22.8
+00:08:28 load  6.16 6.97 6.56  | sum 178 | 99.4 dasd, 32.2 launchd, 17.3 PerfPowerServices, 11.9 appstoreagent, 
+00:09:23 load  5.79 6.74 6.50  | sum 194 | 97.2 dasd, 30.7 launchd, 18.6 PerfPowerServices, 11.7 appstoreagent, 
+# mac_free_gib=22.7
+00:09:33 load  5.98 6.75 6.50  | sum 180 | 102.0 dasd, 30.6 launchd, 21.2 PerfPowerServices, 12.3 appstoreagent, 
+00:09:43 load  5.82 6.69 6.48  | sum 331 | 100.4 dasd, 79.7 launchd, 74.4 cmux, 19.0 PerfPowerServices, 
+00:09:53 load  6.55 6.81 6.53  | sum 185 | 98.8 dasd, 31.8 launchd, 16.2 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=22.7
+00:10:04 load  6.51 6.80 6.53  | sum 207 | 108.2 dasd, 29.3 PerfPowerServices, 27.2 launchd, 12.1 appstoreagent, 
+00:10:14 load  6.23 6.73 6.51  | sum 262 | 98.0 go, 84.4 dasd, 25.6 launchd, 17.3 PerfPowerServices, 
+00:10:24 load  7.02 6.88 6.56  | sum 213 | 81.4 dasd, 25.7 launchd, 20.0 go, 14.7 PerfPowerServices, 
+# mac_free_gib=22.5
+00:10:34 load  7.00 6.89 6.57  | sum 271 | 111.0 go, 92.3 dasd, 22.4 PerfPowerServices, 22.0 launchd, 
+00:10:44 load  6.30 6.74 6.52  | sum 186 | 99.5 dasd, 32.0 launchd, 18.9 PerfPowerServices, 11.8 appstoreagent, 
+00:10:54 load  7.10 6.90 6.58  | sum 186 | 99.4 dasd, 31.9 launchd, 17.8 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=22.3
+00:11:05 load  6.91 6.87 6.57  | sum 248 | 107.5 dasd, 33.3 com.apple.WebKit.WebContent, 27.9 launchd, 25.5 PerfPowerServices, 
+00:11:15 load  6.64 6.80 6.55  | sum 190 | 99.6 dasd, 32.1 launchd, 17.2 PerfPowerServices, 12.0 appstoreagent, 
+00:11:25 load  7.16 6.91 6.59  | sum 184 | 99.7 dasd, 31.9 launchd, 16.6 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=22.3
+00:11:35 load  6.36 6.75 6.54  | sum 215 | 105.0 dasd, 27.5 launchd, 25.8 PerfPowerServices, 12.5 appstoreagent, 
+00:11:45 load  6.25 6.71 6.52  | sum 186 | 100.2 dasd, 31.8 launchd, 18.7 PerfPowerServices, 12.0 appstoreagent, 
+00:11:55 load  6.59 6.76 6.55  | sum 322 | 95.9 dasd, 90.4 mediaanalysisd, 32.4 launchd, 30.6 cmux, 
+# mac_free_gib=22.3
+00:12:06 load  6.03 6.64 6.51  | sum 207 | 107.6 dasd, 28.1 PerfPowerServices, 27.6 launchd, 12.2 appstoreagent, 
+00:12:16 load  5.26 6.45 6.44  | sum 204 | 109.2 dasd, 27.4 launchd, 26.9 PerfPowerServices, 12.1 appstoreagent, 
+00:12:26 load  4.92 6.34 6.40  | sum 208 | 108.5 dasd, 27.7 launchd, 27.4 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=22.5
+00:12:36 load  4.47 6.20 6.35  | sum 204 | 107.9 dasd, 27.5 PerfPowerServices, 27.4 launchd, 12.3 appstoreagent, 
+00:12:46 load  3.94 6.03 6.29  | sum 203 | 107.2 dasd, 27.9 launchd, 26.0 PerfPowerServices, 12.1 appstoreagent, 
+00:12:56 load  3.49 5.86 6.22  | sum 210 | 108.3 dasd, 28.4 PerfPowerServices, 27.6 launchd, 12.2 appstoreagent, 
+# mac_free_gib=22.5
+00:13:07 load  3.33 5.75 6.18  | sum 197 | 108.3 dasd, 27.7 launchd, 26.2 PerfPowerServices, 12.1 appstoreagent, 
+00:13:17 load  3.43 5.69 6.15  | sum 192 | 108.8 dasd, 27.5 launchd, 25.7 PerfPowerServices, 12.1 appstoreagent, 
+00:13:27 load  3.44 5.62 6.12  | sum 207 | 107.9 dasd, 28.0 launchd, 25.6 PerfPowerServices, 12.4 appstoreagent, 
+# mac_free_gib=22.5
+00:13:37 load  3.45 5.55 6.09  | sum 180 | 99.4 dasd, 31.0 launchd, 17.7 PerfPowerServices, 11.8 appstoreagent, 
+00:13:47 load  4.67 5.74 6.15  | sum 175 | 97.4 dasd, 31.1 launchd, 15.5 PerfPowerServices, 11.9 appstoreagent, 
+00:13:57 load  4.99 5.78 6.16  | sum 220 | 106.9 dasd, 27.4 launchd, 26.7 PerfPowerServices, 26.6 cmux, 
+# mac_free_gib=22.4
+00:14:07 load  5.20 5.78 6.15  | sum 237 | 82.7 dasd, 73.9 go, 24.9 launchd, 13.4 PerfPowerServices, 
+00:14:17 load  6.52 6.05 6.24  | sum 183 | 98.1 dasd, 31.6 launchd, 16.3 PerfPowerServices, 11.7 appstoreagent, 
+00:14:27 load  6.14 5.98 6.22  | sum 230 | 103.2 dasd, 32.8 launchd, 24.1 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=22.4
+00:14:38 load  6.50 6.06 6.24  | sum 198 | 93.1 dasd, 30.2 launchd, 15.2 PerfPowerServices, 11.5 cmux, 
+00:14:48 load  6.40 6.06 6.24  | sum 239 | 107.3 dasd, 29.4 launchd, 26.4 PerfPowerServices, 12.1 appstoreagent, 
+00:14:58 load  5.79 5.94 6.20  | sum 210 | 106.9 dasd, 27.6 launchd, 27.1 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=22.3
+00:15:08 load  7.22 6.24 6.30  | sum 308 | 93.8 dasd, 42.0 com.apple.WebKit.WebContent, 32.7 launchd, 17.2 cloudd, 
+00:15:18 load  7.34 6.30 6.32  | sum 244 | 107.7 dasd, 26.4 PerfPowerServices, 23.8 launchd, 23.1 fseventsd, 
+00:15:28 load  7.56 6.37 6.34  | sum 184 | 97.8 dasd, 31.9 launchd, 17.4 PerfPowerServices, 11.7 appstoreagent, 
+# mac_free_gib=22.3
+00:15:39 load  7.78 6.46 6.38  | sum 197 | 96.8 dasd, 31.1 launchd, 17.0 PerfPowerServices, 11.4 appstoreagent, 
+00:15:49 load  7.06 6.34 6.33  | sum 193 | 108.5 dasd, 28.0 PerfPowerServices, 26.9 launchd, 12.1 appstoreagent, 
+00:15:59 load  6.99 6.35 6.34  | sum 199 | 97.5 dasd, 31.0 launchd, 16.3 PerfPowerServices, 11.5 appstoreagent, 
+# mac_free_gib=22.3
+00:16:09 load  7.46 6.47 6.38  | sum 186 | 103.2 dasd, 29.0 launchd, 22.6 PerfPowerServices, 11.7 appstoreagent, 
+00:16:19 load  8.77 6.78 6.49  | sum 461 | 91.4 dasd, 78.1 fseventsd, 49.7 kasboek, 25.3 launchd, 
+00:16:29 load  9.78 7.07 6.60  | sum 267 | 61.3 dasd, 38.4 fseventsd, 18.2 launchd, 13.3 PerfPowerServices, 
+# mac_free_gib=21.9
+00:16:40 load  9.18 7.03 6.59  | sum 327 | 99.5 dasd, 31.6 fseventsd, 27.7 kasboek.test, 25.0 launchd, 
+00:16:50 load  8.30 6.91 6.55  | sum 382 | 106.6 dasd, 73.1 kasboek.test, 47.5 fseventsd, 27.0 launchd, 
+00:17:00 load  9.46 7.21 6.66  | sum 266 | 73.1 dasd, 27.9 postgres:, 21.8 launchd, 16.9 kasboek.test, 
+# mac_free_gib=22.0
+00:17:10 load  9.15 7.22 6.67  | sum 261 | 108.5 dasd, 27.7 launchd, 26.9 PerfPowerServices, 18.4 kasboek.test, 
+00:17:20 load  8.68 7.18 6.66  | sum 187 | 86.8 dasd, 27.9 launchd, 15.1 PerfPowerServices, 12.0 fseventsd, 
+00:19:46 load  7.60 7.53 6.90  | sum 344 | 103.0 dasd, 49.3 fseventsd, 26.8 launchd, 19.2 PerfPowerServices, 
+# mac_free_gib=21.7
+00:19:56 load  7.20 7.45 6.88  | sum 367 | 107.7 dasd, 69.8 kasboek.test, 36.0 fseventsd, 27.1 launchd, 
+00:20:06 load  6.54 7.30 6.83  | sum 216 | 108.1 dasd, 27.4 launchd, 26.6 PerfPowerServices, 12.1 appstoreagent, 
+00:20:17 load  6.39 7.24 6.81  | sum 232 | 107.2 dasd, 27.9 launchd, 26.1 PerfPowerServices, 15.9 fseventsd, 
+# mac_free_gib=21.9
+00:20:27 load  6.00 7.13 6.78  | sum 196 | 110.4 dasd, 29.5 PerfPowerServices, 26.1 launchd, 11.5 appstoreagent, 
+00:20:37 load  5.69 7.03 6.75  | sum 229 | 105.5 dasd, 27.7 launchd, 25.1 PerfPowerServices, 17.9 fseventsd, 
+00:20:47 load  5.67 6.98 6.73  | sum 180 | 99.0 dasd, 32.0 launchd, 16.2 PerfPowerServices, 11.9 appstoreagent, 
+# mac_free_gib=21.8
+00:20:57 load  6.03 7.00 6.74  | sum 224 | 107.4 dasd, 27.8 PerfPowerServices, 27.2 launchd, 24.9 spoor.test, 
+00:21:08 load  6.20 7.00 6.75  | sum 173 | 89.5 dasd, 28.1 launchd, 16.3 PerfPowerServices, 10.7 appstoreagent, 
+00:21:18 load  7.80 7.31 6.86  | sum 110 | 58.5 dasd, 17.8 launchd, 9.6 PerfPowerServices, 7.4 go, 
+# mac_free_gib=21.7
+00:21:28 load  7.42 7.25 6.84  | sum 268 | 101.7 dasd, 49.5 cmux, 29.3 launchd, 21.5 runningboardd, 
+00:21:38 load  7.45 7.26 6.85  | sum 220 | 96.4 dasd, 46.1 com.apple.WebKit.WebContent, 31.2 launchd, 15.2 PerfPowerServices, 
+00:21:48 load  6.69 7.10 6.80  | sum 145 | 98.8 dasd, 16.4 PerfPowerServices, 12.1 appstoreagent, 3.1 launchd, 
+# mac_free_gib=21.7
+00:21:58 load  6.13 6.96 6.75  | sum 202 | 107.2 dasd, 27.7 PerfPowerServices, 27.5 launchd, 12.2 appstoreagent, 
+00:22:08 load  6.58 7.03 6.78  | sum 193 | 96.6 dasd, 31.2 launchd, 16.2 PerfPowerServices, 15.5 com.apple.WebKit.WebContent, 
+00:22:19 load  6.47 7.00 6.77  | sum 238 | 107.9 dasd, 27.1 PerfPowerServices, 23.2 launchd, 21.2 cmux, 
+# mac_free_gib=21.7
+00:22:29 load  5.94 6.86 6.73  | sum 191 | 102.6 dasd, 28.4 launchd, 18.5 PerfPowerServices, 11.6 appstoreagent, 
+00:22:39 load  6.26 6.90 6.74  | sum 188 | 93.9 dasd, 30.6 launchd, 16.0 PerfPowerServices, 11.3 appstoreagent, 
+00:22:49 load  6.71 6.98 6.77  | sum 198 | 108.6 dasd, 25.8 PerfPowerServices, 25.8 launchd, 11.7 appstoreagent, 
+# mac_free_gib=21.7
+00:22:59 load  6.70 6.97 6.77  | sum 168 | 89.9 dasd, 28.5 launchd, 16.2 PerfPowerServices, 10.8 appstoreagent, 
+00:23:09 load  6.99 7.02 6.79  | sum 190 | 97.3 dasd, 31.5 launchd, 17.9 PerfPowerServices, 11.9 appstoreagent, 
+00:23:19 load  6.45 6.90 6.75  | sum 205 | 107.9 dasd, 27.1 launchd, 26.4 PerfPowerServices, 12.2 appstoreagent, 
+# mac_free_gib=21.7
+00:23:30 load  6.01 6.79 6.71  | sum 196 | 107.2 dasd, 27.5 launchd, 26.4 PerfPowerServices, 12.2 appstoreagent, 
+00:23:40 load  5.77 6.72 6.68  | sum 200 | 107.9 dasd, 28.1 PerfPowerServices, 27.6 launchd, 12.2 appstoreagent, 
+00:23:50 load  5.33 6.59 6.64  | sum 224 | 108.1 dasd, 27.5 launchd, 27.4 PerfPowerServices, 18.8 claude, 
+# mac_free_gib=21.7
+00:24:00 load  4.67 6.41 6.57  | sum 233 | 107.3 dasd, 27.3 launchd, 26.5 PerfPowerServices, 15.4 claude, 
+00:24:10 load  4.48 6.31 6.54  | sum 206 | 107.6 dasd, 27.6 launchd, 26.8 PerfPowerServices, 12.2 appstoreagent, 
+00:24:20 load  4.18 6.19 6.49  | sum 216 | 108.2 dasd, 27.5 launchd, 27.1 PerfPowerServices, 12.7 claude, 
+# mac_free_gib=21.6
+00:24:30 load  4.56 6.20 6.49  | sum 180 | 98.1 dasd, 31.3 launchd, 16.6 PerfPowerServices, 11.9 appstoreagent, 
+00:24:40 load  5.31 6.30 6.52  | sum 209 | 100.4 dasd, 30.4 launchd, 21.3 cmux, 17.9 PerfPowerServices, 
+00:24:51 load  4.95 6.19 6.48  | sum 193 | 107.4 dasd, 27.7 launchd, 26.3 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=21.6
+00:25:01 load  5.44 6.25 6.50  | sum 193 | 98.3 dasd, 31.7 launchd, 16.3 PerfPowerServices, 11.9 appstoreagent, 
+00:25:11 load  5.90 6.33 6.52  | sum 240 | 107.4 dasd, 37.3 cmux, 27.9 launchd, 26.3 PerfPowerServices, 
+00:25:21 load  5.38 6.20 6.48  | sum 197 | 106.1 dasd, 27.4 launchd, 26.5 PerfPowerServices, 12.1 appstoreagent, 
+# mac_free_gib=21.6
+00:25:31 load  5.87 6.28 6.50  | sum 190 | 90.1 dasd, 28.8 launchd, 14.4 PerfPowerServices, 10.7 appstoreagent, 
+00:25:41 load  6.09 6.32 6.51  | sum 216 | 107.0 dasd, 27.8 launchd, 26.6 PerfPowerServices, 12.3 appstoreagent, 
+00:25:51 load  5.46 6.17 6.46  | sum 179 | 97.9 dasd, 31.3 launchd, 17.0 PerfPowerServices, 11.6 appstoreagent, 
+# mac_free_gib=21.6
+00:26:02 load  6.46 6.36 6.52  | sum 189 | 98.5 dasd, 31.7 launchd, 17.6 PerfPowerServices, 11.7 appstoreagent, 
+00:26:12 load  7.47 6.58 6.60  | sum 213 | 108.1 dasd, 28.1 launchd, 27.8 PerfPowerServices, 12.0 appstoreagent, 
+00:26:22 load  6.55 6.42 6.54  | sum 182 | 97.1 dasd, 31.1 launchd, 15.5 PerfPowerServices, 11.5 appstoreagent, 
+# mac_free_gib=21.5
+00:28:38 load  3.74 5.77 6.29  | sum 196 | 108.3 dasd, 26.7 PerfPowerServices, 14.3 launchd, 12.6 appstoreagent, 
+# mac_free_gib=21.2
+00:28:48 load  3.55 5.66 6.24  | sum 202 | 107.5 dasd, 27.5 launchd, 26.8 PerfPowerServices, 12.4 appstoreagent, 
+00:28:58 load  3.46 5.57 6.21  | sum 201 | 106.8 dasd, 27.9 launchd, 25.3 PerfPowerServices, 12.4 appstoreagent, 
+00:29:08 load  4.62 5.75 6.26  | sum 201 | 96.3 dasd, 31.2 launchd, 28.1 com.apple.WebKit.WebContent, 16.9 PerfPowerServices, 
+# mac_free_gib=21.2
+00:29:18 load  4.66 5.73 6.25  | sum 201 | 108.2 dasd, 27.9 PerfPowerServices, 27.6 launchd, 12.2 appstoreagent, 
+00:29:28 load  4.55 5.67 6.22  | sum 199 | 108.3 dasd, 27.3 launchd, 26.8 PerfPowerServices, 12.1 appstoreagent, 
+00:29:39 load  5.15 5.76 6.25  | sum 207 | 92.3 dasd, 42.1 com.apple.WebKit.WebContent, 30.1 launchd, 14.6 PerfPowerServices, 
+# mac_free_gib=21.1
+00:29:49 load  5.48 5.82 6.26  | sum 209 | 108.7 dasd, 27.5 launchd, 27.4 PerfPowerServices, 12.1 appstoreagent, 
+00:29:59 load  5.27 5.76 6.23  | sum 203 | 94.7 dasd, 30.5 launchd, 28.2 cmux, 16.7 PerfPowerServices, 
+00:30:09 load  5.84 5.86 6.27  | sum 244 | 92.6 dasd, 34.4 launchd, 30.9 BackgroundShortcutRunner, 30.3 duetexpertd, 
+# mac_free_gib=21.1
+00:30:20 load  5.32 5.75 6.22  | sum 194 | 103.1 dasd, 27.3 launchd, 26.2 PerfPowerServices, 12.0 appstoreagent, 
+00:30:30 load  5.61 5.79 6.23  | sum 171 | 97.7 dasd, 31.9 launchd, 15.5 PerfPowerServices, 11.8 appstoreagent, 
+00:30:40 load  6.28 5.93 6.27  | sum 174 | 97.6 dasd, 31.8 launchd, 15.5 PerfPowerServices, 11.6 appstoreagent, 
+# mac_free_gib=21.0
+00:30:50 load  5.70 5.82 6.23  | sum 235 | 106.7 dasd, 27.9 launchd, 26.2 PerfPowerServices, 17.5 cmux, 
+00:31:00 load  6.00 5.87 6.24  | sum 186 | 96.6 dasd, 30.7 launchd, 17.2 PerfPowerServices, 11.5 appstoreagent, 
+00:31:10 load  6.99 6.09 6.32  | sum 204 | 107.7 dasd, 28.5 PerfPowerServices, 27.5 launchd, 11.9 appstoreagent, 
+# mac_free_gib=21.0
+00:31:20 load  6.67 6.05 6.30  | sum 197 | 106.9 dasd, 27.8 PerfPowerServices, 27.5 launchd, 12.1 appstoreagent, 
+00:31:31 load  7.18 6.18 6.34  | sum 186 | 98.9 dasd, 31.3 launchd, 16.8 PerfPowerServices, 11.7 appstoreagent, 
+00:31:41 load  8.01 6.41 6.42  | sum 200 | 108.5 dasd, 28.1 PerfPowerServices, 27.7 launchd, 12.0 appstoreagent, 
+# mac_free_gib=20.9
+00:31:51 load  8.36 6.54 6.47  | sum 184 | 76.5 dasd, 29.1 XprotectService, 23.9 launchd, 12.3 PerfPowerServices, 
+00:32:01 load  10.09 6.96 6.62  | sum 195 | 96.1 dasd, 30.8 launchd, 16.9 PerfPowerServices, 11.6 appstoreagent, 
+00:32:11 load  9.36 6.92 6.60  | sum 221 | 107.4 dasd, 27.9 launchd, 26.2 PerfPowerServices, 14.5 claude, 
+# mac_free_gib=20.8
+00:32:21 load  8.94 6.90 6.60  | sum 181 | 67.2 dasd, 21.6 compile, 20.5 launchd, 18.2 (compile), 
+00:32:31 load  8.46 6.87 6.60  | sum 185 | 97.6 dasd, 31.5 launchd, 17.4 PerfPowerServices, 11.7 appstoreagent, 
+00:32:41 load  7.46 6.71 6.54  | sum 209 | 107.4 dasd, 27.7 launchd, 25.1 PerfPowerServices, 12.3 appstoreagent, 
+# mac_free_gib=20.8
+00:32:52 load  7.35 6.70 6.54  | sum 180 | 98.9 dasd, 31.5 launchd, 16.8 PerfPowerServices, 11.8 appstoreagent, 
+00:33:02 load  7.45 6.75 6.56  | sum 201 | 108.4 dasd, 27.6 PerfPowerServices, 27.6 launchd, 12.3 appstoreagent, 
+00:33:12 load  7.63 6.80 6.58  | sum 232 | 106.8 dasd, 24.7 PerfPowerServices, 22.1 cmux, 18.8 launchd, 
+# mac_free_gib=20.7
+00:33:22 load  7.48 6.79 6.58  | sum 172 | 94.1 dasd, 30.6 launchd, 16.3 PerfPowerServices, 11.8 appstoreagent, 
+00:33:32 load  7.87 6.90 6.62  | sum 336 | 93.4 compile, 88.3 dasd, 72.3 go, 22.5 launchd, 
+00:33:42 load  7.04 6.75 6.57  | sum 233 | 91.0 dasd, 28.2 launchd, 26.5 cmux, 17.5 PerfPowerServices, 
+# mac_free_gib=20.6
+00:33:53 load  7.88 6.94 6.64  | sum 177 | 100.0 dasd, 32.1 launchd, 17.6 PerfPowerServices, 11.9 appstoreagent, 
+00:34:03 load  7.49 6.89 6.62  | sum 196 | 108.6 dasd, 27.6 PerfPowerServices, 27.6 launchd, 12.2 appstoreagent, 
+00:34:13 load  6.57 6.72 6.56  | sum 178 | 96.8 dasd, 31.3 launchd, 16.1 PerfPowerServices, 11.6 appstoreagent, 
+# mac_free_gib=20.6
+00:34:23 load  7.25 6.86 6.62  | sum 184 | 99.2 dasd, 31.9 launchd, 16.6 PerfPowerServices, 11.9 appstoreagent, 
+00:34:33 load  6.59 6.73 6.57  | sum 210 | 108.7 dasd, 28.2 launchd, 27.5 PerfPowerServices, 12.2 appstoreagent, 
+00:34:43 load  5.89 6.58 6.52  | sum 232 | 108.1 dasd, 60.9 launchd, 25.7 PerfPowerServices, 12.5 appstoreagent, 
+# mac_free_gib=20.6
+00:34:53 load  5.46 6.46 6.48  | sum 211 | 105.3 dasd, 26.4 launchd, 25.7 PerfPowerServices, 11.7 appstoreagent, 
+00:35:03 load  5.32 6.39 6.46  | sum 246 | 107.7 dasd, 27.6 launchd, 23.5 fseventsd, 23.2 PerfPowerServices, 
+00:35:14 load  5.04 6.30 6.42  | sum 272 | 109.4 dasd, 53.4 web.test, 32.0 launchd, 27.0 PerfPowerServices, 
+# mac_free_gib=20.8
+00:35:24 load  4.50 6.14 6.36  | sum 205 | 107.4 dasd, 27.7 launchd, 27.3 PerfPowerServices, 12.0 appstoreagent, 
+00:35:34 load  4.27 6.04 6.32  | sum 214 | 108.4 dasd, 28.5 PerfPowerServices, 27.4 launchd, 15.1 claude, 
+00:35:44 load  3.92 5.90 6.27  | sum 206 | 108.6 dasd, 29.8 launchd, 27.0 PerfPowerServices, 12.5 appstoreagent, 
+# mac_free_gib=20.8
+00:35:54 load  4.10 5.87 6.26  | sum 241 | 107.0 dasd, 25.5 launchd, 25.4 PerfPowerServices, 17.9 fseventsd, 
+00:36:04 load  3.93 5.78 6.22  | sum 219 | 106.2 dasd, 28.0 launchd, 23.2 com.apple.WebKit.WebContent, 20.2 PerfPowerServices, 
+00:36:14 load  4.78 5.90 6.25  | sum 175 | 98.3 dasd, 32.4 launchd, 11.7 PerfPowerServices, 11.7 appstoreagent, 
+# mac_free_gib=20.7
+00:36:25 load  5.02 5.92 6.26  | sum 252 | 107.1 dasd, 29.2 launchd, 25.9 PerfPowerServices, 15.2 mdworker_shared, 
+00:36:35 load  5.04 5.89 6.24  | sum 203 | 97.3 dasd, 31.1 launchd, 18.4 com.apple.WebKit.WebContent, 17.2 PerfPowerServices, 
+00:38:43 load  6.32 6.18 6.31  | sum 262 | 106.0 dasd, 69.6 launchd, 25.8 PerfPowerServices, 13.0 appstoreagent, 
+# mac_free_gib=20.6
+00:38:53 load  7.41 6.42 6.40  | sum 187 | 82.5 dasd, 26.3 launchd, 19.4 XprotectService, 15.6 PerfPowerServices, 
+00:39:04 load  7.80 6.54 6.44  | sum 189 | 88.7 dasd, 28.2 launchd, 15.6 PerfPowerServices, 11.3 claude, 
+00:39:14 load  7.07 6.42 6.40  | sum 202 | 106.0 dasd, 36.4 launchd, 24.1 PerfPowerServices, 12.1 appstoreagent, 
+# mac_free_gib=20.4
+00:39:24 load  7.59 6.56 6.44  | sum 196 | 96.7 dasd, 31.1 launchd, 16.4 PerfPowerServices, 11.4 appstoreagent, 
+00:39:34 load  8.20 6.72 6.50  | sum 289 | 56.3 dasd, 51.2 kasboek.test, 29.6 fseventsd, 17.2 launchd, 
+00:39:44 load  8.23 6.78 6.53  | sum 697 | 503.2 spoor.test, 63.5 dasd, 20.5 fseventsd, 15.9 launchd, 
+# mac_free_gib=20.1
+00:39:54 load  8.91 6.97 6.60  | sum 242 | 62.2 dasd, 52.2 kasboek.test, 30.4 fseventsd, 19.5 launchd, 
+00:40:05 load  10.46 7.38 6.75  | sum 416 | 104.7 dasd, 65.6 kasboek.test, 46.3 fseventsd, 37.6 com.apple.WebKit.WebContent, 
+00:40:15 load  9.70 7.31 6.73  | sum 256 | 107.6 dasd, 27.0 launchd, 25.9 PerfPowerServices, 19.2 fseventsd, 
+# mac_free_gib=20.2
+00:40:25 load  10.24 7.50 6.80  | sum 273 | 74.6 dasd, 24.4 launchd, 18.6 postgres:, 15.7 kasboek.test, 
+00:40:35 load  9.78 7.50 6.81  | sum 256 | 107.0 dasd, 32.7 com.apple.WebKit.WebContent, 27.9 launchd, 25.3 PerfPowerServices, 
+00:40:45 load  9.05 7.42 6.79  | sum 185 | 95.4 dasd, 30.1 launchd, 16.7 PerfPowerServices, 11.3 appstoreagent, 
+# mac_free_gib=20.2
+00:40:55 load  9.68 7.60 6.86  | sum 317 | 98.5 modelcatalogd, 84.8 dasd, 29.4 eligibilityd, 25.7 launchd, 
+00:41:05 load  9.23 7.58 6.86  | sum 245 | 107.1 dasd, 27.2 launchd, 25.7 PerfPowerServices, 21.8 fseventsd, 
+00:41:15 load  9.28 7.64 6.89  | sum 243 | 85.9 dasd, 71.9 mobileassetd, 27.2 launchd, 14.7 PerfPowerServices, 
+# mac_free_gib=20.2
+00:41:26 load  9.88 7.83 6.97  | sum 233 | 78.9 dasd, 44.2 go, 24.7 launchd, 22.3 mediaanalysisd, 
+00:41:36 load  8.90 7.69 6.93  | sum 204 | 109.7 dasd, 27.9 launchd, 25.2 PerfPowerServices, 11.9 appstoreagent, 
+00:41:46 load  8.38 7.62 6.91  | sum 233 | 107.2 dasd, 35.9 XprotectService, 27.6 PerfPowerServices, 26.6 launchd, 
+# mac_free_gib=20.1
+00:41:56 load  7.47 7.45 6.86  | sum 325 | 125.1 com.apple.WebKit.WebContent, 104.8 dasd, 28.8 launchd, 21.9 PerfPowerServices, 
+00:42:06 load  7.12 7.37 6.84  | sum 438 | 84.1 dasd, 75.6 fseventsd, 50.5 go, 25.4 postgres:, 
+00:42:16 load  7.51 7.45 6.87  | sum 413 | 95.0 dasd, 90.0 fseventsd, 29.7 postgres:, 25.9 launchd, 
+# mac_free_gib=20.1
+00:42:27 load  8.22 7.60 6.93  | sum 322 | 104.1 dasd, 47.1 fseventsd, 31.4 kasboek.test, 26.5 launchd, 
+00:42:37 load  7.43 7.45 6.89  | sum 286 | 108.2 dasd, 26.3 launchd, 25.8 fseventsd, 24.8 kasboek.test, 
+00:42:47 load  7.79 7.53 6.92  | sum 258 | 107.8 dasd, 27.3 launchd, 25.0 PerfPowerServices, 24.1 fseventsd, 
+# mac_free_gib=20.3
+00:42:57 load  8.01 7.58 6.95  | sum 226 | 85.0 dasd, 39.5 mediaanalysisd, 27.2 launchd, 16.7 PerfPowerServices, 
+00:43:07 load  8.47 7.69 6.99  | sum 255 | 107.0 dasd, 33.5 werk.test, 27.5 launchd, 25.4 PerfPowerServices, 
+00:43:17 load  7.78 7.57 6.96  | sum 187 | 95.6 dasd, 30.8 launchd, 16.5 PerfPowerServices, 11.4 appstoreagent, 
+# mac_free_gib=20.2
+00:43:27 load  8.34 7.70 7.01  | sum 189 | 90.9 dasd, 28.6 launchd, 15.4 PerfPowerServices, 11.5 fseventsd, 
+00:43:38 load  7.89 7.63 6.99  | sum 255 | 107.7 dasd, 27.9 zwerm.test, 27.1 launchd, 26.4 PerfPowerServices, 
+00:43:48 load  6.99 7.44 6.93  | sum 227 | 88.4 dasd, 37.7 go, 29.2 XprotectService, 27.7 launchd, 
+# mac_free_gib=20.2
+00:43:58 load  7.36 7.51 6.96  | sum 177 | 89.3 dasd, 28.2 launchd, 14.3 PerfPowerServices, 10.3 appstoreagent, 
+00:44:08 load  7.13 7.46 6.95  | sum 174 | 89.5 dasd, 22.7 launchd, 22.2 PerfPowerServices, 14.7 com.apple.WebKit.WebContent, 
+00:44:18 load  7.29 7.48 6.96  | sum 184 | 91.5 dasd, 29.0 launchd, 16.2 PerfPowerServices, 10.9 claude, 
+# mac_free_gib=20.1
+00:44:28 load  7.88 7.61 7.02  | sum 207 | 107.7 dasd, 27.9 PerfPowerServices, 27.5 launchd, 12.1 appstoreagent, 
+00:44:38 load  7.29 7.49 6.98  | sum 286 | 104.0 dasd, 29.8 mds, 28.6 launchd, 25.7 com.apple.WebKit.WebContent, 
+00:44:48 load  7.71 7.57 7.02  | sum 173 | 98.0 dasd, 27.8 launchd, 15.4 PerfPowerServices, 11.6 appstoreagent, 
+# mac_free_gib=20.1
+00:44:59 load  7.28 7.49 7.00  | sum 217 | 108.3 dasd, 27.8 launchd, 27.4 PerfPowerServices, 12.2 appstoreagent, 
+00:45:09 load  7.82 7.59 7.04  | sum 204 | 96.6 dasd, 30.6 launchd, 18.1 cmux, 17.5 PerfPowerServices, 
+00:45:19 load  8.29 7.70 7.08  | sum 181 | 98.3 dasd, 30.8 launchd, 15.3 PerfPowerServices, 11.8 appstoreagent, 
+# mac_free_gib=20.1
+00:46:39 load  11.22 8.65 7.49  | sum 260 | 89.0 opencode, 52.7 dasd, 16.9 postgres:, 15.7 launchd, 
+# mac_free_gib=20.0
+00:46:50 load  10.32 8.54 7.46  | sum 258 | 108.4 dasd, 29.4 fseventsd, 27.0 launchd, 25.9 PerfPowerServices, 
+00:47:00 load  9.13 8.34 7.40  | sum 194 | 90.0 dasd, 21.6 launchd, 15.3 PerfPowerServices, 10.6 appstoreagent, 
+00:47:10 load  9.66 8.48 7.46  | sum 222 | 97.5 dasd, 38.5 PerfPowerServices, 31.4 launchd, 15.8 runningboardd, 
+# mac_free_gib=19.9
+00:47:20 load  9.31 8.45 7.46  | sum 258 | 107.1 dasd, 27.3 launchd, 24.5 PerfPowerServices, 21.3 fseventsd, 
+00:47:30 load  8.66 8.33 7.43  | sum 183 | 92.9 dasd, 29.7 launchd, 13.3 PerfPowerServices, 10.9 appstoreagent, 
+00:47:40 load  9.41 8.50 7.50  | sum 181 | 94.9 dasd, 30.8 launchd, 15.9 PerfPowerServices, 11.5 appstoreagent, 
+# mac_free_gib=19.9
+00:47:51 load  8.48 8.34 7.46  | sum 232 | 105.9 dasd, 29.4 claude, 27.7 launchd, 24.7 PerfPowerServices, 
+00:48:01 load  8.59 8.36 7.48  | sum 156 | 68.4 dasd, 20.6 launchd, 10.8 PerfPowerServices, 7.8 appstoreagent, 
+00:48:11 load  8.96 8.45 7.52  | sum 175 | 99.6 dasd, 31.5 launchd, 16.3 PerfPowerServices, 11.7 appstoreagent, 
+# mac_free_gib=19.8
+00:48:21 load  8.06 8.27 7.46  | sum 201 | 108.8 dasd, 27.8 PerfPowerServices, 27.5 launchd, 12.0 appstoreagent, 
+00:48:31 load  7.45 8.13 7.42  | sum 220 | 107.6 dasd, 28.0 launchd, 25.8 PerfPowerServices, 13.7 claude, 
+00:48:41 load  6.54 7.91 7.35  | sum 231 | 106.2 dasd, 29.6 launchd, 24.5 PerfPowerServices, 17.4 osanalyticshelper, 
+# mac_free_gib=19.9
+00:48:52 load  5.90 7.73 7.29  | sum 205 | 108.4 dasd, 27.5 launchd, 25.7 PerfPowerServices, 12.4 appstoreagent, 
+00:49:02 load  5.46 7.57 7.24  | sum 205 | 108.5 dasd, 27.6 PerfPowerServices, 27.3 launchd, 12.2 appstoreagent, 
+00:49:12 load  5.15 7.44 7.20  | sum 233 | 107.0 dasd, 27.8 launchd, 27.1 PerfPowerServices, 17.9 cmux, 
+# mac_free_gib=20.0
+00:49:22 load  4.91 7.31 7.16  | sum 335 | 140.3 go, 98.7 dasd, 24.5 PerfPowerServices, 24.4 launchd, 
+00:49:32 load  5.20 7.30 7.15  | sum 374 | 148.2 go, 93.2 dasd, 53.9 compile, 23.7 PerfPowerServices, 
+00:49:42 load  4.86 7.15 7.11  | sum 187 | 108.3 dasd, 27.1 PerfPowerServices, 12.2 appstoreagent, 5.7 tccd, 
+# mac_free_gib=19.8
+00:49:53 load  5.38 7.20 7.12  | sum 180 | 98.4 dasd, 31.1 launchd, 15.5 PerfPowerServices, 12.0 appstoreagent, 
+00:50:03 load  5.86 7.24 7.14  | sum 172 | 100.2 dasd, 32.2 launchd, 16.2 PerfPowerServices, 11.9 appstoreagent, 
+00:50:13 load  5.79 7.18 7.12  | sum 196 | 108.5 dasd, 27.4 launchd, 26.4 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=19.7
+00:50:23 load  5.43 7.06 7.07  | sum 187 | 97.2 dasd, 31.2 launchd, 15.7 PerfPowerServices, 11.7 appstoreagent, 
+00:50:33 load  5.84 7.09 7.08  | sum 178 | 98.2 dasd, 31.2 launchd, 15.6 PerfPowerServices, 11.5 appstoreagent, 
+00:50:43 load  6.07 7.10 7.09  | sum 199 | 107.1 dasd, 29.9 launchd, 26.8 PerfPowerServices, 12.1 appstoreagent, 
+# mac_free_gib=19.7
+00:50:53 load  5.93 7.03 7.06  | sum 179 | 97.1 dasd, 31.2 launchd, 15.4 PerfPowerServices, 11.8 appstoreagent, 
+00:51:03 load  6.54 7.13 7.10  | sum 203 | 108.2 dasd, 28.6 PerfPowerServices, 27.4 launchd, 12.2 appstoreagent, 
+00:51:13 load  6.08 7.01 7.06  | sum 245 | 107.9 dasd, 61.5 launchd, 24.1 PerfPowerServices, 12.7 appstoreagent, 
+# mac_free_gib=19.6
+00:51:24 load  5.62 6.86 7.00  | sum 192 | 108.2 dasd, 27.7 PerfPowerServices, 27.4 launchd, 11.9 appstoreagent, 
+00:51:34 load  5.22 6.73 6.95  | sum 195 | 108.7 dasd, 27.6 launchd, 27.3 PerfPowerServices, 12.2 appstoreagent, 
+00:51:44 load  4.72 6.58 6.90  | sum 228 | 108.1 dasd, 35.4 launchd, 25.9 PerfPowerServices, 12.6 appstoreagent, 
+# mac_free_gib=19.6
+00:51:54 load  4.46 6.46 6.85  | sum 203 | 108.2 dasd, 28.0 PerfPowerServices, 27.5 launchd, 12.3 appstoreagent, 
+00:52:04 load  4.08 6.31 6.79  | sum 262 | 105.6 dasd, 45.0 cmux, 29.3 launchd, 25.8 PerfPowerServices, 
+00:52:14 load  4.41 6.30 6.78  | sum 229 | 95.6 dasd, 25.0 launchd, 25.0 go, 22.0 PerfPowerServices, 
+# mac_free_gib=19.6
+00:52:24 load  5.26 6.42 6.82  | sum 175 | 98.2 dasd, 31.8 launchd, 16.8 PerfPowerServices, 11.7 appstoreagent, 
+00:52:35 load  5.36 6.41 6.81  | sum 353 | 110.4 go, 99.6 dasd, 43.6 com.apple.WebKit.WebContent, 26.7 launchd, 
+00:52:45 load  5.41 6.38 6.79  | sum 178 | 99.8 dasd, 31.9 launchd, 17.1 PerfPowerServices, 11.8 appstoreagent, 
+# mac_free_gib=19.5
+00:52:55 load  5.79 6.43 6.81  | sum 182 | 76.6 dasd, 24.7 launchd, 12.8 PerfPowerServices, 9.0 appstoreagent, 
+00:53:05 load  6.16 6.50 6.83  | sum 208 | 106.5 dasd, 27.7 launchd, 25.4 PerfPowerServices, 13.4 com.apple.WebKit.WebContent, 
+00:53:15 load  6.39 6.53 6.83  | sum 175 | 99.0 dasd, 31.7 launchd, 15.5 PerfPowerServices, 11.6 appstoreagent, 
+# mac_free_gib=19.5
+00:53:25 load  6.87 6.63 6.86  | sum 524 | 63.4 dasd, 49.3 routined, 47.2 com.apple.geod, 35.0 AuthenticationServicesAgent, 
+00:53:36 load  6.12 6.48 6.81  | sum 237 | 105.4 dasd, 27.6 launchd, 26.6 PerfPowerServices, 25.1 com.apple.WebKit.WebContent, 
+00:53:46 load  6.64 6.57 6.84  | sum 178 | 98.9 dasd, 32.1 launchd, 16.6 PerfPowerServices, 11.9 appstoreagent, 
+# mac_free_gib=19.5
+00:53:56 load  6.60 6.57 6.83  | sum 210 | 108.4 dasd, 28.3 PerfPowerServices, 27.7 launchd, 12.0 appstoreagent, 
+00:54:06 load  6.21 6.49 6.80  | sum 209 | 105.5 dasd, 28.6 PerfPowerServices, 27.7 launchd, 12.2 appstoreagent, 
+00:54:16 load  7.02 6.65 6.85  | sum 178 | 98.8 dasd, 31.6 launchd, 16.0 PerfPowerServices, 11.7 appstoreagent, 
+# mac_free_gib=19.4
+00:54:26 load  6.76 6.61 6.84  | sum 244 | 90.9 dasd, 24.0 launchd, 21.0 PerfPowerServices, 16.7 link, 
+00:54:36 load  8.00 6.89 6.93  | sum 257 | 62.9 dasd, 28.5 kasboek.test, 21.4 fseventsd, 19.8 launchd, 
+00:54:47 load  10.21 7.40 7.11  | sum 278 | 51.0 dasd, 39.5 ospredictiond, 29.2 launchd, 24.9 generativeexperiencesd, 
+# mac_free_gib=19.1
+00:54:57 load  11.80 7.84 7.27  | sum 335 | 101.1 dasd, 61.5 fseventsd, 27.2 launchd, 22.0 PerfPowerServices, 
+00:55:07 load  12.04 8.02 7.34  | sum 267 | 65.2 kasboek.test, 63.1 dasd, 23.9 fseventsd, 19.6 launchd, 
+00:55:17 load  13.38 8.44 7.50  | sum 240 | 64.7 dasd, 35.2 kasboek.test, 22.9 fseventsd, 20.3 launchd, 
+# mac_free_gib=19.2
+00:57:44 load  10.28 8.94 7.83  | sum 323 | 103.5 dasd, 36.3 fseventsd, 29.2 PerfPowerServices, 28.9 launchd, 
+# mac_free_gib=19.1
+00:57:55 load  9.24 8.76 7.78  | sum 242 | 107.6 dasd, 27.1 launchd, 26.4 PerfPowerServices, 25.0 fseventsd, 
+00:58:05 load  8.20 8.56 7.72  | sum 290 | 102.9 dasd, 39.5 fseventsd, 37.9 com.apple.WebKit.WebContent, 27.1 launchd, 
+00:58:15 load  7.24 8.34 7.65  | sum 211 | 108.2 dasd, 27.8 launchd, 27.4 PerfPowerServices, 12.5 appstoreagent, 
+# mac_free_gib=19.1
+00:58:25 load  6.58 8.16 7.60  | sum 254 | 109.0 dasd, 27.5 PerfPowerServices, 27.2 launchd, 23.1 fseventsd, 
+00:58:35 load  6.33 8.06 7.57  | sum 379 | 131.3 com.apple.WebKit.WebContent, 96.0 dasd, 61.1 go, 26.5 launchd, 
+00:58:45 load  6.66 8.07 7.58  | sum 191 | 95.3 dasd, 29.5 launchd, 18.5 PerfPowerServices, 11.2 appstoreagent, 
+# mac_free_gib=19.1
+00:58:55 load  7.01 8.10 7.59  | sum 205 | 109.5 dasd, 28.3 launchd, 26.8 PerfPowerServices, 11.9 appstoreagent, 
+00:59:05 load  6.83 8.03 7.57  | sum 203 | 106.5 dasd, 26.6 launchd, 25.2 PerfPowerServices, 11.6 appstoreagent, 
+00:59:15 load  7.61 8.16 7.62  | sum 180 | 93.3 dasd, 29.4 launchd, 17.2 PerfPowerServices, 11.0 appstoreagent, 
+# mac_free_gib=19.0
+00:59:26 load  7.64 8.15 7.63  | sum 229 | 107.3 dasd, 28.9 launchd, 25.4 PerfPowerServices, 12.6 appstoreagent, 
+00:59:36 load  7.88 8.18 7.64  | sum 178 | 79.9 dasd, 24.4 launchd, 16.3 PerfPowerServices, 9.6 bash, 
+00:59:46 load  8.44 8.29 7.69  | sum 411 | 95.4 go, 49.8 dasd, 25.1 link, 23.6 link, 
+# mac_free_gib=18.9
+00:59:56 load  9.01 8.43 7.74  | sum 434 | 98.0 dasd, 93.3 fseventsd, 40.9 postgres:, 26.2 launchd, 
+01:00:06 load  10.15 8.69 7.85  | sum 241 | 76.5 dasd, 34.6 kasboek.test, 23.5 launchd, 16.9 PerfPowerServices, 
+01:00:17 load  10.94 8.91 7.93  | sum 352 | 102.8 dasd, 55.5 kasboek.test, 40.6 fseventsd, 26.5 launchd, 
+# mac_free_gib=18.8
+01:00:27 load  10.03 8.78 7.90  | sum 244 | 107.3 dasd, 32.0 kasboek.test, 27.2 launchd, 25.5 PerfPowerServices, 
+01:00:37 load  10.42 8.91 7.95  | sum 202 | 108.3 dasd, 26.4 launchd, 14.1 PerfPowerServices, 12.3 appstoreagent, 
+01:00:47 load  9.79 8.83 7.94  | sum 229 | 108.8 dasd, 27.3 PerfPowerServices, 27.1 launchd, 11.7 appstoreagent, 
+# mac_free_gib=18.9
+01:00:58 load  8.75 8.63 7.88  | sum 189 | 98.1 dasd, 29.7 launchd, 19.3 PerfPowerServices, 11.4 appstoreagent, 
+01:01:08 load  9.01 8.69 7.91  | sum 181 | 96.7 dasd, 30.3 launchd, 16.9 PerfPowerServices, 11.7 appstoreagent, 
+01:01:18 load  8.36 8.57 7.87  | sum 246 | 107.4 dasd, 27.8 launchd, 24.7 PerfPowerServices, 21.1 fseventsd, 
+# mac_free_gib=19.0
+01:01:28 load  7.77 8.44 7.83  | sum 271 | 108.1 dasd, 70.1 go, 27.2 launchd, 24.9 PerfPowerServices, 
+01:01:38 load  7.18 8.29 7.79  | sum 266 | 107.5 dasd, 52.5 com.apple.WebKit.WebContent, 28.5 launchd, 25.5 PerfPowerServices, 
+01:01:48 load  7.10 8.23 7.77  | sum 172 | 86.7 dasd, 22.4 PerfPowerServices, 17.9 go, 10.0 launchd, 
+# mac_free_gib=19.0
+01:01:58 load  7.56 8.29 7.80  | sum 196 | 108.5 dasd, 28.0 PerfPowerServices, 27.3 launchd, 12.1 appstoreagent, 
+01:02:09 load  7.01 8.15 7.75  | sum 244 | 101.9 dasd, 27.2 XprotectService, 26.0 launchd, 22.7 PerfPowerServices, 
+01:02:19 load  6.77 8.06 7.73  | sum 211 | 108.1 dasd, 26.0 PerfPowerServices, 25.2 launchd, 12.3 appstoreagent, 
+# mac_free_gib=18.8
+01:02:29 load  5.64 7.75 7.62  | sum 214 | 108.5 dasd, 27.7 launchd, 26.1 PerfPowerServices, 12.3 appstoreagent, 
+01:02:39 load  5.17 7.57 7.56  | sum 196 | 110.9 dasd, 28.8 PerfPowerServices, 25.9 launchd, 11.3 appstoreagent, 
+01:02:49 load  6.30 7.73 7.62  | sum 402 | 90.5 dasd, 78.0 taal.test, 73.9 fseventsd, 25.2 launchd, 
+# mac_free_gib=18.6
+01:02:59 load  7.68 7.99 7.71  | sum 270 | 64.1 dasd, 39.6 fseventsd, 19.7 launchd, 12.0 PerfPowerServices, 
+01:03:09 load  7.85 8.02 7.72  | sum 354 | 103.4 dasd, 58.3 fseventsd, 33.5 kasboek.test, 26.6 launchd, 
+01:03:19 load  8.41 8.13 7.77  | sum 326 | 105.3 dasd, 45.3 kasboek.test, 40.3 fseventsd, 26.4 launchd, 
+# mac_free_gib=18.7
+01:03:30 load  8.72 8.21 7.80  | sum 234 | 88.3 dasd, 19.3 postgres:, 18.9 kasboek.test, 18.7 launchd, 
+01:03:40 load  8.59 8.20 7.80  | sum 241 | 106.3 dasd, 27.2 launchd, 25.3 PerfPowerServices, 24.9 fseventsd, 
+01:03:50 load  8.04 8.10 7.77  | sum 240 | 108.8 dasd, 26.9 launchd, 25.8 PerfPowerServices, 24.4 go, 
+# mac_free_gib=18.8
+01:04:00 load  8.16 8.11 7.77  | sum 219 | 88.4 dasd, 28.2 launchd, 24.9 com.apple.WebKit.WebContent, 13.4 PerfPowerServices, 
+01:04:10 load  8.52 8.19 7.81  | sum 248 | 100.4 dasd, 44.5 zwerm.test, 27.4 launchd, 21.3 PerfPowerServices, 
+01:04:20 load  7.81 8.05 7.76  | sum 205 | 108.2 dasd, 27.4 launchd, 26.4 PerfPowerServices, 11.9 appstoreagent, 
+# mac_free_gib=18.8
+01:04:31 load  8.02 8.08 7.77  | sum 211 | 87.7 dasd, 45.3 spoor.test, 27.6 launchd, 15.5 PerfPowerServices, 
+01:04:41 load  8.40 8.16 7.81  | sum 185 | 93.7 dasd, 29.7 launchd, 14.3 PerfPowerServices, 14.0 com.apple.WebKit.WebContent, 
+01:04:51 load  7.57 7.99 7.75  | sum 199 | 102.1 dasd, 25.9 launchd, 24.5 PerfPowerServices, 10.8 appstoreagent, 
+# mac_free_gib=18.8
+01:05:01 load  7.89 8.04 7.77  | sum 230 | 80.3 dasd, 54.4 (top), 25.2 launchd, 14.7 PerfPowerServices, 
+01:05:11 load  8.05 8.07 7.78  | sum 209 | 97.1 dasd, 36.3 cmux, 31.6 launchd, 17.5 PerfPowerServices, 
+01:05:21 load  7.12 7.87 7.72  | sum 211 | 108.6 dasd, 27.6 launchd, 27.0 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=18.7
+01:05:31 load  6.98 7.81 7.69  | sum 191 | 93.3 dasd, 29.5 launchd, 15.0 PerfPowerServices, 11.2 appstoreagent, 
+01:05:41 load  7.21 7.83 7.70  | sum 176 | 98.7 dasd, 31.9 launchd, 15.3 PerfPowerServices, 11.8 appstoreagent, 
+01:05:51 load  6.92 7.76 7.68  | sum 202 | 109.0 dasd, 28.1 PerfPowerServices, 27.0 launchd, 11.9 appstoreagent, 
+# mac_free_gib=18.7
+01:06:02 load  6.15 7.57 7.61  | sum 201 | 108.2 dasd, 28.1 PerfPowerServices, 27.7 launchd, 12.5 appstoreagent, 
+01:06:12 load  5.67 7.41 7.56  | sum 268 | 106.5 dasd, 81.1 go, 24.0 PerfPowerServices, 11.6 appstoreagent, 
+01:06:22 load  5.49 7.32 7.52  | sum 181 | 89.4 dasd, 22.7 launchd, 18.3 PerfPowerServices, 12.8 (go), 
+# mac_free_gib=18.7
+01:07:50 load  5.40 6.67 7.24  | sum 225 | 107.4 dasd, 28.1 launchd, 26.5 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=18.4
+01:08:01 load  5.58 6.67 7.23  | sum 205 | 93.5 dasd, 30.0 launchd, 15.2 PerfPowerServices, 13.4 shazamd, 
+01:08:11 load  5.69 6.66 7.22  | sum 415 | 48.5 ScreenTimeSettingsAgent, 38.2 translationd, 35.6 postersyncd, 33.3 callservicesd, 
+01:08:21 load  5.19 6.52 7.17  | sum 205 | 108.3 dasd, 26.0 PerfPowerServices, 20.5 launchd, 12.5 appstoreagent, 
+# mac_free_gib=18.3
+01:08:31 load  4.78 6.39 7.11  | sum 216 | 106.0 dasd, 27.9 launchd, 26.4 PerfPowerServices, 12.4 appstoreagent, 
+01:08:41 load  4.51 6.28 7.06  | sum 205 | 108.5 dasd, 27.8 launchd, 26.0 PerfPowerServices, 12.3 appstoreagent, 
+01:08:51 load  4.29 6.17 7.02  | sum 199 | 108.4 dasd, 27.8 launchd, 26.7 PerfPowerServices, 12.4 appstoreagent, 
+# mac_free_gib=18.3
+01:09:02 load  4.09 6.07 6.97  | sum 210 | 108.6 dasd, 27.7 launchd, 25.7 PerfPowerServices, 12.6 appstoreagent, 
+01:09:12 load  3.77 5.93 6.91  | sum 232 | 107.7 dasd, 27.8 launchd, 27.0 PerfPowerServices, 15.4 cmux, 
+01:09:22 load  4.75 6.08 6.95  | sum 212 | 108.8 dasd, 27.7 launchd, 27.4 PerfPowerServices, 12.5 appstoreagent, 
+# mac_free_gib=18.4
+01:09:32 load  4.96 6.08 6.94  | sum 177 | 99.5 dasd, 31.8 launchd, 15.6 PerfPowerServices, 12.1 appstoreagent, 
+01:09:42 load  5.36 6.12 6.95  | sum 181 | 97.2 dasd, 31.4 launchd, 17.3 PerfPowerServices, 11.7 appstoreagent, 
+01:09:52 load  4.93 6.00 6.89  | sum 193 | 102.8 dasd, 28.7 PerfPowerServices, 27.5 launchd, 11.8 appstoreagent, 
+# mac_free_gib=18.4
+01:10:02 load  5.50 6.09 6.91  | sum 184 | 98.3 dasd, 31.7 launchd, 15.1 PerfPowerServices, 11.6 appstoreagent, 
+01:10:12 load  5.89 6.15 6.92  | sum 175 | 97.6 dasd, 30.9 launchd, 16.0 PerfPowerServices, 11.7 appstoreagent, 
+01:10:22 load  5.53 6.06 6.88  | sum 194 | 109.5 dasd, 28.1 PerfPowerServices, 27.0 launchd, 11.8 appstoreagent, 
+# mac_free_gib=18.4
+01:10:33 load  5.05 5.94 6.83  | sum 234 | 60.4 dasd, 21.8 launchd, 19.7 XprotectService, 16.8 mdworker_shared, 
+01:10:43 load  5.71 6.06 6.86  | sum 193 | 95.7 dasd, 23.8 launchd, 15.6 cmux, 15.0 PerfPowerServices, 
+01:10:53 load  5.43 5.99 6.83  | sum 210 | 108.9 dasd, 27.8 launchd, 26.5 PerfPowerServices, 12.2 appstoreagent, 
+# mac_free_gib=18.3
+01:11:03 load  5.13 5.91 6.79  | sum 165 | 43.9 dasd, 29.6 go, 16.4 syspolicyd, 13.7 launchd, 
+01:11:13 load  9.09 6.72 7.07  | sum 232 | 52.5 dasd, 39.1 launchd, 31.2 fseventsd, 12.0 PerfPowerServices, 
+01:11:23 load  9.64 6.92 7.14  | sum 950 | 788.1 spoor.test, 29.2 ScreenTimeAgent, 19.1 knowledge-agent, 16.8 dasd, 
+# mac_free_gib=18.1
+01:11:34 load  9.31 6.94 7.14  | sum 512 | 102.9 dasd, 77.3 kasboek.test, 43.9 fseventsd, 32.9 postgres:, 
+01:11:44 load  8.56 6.86 7.11  | sum 354 | 108.4 dasd, 78.2 kasboek.test, 31.1 fseventsd, 29.0 launchd, 
+01:11:54 load  8.62 6.93 7.13  | sum 241 | 108.0 dasd, 27.9 launchd, 25.6 PerfPowerServices, 21.2 fseventsd, 
+# mac_free_gib=18.3
+01:12:04 load  7.99 6.88 7.11  | sum 263 | 108.3 dasd, 27.8 launchd, 26.2 cmux, 25.7 PerfPowerServices, 
+01:12:14 load  7.06 6.72 7.05  | sum 221 | 108.4 dasd, 28.8 launchd, 27.2 PerfPowerServices, 12.3 appstoreagent, 
+01:12:24 load  6.57 6.63 7.01  | sum 222 | 107.9 dasd, 27.8 launchd, 26.6 PerfPowerServices, 12.3 appstoreagent, 
+# mac_free_gib=18.3
+01:12:35 load  5.95 6.49 6.96  | sum 254 | 104.6 dasd, 56.7 com.apple.WebKit.WebContent, 27.3 launchd, 23.8 PerfPowerServices, 
+01:12:45 load  6.13 6.51 6.96  | sum 181 | 89.2 dasd, 28.0 launchd, 14.6 PerfPowerServices, 12.1 fseventsd, 
+01:12:55 load  6.50 6.58 6.98  | sum 197 | 99.7 dasd, 27.2 launchd, 22.2 PerfPowerServices, 11.2 appstoreagent, 
+# mac_free_gib=18.2
+01:13:05 load  6.68 6.61 6.98  | sum 184 | 77.8 dasd, 27.1 com.apple.WebKit.WebContent, 20.1 launchd, 16.1 PerfPowerServices, 
+01:13:15 load  8.02 6.90 7.08  | sum 226 | 80.0 dasd, 48.1 kasboek, 26.9 postgres:, 23.9 launchd, 
+01:13:25 load  7.38 6.80 7.05  | sum 235 | 107.8 dasd, 28.4 launchd, 26.4 PerfPowerServices, 18.1 top, 
+# mac_free_gib=18.1
+01:13:35 load  6.99 6.74 7.02  | sum 194 | 92.6 dasd, 29.3 launchd, 17.5 PerfPowerServices, 10.8 appstoreagent, 
+01:13:45 load  7.77 6.91 7.08  | sum 176 | 98.3 dasd, 31.9 launchd, 16.3 PerfPowerServices, 11.7 appstoreagent, 
+01:13:55 load  9.88 7.39 7.25  | sum 377 | 90.3 dasd, 75.9 fseventsd, 29.6 mediaanalysisd, 25.4 launchd, 
+# mac_free_gib=17.9
+01:14:06 load  13.06 8.15 7.52  | sum 236 | 73.7 dasd, 30.9 com.apple.WebKit.WebContent, 22.9 launchd, 20.4 postgres:, 
+01:14:16 load  12.91 8.28 7.57  | sum 281 | 59.3 dasd, 33.2 kasboek.test, 17.8 launchd, 14.4 postgres:, 
+01:14:26 load  11.47 8.12 7.52  | sum 386 | 107.6 dasd, 77.2 kasboek.test, 53.9 fseventsd, 27.1 launchd, 
+# mac_free_gib=17.9
+01:14:36 load  11.12 8.15 7.54  | sum 337 | 75.5 dasd, 32.3 com.apple.geod, 24.8 launchd, 24.7 routined, 
+01:14:46 load  11.10 8.25 7.58  | sum 221 | 107.5 dasd, 26.3 launchd, 16.3 PerfPowerServices, 12.1 appstoreagent, 
+01:14:56 load  10.09 8.12 7.54  | sum 244 | 106.1 dasd, 27.9 launchd, 23.8 PerfPowerServices, 16.4 fseventsd, 
+# mac_free_gib=18.0
+01:15:07 load  9.85 8.13 7.55  | sum 215 | 95.5 dasd, 32.2 com.apple.WebKit.WebContent, 30.0 launchd, 17.3 PerfPowerServices, 
+01:15:17 load  9.09 8.03 7.52  | sum 213 | 107.6 dasd, 27.5 launchd, 27.0 PerfPowerServices, 12.1 appstoreagent, 
+01:15:27 load  8.37 7.91 7.49  | sum 229 | 89.8 dasd, 69.1 zwerm.test, 25.8 launchd, 18.0 PerfPowerServices, 
+# mac_free_gib=18.0
+01:15:37 load  8.55 7.96 7.51  | sum 197 | 92.3 dasd, 28.2 launchd, 16.7 PerfPowerServices, 16.7 fseventsd, 
+01:15:47 load  8.83 8.05 7.54  | sum 235 | 107.8 dasd, 27.6 launchd, 24.9 PerfPowerServices, 12.0 zicht.test, 
+01:15:57 load  8.42 7.98 7.53  | sum 183 | 85.5 dasd, 26.9 launchd, 14.7 PerfPowerServices, 9.9 appstoreagent, 
+# mac_free_gib=18.0
+01:16:08 load  9.04 8.13 7.58  | sum 226 | 87.4 compile, 52.6 dasd, 41.1 compile, 16.0 launchd, 
+01:17:11 load  4.48 6.99 7.20  | sum 254 | 106.8 dasd, 27.9 launchd, 26.0 PerfPowerServices, 16.0 claude, 
+# mac_free_gib=18.1
+01:17:22 load  4.10 6.83 7.14  | sum 292 | 107.0 dasd, 68.7 compile, 35.9 go, 26.1 launchd, 
+01:17:32 load  4.51 6.82 7.13  | sum 191 | 95.3 dasd, 30.5 launchd, 16.2 cmux, 15.8 PerfPowerServices, 
+01:17:42 load  5.34 6.92 7.16  | sum 175 | 99.9 dasd, 31.3 launchd, 17.2 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=18.0
+01:17:52 load  4.98 6.79 7.11  | sum 200 | 106.9 dasd, 27.5 launchd, 27.0 PerfPowerServices, 12.2 appstoreagent, 
+01:18:02 load  6.97 7.15 7.23  | sum 287 | 100.2 (2.1.290), 60.7 dasd, 27.1 claude, 18.5 launchd, 
+01:18:12 load  8.31 7.42 7.33  | sum 387 | 188.5 compile, 71.0 dasd, 40.2 go, 17.3 launchd, 
+# mac_free_gib=17.7
+01:18:23 load  8.21 7.44 7.34  | sum 201 | 107.0 dasd, 27.8 launchd, 25.9 PerfPowerServices, 12.2 appstoreagent, 
+01:18:33 load  8.42 7.51 7.36  | sum 175 | 98.9 dasd, 31.7 launchd, 17.6 PerfPowerServices, 11.7 appstoreagent, 
+01:18:43 load  7.66 7.38 7.32  | sum 203 | 108.6 dasd, 27.3 launchd, 25.7 PerfPowerServices, 12.1 appstoreagent, 
+# mac_free_gib=17.7
+01:18:53 load  6.94 7.23 7.26  | sum 182 | 98.8 dasd, 31.4 launchd, 11.6 appstoreagent, 11.2 PerfPowerServices, 
+01:19:03 load  6.86 7.21 7.25  | sum 188 | 98.4 dasd, 31.0 launchd, 17.3 PerfPowerServices, 11.7 appstoreagent, 
+01:19:13 load  6.85 7.20 7.25  | sum 212 | 107.0 dasd, 27.4 launchd, 27.2 PerfPowerServices, 15.2 claude, 
+# mac_free_gib=17.6
+01:19:23 load  6.90 7.19 7.25  | sum 181 | 98.6 dasd, 31.6 launchd, 17.8 PerfPowerServices, 11.9 appstoreagent, 
+01:19:33 load  7.77 7.37 7.31  | sum 187 | 97.8 dasd, 31.1 launchd, 15.5 PerfPowerServices, 11.7 appstoreagent, 
+01:19:43 load  7.19 7.25 7.27  | sum 220 | 105.7 dasd, 50.7 launchd, 25.6 PerfPowerServices, 12.2 appstoreagent, 
+# mac_free_gib=17.6
+01:19:54 load  7.64 7.35 7.30  | sum 180 | 98.8 dasd, 31.6 launchd, 17.2 PerfPowerServices, 11.5 appstoreagent, 
+01:20:04 load  8.33 7.50 7.36  | sum 206 | 107.9 dasd, 27.6 launchd, 26.2 PerfPowerServices, 12.0 appstoreagent, 
+01:20:14 load  7.27 7.30 7.29  | sum 212 | 107.5 dasd, 34.1 launchd, 24.8 PerfPowerServices, 12.2 appstoreagent, 
+# mac_free_gib=17.5
+01:20:24 load  7.32 7.31 7.29  | sum 193 | 87.5 dasd, 27.8 launchd, 16.2 cmux, 14.9 claude, 
+01:20:34 load  7.24 7.30 7.28  | sum 211 | 107.3 dasd, 27.8 launchd, 25.8 PerfPowerServices, 12.2 appstoreagent, 
+01:20:44 load  6.84 7.20 7.25  | sum 180 | 98.5 dasd, 33.0 launchd, 16.9 PerfPowerServices, 11.6 appstoreagent, 
+# mac_free_gib=17.5
+01:20:54 load  7.67 7.37 7.31  | sum 171 | 98.0 dasd, 31.8 launchd, 15.2 PerfPowerServices, 11.7 appstoreagent, 
+01:21:05 load  7.12 7.26 7.27  | sum 319 | 124.9 com.apple.WebKit.WebContent, 97.8 dasd, 28.0 launchd, 20.6 PerfPowerServices, 
+01:21:15 load  6.49 7.12 7.22  | sum 195 | 106.7 dasd, 28.0 launchd, 25.8 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=17.5
+01:21:25 load  5.72 6.93 7.15  | sum 203 | 108.1 dasd, 28.0 launchd, 26.1 PerfPowerServices, 12.1 appstoreagent, 
+01:21:35 load  5.16 6.77 7.09  | sum 235 | 108.7 dasd, 28.1 launchd, 26.7 com.apple.WebKit.WebContent, 24.8 PerfPowerServices, 
+01:21:45 load  4.75 6.63 7.04  | sum 204 | 107.0 dasd, 28.0 launchd, 27.2 PerfPowerServices, 12.1 appstoreagent, 
+# mac_free_gib=17.6
+01:21:55 load  4.64 6.54 7.00  | sum 251 | 99.7 dasd, 53.0 mediaanalysisd, 32.1 launchd, 18.2 PerfPowerServices, 
+01:22:05 load  4.31 6.41 6.95  | sum 211 | 107.9 dasd, 28.0 launchd, 26.5 PerfPowerServices, 12.1 appstoreagent, 
+01:22:15 load  3.95 6.26 6.89  | sum 200 | 108.0 dasd, 27.8 launchd, 26.4 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=17.6
+01:22:26 load  3.65 6.12 6.83  | sum 229 | 107.1 dasd, 30.0 cmux, 28.8 launchd, 27.4 PerfPowerServices, 
+01:22:36 load  3.40 5.99 6.78  | sum 203 | 110.3 dasd, 29.3 PerfPowerServices, 26.1 launchd, 11.2 appstoreagent, 
+01:22:46 load  3.18 5.86 6.72  | sum 212 | 107.1 dasd, 27.7 launchd, 25.7 PerfPowerServices, 12.2 appstoreagent, 
+# mac_free_gib=17.6
+01:22:56 load  4.56 6.06 6.78  | sum 188 | 96.0 dasd, 31.1 launchd, 15.8 PerfPowerServices, 11.3 appstoreagent, 
+01:23:06 load  5.23 6.15 6.81  | sum 238 | 107.9 dasd, 27.2 launchd, 26.6 PerfPowerServices, 17.0 web.test, 
+01:23:16 load  5.75 6.23 6.83  | sum 210 | 88.4 dasd, 27.5 launchd, 20.8 web.test, 14.5 PerfPowerServices, 
+# mac_free_gib=17.5
+01:23:27 load  6.32 6.34 6.86  | sum 195 | 91.1 dasd, 28.3 launchd, 15.3 PerfPowerServices, 15.0 fseventsd, 
+01:23:37 load  5.81 6.23 6.81  | sum 196 | 107.8 dasd, 27.7 launchd, 26.4 PerfPowerServices, 12.3 appstoreagent, 
+01:23:47 load  5.37 6.12 6.77  | sum 179 | 100.0 dasd, 31.3 launchd, 17.5 PerfPowerServices, 11.7 appstoreagent, 
+# mac_free_gib=17.5
+01:23:57 load  6.58 6.35 6.84  | sum 222 | 102.3 dasd, 30.4 launchd, 19.8 PerfPowerServices, 18.4 cmux, 
+01:24:07 load  6.11 6.26 6.80  | sum 205 | 108.4 dasd, 27.7 launchd, 26.2 PerfPowerServices, 11.9 appstoreagent, 
+01:24:17 load  5.64 6.15 6.75  | sum 208 | 107.5 dasd, 27.9 launchd, 27.1 PerfPowerServices, 12.2 appstoreagent, 
+# mac_free_gib=17.5
+01:24:27 load  4.93 5.98 6.69  | sum 202 | 108.2 dasd, 27.7 launchd, 26.5 PerfPowerServices, 12.1 appstoreagent, 
+01:24:38 load  4.32 5.81 6.62  | sum 276 | 107.8 dasd, 47.8 spotlightknowledged.updater, 29.6 launchd, 24.5 PerfPowerServices, 
+01:24:48 load  3.97 5.69 6.56  | sum 202 | 108.8 dasd, 27.4 PerfPowerServices, 27.4 launchd, 12.3 appstoreagent, 
+# mac_free_gib=17.4
+01:24:58 load  3.66 5.57 6.51  | sum 210 | 107.8 dasd, 27.5 launchd, 26.4 PerfPowerServices, 12.2 appstoreagent, 
+01:25:08 load  3.81 5.53 6.49  | sum 205 | 107.4 dasd, 28.2 launchd, 27.1 PerfPowerServices, 12.3 appstoreagent, 
+01:25:18 load  4.24 5.56 6.49  | sum 175 | 99.0 dasd, 31.4 launchd, 17.1 PerfPowerServices, 11.8 appstoreagent, 
+# mac_free_gib=17.4
+01:25:28 load  4.90 5.66 6.51  | sum 204 | 109.7 dasd, 28.5 PerfPowerServices, 27.1 launchd, 11.7 appstoreagent, 
+01:25:46 load  4.64 5.54 6.45  | sum 177 | 56.5 dasd, 17.4 launchd, 12.9 claude, 11.9 PerfPowerServices, 
+# mac_free_gib=17.3
+01:25:57 load  4.92 5.57 6.45  | sum 237 | 109.2 dasd, 27.1 launchd, 25.2 PerfPowerServices, 16.9 web.test, 
+01:26:07 load  5.02 5.57 6.43  | sum 201 | 87.0 dasd, 28.6 top, 27.4 launchd, 14.2 PerfPowerServices, 
+01:26:17 load  5.71 5.70 6.47  | sum 189 | 97.5 dasd, 30.8 launchd, 15.7 PerfPowerServices, 11.6 appstoreagent, 
+# mac_free_gib=17.3
+01:26:27 load  6.53 5.87 6.52  | sum 221 | 78.7 dasd, 59.1 go, 19.8 launchd, 18.3 PerfPowerServices, 
+01:26:37 load  6.63 5.91 6.53  | sum 432 | 284.6 compile, 45.1 dasd, 41.5 go, 14.4 launchd, 
+01:26:47 load  7.23 6.06 6.57  | sum 185 | 98.8 dasd, 31.4 launchd, 17.2 PerfPowerServices, 11.6 appstoreagent, 
+# mac_free_gib=17.2
+01:26:58 load  6.65 5.97 6.54  | sum 194 | 109.0 dasd, 27.3 launchd, 26.5 PerfPowerServices, 11.7 appstoreagent, 
+01:27:08 load  6.16 5.89 6.50  | sum 222 | 107.6 dasd, 28.7 PerfPowerServices, 27.7 launchd, 12.1 appstoreagent, 
+01:27:18 load  5.37 5.73 6.44  | sum 215 | 108.0 dasd, 27.7 launchd, 26.0 PerfPowerServices, 12.2 appstoreagent, 
+# mac_free_gib=17.2
+01:27:28 load  4.94 5.62 6.39  | sum 525 | 119.6 compile, 91.4 go, 68.3 compile, 42.8 dasd, 
+01:27:38 load  5.71 5.77 6.43  | sum 451 | 96.4 dasd, 81.5 kasboek.test, 50.7 fseventsd, 40.5 com.apple.WebKit.WebContent, 
+01:27:48 load  6.56 5.95 6.49  | sum 334 | 106.5 dasd, 40.7 kasboek.test, 26.7 launchd, 25.5 PerfPowerServices, 
+# mac_free_gib=16.9
+01:27:59 load  6.74 6.01 6.50  | sum 355 | 106.3 dasd, 48.4 kasboek.test, 34.8 fseventsd, 27.0 launchd, 
+01:28:09 load  7.10 6.10 6.53  | sum 255 | 86.0 dasd, 26.5 launchd, 25.0 com.apple.WebKit.WebContent, 16.8 PerfPowerServices, 
+01:28:19 load  7.98 6.33 6.60  | sum 243 | 89.9 dasd, 43.9 (postgres), 29.0 launchd, 18.5 PerfPowerServices, 
+# mac_free_gib=17.0
+01:28:29 load  7.14 6.20 6.56  | sum 285 | 102.9 dasd, 58.5 claude, 27.1 launchd, 22.7 PerfPowerServices, 
+01:28:39 load  6.58 6.11 6.52  | sum 237 | 106.9 dasd, 27.7 launchd, 24.4 PerfPowerServices, 13.7 zwerm.test, 
+01:28:49 load  6.41 6.09 6.51  | sum 270 | 107.9 dasd, 29.0 fseventsd, 27.5 launchd, 25.3 PerfPowerServices, 
+# mac_free_gib=17.0
+01:29:00 load  5.95 6.01 6.47  | sum 223 | 107.8 dasd, 27.6 PerfPowerServices, 26.6 launchd, 12.4 go, 
+01:29:10 load  5.42 5.89 6.43  | sum 252 | 108.3 dasd, 27.9 launchd, 25.0 zicht.test, 23.7 PerfPowerServices, 
+01:29:20 load  4.89 5.76 6.37  | sum 209 | 108.4 dasd, 27.9 launchd, 26.7 PerfPowerServices, 11.9 appstoreagent, 
+# mac_free_gib=17.0
+01:29:30 load  5.54 5.87 6.40  | sum 286 | 109.7 dasd, 73.4 kasboek, 27.6 PerfPowerServices, 26.4 launchd, 
+01:29:40 load  5.95 5.94 6.42  | sum 251 | 96.5 dasd, 58.7 kasboek.test, 27.5 launchd, 20.9 PerfPowerServices, 
+01:29:50 load  7.20 6.21 6.51  | sum 211 | 97.2 dasd, 34.7 kasboek.test, 28.1 launchd, 16.7 PerfPowerServices, 
+# mac_free_gib=16.9
+01:30:01 load  6.85 6.17 6.49  | sum 291 | 110.5 dasd, 84.3 kasboek.test, 26.9 PerfPowerServices, 26.1 launchd, 
+01:30:11 load  6.10 6.03 6.44  | sum 228 | 107.2 dasd, 28.5 launchd, 23.9 PerfPowerServices, 21.9 postgres:, 
+01:30:21 load  7.46 6.31 6.53  | sum 457 | 91.1 fseventsd, 74.9 dasd, 22.2 Finder, 20.5 launchd, 
+# mac_free_gib=16.6
+01:30:31 load  7.39 6.33 6.53  | sum 405 | 94.8 dasd, 73.5 fseventsd, 27.1 launchd, 24.9 kasboek.test, 
+01:30:41 load  7.50 6.39 6.55  | sum 344 | 104.4 dasd, 44.6 kasboek.test, 35.7 fseventsd, 26.7 launchd, 
+01:30:51 load  6.95 6.31 6.52  | sum 288 | 108.1 dasd, 28.2 kasboek.test, 26.9 launchd, 25.7 PerfPowerServices, 
+# mac_free_gib=16.9
+01:31:01 load  6.72 6.28 6.51  | sum 240 | 105.3 dasd, 27.1 launchd, 24.8 PerfPowerServices, 18.6 fseventsd, 
+01:31:11 load  7.33 6.42 6.55  | sum 199 | 91.9 dasd, 28.6 launchd, 16.8 PerfPowerServices, 14.2 fseventsd, 
+01:31:21 load  7.90 6.57 6.61  | sum 200 | 92.7 dasd, 28.9 launchd, 16.6 werk.test, 15.1 PerfPowerServices, 
+# mac_free_gib=16.9
+01:31:32 load  7.24 6.47 6.57  | sum 240 | 105.0 dasd, 28.2 launchd, 24.9 PerfPowerServices, 12.4 appstoreagent, 
+01:31:42 load  8.34 6.73 6.66  | sum 191 | 95.8 dasd, 30.6 launchd, 17.5 PerfPowerServices, 11.4 appstoreagent, 
+01:31:52 load  8.27 6.77 6.68  | sum 260 | 106.3 dasd, 55.8 cmux, 29.2 launchd, 24.5 PerfPowerServices, 
+# mac_free_gib=16.9
+01:32:02 load  7.46 6.65 6.63  | sum 184 | 93.0 dasd, 25.5 PerfPowerServices, 23.9 launchd, 12.3 appstoreagent, 
+01:32:12 load  8.53 6.90 6.72  | sum 178 | 97.5 dasd, 31.7 launchd, 17.8 PerfPowerServices, 11.9 appstoreagent, 
+01:32:22 load  8.18 6.89 6.72  | sum 205 | 88.9 dasd, 22.7 launchd, 21.4 PerfPowerServices, 20.2 link, 
+# mac_free_gib=16.7
+01:32:33 load  8.41 6.99 6.76  | sum 183 | 93.5 dasd, 30.4 launchd, 16.1 PerfPowerServices, 11.3 appstoreagent, 
+01:32:43 load  8.80 7.12 6.81  | sum 179 | 97.7 dasd, 31.4 launchd, 16.4 PerfPowerServices, 11.7 appstoreagent, 
+01:32:53 load  8.27 7.06 6.79  | sum 211 | 107.5 dasd, 28.2 launchd, 25.9 PerfPowerServices, 12.2 appstoreagent, 
+# mac_free_gib=16.8
+01:33:03 load  7.78 7.00 6.77  | sum 180 | 96.8 dasd, 31.7 launchd, 16.5 PerfPowerServices, 11.7 appstoreagent, 
+01:33:13 load  8.12 7.10 6.81  | sum 232 | 103.2 dasd, 68.1 launchd, 23.1 PerfPowerServices, 12.5 appstoreagent, 
+01:33:23 load  7.26 6.94 6.76  | sum 196 | 107.0 dasd, 27.4 launchd, 25.5 PerfPowerServices, 12.0 appstoreagent, 
+# mac_free_gib=16.7
+01:33:33 load  7.01 6.90 6.74  | sum 120 | 60.9 dasd, 18.5 launchd, 10.3 PerfPowerServices, 7.0 appstoreagent, 
+01:33:43 load  10.25 7.59 6.99  | sum 425 | 87.8 dasd, 70.4 fseventsd, 47.7 kasboek.test, 35.5 launchd, 
+01:33:53 load  10.40 7.72 7.04  | sum 335 | 106.6 dasd, 50.0 fseventsd, 27.2 launchd, 25.4 PerfPowerServices, 
+# mac_free_gib=16.5
+01:34:04 load  11.36 8.01 7.15  | sum 249 | 54.4 dasd, 21.4 web.test, 19.1 fseventsd, 15.6 launchd, 

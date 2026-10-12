@@ -1,0 +1,30 @@
+date: 2026-10-10T22:19:16-04:00
+app: oncrack, clients: 1000, prefix: none, runs: 15, fresh: 0, secs: 15
+app env:  CAMPFIRE_CABLE_TRACE=/trace/cable.jsonl
+loadgen args:  (client trace 1)
+server trace: 1
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-trace (d8fdaf4 (dirty files under src/: 0) at 2026-10-11T01:56:58Z)
+repo HEAD: 86490e2
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 21:56:57)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[22:20:26] load before run: 1.29 3.11 2.89 (waited 70s)
+[22:20:28] host probe before run: {"spin_ms": 58.51, "spin_ms_max_cpu": 63.32, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.053} (waited 70s)
+[22:20:32] oncrack: container up, cold start 247ms
+ok   run 1 1000 clients (target): 26553/26553 messages, 1768.2 msg/s, drain 0.01 s
+ok   run 2 1000 clients (target): 29542/29542 messages, 1968.8 msg/s, drain 0.0 s
+ok   run 3 1000 clients (target): 29215/29215 messages, 1945.6 msg/s, drain 0.01 s
+ok   run 4 1000 clients (target): 22358/22358 messages, 1489.4 msg/s, drain 0.01 s
+ok   run 5 1000 clients (target): 23452/23452 messages, 1562.3 msg/s, drain 0.01 s
+MISS run 6 1000 clients (target): 1 ERROR/WARN lines in the app's log
+ok   run 7 1000 clients (target): 28431/28431 messages, 1894.1 msg/s, drain 0.01 s
+MISS run 8 1000 clients (target): 1 ERROR/WARN lines in the app's log
+ok   run 9 1000 clients (target): 28767/28767 messages, 1916.9 msg/s, drain 0.01 s
+ok   run 10 1000 clients (target): 29010/29010 messages, 1932.6 msg/s, drain 0.01 s
+MISS run 11 1000 clients (target): 1 ERROR/WARN lines in the app's log
+ok   run 12 1000 clients (target): 27435/27435 messages, 1827.5 msg/s, drain 0.0 s
+ok   run 13 1000 clients (target): 29092/29092 messages, 1936.6 msg/s, drain 0.02 s
+MISS run 14 1000 clients (target): 1 ERROR/WARN lines in the app's log
+ok   run 15 1000 clients (target): 28596/28596 messages, 1905.3 msg/s, drain 0.01 s
+[22:27:33] done: 15 phases, 4 with a problem
+exit 0

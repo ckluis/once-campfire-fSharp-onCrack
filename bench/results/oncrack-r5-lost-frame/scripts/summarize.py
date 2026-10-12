@@ -2,7 +2,7 @@
 """Prints the hunt's table from data/*/phases.jsonl and data/*/env.txt: per block its configuration, phases at the target client count,
 phases in which a message did not reach every client, phases with something else flagged (a freeze, a WAL warning, a verify failure)."""
 import glob, json, os, re, sys
-root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
+root = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 rows = []
 for d in sorted(glob.glob(root + "/*/")):
     name = os.path.basename(d.rstrip("/"))

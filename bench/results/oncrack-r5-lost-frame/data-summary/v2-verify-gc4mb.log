@@ -1,0 +1,27 @@
+date: 2026-10-11T00:41:34-04:00
+app: oncrack, clients: 500, prefix: none, runs: 12, fresh: 0, secs: 15
+app env: CAMPFIRE_CABLE_VERIFY=1 DOTNET_GCgen0MaxBudget=400000
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-verify (4d6f89c (dirty files under src/: 0) at 2026-10-11T04:27:37Z)
+repo HEAD: 730c42d
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[00:42:34] load before run: 1.31 3.17 3.53 (waited 60s)
+[00:42:37] host probe before run: {"spin_ms": 59.39, "spin_ms_max_cpu": 60.79, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.069} (waited 60s)
+[00:42:41] oncrack: container up, cold start 396ms
+MISS run 1 500 clients (target): 48 ERROR/WARN lines in the app's log
+ok   run 2 500 clients (target): 43683/43683 messages, 2911.6 msg/s, drain 0.0 s
+ok   run 3 500 clients (target): 41717/41717 messages, 2780.6 msg/s, drain 0.0 s
+ok   run 4 500 clients (target): 44577/44577 messages, 2971.0 msg/s, drain 0.0 s
+ok   run 5 500 clients (target): 44332/44332 messages, 2954.6 msg/s, drain 0.0 s
+ok   run 6 500 clients (target): 44943/44943 messages, 2995.6 msg/s, drain 0.0 s
+ok   run 7 500 clients (target): 36747/36747 messages, 2449.0 msg/s, drain 0.0 s
+ok   run 8 500 clients (target): 35461/35461 messages, 2363.2 msg/s, drain 0.0 s
+ok   run 9 500 clients (target): 38743/38743 messages, 2582.2 msg/s, drain 0.0 s
+MISS run 10 500 clients (target): 3 ERROR/WARN lines in the app's log
+ok   run 11 500 clients (target): 41797/41797 messages, 2785.2 msg/s, drain 0.0 s
+ok   run 12 500 clients (target): 37147/37147 messages, 2476.0 msg/s, drain 0.0 s
+[00:48:17] done: 12 phases, 2 with a problem
+exit 0

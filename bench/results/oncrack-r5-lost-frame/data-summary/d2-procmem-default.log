@@ -1,0 +1,48 @@
+date: 2026-10-11T02:53:17-04:00
+app: oncrack, clients: 500, prefix: 100, runs: 10, fresh: 1, secs: 15
+app env: 
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-verify2 (6920635 (dirty files under src/: 0) at 2026-10-11T04:57:25Z)
+repo HEAD: 0eaed8f
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[02:54:37] load before run: 1.36 2.94 2.95 (waited 80s)
+[02:54:50] host busy: {"spin_ms": 285.18, "spin_ms_max_cpu": 311.36, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.132}
+[02:55:12] host busy: {"spin_ms": 280.29, "spin_ms_max_cpu": 292.54, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.044}
+[02:55:34] host busy: {"spin_ms": 287.03, "spin_ms_max_cpu": 301.93, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.165}
+[02:55:57] host busy: {"spin_ms": 280.28, "spin_ms_max_cpu": 299.35, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.044}
+[02:56:20] host probe before run: {"spin_ms": 284.9, "spin_ms_max_cpu": 298.07, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.127} (waited 120s)
+[02:56:25] oncrack: container up, cold start 710ms
+MISS run 1 100 clients (prefix): the container used under one core for 3082 ms inside the phase (a freeze)
+ok   run 1 500 clients (target): 18916/18916 messages, 1260.6 msg/s, drain 0.0 s
+[02:57:24] oncrack: container up, cold start 190ms
+ok   run 2 100 clients (prefix): 40298/40298 messages, 2686.3 msg/s, drain 0.0 s
+ok   run 2 500 clients (target): 17113/17113 messages, 1140.0 msg/s, drain 0.01 s
+[02:58:26] oncrack: container up, cold start 713ms
+MISS run 3 100 clients (prefix): the container used under one core for 776 ms inside the phase (a freeze)
+ok   run 3 500 clients (target): 12248/12248 messages, 815.3 msg/s, drain 0.01 s
+[02:59:27] oncrack: container up, cold start 727ms
+MISS run 4 100 clients (prefix): the container used under one core for 3118 ms inside the phase (a freeze)
+ok   run 4 500 clients (target): 11919/11919 messages, 793.1 msg/s, drain 0.0 s
+[03:00:29] oncrack: container up, cold start 767ms
+MISS run 5 100 clients (prefix): the container used under one core for 4145 ms inside the phase (a freeze)
+ok   run 5 500 clients (target): 12909/12909 messages, 859.9 msg/s, drain 0.01 s
+[03:01:31] oncrack: container up, cold start 701ms
+MISS run 6 100 clients (prefix): the container used under one core for 2077 ms inside the phase (a freeze)
+ok   run 6 500 clients (target): 12465/12465 messages, 830.6 msg/s, drain 0.0 s
+[03:02:31] oncrack: container up, cold start 728ms
+ok   run 7 100 clients (prefix): 104068/104068 messages, 6937.5 msg/s, drain 0.0 s
+ok   run 7 500 clients (target): 48806/48806 messages, 3253.2 msg/s, drain 0.0 s
+[03:18:48] oncrack: container up, cold start 192ms
+ok   run 8 100 clients (prefix): 105411/105411 messages, 7027.0 msg/s, drain 0.0 s
+MISS run 8 500 clients (target): 1 of 42144 posted messages did not reach every client, 1 window stalls, the container used under one core for 1854 ms inside the phase (a freeze)
+[03:20:48] oncrack: container up, cold start 206ms
+ok   run 9 100 clients (prefix): 104872/104872 messages, 6991.0 msg/s, drain 0.0 s
+ok   run 9 500 clients (target): 47663/47663 messages, 3176.9 msg/s, drain 0.0 s
+[03:21:47] oncrack: container up, cold start 187ms
+ok   run 10 100 clients (prefix): 96730/96730 messages, 6448.1 msg/s, drain 0.0 s
+ok   run 10 500 clients (target): 42827/42827 messages, 2854.5 msg/s, drain 0.0 s
+[03:22:42] done: 20 phases, 6 with a problem
+exit 0

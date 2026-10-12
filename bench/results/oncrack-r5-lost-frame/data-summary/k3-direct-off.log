@@ -1,0 +1,30 @@
+date: 2026-10-11T00:03:34-04:00
+app: oncrack, clients: 500, prefix: none, runs: 15, fresh: 0, secs: 15
+app env: CAMPFIRE_CABLE_DIRECT=off
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-trace (d8fdaf4 (dirty files under src/: 0) at 2026-10-11T01:56:58Z)
+repo HEAD: 550d15a
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[00:04:54] load before run: 1.26 3.29 3.47 (waited 80s)
+[00:04:57] host probe before run: {"spin_ms": 59.74, "spin_ms_max_cpu": 62.18, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.075} (waited 80s)
+[00:05:01] oncrack: container up, cold start 249ms
+ok   run 1 500 clients (target): 32588/32588 messages, 2171.5 msg/s, drain 0.0 s
+ok   run 2 500 clients (target): 35545/35545 messages, 2368.7 msg/s, drain 0.0 s
+ok   run 3 500 clients (target): 35526/35526 messages, 2367.5 msg/s, drain 0.0 s
+ok   run 4 500 clients (target): 35739/35739 messages, 2381.9 msg/s, drain 0.0 s
+ok   run 5 500 clients (target): 35812/35812 messages, 2384.8 msg/s, drain 0.0 s
+ok   run 6 500 clients (target): 35686/35686 messages, 2377.0 msg/s, drain 0.01 s
+ok   run 7 500 clients (target): 34682/34682 messages, 2311.1 msg/s, drain 0.0 s
+ok   run 8 500 clients (target): 35542/35542 messages, 2367.5 msg/s, drain 0.01 s
+ok   run 9 500 clients (target): 35199/35199 messages, 2345.6 msg/s, drain 0.0 s
+ok   run 10 500 clients (target): 35214/35214 messages, 2346.7 msg/s, drain 0.0 s
+ok   run 11 500 clients (target): 35322/35322 messages, 2353.6 msg/s, drain 0.01 s
+ok   run 12 500 clients (target): 23854/23854 messages, 1589.7 msg/s, drain 0.0 s
+ok   run 13 500 clients (target): 35646/35646 messages, 2374.9 msg/s, drain 0.01 s
+ok   run 14 500 clients (target): 35897/35897 messages, 2391.3 msg/s, drain 0.01 s
+ok   run 15 500 clients (target): 35395/35395 messages, 2358.2 msg/s, drain 0.01 s
+[00:12:01] done: 15 phases, 0 with a problem
+exit 0
