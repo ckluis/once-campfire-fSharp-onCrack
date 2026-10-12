@@ -222,46 +222,52 @@ let ``a reader that stops reading gets every byte in order once it reads again``
             do! roundTrip app client 200 20 10
         })
 
-[<Fact>]
-let ``many connections, each sees every frame once and in order`` () =
-    withServer testConfig (fun app ->
-        task {
-            let clients = Collections.Generic.List<Client>()
-            try
-                for i in 1..40 do
-                    let! client = connect app (uint64 (1 + i % 2))
-                    // Every fourth never answers its probe: those stay on the stream, beside the rest.
-                    if i % 4 = 0 then client.AnswerPings <- false
-                    clients.Add client
-                for client in clients do
-                    do! expectText Welcome client
-                    do! client.Subscribe(room 1)
-                // Read at once: a client that doesn't answer holds its own confirmation for the probe's timeout, which would
-                // otherwise let the later clients' probes time out too.
-                let! _ = Task.WhenAll [| for client in clients -> expectText (confirm (room 1)) client |]
-                let body (i: int) = object' [ "n", int' i; "pad", str (String('z', i % 700)) ]
-                let publisher =
-                    Task.Run(fun () ->
-                        for i in 0..199 do
-                            app.Server.Broadcast("room:room-1", body i) |> ignore
-                            if i % 20 = 0 then Threading.Thread.Sleep 1)
-                let readers =
-                    [| for client in clients ->
-                           task {
-                               for i in 0..199 do
-                                   do! expectText (message (room 1) (Json.generate (body i))) client
-                           } |]
-                do! publisher
-                let! _ = Task.WhenAll readers
-                eq 30L app.Server.DirectConnections
-            finally
-                for client in clients do
-                    (client :> IDisposable).Dispose()
-        })
+/// Round 5 verifier: in the "fan-out" collection, where nothing runs beside it. It counts the connections that answered their probe in time and
+/// reads each frame within 5 s; in the parallel suite on Linux it failed on those bounds in nearly every full run, on round 5's code and on
+/// unchanged 3e3e184 alike, and passed alone.
+[<Xunit.Collection("fan-out")>]
+module ManyConnections =
+    [<Fact>]
+    let ``many connections, each sees every frame once and in order`` () =
+        withServer testConfig (fun app ->
+            task {
+                let clients = Collections.Generic.List<Client>()
+                try
+                    for i in 1..40 do
+                        let! client = connect app (uint64 (1 + i % 2))
+                        // Every fourth never answers its probe: those stay on the stream, beside the rest.
+                        if i % 4 = 0 then client.AnswerPings <- false
+                        clients.Add client
+                    for client in clients do
+                        do! expectText Welcome client
+                        do! client.Subscribe(room 1)
+                    // Read at once: a client that doesn't answer holds its own confirmation for the probe's timeout, which would
+                    // otherwise let the later clients' probes time out too.
+                    let! _ = Task.WhenAll [| for client in clients -> expectText (confirm (room 1)) client |]
+                    let body (i: int) = object' [ "n", int' i; "pad", str (String('z', i % 700)) ]
+                    let publisher =
+                        Task.Run(fun () ->
+                            for i in 0..199 do
+                                app.Server.Broadcast("room:room-1", body i) |> ignore
+                                if i % 20 = 0 then Threading.Thread.Sleep 1)
+                    let readers =
+                        [| for client in clients ->
+                               task {
+                                   for i in 0..199 do
+                                       do! expectText (message (room 1) (Json.generate (body i))) client
+                               } |]
+                    do! publisher
+                    let! _ = Task.WhenAll readers
+                    eq 30L app.Server.DirectConnections
+                finally
+                    for client in clients do
+                        (client :> IDisposable).Dispose()
+            })
 
-// Round 4 verifier: clients that stop reading are not the fan-out falling behind. Two of three connections in a room stop reading while
-// 40 MB are broadcast; once their sends have waited longer than `Hub.ReaderBoundAfter` the room is not congested (posts do not wait for
-// them), and when they read again they get every frame in order.
+    // Round 4 verifier: clients that stop reading are not the fan-out falling behind. Two of three connections in a room stop reading while
+    // 40 MB are broadcast; once their sends have waited longer than `Hub.ReaderBoundAfter` the room is not congested (posts do not wait for
+    // them), and when they read again they get every frame in order.
+
 [<Fact>]
 let ``clients that stop reading do not make the room congested, and lose nothing`` () =
     withServer testConfig (fun app ->

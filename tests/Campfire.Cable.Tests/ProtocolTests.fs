@@ -261,6 +261,11 @@ let ``unsubscribe stops delivery silently`` () =
 
             do! client.Unsubscribe room
             do! client.AssertSilent()
+            // Round 5 verifier: an unsubscribe has no reply, so 200 ms of silence did not mean the server had taken it; under load the broadcast
+            // below came first and was delivered, as Rails would deliver it. Wait for the server to have dropped the stream.
+            let sw = Stopwatch.StartNew()
+            while app.Server.StreamCount > 1 && sw.Elapsed < TimeSpan.FromSeconds 10.0 do
+                do! Task.Delay 10
             app.Server.Broadcast("room:room-1", object' []) |> ignore
             do! client.AssertSilent()
             eq 1 app.Server.StreamCount // only the internal channel remains

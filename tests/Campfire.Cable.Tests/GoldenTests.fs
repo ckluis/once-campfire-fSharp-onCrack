@@ -17,6 +17,10 @@
 //
 // The replay builds Campfire's channels over the same fixture values, so every frame must match byte
 // for byte; only ping timestamps are normalized.
+// Round 5 verifier: in the "fan-out" collection, where nothing runs beside it: the replay waits a few seconds a step for each reference frame,
+// and in the parallel suite on Linux it timed out ("no frame within 5s", or a step that got none) in most full runs on round 5's code and on
+// unchanged 3e3e184 alike, and passed alone.
+[<Xunit.Collection("fan-out")>]
 module Campfire.Cable.Tests.GoldenTests
 
 open System

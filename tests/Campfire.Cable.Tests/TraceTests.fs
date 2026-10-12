@@ -1,5 +1,10 @@
 // Unit R5.1: the evidence switch (`CAMPFIRE_CABLE_TRACE`, src/Campfire.Cable/Trace.fs). Off, a connection has no trace; on, the file
 // names the frames a connection was handed to its writes, as runs of the group's publish numbers, and its chunk crossings.
+// Round 5 verifier: every test here switches something process-wide (the trace, the verify switch, a hook that forces a full compacting
+// collection before every gathered write), so they run in the "fan-out" collection, where nothing runs beside them. In the parallel suite the
+// trace test's own 300 records drowned under other tests' publishes (a million a second from the chunk-crossing attack), and the forced
+// collections stalled every socket test beside them on Linux ("no frame within 5s").
+[<Xunit.Collection("fan-out")>]
 module Campfire.Cable.Tests.TraceTests
 
 open System
