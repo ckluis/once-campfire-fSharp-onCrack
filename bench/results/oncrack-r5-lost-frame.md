@@ -1,7 +1,160 @@
-# Round 5, unit R5.1: the message that did not reach every client
+# Round 5, units R5.1 and R5.2: the message that did not reach every client
 
-Written 2026-10-12 from the hunt of 2026-10-10/11 (about four hours, 395 target phases). This file is evidence for the next unit, which
-diagnoses and fixes; nothing under `src/` was changed beyond the switches below.
+R5.1 (2026-10-10/11, the sections after "R5.2" below) found the fault. R5.2 (2026-10-12, the next section) proved the cause, fixed it and proved the
+fix. **Conclusion: the defect was round 4's gathered write pinning only the last payload of each batch. It is fixed (54fb67f) and covered by a test
+that fails without the fix, and no message was lost or corrupted in 105 target phases after the fix.**
+
+## R5.2: cause, fix, proof, cost (2026-10-12)
+
+### The cause, proven
+
+`Sendmsg.pin` (R4.2) pinned each payload with `use p = fixed payload` and called itself for the next one, in tail position. The F# compiler turns a
+self-recursive tail call into a loop. The IL of round 4's `pin` (read from the Release build with `System.Reflection.Metadata`) has one
+`pinned byref uint8` local and ends its body with `br` back to offset 0000. So the one pinned slot was overwritten for each payload, and during
+`sendmsg` only the batch's last payload was pinned. A compacting gen1 collection on another thread during the call could move the others: the kernel
+read the old addresses, and once something else was allocated there, a client got the message's length of NULs and other objects' bytes. Round 5.1's
+observation 3 (the highest index reported moved was even in 34 of 38 batches) is this: the last slot, the one never reported, was the pinned one.
+
+Direct proof, with a test hook that runs a full compacting collection after the iovec table is filled and before the `sendmsg` (`SetBeforeSendmsg`,
+tests only): round 4's `Sendmsg.pin` (b6d0a9a's `Socket.fs`, the hook and two factories added so the tests compile) fails the new test with **620 of 640
+payloads moved: 20 batches of 32, every payload except the last of each batch**. The bounded contention reproducer fails it too (713 moved). In that small
+test process the client still read the right bytes, because nothing had reused the vacated memory yet; the address check is the decisive one.
+
+### The fix (54fb67f)
+
+`Sendmsg.pinFrom` pins payloads with eight `fixed` locals per stack frame and recurses for the next eight. The recursive call is followed by a check that
+reads that level's payloads (the verify switch's address check), so it is not in tail position: F# cannot make it a loop and the JIT cannot drop the
+frame. IL: eight pinned locals, `call pinFrom`, no `tail.` prefix. Every level's pins stay on the stack until `sendmsg` returns; the kernel copies TCP
+data during the call, and what a partial send leaves is copied by managed code (`FinishSend`), so nothing needs pinning after it. The scratch headers
+are on the pinned object heap. `Frame`'s constructor is now private: frames come only from `OfString`, `OfBytes` and `Concat`, which fill every byte of
+the array before the frame exists, so before anyone can publish it.
+
+A first fix (426bcef) put every payload on the pinned object heap instead, which needs no pinning at all. It was proven the same way (below) and then
+replaced because it costs memory (section "Cost"). Tests, in `tests/Campfire.Cable.Tests/TraceTests.fs`:
+
+| test | kept fix | round 4's pin | mutation of the kept fix: recursive call back in tail position | first fix with `pinned = false` |
+|---|---|---|---|---|
+| "a compacting collection just before a gathered write's sendmsg changes nothing the client reads" (Linux, ungated, 25-37 ms) | pass | fail, 620 of 640 moved | fail, 480 of 640 moved (all but the last level's eight) | fail |
+| "gathered writes keep their payloads where the kernel was told under contention with compacting collections" (`CAMPFIRE_PIN_STRESS=1`; 1,500 batches beside forced gen1 collections, bounded at 60 s) | pass (under 1 s) | fail, 713 moved | fail, 552 moved | fail, 480 moved |
+
+R5.1's reproducer never reached a verdict (22 minutes, stopped by hand): its collector forced collections back to back, which starved the writing thread.
+The new one pauses 1 ms between collections and has a 60 s ceiling; it decides in under a second.
+
+`bin/linux-tests Cable` (54fb67f, with `CAMPFIRE_PIN_STRESS=1`): 106 passed, 1 skipped, 1 failed: `pings every three seconds with a unix timestamp`, 3.39 s
+against its 3.1 s bound. It fails the same way on unchanged b6d0a9a (3.87 s) and in every full Linux run this session (3.25-3.89 s), and passes alone
+(3.09 s): it is a timing test squeezed by the parallel suite in the VM, not this change. The golden replay failed once in five full runs and passed alone and
+in the other four. macOS `dotnet test` of the Cable suite: 101 passed, 7 skipped (the Linux-only ones).
+
+### The proof on the server
+
+The R5.1 loop (`bench/cable/loop`, the raw client with its evidence on, window 128, 15 s saturated phases, the server trace OFF, the configuration in which
+every miss happened) over the fix's build, published from the clean measured worktree (`bin/publish-mounted`, 0 dirty files) and mounted over
+`campfire-oncrack:app`; the runner is `scripts/proof-r52.sh`. A target phase checks every acknowledged post against every client.
+
+| build | block | containers | environment | target phases | messages posted | not delivered to every client | clients closed | window stalls | verify reports |
+|---|---|---|---|---|---|---|---|---|---|
+| kept fix 54fb67f | a-verify-gc4mb-fresh | fresh, 500 clients | `CAMPFIRE_CABLE_VERIFY=1 DOTNET_GCgen0MaxBudget=400000` | 30 | 1,301,012 | 0 | 0 | 0 | 0 |
+| kept fix 54fb67f | b-verify-default-fresh | fresh, 500 | `CAMPFIRE_CABLE_VERIFY=1` | 30 | 1,114,259 | 0 | 0 | 0 | 0 |
+| kept fix 54fb67f | c-default-warm500 | warm, 500 | the defaults | 15 | 521,203 | 0 | 0 | 0 | (off) |
+| kept fix 54fb67f | d-default-warm1000 | warm, 1,000 | the defaults | 10 | 258,877 | 0 | 0 | 0 | (off) |
+| kept fix 54fb67f | alternation (below, "Cost"): stack1, stack2 | warm, 500 | `CAMPFIRE_MEM_LOG_MS=1000` | 20 | 734,848 | 0 | 0 | 0 | (off) |
+| first fix 426bcef | a, b, c as above, and poh1, poh2 | | | 30 + 30 + 15 + 20 | 3,558,298 | 0 | 0 | 0 | 0 in 60 |
+
+The kept fix: **105 target phases, 3,930,199 messages, about 2.1 billion deliveries, 0 not delivered to every client, 0 verify reports in 60 verify-on
+phases.** The only lines in the app's error log were 12 `WAL restart took N ms` warnings (the VM's disk, R3.4). Data: `oncrack-r5-lost-frame/data-r52/proof/`
+(the first fix's in `proof-poh/`); `python3 scripts/summarize.py data-r52/proof` prints the table.
+
+Against R5.1, same loop and settings, round 4's code: with the trace off, 11 of 190 default phases had a miss. If the rate were unchanged, 0 in 105 would have
+probability 0.2% (0.942^105). The verify switch is the sharper signal: on round 4's code it reported moved arrays in **every one of 52 fresh-container phases**
+(`c0`-`c3`, `d1`, `y2`, `y3`), with or without GC pressure. On the kept fix it reported none in 60 fresh-container phases, 30 of them at the 4 MB gen0
+budget, and the first fix none in 60 either.
+
+### Cost at 1,000 clients
+
+All at 1,000 clients, the cable suite of `bench/run` (raw client, window 128, one rep a run), arms rotated so that none always follows another, the builds
+mounted over the same image. CPU is the server's per delivery (us), Pss its memory at saturation. Data: `data-r52/{cost-poh,arms,final}`;
+`python3 scripts/arms-table.py DIR BASE` prints each round.
+
+| rotation | arms (median CPU us / msgs/s / Pss MB) | CPU against the base, median of per-round ratios |
+|---|---|---|
+| `arms`, 6 rounds | pre-fix b6d0a9a 2.42 / 1,528 / 304; pinned heap 2.33 / 1,613 / 362; **stack (the kept code) 2.33 / 1,557 / 316**; gather off 2.26 / 1,676 / 308 | stack 1.004, pinned heap 0.963, off 0.988 (each against pre-fix; rounds range 0.77-1.31) |
+| `final`, 6 rounds, the committed 54fb67f | **gather on 2.74 / 1,383 / 300**; gather off 2.29 / 1,679 / 311 | on/off 1.22 over all six; 1.01 without rounds 4 and 5 (below) |
+| `cost-poh`, 4 rounds, the first fix | round 4's image 2.12 / 1,797 / 297; pinned heap on 2.41 / 1,571 / 363; off 2.26 / 1,675 / 401 | on 1.06, off 1.11 against round 4's image (a different build: no R5.1 switches) |
+
+Rounds 4 and 5 of `final` were starved by the host: the load generator's cores fell to 1.10 and 1.55 (2.82-2.87 in the other rounds), the gather-on run of
+round 4 posted 184 msgs/s at 17.6 us a delivery, and round 5 was slow for both arms. The Mac's load average was 4-12 all afternoon, from other sessions;
+the VM reports no steal time, so a starved vCPU shows up as CPU per delivery.
+
+**The fix costs nothing measurable:** the kept code against the pre-fix code in the same rotation is 1.004 by the median of rounds, with Pss 316 MB against
+304. The first fix (payloads on the pinned object heap) was as fast but took +19% Pss (362 MB; its first rotation 357-435 MB against 293-312 for round 4's
+image): pinned-heap arrays are reclaimed only by gen2 collections (in the alternation below, its first block reported 123-203 MB of fragmentation a phase; the
+stack pin's phases 39-63 MB).
+That is why it was replaced.
+
+**Gather against copy is not separable on this host this afternoon:** off against pre-fix 0.988, on against off 1.01 without the two starved rounds, rounds
+ranging ±30%. R4.2 measured -9% to -30% CPU per delivery for gathered writes in its own session; this session neither confirms nor contradicts it. It is
+recorded as an open item: a same-process A/B with a runtime switch would settle whether gathered writes still pay for the care they need.
+
+Whether the stack pin has a pathology the heap does not (many arrays pinned when a collection lands): the alternation (`data-r52/alt`, `scripts/alt-table.py`)
+ran the two fixes by block in one session (pinned heap, stack, pinned heap, stack; 10 warm phases each at 500 clients, the GC's view logged every second).
+Median 2,604 msgs/s for the pinned heap and 2,615 for the stack pin. Phases under half the median: 3 of 20 for the pinned heap, 1 of 20 for the stack pin,
+at Mac load averages of 5.7-10.1 (`alt/hostload-mac.txt`; other phases ran normally at the same loads, so the load does not explain each one). Both fixes
+have them, the pinned heap more often, and none of R5.1's 395 overnight phases did: they come with this afternoon's host, not with the stack pin. GC pause per 15 s phase: median 398 ms for the
+stack pin, 184 ms for the pinned heap (whose first block ran a different mix, 38-46 gen2 collections a phase; its second block's first seven phases paused
+289-410 ms like the stack's). No delivery suffered in either.
+
+### R5.1's open questions, answered
+
+- **How the pin failed:** proven above (the IL, and 620 of 640 moved under the hook).
+- **v3 run03** (a verify-on phase whose client got a corrupted frame, with no verify report): not explained. Round 4's check ran in the innermost call
+  after `sendmsg` and compared every payload's address, so a move during the call should have been reported. After the fix, 0 corrupted frames and 0 verify
+  reports in 60 verify-on phases.
+- **Why the server trace hid the miss** (0 of 118): not established. The trace adds work per batch, which changes how batches line up with collections; the
+  mechanism needs a collection inside a `sendmsg` and a reuse of the vacated memory before the kernel's copy. Moot after the fix: every proof block ran with
+  the trace off, the configuration in which the misses happened.
+- **Other direct writers:** audited. In `Campfire.Cable` the only native call given managed addresses is the gathered `sendmsg`; the copy path, control
+  frames and the remainder of a partial send go through `Socket.SendAsync`, which pins its memory itself. Elsewhere in `src/`: `Sql.fs` binds text from a
+  scratch array allocated on the pinned object heap and binds blobs inside a straight-line `fixed`; `Deflater.fs` calls libdeflate inside two straight-line
+  `fixed` locals. Neither involves a tail call or a loop. Nothing else hands native code a managed address.
+- **The 4 misses without client evidence (ab3, ab4):** not re-run. They were on round 4's code, which has the defect.
+- **The generator's `drain_secs: 0.0`:** unchanged, a reporting quirk.
+
+### Can "no lost messages" be claimed?
+
+Yes, for what was measured, with its limits stated. The one way R5.1 found messages going wrong is removed. Its mechanism is proven: the IL, and 620 of 640
+moved under the hook. A test fails without the fix and passes with it, and runs in every `bin/linux-tests Cable`. After the fix the loop that found it
+saw no message missing or corrupted at any client in 105 phases (3.9 million messages to 500 or 1,000 clients each) and no moved array in 60 verify-on
+phases, under the conditions that produced the most moves before.
+
+What this does not cover: it is a statistical result for the paths the load exercises (one room, 500 or 1,000 subscribers, plain TCP, gathered writes, no
+compression on the generator's side). The fix is a pinning discipline that a future compiler change could undo; the ungated test is what guards it. One
+R5.1 miss (v3 run03) is unexplained, and nothing like it was seen in 200 phases of the two fixes. Round 4's other reliability results (cable_heavy, the
+lag cut, the hub budget) were not re-run here: cutting a slow reader stays the documented behavior (a reader that is cut is told to reconnect and refreshes
+the room), so "no lost messages" means that no message a connected subscriber should get is skipped or corrupted.
+
+### Open after R5.2
+
+- Whether gathered writes still pay (above): a same-process A/B with a runtime switch. If they do not, turning them off removes this whole class of risk.
+- `ProtocolTests` "pings every three seconds with a unix timestamp" fails in every full `bin/linux-tests Cable` run in the VM (3.25-3.89 s against a 3.1 s
+  bound, also on unchanged b6d0a9a) and passes alone: a timing bound too tight for the parallel suite. Not changed here.
+- v3 run03 (above), and why the server trace hid the miss: unexplained, moot for the fix.
+- The R5.1 reproducer's gate and the deterministic test cover `Sendmsg` on Linux only; macOS always copies.
+
+### Files (R5.2)
+
+- `src/Campfire.Cable/Socket.fs` (`Sendmsg.pinFrom`, `Frame`'s factories, `SetBeforeSendmsg`), `src/Campfire.Cable/Pubsub.fs` (`GroupBase.Frame`),
+  `tests/Campfire.Cable.Tests/TraceTests.fs` (the two tests).
+- `bench/results/oncrack-r5-lost-frame/scripts/`: `proof-r52.sh` (the proof's blocks), `cost-r52.sh` and `arms-r52.sh` (rotations), `collect-r52.sh`,
+  `arms-table.py`, `alt-table.py`; data in `bench/results/oncrack-r5-lost-frame/data-r52/` (`proof`, `proof-poh`, `cost-poh`, `arms`, `final`, `alt`).
+- The VM keeps the full evidence under `/var/tmp/r52-proof`, `r52b-proof`, `r52-cost`, `r52-arms`, `r52-final`, `r52-alt` (not committed), and the
+  mounted builds `/var/tmp/campfire-r52b` (54fb67f), `campfire-r52` (426bcef), `campfire-r52-pre` (b6d0a9a).
+
+---
+
+# R5.1 (2026-10-10/11): the hunt
+
+Written 2026-10-12 from the hunt of 2026-10-10/11 (about four hours, 395 target phases). Evidence for R5.2, which diagnosed and fixed; nothing under `src/` was
+changed in R5.1 beyond the switches below.
 
 ## Question
 

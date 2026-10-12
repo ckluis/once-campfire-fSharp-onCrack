@@ -1,0 +1,7 @@
+08:57:35 block a-verify-gc4mb-fresh start
+09:13:15 block a-verify-gc4mb-fresh end
+09:13:15 block b-verify-default-fresh start
+09:30:08 block b-verify-default-fresh end
+09:30:08 block c-default-warm500 start
+09:39:19 block c-default-warm500 end
+STOP: asked to before d-default-warm1000

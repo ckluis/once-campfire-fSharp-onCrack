@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unit R5.2's proof of the fix, inside colima, detached, run from the clean measured worktree (the checkout this script is in):
+# Unit R5.2's proof of the fix, inside colima, detached, from this checkout (its seed and load generator, as R5.1's hunt), the build measured mounted:
 #   proof-r52.sh "NAME|bench/cable/loop arguments" ...
 # Block after block, each bench/cable/loop's evidence in $OUTROOT/NAME/ (default /var/tmp/r52-proof), the onCrack build mounted from
 # $ONCRACK_MOUNT (bin/publish-mounted of the fix). Same machine settings as R5.1's hunt (scripts/block.sh). Writes $OUTROOT/proof.done at
@@ -17,7 +17,9 @@ for spec in "$@"; do
   name=${spec%%|*}; args=${spec#*|}
   free=$(df -k /var/tmp | awk 'NR==2 {printf "%d", $4/1024/1024}')
   if [ "$free" -lt 4 ]; then echo "STOP: /var/tmp has ${free} GB free before $name" >> "$OUTROOT/proof.log"; break; fi
-  [ -f "$OUTROOT/stop" ] && { echo "STOP: asked to before $name" >> "$OUTROOT/proof.log"; break; }
+  # $OUTROOT/stop pauses before the next block (a disk guard sets it under the floor and clears it after), $OUTROOT/quit ends it.
+  while [ -f "$OUTROOT/stop" ] && [ ! -f "$OUTROOT/quit" ]; do sleep 10; done
+  [ -f "$OUTROOT/quit" ] && { echo "QUIT before $name" >> "$OUTROOT/proof.log"; break; }
   echo "$(date +%T) block $name start" >> "$OUTROOT/proof.log"
   out=$OUTROOT/$name; rm -rf "$out"; mkdir -p "$out"
   eval "bench/cable/loop --out \"\$out\" $args" > "$out.log" 2>&1
