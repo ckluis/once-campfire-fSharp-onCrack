@@ -392,6 +392,10 @@ let ``total: connections that read nothing, each with 64 identifier variants of 
     Assert.True(hub.CutCount > 0L)
     // What was cut was attackers' (a reader's streams all read on, whole), and nothing else.
     let lagged = attackers |> Array.sumBy (fun subs -> subs |> Array.filter (fun s -> recv s = Error RecvStatus.Lagged) |> Array.length)
+    // Round 5 verifier: a shed the broadcasts queued on the thread pool notes its cuts when it finishes; let the last one finish.
+    let settle = Diagnostics.Stopwatch.StartNew()
+    while hub.CutCount < int64 lagged && settle.Elapsed < TimeSpan.FromSeconds 5.0 do
+        Thread.Sleep 10
     Assert.Equal(hub.CutCount, int64 lagged)
 
 [<Fact>]
@@ -420,7 +424,6 @@ let ``total: connections that read all they are sent, 64 variants each, are neve
 let ``total: the client furthest behind is cut first, in any chunk, and the others are left to read`` () =
     // Chunks of 4 frames of 1,000 bytes; the total is 100 KB.
     let hub = Hub(4)
-    hub.TotalBudget <- 100_000L
     let payload = String('x', 1000)
     let far = hub.Subscribe("a", null, Wake())
     let farB = hub.Subscribe("b", null, Wake())
@@ -436,6 +439,9 @@ let ``total: the client furthest behind is cut first, in any chunk, and the othe
     // Held: "a" from the far one's place (90 frames), "b" from the other far one's (30).
     hub.Trim()
     Assert.Equal(120_000L, hub.RetainedBytes)
+    // Round 5 verifier: the total is set only now. Set before, a broadcast or the trim over it queued the hub's own shed on the thread pool,
+    // which could take the far one out before this one looked and note the cut after the count below was read (2 runs in 20 alone).
+    hub.TotalBudget <- 100_000L
     hub.Shed()
     // Cutting the far one of "a" lets "a" go down to the middle one's 50 frames: 80 KB all told, so it stops there.
     Assert.Equal(1L, hub.CutCount)
@@ -956,7 +962,8 @@ let ``verifier: a reader crossing from one chunk into the next never reads to th
     let mutable over = 0
     let mutable worst = 0L
     try
-        while clock.Elapsed < TimeSpan.FromSeconds 3.0 && failure.Value = "" do
+        // One second: round 5's two-step crossing was misread 1,700 to 41,000 times a second (Linux, macOS); longer only squeezes the suite's timing tests.
+        while clock.Elapsed < TimeSpan.FromSeconds 1.0 && failure.Value = "" do
             hub.Broadcast("room", payload) |> ignore
             published <- published + 1
             let mutable c = Volatile.Read(&consumed.contents)
@@ -979,5 +986,5 @@ let ``verifier: a reader crossing from one chunk into the next never reads to th
         Volatile.Write(&stop.contents, true)
         thread.Join()
     Assert.Equal("", failure.Value)
-    Assert.True(published > 10_000, $"published {published}")
+    Assert.True(published > 3_000, $"published {published}")
     Assert.True((over = 0), $"{over} of {looks} looks over {published} crossings measured the reader as further behind than it was (by up to {worst} bytes)")

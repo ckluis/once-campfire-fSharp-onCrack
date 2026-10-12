@@ -386,29 +386,35 @@ let ``clients with 64 identifier variants that read nothing are cut at the hub's
             (reader :> IDisposable).Dispose()
         })
 
-[<Fact>]
-let ``pings every three seconds with a unix timestamp`` () =
-    withServer testConfig (fun app ->
-        task {
-            let! client = connect app 1UL
-            do! expectText Welcome client
-            let started = Stopwatch.StartNew()
-            let! got = client.NextIncludingPings()
-            let ping =
-                match got with
-                | Said ping -> ping
-                | other -> failwith $"expected a ping, got {other}"
-            Assert.True(started.Elapsed <= TimeSpan.FromMilliseconds 3100.0, $"{started.Elapsed}")
-            match Json.parse (Text.Encoding.UTF8.GetBytes ping) with
-            | Some(Value.Object entries) ->
-                eq [ "type"; "message" ] (entries |> List.map fst)
-                eq (str "ping") (entries |> List.find (fun (k, _) -> k = "type") |> snd)
-                let now = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-                match entries |> List.find (fun (k, _) -> k = "message") |> snd with
-                | Value.Int sent -> Assert.True(abs (sent - now) <= 1L)
-                | other -> failwith $"{other}"
-            | _ -> failwith ping
-        })
+/// Round 5 verifier: a timing test (the first ping within 3.1 s of the welcome, against a 3 s timer) runs where nothing else does, in the
+/// fan-out tests' collection. In the parallel suite its 100 ms of slack went to whatever happened to run beside it: on macOS it failed 0 of 8
+/// runs with one build of the other tests and 4 of 8 with another whose CPU was the same but whose schedule packed tighter, and every full
+/// Linux run of round 5.2. It still checks the same bound.
+[<Xunit.Collection("fan-out")>]
+module Heartbeat =
+    [<Fact>]
+    let ``pings every three seconds with a unix timestamp`` () =
+        withServer testConfig (fun app ->
+            task {
+                let! client = connect app 1UL
+                do! expectText Welcome client
+                let started = Stopwatch.StartNew()
+                let! got = client.NextIncludingPings()
+                let ping =
+                    match got with
+                    | Said ping -> ping
+                    | other -> failwith $"expected a ping, got {other}"
+                Assert.True(started.Elapsed <= TimeSpan.FromMilliseconds 3100.0, $"{started.Elapsed}")
+                match Json.parse (Text.Encoding.UTF8.GetBytes ping) with
+                | Some(Value.Object entries) ->
+                    eq [ "type"; "message" ] (entries |> List.map fst)
+                    eq (str "ping") (entries |> List.find (fun (k, _) -> k = "type") |> snd)
+                    let now = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                    match entries |> List.find (fun (k, _) -> k = "message") |> snd with
+                    | Value.Int sent -> Assert.True(abs (sent - now) <= 1L)
+                    | other -> failwith $"{other}"
+                | _ -> failwith ping
+            })
 
 [<Fact>]
 let ``turbo streams channel verifies and guards stream names`` () =
