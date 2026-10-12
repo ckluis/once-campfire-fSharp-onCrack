@@ -17,7 +17,7 @@ and pieces of other heap objects instead of the message. The only path that hand
 where the kernel was told when `sendmsg` returns, although each is held by a `fixed` local. That reporting never happens with
 `CAMPFIRE_CABLE_GATHER=off` or `CAMPFIRE_CABLE_DIRECT=off`, and no miss has happened with either off, with the F# port or with Rust. What
 is not closed: one verify-on miss (v3 run03) had no verify report in its phase, and nothing has yet shown the exact way the pin fails
-(section "Mechanism"). The F# fix belongs to the next unit; the reproducer for it is `TraceTests.fs` (section "Reproducer").
+(section "Mechanism"). The F# fix belongs to the next unit; the reproducer for it is `TraceTests.fs` (section "Reproducer": it has not yet produced a verdict).
 
 ## What was added (all off by default, committed d8fdaf4..0eaed8f)
 
@@ -128,7 +128,10 @@ with a fresh container is the verify reports of moves.
 
 `LINUX_TESTS_ENV=CAMPFIRE_PIN_STRESS=1 bin/linux-tests Cable --filter-method "*gathered writes keep*"` (from
 `tests/Campfire.Cable.Tests/TraceTests.fs`, commit 0a792aa): 4,000 gathered writes of 32 frames of 10 KB each while another thread forces
-compacting collections; it fails with the count of arrays not where the kernel was told. RESULT_PLACEHOLDER
+compacting collections; it fails with the count of arrays not where the kernel was told. **It has not been run to a verdict.** The committed test was started once for this report
+(2026-10-12 08:02, the build took about 2 minutes) and was stopped by hand after 22 minutes of test time at 100% of one core, with no result:
+the tight forced-GC loop beside 4,000 writes of 320 KB may simply be too slow, or it hangs. It needs a smaller loop (fewer iterations, a pause
+between collections) and a timeout before it can decide anything; that is the first job of the next unit, ahead of any change to `Sendmsg.pin`.
 
 ## What is still unknown
 
