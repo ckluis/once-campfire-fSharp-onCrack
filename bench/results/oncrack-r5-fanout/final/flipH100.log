@@ -1,0 +1,27 @@
+[15:54:55] load before run: 1.39 1.56 1.59 (waited 20s)
+[15:54:58] host probe before run: {"spin_ms": 59.59, "spin_ms_max_cpu": 61.8, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.072} (waited 20s)
+[15:55:57] load before run: 1.37 1.59 1.60 (waited 40s)
+[15:56:00] host probe before run: {"spin_ms": 61.18, "spin_ms_max_cpu": 64.88, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.101} (waited 40s)
+h1000 #1                     ready   100 failed 0    5747.0 msgs/s  server 3.01 cores  5.15 us/del  loadgen 1.53 cores  2.66 us/del  paced p50 1.775 p99 5.487  sat p99 4.423
+    host 1.101 1.057
+[15:56:30] load before run: 1.27 1.55 1.59 (waited 10s)
+[15:56:33] host probe before run: {"spin_ms": 61.33, "spin_ms_max_cpu": 67.27, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.104} (waited 10s)
+h3000 #1                     ready   100 failed 0    5394.8 msgs/s  server 2.84 cores  5.34 us/del  loadgen 1.40 cores  2.60 us/del  paced p50 4.199 p99 8.447  sat p99 5.959
+    host 1.104 1.098
+[15:57:14] load before run: 1.30 1.54 1.59 (waited 20s)
+[15:57:16] host probe before run: {"spin_ms": 62.9, "spin_ms_max_cpu": 66.68, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.132} (waited 20s)
+h3000 #2                     ready   100 failed 0    3032.0 msgs/s  server 1.90 cores  6.11 us/del  loadgen 0.84 cores  2.76 us/del  paced p50 1.663 p99 186.751  sat p99 5.671
+    host 1.132 1.092
+[15:57:57] load before run: 1.30 1.54 1.58 (waited 20s)
+[15:58:00] host probe before run: {"spin_ms": 59.58, "spin_ms_max_cpu": 61.98, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.072} (waited 20s)
+h1000 #2                     ready   100 failed 0    6369.4 msgs/s  server 2.95 cores  4.71 us/del  loadgen 1.56 cores  2.45 us/del  paced p50 2.201 p99 6.823  sat p99 4.001
+    host 1.072 1.083
+[15:58:31] load before run: 1.35 1.53 1.58 (waited 10s)
+[15:58:33] host probe before run: {"spin_ms": 58.91, "spin_ms_max_cpu": 64.97, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.06} (waited 10s)
+h1000 #3                     ready   100 failed 0    6222.8 msgs/s  server 3.00 cores  4.88 us/del  loadgen 1.57 cores  2.52 us/del  paced p50 2.679 p99 5.927  sat p99 3.803
+    host 1.06 1.04
+[15:59:04] load before run: 1.46 1.55 1.58 (waited 10s)
+[15:59:06] host probe before run: {"spin_ms": 59.64, "spin_ms_max_cpu": 62.76, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.073} (waited 10s)
+h3000 #3                     ready   100 failed 0    3867.1 msgs/s  server 2.71 cores  7.15 us/del  loadgen 1.17 cores  3.03 us/del  paced p50 1.697 p99 4.991  sat p99 11.791
+    host 1.073 1.128
+-> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-fanout/final/flipH100

@@ -1,0 +1,143 @@
+samples 30623
+
+threads (comm):
+   94.9%  .NET
+    4.6%  campfire-db-wri
+    0.4%  campfire-db-che
+    0.1%  request-log
+    0.0%  Kestrel
+
+layers (inclusive; a sample can be in several):
+   74.0%  cable: Campfire.Cable
+    9.2%  Kestrel transport (sockets, IOQueue, SocketSender)
+    1.4%  Kestrel pipes and upgraded stream
+   84.3%  thread pool dispatch
+   88.1%  posting (app: messages#create, render, db)
+    2.5%  GC
+   62.1%  kernel TCP send
+    0.2%  kernel TCP recv/epoll
+    7.4%  futex/scheduler
+
+self:
+   18.5%  __arch_copy_from_user
+    4.2%  __pi_clear_page
+    2.5%  _raw_spin_unlock_irqrestore
+    2.1%  instance valuetype Campfire.Cable.Connection/Drained [Campfire.Cable] Campfire.Cable.Connection+Merge::Drain
+    1.7%  arch_counter_get_cntvct
+    1.6%  arch_local_irq_restore
+    1.6%  try_charge_memcg
+    1.5%  stub InitThreadManagerPerfMapData<JIT_CopiedWriteBarriers>
+    1.5%  page_counter_try_charge
+    1.2%  instance valuetype [System.Runtime]System.Threading.Tasks.ValueTask [Campfire.Cable] Campfire.Cable.Socket+Writer::SendGather
+    1.0%  __local_bh_enable_ip
+    1.0%  instance valuetype Campfire.Cable.RecvStatus [Campfire.Cable] Campfire.Cable.LogGroup::TryPeek
+    1.0%  arch_local_irq_save
+    0.9%  _raw_spin_lock_irqsave
+    0.8%  __syscall_cancel_arch
+    0.8%  memset
+    0.8%  free_unref_page_prepare
+    0.8%  handle_softirqs
+    0.7%  __wake_up_sync_key
+    0.7%  instance int32 [Campfire.Cable] Campfire.Cable.LogGroup::Publish
+    0.7%  __arch_copy_to_user
+    0.7%  tcp_in_window
+    0.7%  tcp_v4_rcv
+    0.6%  instance void [Campfire.Cable] Campfire.Cable.Connection+run@404[System.__Canon]::MoveNext
+    0.6%  skb_release_data
+    0.6%  net_rx_action
+    0.6%  __mod_timer
+    0.6%  SVR::gc_heap::background_mark_simple1
+    0.6%  sqlite3VdbeExec
+    0.6%  _copy_from_iter
+    0.6%  _dl_tlsdesc_dynamic
+    0.6%  tcp_sendmsg_locked
+    0.6%  copy_iovec_from_user
+    0.5%  uaccess_ttbr0_disable.isra.0
+    0.5%  mem_cgroup_charge_skmem
+    0.5%  ObjHeader::EnterObjMonitorHelper
+    0.5%  stub ReportStubBlock<MethodCallThunk>
+    0.5%  rmqueue_bulk
+    0.5%  [unknown]
+    0.5%  uaccess_ttbr0_enable.isra.0
+    0.5%  valuetype [System.Runtime]System.ValueTuple`2<int64,int32> [Campfire.Cable] Campfire.Cable.Socket+Sendmsg::pinFrom
+    0.5%  __nf_conntrack_find_get
+    0.4%  el0_svc
+    0.4%  __rmqueue_pcplist
+    0.4%  aa_dfa_match_len
+    0.4%  instance void [campfire] Campfire.App.Channels.Broadcasts::UnreadRoomTo
+    0.4%  __sk_mem_raise_allocated
+    0.4%  prep_compound_page
+    0.4%  __update_cpu_freelist_fast
+    0.4%  void [System.Private.CoreLib] System.SpanHelpers::Memmove
+    0.4%  nf_conntrack_tcp_packet
+    0.3%  stub ReportStubBlock<VSD_DispatchStub>
+    0.3%  kmem_cache_alloc_node
+    0.3%  instance void [Campfire.Cable] Campfire.Cable.Wake::Set
+    0.3%  nf_nat_inet_fn
+    0.3%  nft_do_chain
+    0.3%  __zone_watermark_ok
+    0.3%  _raw_spin_lock_irq
+    0.2%  free_tail_page_prepare
+    0.2%  __import_iovec
+
+inclusive:
+   99.5%  CorUnix::CPalThread::ThreadEntry
+   99.5%  start_thread
+   99.5%  thread_start
+   98.2%  [unknown]
+   98.1%  CallDescrWorkerInternal
+   98.1%  ManagedThreadBase::KickOff
+   98.1%  DispatchCallSimple
+   98.1%  KickOffThread_Worker
+   98.1%  KickOffThread
+   84.3%  bool [System.Private.CoreLib] System.Threading.ThreadPoolWorkQueue::Dispatch
+   81.3%  void [System.Private.CoreLib] System.Threading.ExecutionContext::RunFromThreadPoolDispatchLoop
+   71.5%  instance void [System.Private.CoreLib] System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.__Canon,Campfire.Cable.Connection+
+   71.0%  instance void [Campfire.Cable] Campfire.Cable.Connection+run@404[System.__Canon]::MoveNext
+   66.8%  el0t_64_sync_handler
+   66.8%  el0t_64_sync
+   66.8%  el0_svc
+   66.5%  __syscall_cancel
+   66.5%  __internal_syscall_cancel
+   66.4%  __syscall_cancel_arch
+   66.2%  do_el0_svc
+   66.2%  el0_svc_common.constprop.0
+   65.7%  invoke_syscall
+   65.1%  instance valuetype [System.Runtime]System.Threading.Tasks.ValueTask [Campfire.Cable] Campfire.Cable.Socket+Writer::SendGather
+   63.6%  valuetype [System.Runtime]System.ValueTuple`2<int64,int32> [Campfire.Cable] Campfire.Cable.Socket+Sendmsg::pinFrom
+   63.1%  valuetype [System.Runtime]System.ValueTuple`2<int64,int32> [Campfire.Cable] Campfire.Cable.Socket+Sendmsg::call
+   63.1%  native int [Campfire.Kit] dynamicClass::IL_STUB_PInvoke
+   62.0%  __arm64_sys_sendmsg
+   61.9%  __sys_sendmsg
+   61.7%  ___sys_sendmsg
+   59.8%  ____sys_sendmsg
+   59.7%  __sock_sendmsg
+   57.8%  inet6_sendmsg
+   57.7%  tcp_sendmsg
+   57.2%  tcp_sendmsg_locked
+   23.9%  tcp_write_xmit
+   22.3%  __tcp_transmit_skb
+   21.8%  ip_queue_xmit
+   21.7%  __ip_queue_xmit
+   20.7%  void [System.Private.CoreLib] System.Threading.ExecutionContext::RunInternal
+   19.7%  skb_do_copy_data_nocache
+   18.8%  __arch_copy_from_user
+   18.7%  ip_output
+   18.4%  ip_finish_output
+   18.3%  __ip_finish_output
+   18.2%  void [System.Private.CoreLib] System.Runtime.CompilerServices.AsyncMethodBuilderCore::Start
+   18.2%  ip_finish_output2
+   18.1%  neigh_hh_output
+   18.0%  __dev_queue_xmit
+   17.9%  __do_softirq
+   17.9%  ____do_softirq
+   17.9%  call_on_irq_stack
+   17.9%  do_softirq_own_stack
+   17.6%  handle_softirqs
+   17.5%  __local_bh_enable_ip
+   16.6%  net_rx_action
+   16.4%  do_softirq
+   14.7%  instance void [Campfire.Kit] <StartupCode$Campfire-Kit>.$Actions+Bind@29[System.__Canon,System.__Canon]::MoveNext
+   13.0%  __napi_poll
+   12.7%  instance class [System.Runtime]System.Threading.Tasks.Task`1<valuetype [FSharp.Core]Microsoft.FSharp.Core.FSharpResult`2<!!0,class Campfire.Db.DbError>> [Campfi
+   12.7%  process_backlog

@@ -1,0 +1,34 @@
+
+== 1000 clients ==
+round    arm          msgs/s cpu us/del srv cores lg cores  Pss MB  VM load b/a valid
+ab1r1    default      1290.3       2.90      3.74     2.60   291.8    0.00/2.93 yes
+ab1r1    ring         1461.0       2.58      3.77     2.83   279.2    1.27/3.54 yes
+ab1r1    stream       1413.8       2.68      3.79     2.77   295.8    1.30/3.57 yes
+ab1r2    default      1466.0       2.58      3.78     2.79   297.4    1.30/3.46 yes
+ab1r2    ring         1566.3       2.42      3.74     2.84   297.0    1.31/4.12 yes
+ab1r2    stream       1607.5       2.36      3.74     2.82   294.2    1.28/4.19 yes
+ab1r3    default      1229.7       2.95      3.65     2.51   300.6    1.27/3.69 yes
+ab1r3    ring         1490.2       2.49      3.73     2.75   299.6    1.35/3.90 yes
+ab1r3    stream       1484.8       2.52      3.75     2.72   300.6    1.27/3.47 yes
+default    median msgs/s    1290 [1230-1466]  CPU/del 2.90 [2.58-2.95]  Pss 297
+ring       median msgs/s    1490 [1461-1566]  CPU/del 2.49 [2.42-2.58]  Pss 297
+stream     median msgs/s    1485 [1414-1608]  CPU/del 2.52 [2.36-2.68]  Pss 296
+ring/default per round: msgs/s 1.132 1.068 1.212 | median 1.132;  CPU/del 0.892 0.940 0.845 | median 0.892
+stream/default per round: msgs/s 1.096 1.097 1.207 | median 1.097;  CPU/del 0.924 0.916 0.854 | median 0.916
+
+== 2000 clients ==
+round    arm          msgs/s cpu us/del srv cores lg cores  Pss MB  VM load b/a valid
+ab1r1    default       869.9       2.21      3.84     2.87   351.4    0.00/2.93 yes
+ab1r1    ring          848.2       2.24      3.86     2.91   333.0    1.27/3.54 yes
+ab1r1    stream        808.9       2.32      3.70     2.79   377.2    1.30/3.57 yes
+ab1r2    default       795.1       2.35      3.73     2.77   352.7    1.30/3.46 yes
+ab1r2    ring          831.5       2.26      3.75     2.72   341.6    1.31/4.12 yes
+ab1r2    stream        876.3       2.12      3.68     2.82   378.2    1.28/4.19 yes
+ab1r3    default       775.7       2.42      3.80     2.77   389.3    1.27/3.69 yes
+ab1r3    ring          736.2       2.54      3.78     2.68   378.7    1.35/3.90 yes
+ab1r3    stream        772.8       2.40      3.72     2.75   397.2    1.27/3.47 yes
+default    median msgs/s     795 [776-870]  CPU/del 2.35 [2.21-2.42]  Pss 353
+ring       median msgs/s     832 [736-848]  CPU/del 2.26 [2.24-2.54]  Pss 342
+stream     median msgs/s     809 [773-876]  CPU/del 2.32 [2.12-2.40]  Pss 378
+ring/default per round: msgs/s 0.975 1.046 0.949 | median 0.975;  CPU/del 1.017 0.963 1.048 | median 1.017
+stream/default per round: msgs/s 0.930 1.102 0.996 | median 0.996;  CPU/del 1.049 0.901 0.989 | median 0.989

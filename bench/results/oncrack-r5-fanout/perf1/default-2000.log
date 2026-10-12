@@ -1,0 +1,59 @@
+[13:45:57] load before run: 1.31 2.01 1.83 (waited 0s)
+[13:46:01] host busy: {"spin_ms": 77.68, "spin_ms_max_cpu": 88.16, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.398}
+[13:46:14] host busy: {"spin_ms": 75.36, "spin_ms_max_cpu": 85.93, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.356}
+[13:46:27] host busy: {"spin_ms": 66.03, "spin_ms_max_cpu": 72.94, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.188}
+[13:46:40] host busy: {"spin_ms": 68.6, "spin_ms_max_cpu": 72.41, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.235}
+[13:46:59] host busy: {"spin_ms": 63.91, "spin_ms_max_cpu": 596.17, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.15}
+[13:47:14] host busy: {"spin_ms": 84.61, "spin_ms_max_cpu": 386.1, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.523}
+[13:47:30] host busy: {"spin_ms": 98.84, "spin_ms_max_cpu": 258.36, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.779}
+[13:47:42] host probe before run: {"spin_ms": 61.03, "spin_ms_max_cpu": 65.27, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.098} (waited 70s)
+[13:48:31] oncrack 2000 clients: 968.0 msgs/s delivered to all, 969.1 posts/s
+syscalls over 3 s of the saturated phase, per delivered marked frame (1,935,940/s):
+  syscalls:sys_enter_sendto                         160/s   0.000 per delivery
+  syscalls:sys_enter_sendmsg                    163,377/s   0.084 per delivery
+  syscalls:sys_enter_write                          131/s   0.000 per delivery
+  syscalls:sys_enter_writev                           0/s   0.000 per delivery
+  syscalls:sys_enter_futex                        9,005/s   0.005 per delivery
+  syscalls:sys_enter_epoll_pwait                  1,018/s   0.001 per delivery
+  context-switches                                7,892/s   0.004 per delivery
+samples 30330
+
+threads (comm):
+   96.9%  .NET
+    2.7%  campfire-db-wri
+    0.2%  campfire-db-che
+    0.1%  request-log
+    0.1%  Kestrel
+
+layers (inclusive; a sample can be in several):
+   84.9%  cable: Campfire.Cable
+    5.2%  Kestrel transport (sockets, IOQueue, SocketSender)
+    0.9%  Kestrel pipes and upgraded stream
+   90.8%  thread pool dispatch
+   89.2%  posting (app: messages#create, render, db)
+    1.7%  GC
+   72.5%  kernel TCP send
+    0.1%  kernel TCP recv/epoll
+    8.4%  futex/scheduler
+
+self:
+   23.4%  __arch_copy_from_user
+    5.4%  __pi_clear_page
+    2.1%  page_counter_try_charge
+    2.0%  instance valuetype Campfire.Cable.Connection/Drained [Campfire.Cable] Campfire.Cable.Connection+Merge::Drain
+    1.8%  arch_counter_get_cntvct
+    1.8%  _raw_spin_unlock_irqrestore
+    1.8%  try_charge_memcg
+    1.5%  arch_local_irq_restore
+    1.4%  instance valuetype [System.Runtime]System.Threading.Tasks.ValueTask [Campfire.Cable] Campfire.Cable.Socket+Writer::SendGather
+    1.4%  stub InitThreadManagerPerfMapData<JIT_CopiedWriteBarriers>
+    1.1%  _raw_spin_lock_irqsave
+    1.1%  __local_bh_enable_ip
+    1.0%  arch_local_irq_save
+    1.0%  instance valuetype Campfire.Cable.RecvStatus [Campfire.Cable] Campfire.Cable.LogGroup::TryPeek
+    1.0%  free_unref_page_prepare
+    0.8%  instance int32 [Campfire.Cable] Campfire.Cable.LogGroup::Publish
+    0.8%  memset
+    0.8%  __syscall_cancel_arch
+    0.7%  __mod_timer
+-> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-fanout/perf1/default-2000/perf-oncrack-2000.txt

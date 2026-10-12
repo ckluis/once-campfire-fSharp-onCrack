@@ -1,0 +1,5 @@
+[13:58:25] load before run: 1.35 1.38 1.52 (waited 40s)
+[13:58:28] host busy: {"spin_ms": 72.65, "spin_ms_max_cpu": 81.23, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.307}
+[13:58:41] host busy: {"spin_ms": 61.42, "spin_ms_max_cpu": 65.43, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.105}
+[13:58:54] host probe before run: {"spin_ms": 60.27, "spin_ms_max_cpu": 68.53, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.085} (waited 60s)
+1000 clients 1495 msgs/s: sendmsg/delivery 0.1224  segments/delivery 0.3410  octets/delivery 11120  octets/segment 32610

@@ -1,0 +1,152 @@
+# host load during ab1 (ps -A, non-VM processes: top 4 by %CPU and the sum of all, every 10 s; loadavg)
+# quiet after 0s; session starts
+13:22:15 load  19.86 14.63 13.93  | sum 668 | 162.8 beam.smp, 129.8 beam.smp, 129.0 beam.smp, 96.0 beam.smp, 
+# mac_free_gib=22.5
+13:22:25 load  18.46 14.51 13.89  | sum 124 | 44.5 fseventsd, 14.6 cmux, 9.6 Finder, 8.4 WindowServer, 
+13:22:35 load  16.01 14.12 13.76  | sum 602 | 145.2 beam.smp, 144.4 beam.smp, 143.8 beam.smp, 72.9 fseventsd, 
+13:22:45 load  14.81 13.93 13.69  | sum 588 | 230.2 fseventsd, 64.8 mds_stores, 64.0 cp, 63.8 Finder, 
+# mac_free_gib=22.5
+13:22:55 load  13.95 13.78 13.65  | sum 57 | 12.9 bash, 12.7 fseventsd, 8.7 WindowServer, 5.2 WallpaperAerialsExtension, 
+13:23:05 load  13.54 13.70 13.62  | sum 569 | 189.9 beam.smp, 142.2 beam.smp, 110.8 beam.smp, 32.6 postgres:, 
+13:23:15 load  13.91 13.78 13.65  | sum 253 | 82.2 beam.smp, 64.3 beam.smp, 14.3 beam.smp, 13.2 postgres:, 
+# mac_free_gib=22.5
+13:23:26 load  13.73 13.75 13.64  | sum 653 | 163.6 beam.smp, 138.9 beam.smp, 133.5 beam.smp, 88.4 beam.smp, 
+13:23:36 load  13.30 13.66 13.61  | sum 102 | 36.5 mediaanalysisd, 14.3 zicht.test, 14.0 bash, 10.1 WindowServer, 
+13:23:46 load  14.31 13.85 13.68  | sum 219 | 89.8 beam.smp, 85.7 beam.smp, 10.4 WindowServer, 6.7 bash, 
+# mac_free_gib=22.5
+13:23:57 load  13.90 13.78 13.65  | sum 458 | 125.1 fseventsd, 88.0 beam.smp, 64.3 cp, 62.5 go, 
+13:24:07 load  12.67 13.52 13.56  | sum 470 | 351.6 (compile), 66.6 beam.smp, 29.2 go, 7.7 WindowServer, 
+13:24:17 load  11.58 13.25 13.47  | sum 282 | 155.8 beam.smp, 16.3 bash, 11.1 mdworker_shared, 10.5 mdworker_shared, 
+# mac_free_gib=22.3
+13:24:27 load  10.73 13.02 13.38  | sum 648 | 98.9 go, 68.4 beam.smp, 55.4 kasboek.test, 52.6 beam.smp, 
+13:24:37 load  12.82 13.39 13.51  | sum 433 | 105.6 beam.smp, 69.8 fseventsd, 55.2 kasboek.test, 48.7 postgres:, 
+13:24:47 load  14.88 13.83 13.66  | sum 294 | 129.3 beam.smp, 58.8 kasboek.test, 30.6 fseventsd, 20.1 postgres:, 
+# mac_free_gib=22.1
+13:24:58 load  13.20 13.51 13.55  | sum 533 | 194.5 fseventsd, 67.2 Finder, 48.8 cp, 48.4 cp, 
+13:25:08 load  11.84 13.21 13.44  | sum 235 | 69.3 fseventsd, 58.5 (beam.smp), 21.6 Finder, 15.6 kasboek.test, 
+13:25:18 load  10.40 12.86 13.32  | sum 213 | 78.5 fseventsd, 40.9 beam.smp, 39.9 Finder, 11.9 mds, 
+# mac_free_gib=22.1
+13:25:28 load  11.91 13.11 13.40  | sum 119 | 37.6 launchd, 12.3 bash, 12.1 bash, 11.1 bash, 
+13:25:38 load  11.45 12.97 13.35  | sum 908 | 617.9 beam.smp, 112.3 beam.smp, 105.0 beam.smp, 13.7 postgres:, 
+13:25:48 load  13.97 13.45 13.51  | sum 371 | 151.6 beam.smp, 65.5 beam.smp, 57.4 donotdisturbd, 17.8 beam.smp, 
+# mac_free_gib=22.2
+13:25:59 load  16.51 14.01 13.71  | sum 875 | 637.6 beam.smp, 102.8 beam.smp, 55.1 beam.smp, 20.0 fseventsd, 
+13:26:09 load  15.63 13.91 13.68  | sum 159 | 112.2 beam.smp, 8.3 fseventsd, 5.5 postgres:, 3.8 postgres:, 
+13:26:19 load  13.68 13.55 13.55  | sum 227 | 92.5 beam.smp, 48.6 fseventsd, 34.1 beam.smp, 17.6 zwerm.test, 
+# mac_free_gib=22.2
+13:26:29 load  12.34 13.27 13.45  | sum 486 | 174.7 fseventsd, 89.0 beam.smp, 73.6 Finder, 63.9 cp, 
+13:26:39 load  10.82 12.91 13.32  | sum 130 | 42.2 com.apple.WebKit.WebContent, 14.3 bash, 13.8 bash, 13.5 bash, 
+13:26:49 load  12.93 13.25 13.43  | sum 569 | 220.5 beam.smp, 166.6 beam.smp, 94.9 beam.smp, 39.6 beam.smp, 
+# mac_free_gib=22.2
+13:27:00 load  14.05 13.49 13.52  | sum 470 | 259.3 beam.smp, 61.0 beam.smp, 60.6 beam.smp, 23.4 postgres:, 
+13:27:10 load  12.50 13.17 13.40  | sum 179 | 145.2 go, 11.2 fseventsd, 10.3 bash, 2.9 syspolicyd, 
+13:27:20 load  11.33 12.90 13.31  | sum 277 | 101.0 beam.smp, 91.1 beam.smp, 27.0 fseventsd, 19.4 cmux, 
+# mac_free_gib=22.0
+13:27:30 load  11.61 12.91 13.30  | sum 487 | 162.0 fseventsd, 154.8 beam.smp, 79.1 Finder, 34.2 beam.smp, 
+13:27:40 load  10.53 12.63 13.20  | sum 513 | 195.3 beam.smp, 117.2 go, 79.8 beam.smp, 36.4 postgres:, 
+13:27:50 load  11.95 12.86 13.27  | sum 380 | 113.9 (beam.smp), 85.9 beam.smp, 69.9 beam.smp, 51.3 beam.smp, 
+# mac_free_gib=21.8
+13:28:01 load  12.34 12.91 13.29  | sum 218 | 70.7 go, 41.2 beam.smp, 24.0 compile, 9.0 beam.smp, 
+13:28:11 load  14.96 13.46 13.47  | sum 563 | 207.5 beam.smp, 192.2 beam.smp, 109.3 beam.smp, 3.6 postgres:, 
+13:28:21 load  13.60 13.21 13.39  | sum 35 | 16.0 bash, 4.7 claude, 4.1 kasboek.test, 3.6 postgres:, 
+# mac_free_gib=21.8
+13:28:31 load  13.77 13.25 13.40  | sum 667 | 306.1 fseventsd, 80.1 cp, 78.5 Finder, 60.9 cp, 
+13:28:41 load  11.96 12.88 13.27  | sum 618 | 321.3 fseventsd, 85.9 Finder, 76.1 cp, 64.0 cp, 
+13:28:51 load  13.37 13.15 13.36  | sum 260 | 67.8 fseventsd, 34.5 postgres:, 19.6 kasboek, 18.5 web.test, 
+# mac_free_gib=21.5
+13:29:02 load  13.35 13.15 13.35  | sum 311 | 134.1 beam.smp, 44.1 fseventsd, 23.8 postgres:, 12.8 (postgres), 
+13:29:12 load  13.38 13.16 13.35  | sum 618 | 113.6 beam.smp, 93.1 beam.smp, 91.7 beam.smp, 77.0 beam.smp, 
+13:29:22 load  14.54 13.42 13.44  | sum 454 | 145.7 beam.smp, 98.9 beam.smp, 88.5 beam.smp, 29.6 kasboek.test, 
+# mac_free_gib=21.7
+13:29:32 load  15.97 13.76 13.56  | sum 349 | 116.6 beam.smp, 105.3 beam.smp, 25.7 fseventsd, 15.9 kasboek.test, 
+13:29:42 load  14.06 13.42 13.45  | sum 214 | 95.2 fseventsd, 40.9 rm, 25.9 Finder, 16.1 mds_stores, 
+13:29:52 load  12.43 13.10 13.33  | sum 203 | 84.0 beam.smp, 79.5 cmux, 12.5 fseventsd, 5.7 com.apple.DriverKit-AppleBCMWLAN, 
+# mac_free_gib=21.8
+13:30:02 load  11.14 12.80 13.22  | sum 61 | 15.0 bash, 14.1 werk.test, 13.0 bash, 5.6 fseventsd, 
+13:30:12 load  11.01 12.71 13.18  | sum 239 | 129.5 beam.smp, 40.3 beam.smp, 13.8 postgres:, 6.9 fseventsd, 
+13:30:23 load  12.41 12.95 13.26  | sum 441 | 140.7 beam.smp, 129.5 beam.smp, 88.8 com.apple.WebKit.WebContent, 23.9 fseventsd, 
+# mac_free_gib=21.7
+13:30:33 load  10.89 12.60 13.14  | sum 127 | 94.0 beam.smp, 17.9 claude, 3.9 opencode, 3.7 claude, 
+13:30:43 load  11.34 12.65 13.15  | sum 144 | 101.3 beam.smp, 30.5 spoor.test, 2.0 fseventsd, 1.4 claude, 
+13:30:53 load  10.81 12.49 13.08  | sum 736 | 278.6 fseventsd, 94.4 Finder, 84.0 (cp), 83.3 cp, 
+# mac_free_gib=21.8
+13:31:03 load  11.84 12.66 13.14  | sum 303 | 77.3 fseventsd, 73.3 (beam.smp), 68.7 beam.smp, 30.2 Finder, 
+13:31:13 load  11.77 12.60 13.11  | sum 499 | 156.1 beam.smp, 155.9 beam.smp, 66.2 com.apple.WebKit.WebContent, 40.0 fseventsd, 
+13:31:23 load  11.23 12.47 13.06  | sum 422 | 99.7 beam.smp, 97.7 beam.smp, 66.4 kasboek, 29.8 com.apple.WebKit.WebContent, 
+# mac_free_gib=21.5
+13:31:34 load  12.59 12.70 13.13  | sum 688 | 191.6 beam.smp, 176.1 beam.smp, 141.3 beam.smp, 130.3 beam.smp, 
+13:31:44 load  11.50 12.47 13.04  | sum 766 | 542.7 beam.smp, 107.0 beam.smp, 95.2 beam.smp, 2.6 mdworker_shared, 
+13:31:54 load  10.99 12.33 12.99  | sum 38 | 15.0 bash, 10.7 com.apple.WebKit.WebContent, 4.1 syspolicyd, 2.5 claude, 
+# mac_free_gib=21.5
+13:32:04 load  11.07 12.30 12.97  | sum 545 | 189.7 fseventsd, 59.2 Finder, 54.8 beam.smp, 52.1 cp, 
+13:32:14 load  12.58 12.60 13.07  | sum 563 | 99.6 fseventsd, 98.2 beam.smp, 68.9 kasboek.test, 57.0 beam.smp, 
+13:32:24 load  15.94 13.34 13.32  | sum 281 | 134.0 beam.smp, 34.2 kasboek.test, 23.1 postgres:, 22.0 fseventsd, 
+# mac_free_gib=21.3
+13:32:35 load  14.03 13.01 13.21  | sum 418 | 101.1 beam.smp, 84.1 kasboek.test, 64.0 beam.smp, 42.4 fseventsd, 
+13:32:45 load  13.92 13.03 13.21  | sum 685 | 144.6 beam.smp, 134.9 beam.smp, 120.3 beam.smp, 100.8 beam.smp, 
+13:32:55 load  15.00 13.32 13.31  | sum 344 | 126.4 beam.smp, 82.6 beam.smp, 24.1 postgres:, 22.1 fseventsd, 
+# mac_free_gib=21.5
+13:33:05 load  13.38 13.03 13.21  | sum 65 | 29.7 fseventsd, 9.8 engine.test, 4.9 Finder, 4.7 mds, 
+13:33:15 load  12.18 12.78 13.12  | sum 365 | 121.8 fseventsd, 66.8 cp, 60.3 Finder, 47.7 beam.smp, 
+13:33:25 load  14.29 13.21 13.27  | sum 239 | 91.6 fseventsd, 53.5 cp, 29.2 beam.smp, 17.7 Finder, 
+# mac_free_gib=21.4
+13:33:36 load  14.17 13.23 13.28  | sum 58 | 13.6 bash, 11.6 werk.test, 8.1 fseventsd, 2.7 modelmanagerd, 
+13:33:46 load  14.61 13.34 13.31  | sum 194 | 51.8 beam.smp, 40.7 beam.smp, 15.9 cmux, 14.1 bash, 
+13:33:56 load  16.52 13.81 13.48  | sum 304 | 103.0 beam.smp, 92.3 beam.smp, 62.2 beam.smp, 21.5 beam.smp, 
+# mac_free_gib=21.4
+13:34:06 load  18.98 14.40 13.69  | sum 977 | 277.8 beam.smp, 269.9 beam.smp, 240.5 beam.smp, 156.5 beam.smp, 
+13:34:16 load  23.24 15.45 14.07  | sum 921 | 317.9 beam.smp, 271.8 beam.smp, 259.1 beam.smp, 14.9 beam.smp, 
+13:34:26 load  20.06 15.03 13.94  | sum 416 | 129.7 fseventsd, 60.0 beam.smp, 58.5 Finder, 57.5 beam.smp, 
+# mac_free_gib=21.5
+13:34:37 load  18.01 14.75 13.85  | sum 424 | 139.1 beam.smp, 134.6 beam.smp, 82.8 beam.smp, 22.9 fseventsd, 
+13:34:47 load  18.48 14.95 13.93  | sum 441 | 156.6 fseventsd, 69.9 cp, 64.1 cp, 38.4 Finder, 
+13:34:57 load  16.41 14.63 13.83  | sum 639 | 570.8 beam.smp, 17.9 bash, 14.0 bash, 13.9 bash, 
+# mac_free_gib=21.3
+13:35:07 load  18.12 15.05 13.99  | sum 823 | 487.3 beam.smp, 103.1 beam.smp, 89.6 beam.smp, 37.1 beam.smp, 
+13:35:17 load  16.62 14.83 13.92  | sum 376 | 166.5 beam.smp, 157.8 beam.smp, 13.2 postgres:, 6.1 fseventsd, 
+13:35:27 load  14.75 14.49 13.81  | sum 687 | 182.7 beam.smp, 176.7 beam.smp, 173.4 beam.smp, 84.3 fseventsd, 
+# mac_free_gib=21.3
+13:35:37 load  13.18 14.16 13.70  | sum 389 | 111.7 beam.smp, 80.9 fseventsd, 60.9 beam.smp, 54.8 beam.smp, 
+13:35:47 load  14.37 14.39 13.79  | sum 266 | 119.4 beam.smp, 104.5 beam.smp, 14.1 mds_stores, 10.2 fseventsd, 
+13:35:58 load  14.58 14.42 13.81  | sum 149 | 48.8 go, 20.2 XprotectService, 15.3 bash, 14.5 bash, 
+# mac_free_gib=21.1
+13:36:08 load  15.61 14.66 13.90  | sum 289 | 82.2 beam.smp, 64.6 kasboek.test, 60.0 beam.smp, 22.9 beam.smp, 
+13:36:18 load  17.71 15.14 14.08  | sum 210 | 74.9 beam.smp, 28.3 beam.smp, 24.3 fseventsd, 20.6 beam.smp, 
+13:36:28 load  19.41 15.58 14.25  | sum 20 | 3.1 claude, 2.8 engine.test, 2.4 opencode, 2.0 postgres:, 
+# mac_free_gib=21.0
+13:36:38 load  16.58 15.10 14.09  | sum 99 | 76.3 kasboek.test, 7.4 postgres:, 4.3 XprotectService, 2.8 fseventsd, 
+13:36:48 load  14.33 14.67 13.95  | sum 34 | 14.2 bash, 3.7 mdworker_shared, 3.6 mds_stores, 3.5 claude, 
+13:36:58 load  12.36 14.24 13.80  | sum 192 | 141.4 beam.smp, 18.5 launchd, 4.6 postgres:, 4.5 fseventsd, 
+# mac_free_gib=21.1
+13:37:09 load  11.73 14.03 13.73  | sum 36 | 12.6 bash, 9.6 kasboek.test, 4.3 syspolicyd, 3.3 postgres:, 
+13:37:19 load  10.15 13.62 13.59  | sum 28 | 6.2 claude, 5.7 claude, 5.5 fseventsd, 1.5 mds_stores, 
+13:37:29 load  9.12 13.28 13.47  | sum 73 | 22.6 claude, 19.2 cmux, 14.1 launchd, 4.5 cmux, 
+# mac_free_gib=21.0
+13:37:39 load  8.17 12.94 13.35  | sum 458 | 181.8 go, 74.3 beam.smp, 73.8 beam.smp, 72.7 beam.smp, 
+13:37:49 load  9.47 13.06 13.39  | sum 269 | 69.4 go, 60.1 beam.smp, 52.0 beam.smp, 50.2 beam.smp, 
+13:37:59 load  14.86 14.08 13.74  | sum 205 | 72.9 fseventsd, 25.4 beam.smp, 25.2 rm, 21.6 Finder, 
+# mac_free_gib=20.7
+13:38:10 load  17.33 14.67 13.96  | sum 568 | 521.5 compile, 30.6 go, 10.0 bash, 2.8 claude, 
+13:38:20 load  15.86 14.43 13.88  | sum 123 | 75.4 beam.smp, 12.4 bash, 12.2 bash, 12.1 bash, 
+13:38:30 load  15.42 14.38 13.87  | sum 656 | 183.2 beam.smp, 167.8 beam.smp, 156.2 beam.smp, 127.4 beam.smp, 
+# mac_free_gib=20.7
+13:38:40 load  16.41 14.62 13.96  | sum 672 | 144.4 beam.smp, 143.8 beam.smp, 138.8 beam.smp, 90.7 beam.smp, 
+13:38:50 load  14.34 14.24 13.83  | sum 551 | 158.4 beam.smp, 158.3 beam.smp, 153.1 beam.smp, 38.3 fseventsd, 
+13:39:00 load  12.61 13.87 13.70  | sum 637 | 268.1 fseventsd, 84.6 mds_stores, 76.3 Finder, 68.8 cp, 
+# mac_free_gib=20.7
+13:39:10 load  11.38 13.54 13.59  | sum 18 | 14.0 bash, 0.7 opencode, 0.5 com.apple.DriverKit-AppleBCMWLAN, 0.4 mds_stores, 
+13:39:20 load  10.32 13.24 13.48  | sum 506 | 173.6 beam.smp, 138.1 beam.smp, 126.9 beam.smp, 15.3 bash, 
+13:39:30 load  11.82 13.48 13.57  | sum 704 | 235.6 beam.smp, 139.7 beam.smp, 115.6 beam.smp, 108.3 beam.smp, 
+# mac_free_gib=20.7
+13:39:41 load  11.21 13.30 13.50  | sum 16 | 12.4 bash, 0.9 mdworker_shared, 0.8 Finder, 0.4 mdworker_shared, 
+13:39:51 load  11.11 13.20 13.46  | sum 407 | 145.4 beam.smp, 141.6 beam.smp, 56.6 beam.smp, 32.3 fseventsd, 
+13:40:01 load  11.49 13.21 13.46  | sum 291 | 97.0 fseventsd, 57.1 cp, 56.6 cp, 26.7 beam.smp, 
+# mac_free_gib=20.7
+13:40:11 load  14.64 13.83 13.68  | sum 185 | 86.0 beam.smp, 51.2 beam.smp, 17.7 cmux, 7.4 com.apple.DriverKit-AppleBCMWLAN, 
+13:40:21 load  13.97 13.71 13.64  | sum 345 | 105.1 (compile), 83.6 (compile), 53.3 beam.smp, 41.1 beam.smp, 
+13:40:31 load  14.05 13.73 13.65  | sum 245 | 78.0 kasboek.test, 43.8 beam.smp, 42.8 beam.smp, 40.3 beam.smp, 
+# mac_free_gib=20.6
+13:40:42 load  14.76 13.89 13.70  | sum 504 | 318.3 beam.smp, 103.5 beam.smp, 31.7 beam.smp, 5.5 fseventsd, 
+13:40:52 load  13.62 13.68 13.63  | sum 142 | 87.9 beam.smp, 5.5 fseventsd, 4.5 claude, 4.2 postgres:, 
+13:41:02 load  12.39 13.41 13.54  | sum 462 | 135.5 beam.smp, 127.2 beam.smp, 123.9 beam.smp, 25.7 com.apple.WebKit.WebContent, 
+# session ended 13:41:02

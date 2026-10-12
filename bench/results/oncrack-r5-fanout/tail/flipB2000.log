@@ -1,0 +1,41 @@
+[15:27:43] load before run: 1.26 1.76 1.67 (waited 50s)
+[15:27:51] host busy: {"spin_ms": 91.85, "spin_ms_max_cpu": 383.79, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.653}
+[15:28:04] host probe before run: {"spin_ms": 58.45, "spin_ms_max_cpu": 61.46, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.052} (waited 60s)
+[15:28:44] load before run: 1.44 1.71 1.66 (waited 20s)
+[15:28:48] host busy: {"spin_ms": 77.27, "spin_ms_max_cpu": 131.43, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.391}
+[15:29:00] host probe before run: {"spin_ms": 62.7, "spin_ms_max_cpu": 66.72, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.128} (waited 30s)
+b64 #1                       ready  2000 failed 0     568.7 msgs/s  server 3.60 cores  3.17 us/del  loadgen 2.38 cores  2.09 us/del  paced p50 9.639 p99 26.127  sat p99 387.327
+    host 1.128 1.104
+[15:29:42] load before run: 1.41 1.67 1.65 (waited 20s)
+[15:29:44] host probe before run: {"spin_ms": 59.5, "spin_ms_max_cpu": 61.71, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.071} (waited 20s)
+b128 #1                      ready  2000 failed 0     949.6 msgs/s  server 3.74 cores  2.00 us/del  loadgen 2.95 cores  1.55 us/del  paced p50 9.783 p99 21.311  sat p99 145.663
+    host 1.071 1.82
+[15:30:19] load before run: 1.37 1.64 1.64 (waited 10s)
+[15:30:21] host probe before run: {"spin_ms": 59.39, "spin_ms_max_cpu": 62.77, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.069} (waited 10s)
+h3000 #1                     ready  2000 failed 0     954.3 msgs/s  server 3.63 cores  1.93 us/del  loadgen 2.84 cores  1.48 us/del  paced p50 8.655 p99 26.095  sat p99 222.463
+    host 1.069 1.063
+[15:31:12] load before run: 1.43 1.67 1.65 (waited 30s)
+[15:31:15] host probe before run: {"spin_ms": 61.62, "spin_ms_max_cpu": 64.84, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.109} (waited 30s)
+b128 #2                      ready  2000 failed 0     802.8 msgs/s  server 3.59 cores  2.22 us/del  loadgen 2.69 cores  1.67 us/del  paced p50 9.111 p99 25.087  sat p99 273.407
+    host 1.109 1.071
+[15:31:56] load before run: 1.32 1.63 1.64 (waited 20s)
+[15:31:58] host probe before run: {"spin_ms": 60.11, "spin_ms_max_cpu": 62.36, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.082} (waited 20s)
+h3000 #2                     ready  2000 failed 0     974.5 msgs/s  server 3.71 cores  1.92 us/del  loadgen 2.90 cores  1.49 us/del  paced p50 5.995 p99 9.559  sat p99 144.895
+    host 1.082 1.097
+[15:32:49] load before run: 1.29 1.62 1.63 (waited 30s)
+[15:32:52] host probe before run: {"spin_ms": 58.99, "spin_ms_max_cpu": 62.68, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.062} (waited 30s)
+b64 #2                       ready  2000 failed 0     872.4 msgs/s  server 3.79 cores  2.21 us/del  loadgen 2.95 cores  1.69 us/del  paced p50 6.619 p99 8.423  sat p99 148.223
+    host 1.062 1.077
+[15:33:43] load before run: 1.40 1.65 1.65 (waited 30s)
+[15:33:45] host probe before run: {"spin_ms": 59.54, "spin_ms_max_cpu": 64.48, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.071} (waited 30s)
+h3000 #3                     ready  2000 failed 0    1032.3 msgs/s  server 3.73 cores  1.78 us/del  loadgen 2.90 cores  1.40 us/del  paced p50 15.815 p99 23.327  sat p99 161.151
+    host 1.071 1.07
+[15:34:06] load before run: 1.40 1.63 1.64 (waited 0s)
+[15:34:09] host probe before run: {"spin_ms": 60.06, "spin_ms_max_cpu": 60.54, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.081} (waited 0s)
+b64 #3                       ready  2000 failed 0     909.7 msgs/s  server 3.75 cores  2.10 us/del  loadgen 2.95 cores  1.62 us/del  paced p50 7.279 p99 24.623  sat p99 150.015
+    host 1.081 1.063
+[15:34:49] load before run: 1.38 1.62 1.64 (waited 20s)
+[15:34:52] host probe before run: {"spin_ms": 60.62, "spin_ms_max_cpu": 76.4, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.091} (waited 20s)
+b128 #3                      ready  2000 failed 0    1013.0 msgs/s  server 3.80 cores  1.86 us/del  loadgen 2.92 cores  1.44 us/del  paced p50 18.319 p99 24.255  sat p99 147.071
+    host 1.091 1.064
+-> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-fanout/tail/flipB2000

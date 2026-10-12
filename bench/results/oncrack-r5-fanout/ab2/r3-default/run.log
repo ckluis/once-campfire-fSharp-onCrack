@@ -1,0 +1,147 @@
+date: 2026-10-12T14:32:28-04:00
+host: 6.8.0-117-generic, , 8 threads, 5GB
+server cpus: 0-3 (nproc 4); loadgen cpus: 4-7; network: host
+env: WEB_CONCURRENCY=3 JOB_CONCURRENCY=3 RAILS_MAX_THREADS=5 
+rust extra env: 
+fsharp extra env: 
+oncrack extra env: 
+user agent: (none)
+oncrack image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00 built from commit: ea1f85b4b66e9f2f6756bdd428772e5aed29703f
+oncrack build: MOUNTED /var/tmp/campfire-r52c over /opt/campfire (db83b63 (dirty files under src/: 0) at 2026-10-12T16:41:40Z)
+repo HEAD: b65d116 (dirty: 3 files under src/ and rust/)
+work dir (seed copies): /var/tmp/campfire-bench-work (ext4)
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11), built with rust:1.98.1-trixie
+seed: default (realistic workloads: crowd; classic: default); realistic concs 16, MIX_POSTERS 1, SPREAD_POSTERS 1, POST_RATE 0, POSTING_USERS 32, SEARCH_QUERIES 200, REAL_USERS 0 (0: all)
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+log retention: 2 x 10m (json-file)
+[14:32:28] load before run: 1.35 1.97 2.11 (waited 0s)
+[14:32:31] host busy: {"spin_ms": 62.54, "spin_ms_max_cpu": 73.66, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.125}
+[14:32:49] host busy: {"spin_ms": 100.56, "spin_ms_max_cpu": 414.83, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.81}
+[14:33:02] host busy: {"spin_ms": 64.05, "spin_ms_max_cpu": 83.53, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.153}
+[14:33:16] host busy: {"spin_ms": 76.06, "spin_ms_max_cpu": 95.42, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.369}
+[14:33:29] host busy: {"spin_ms": 61.28, "spin_ms_max_cpu": 64.42, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.103}
+[14:33:44] host busy: {"spin_ms": 96.26, "spin_ms_max_cpu": 131.75, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.732}
+[14:33:57] host busy: {"spin_ms": 66.73, "spin_ms_max_cpu": 73.04, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.201}
+[14:34:09] host probe before run: {"spin_ms": 60.48, "spin_ms_max_cpu": 61.83, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.088} (waited 70s)
+[14:34:09] oncrack rep 1: starting (load: 0.47 1.49 1.92)
+[14:34:20] oncrack rep 1: cold start 300ms, idle 28MB (anon 15MB)
+[14:34:43] oncrack rep 1: cable 1000 clients ready 1000 lat all p50 5.363 p99 25.263 tput 679.2 msg/s 10192 / 10192
+[14:35:08] oncrack rep 1: cable 2000 clients ready 2000 lat all p50 6.983 p99 11.967 tput 812.9 msg/s 12217 / 12217
+[14:35:14] oncrack rep 1: done -> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-fanout/ab2/r3-default/oncrack-1.json
+```
+date: 2026-10-12T14:32:28-04:00
+host: 6.8.0-117-generic, , 8 threads, 5GB
+server cpus: 0-3 (nproc 4); loadgen cpus: 4-7; network: host
+env: WEB_CONCURRENCY=3 JOB_CONCURRENCY=3 RAILS_MAX_THREADS=5 
+rust extra env: 
+fsharp extra env: 
+oncrack extra env: 
+user agent: (none)
+oncrack image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00 built from commit: ea1f85b4b66e9f2f6756bdd428772e5aed29703f
+oncrack build: MOUNTED /var/tmp/campfire-r52c over /opt/campfire (db83b63 (dirty files under src/: 0) at 2026-10-12T16:41:40Z)
+repo HEAD: b65d116 (dirty: 3 files under src/ and rust/)
+work dir (seed copies): /var/tmp/campfire-bench-work (ext4)
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11), built with rust:1.98.1-trixie
+seed: default (realistic workloads: crowd; classic: default); realistic concs 16, MIX_POSTERS 1, SPREAD_POSTERS 1, POST_RATE 0, POSTING_USERS 32, SEARCH_QUERIES 200, REAL_USERS 0 (0: all)
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+log retention: 2 x 10m (json-file)
+```
+
+Reps: oncrack 1. Cells: median [min–max].
+
+### Startup and memory
+
+| Metric | onCrack |
+|---|---|
+| cold start: docker run → /up 200 (ms) | 300 |
+| idle memory.current (MB) | 28.0 |
+| idle anon (MB) | 15.0 |
+| peak memory.current under load (MB) | 445 |
+| peak anon under load (MB) | 271 |
+
+### HTTP (signed in as david; keep-alive; c = concurrent connections)
+
+| Metric | onCrack |
+|---|---|
+
+### Action Cable fan-out (one room; chatter.js subscriptions per client)
+
+| Metric | onCrack |
+|---|---|
+| 1000 clients: subscribed | 1,000 |
+| 1000 clients: connect+subscribe all (s) | 0.31 |
+| 1000 clients: paced post→one client p50 ms | 4.16 |
+| 1000 clients: paced post→all clients p50 ms | 5.36 |
+| 1000 clients: paced post→all clients p99 ms | 25.3 |
+| 1000 clients: max sustained msgs/s (delivered to all) | 679 |
+| 1000 clients: deliveries/s (client×message) | 679,237 |
+| 1000 clients: saturated post→all p50 ms | 27.8 |
+| 1000 clients: saturated POST p50 ms | 3.19 |
+| 2000 clients: subscribed | 2,000 |
+| 2000 clients: connect+subscribe all (s) | 0.26 |
+| 2000 clients: paced post→one client p50 ms | 4.46 |
+| 2000 clients: paced post→all clients p50 ms | 6.98 |
+| 2000 clients: paced post→all clients p99 ms | 12.0 |
+| 2000 clients: max sustained msgs/s (delivered to all) | 813 |
+| 2000 clients: deliveries/s (client×message) | 1,625,814 |
+| 2000 clients: saturated post→all p50 ms | 72.6 |
+| 2000 clients: saturated POST p50 ms | 3.58 |
+
+### Memory during cable fan-out, by process (MB, peak within the phase)
+
+App process: Rails' Puma master and workers (Action Cable runs in them), or the Rust and F# ports' one campfire
+process (its front server included). Pss counts pages shared between forked workers once;
+RssAnon counts them in every process.
+
+| Metric | onCrack |
+|---|---|
+| 1000 clients, all subscribed, idle: app process Pss | 183 |
+| 1000 clients, all subscribed, idle: app process RssAnon | 101 |
+| 1000 clients, all subscribed, idle: app + Redis + Thruster Pss | 183 |
+| 1000 clients, all subscribed, idle: whole container Pss | 183 |
+| 1000 clients, saturated fan-out: app process Pss | 284 |
+| 1000 clients, saturated fan-out: app process RssAnon | 197 |
+| 1000 clients, saturated fan-out: app + Redis + Thruster Pss | 284 |
+| 1000 clients, saturated fan-out: whole container Pss | 284 |
+| 2000 clients, all subscribed, idle: app process Pss | 300 |
+| 2000 clients, all subscribed, idle: app process RssAnon | 211 |
+| 2000 clients, all subscribed, idle: app + Redis + Thruster Pss | 300 |
+| 2000 clients, all subscribed, idle: whole container Pss | 300 |
+| 2000 clients, saturated fan-out: app process Pss | 359 |
+| 2000 clients, saturated fan-out: app process RssAnon | 269 |
+| 2000 clients, saturated fan-out: app + Redis + Thruster Pss | 359 |
+| 2000 clients, saturated fan-out: whole container Pss | 359 |
+
+## Validity
+
+### Load average before each run (1, 5, 15 minutes; the run waited for the 1-minute figure to fall below LOAD_MAX)
+
+| App | Rep | Before | After |
+|---|---|---|---|
+| onCrack | 1 | 0.47 1.49 1.92 | 3.76 2.18 2.12 |
+
+### Host CPU probe (a fixed spin timed on every pinned CPU, against the quietest this VM has shown; bench/lib/hostprobe.py)
+
+The VM's load average cannot see another program on the Mac taking the cores its vCPUs run on; this can. A ratio of 1.00 is a quiet host, above 1.10 the pinned server and load generator were slowed by something outside the run. `After each window` probes the machine right after every measured run of the rep.
+
+| App | Rep | Before the run | After the run | Windows probed above 1.10 | Highest after a window |
+|---|---|---|---|---|---|
+| onCrack | 1 | 1.09 | 1.12 | 0/0 | nan |
+
+### Responses by status class, every HTTP run of every rep
+
+| App | Route | 2xx | 3xx | 4xx | 5xx | Errors (no response) |
+|---|---|---|---|---|---|---|
+
+### Rows written by `post_message` and the realistic workloads that post (messages counted in the app's SQLite file around each run: the write room's, or every room's for a realistic workload)
+
+| App | Rep | Phase | Posts answered below 400 | Rows written | Match |
+|---|---|---|---|---|---|
+
+### Response bytes, one request per route (gzip: wire / decoded; identity: bytes) and the average over the c=16 run
+
+The probe is a single request after sign-in, before any load. Bodies carry per-request tokens and the clock, so sizes of two apps agree to within a few bytes when they render the same page. "c=16 avg" is what the load generator received per request on the wire (gzip unless the column says otherwise).
+
+| Route | onCrack gzip wire / decoded | onCrack identity | onCrack c=16 avg | vs Rust |
+|---|---|---|---|---|
+| post_message | – | – | – | – |

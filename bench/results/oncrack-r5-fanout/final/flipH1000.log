@@ -1,0 +1,40 @@
+[15:48:09] load before run: 1.29 1.57 1.60 (waited 30s)
+[15:48:12] host probe before run: {"spin_ms": 59.87, "spin_ms_max_cpu": 65.04, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.077} (waited 30s)
+[15:48:42] load before run: 1.45 1.58 1.60 (waited 10s)
+[15:48:44] host probe before run: {"spin_ms": 59.75, "spin_ms_max_cpu": 63.05, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.075} (waited 10s)
+h1000 #1                     ready  1000 failed 0    1862.7 msgs/s  server 3.71 cores  1.98 us/del  loadgen 2.93 cores  1.57 us/del  paced p50 9.831 p99 13.823  sat p99 72.383
+    host 1.075 1.077
+[15:49:15] load before run: 1.38 1.56 1.59 (waited 10s)
+[15:49:18] host probe before run: {"spin_ms": 59.57, "spin_ms_max_cpu": 61.95, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.072} (waited 10s)
+h3000 #1                     ready  1000 failed 0    1773.5 msgs/s  server 3.66 cores  2.06 us/del  loadgen 2.84 cores  1.60 us/del  paced p50 8.951 p99 54.719  sat p99 75.007
+    host 1.072 1.041
+[15:49:58] load before run: 1.43 1.58 1.60 (waited 20s)
+[15:50:01] host probe before run: {"spin_ms": 57.81, "spin_ms_max_cpu": 61.11, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.04} (waited 20s)
+h6000 #1                     ready  1000 failed 0    1933.7 msgs/s  server 3.73 cores  1.93 us/del  loadgen 2.92 cores  1.51 us/del  paced p50 9.175 p99 55.583  sat p99 70.207
+    host 1.04 1.061
+[15:50:21] load before run: 1.49 1.58 1.60 (waited 0s)
+[15:50:24] host probe before run: {"spin_ms": 57.51, "spin_ms_max_cpu": 59.45, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.035} (waited 0s)
+h3000 #2                     ready  1000 failed 0    1701.0 msgs/s  server 3.74 cores  2.21 us/del  loadgen 2.89 cores  1.70 us/del  paced p50 9.431 p99 15.983  sat p99 76.927
+    host 1.035 1.083
+[15:51:15] load before run: 1.29 1.56 1.59 (waited 30s)
+[15:51:17] host probe before run: {"spin_ms": 58.58, "spin_ms_max_cpu": 61.45, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.054} (waited 30s)
+h6000 #2                     ready  1000 failed 0    1947.9 msgs/s  server 3.69 cores  1.89 us/del  loadgen 2.91 cores  1.49 us/del  paced p50 9.143 p99 15.671  sat p99 70.271
+    host 1.054 1.075
+[15:52:08] load before run: 1.36 1.59 1.60 (waited 30s)
+[15:52:10] host probe before run: {"spin_ms": 58.89, "spin_ms_max_cpu": 63.93, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.06} (waited 30s)
+h1000 #2                     ready  1000 failed 0    1756.4 msgs/s  server 3.80 cores  2.15 us/del  loadgen 2.91 cores  1.66 us/del  paced p50 7.583 p99 15.495  sat p99 78.015
+    host 1.06 1.082
+[15:52:31] load before run: 1.49 1.60 1.60 (waited 0s)
+[15:52:34] host probe before run: {"spin_ms": 59.63, "spin_ms_max_cpu": 61.81, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.073} (waited 0s)
+h6000 #3                     ready  1000 failed 0    1943.8 msgs/s  server 3.71 cores  1.90 us/del  loadgen 2.92 cores  1.50 us/del  paced p50 8.439 p99 14.511  sat p99 70.847
+    host 1.073 1.071
+[15:53:34] load before run: 1.30 1.59 1.61 (waited 40s)
+[15:53:38] host busy: {"spin_ms": 74.84, "spin_ms_max_cpu": 91.01, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.347}
+[15:53:51] host probe before run: {"spin_ms": 62.67, "spin_ms_max_cpu": 64.04, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.128} (waited 50s)
+h1000 #3                     ready  1000 failed 0    1471.1 msgs/s  server 3.79 cores  2.51 us/del  loadgen 2.83 cores  1.92 us/del  paced p50 4.243 p99 102.271  sat p99 80.959
+    host 1.128 1.091
+[15:54:11] load before run: 1.25 1.54 1.59 (waited 0s)
+[15:54:14] host probe before run: {"spin_ms": 60.35, "spin_ms_max_cpu": 62.25, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.086} (waited 0s)
+h3000 #3                     ready  1000 failed 0    1588.1 msgs/s  server 3.33 cores  2.09 us/del  loadgen 2.55 cores  1.61 us/del  paced p50 3.783 p99 118.591  sat p99 71.871
+    host 1.086 1.071
+-> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-fanout/final/flipH1000

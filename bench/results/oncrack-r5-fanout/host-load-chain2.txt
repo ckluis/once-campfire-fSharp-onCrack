@@ -1,0 +1,722 @@
+# host load during chain2 (ps -A, non-VM processes: top 4 by %CPU and the sum of all, every 10 s; loadavg)
+# quiet after 0s; session starts
+14:46:22 load  11.31 18.02 15.74  | sum 75 | 11.7 fseventsd, 8.5 claude, 7.3 WindowServer, 7.2 Finder, 
+# mac_free_gib=22.6
+14:46:32 load  10.83 17.69 15.65  | sum 325 | 31.9 Python, 29.5 spotlightknowledged.updater, 28.2 Python, 25.9 Python, 
+14:46:42 load  11.44 17.59 15.64  | sum 297 | 34.4 beam.smp, 24.1 Python, 23.1 Python, 22.6 Python, 
+14:46:52 load  10.58 17.21 15.53  | sum 40 | 8.4 fseventsd, 7.9 WindowServer, 2.1 opencode, 1.9 zwerm.test, 
+# mac_free_gib=22.5
+14:47:02 load  10.14 16.90 15.44  | sum 83 | 27.1 fseventsd, 21.9 zicht.test, 7.9 WindowServer, 5.3 opencode, 
+14:47:12 load  8.89 16.41 15.28  | sum 63 | 35.8 cmux, 9.7 bash, 9.5 WindowServer, 4.4 syspolicyd, 
+14:47:23 load  11.52 16.71 15.40  | sum 231 | 21.7 compile, 18.9 compile, 18.3 Python, 17.3 Python, 
+# mac_free_gib=22.4
+14:47:34 load  11.63 16.57 15.36  | sum 296 | 21.7 Python, 21.7 Python, 21.1 Python, 20.1 Python, 
+14:47:44 load  12.33 16.57 15.38  | sum 77 | 12.8 Python, 12.1 (Python), 8.7 Python, 7.0 WindowServer, 
+14:47:54 load  11.12 16.17 15.25  | sum 50 | 11.4 com.apple.WebKit.WebContent, 10.5 WindowServer, 7.4 cmux, 3.6 Python, 
+# mac_free_gib=22.3
+14:48:04 load  10.48 15.87 15.15  | sum 120 | 83.2 spreekuur.test, 9.8 postgres:, 7.9 fseventsd, 6.3 WindowServer, 
+14:48:14 load  9.34 15.44 15.01  | sum 323 | 25.2 Python, 19.8 Python, 18.9 Python, 18.9 Python, 
+14:48:24 load  9.72 15.33 14.97  | sum 318 | 162.8 beam.smp, 51.6 spreekuur.test, 25.4 Python, 13.9 fseventsd, 
+# mac_free_gib=22.3
+14:48:35 load  10.11 15.23 14.95  | sum 153 | 79.5 spreekuur.test, 18.3 Python, 8.8 postgres:, 7.4 fseventsd, 
+14:48:45 load  9.23 14.88 14.82  | sum 106 | 87.1 spreekuur.test, 8.1 postgres:, 2.8 fseventsd, 1.9 WindowServer, 
+14:48:55 load  8.43 14.52 14.70  | sum 118 | 51.6 spreekuur.test, 50.8 postgres:, 2.1 postgres:, 1.9 WindowServer, 
+# mac_free_gib=22.3
+14:49:05 load  8.82 14.40 14.65  | sum 296 | 129.8 beam.smp, 88.2 spreekuur.test, 20.7 fseventsd, 10.0 postgres:, 
+14:49:15 load  9.51 14.37 14.64  | sum 65 | 19.9 Python, 8.0 fseventsd, 5.7 mds, 4.0 bash, 
+14:49:25 load  8.35 13.96 14.49  | sum 38 | 22.1 cmux, 4.5 WindowServer, 1.5 claude, 1.3 Finder, 
+# mac_free_gib=22.3
+14:49:35 load  7.29 13.55 14.34  | sum 46 | 11.4 cmux, 8.9 cmux, 5.1 WindowServer, 4.6 claude, 
+14:49:46 load  6.40 13.16 14.19  | sum 18 | 3.0 cmux, 2.8 Safari, 2.3 opencode, 1.6 claude, 
+14:49:56 load  6.12 12.87 14.07  | sum 160 | 101.8 spotlightknowledged.updater, 15.8 cfprefsd, 14.7 corespotlightd, 4.6 BiomeAgent, 
+# mac_free_gib=22.3
+14:50:06 load  5.72 12.56 13.95  | sum 56 | 12.2 claude, 10.4 cmux, 8.5 claude, 3.6 claude, 
+14:50:16 load  5.07 12.20 13.80  | sum 55 | 27.1 Python, 8.5 claude, 4.8 opencode, 1.6 cmux, 
+14:50:26 load  5.24 11.99 13.71  | sum 140 | 63.9 spotlightknowledged.updater, 13.6 bash, 10.9 cfprefsd, 7.5 opencode, 
+# mac_free_gib=22.3
+14:50:36 load  5.57 11.84 13.64  | sum 262 | 68.4 tar, 49.4 beam.smp, 32.5 git, 30.1 fseventsd, 
+14:50:46 load  7.09 11.96 13.66  | sum 445 | 207.4 beam.smp, 30.0 Python, 27.1 Python, 18.6 Python, 
+14:50:57 load  11.01 12.65 13.89  | sum 670 | 344.8 beam.smp, 77.7 spotlightknowledged.updater, 35.1 corespotlightd, 31.0 (Python), 
+# mac_free_gib=22.2
+14:51:07 load  14.29 13.38 14.13  | sum 27 | 6.8 cmux, 5.3 WindowServer, 3.1 airportd, 2.3 claude, 
+14:51:17 load  13.87 13.32 14.10  | sum 234 | 131.4 spotlightknowledged.updater, 56.9 corespotlightd, 12.3 Python, 11.1 cfprefsd, 
+14:51:27 load  12.29 13.00 13.97  | sum 24 | 3.6 networkserviceproxy, 3.1 airportd, 2.3 cmux, 2.0 WindowServer, 
+# mac_free_gib=22.2
+14:51:38 load  11.34 12.77 13.88  | sum 56 | 35.9 Python, 4.1 claude, 2.1 opencode, 2.0 opendirectoryd, 
+14:51:48 load  10.57 12.56 13.79  | sum 199 | 155.6 beam.smp, 26.1 Python, 5.6 fseventsd, 2.4 cmux, 
+14:51:58 load  9.10 12.18 13.64  | sum 23 | 7.1 opencode, 2.1 claude, 1.5 WindowServer, 1.5 Finder, 
+# mac_free_gib=22.2
+14:52:08 load  8.68 11.99 13.56  | sum 115 | 69.6 mediaanalysisd, 11.6 aned, 6.6 beam.smp, 6.2 opencode, 
+14:52:18 load  7.88 11.71 13.44  | sum 137 | 80.4 beam.smp, 45.3 beam.smp, 2.1 opencode, 1.7 WindowServer, 
+14:52:28 load  6.90 11.37 13.30  | sum 52 | 27.1 launchd, 7.5 opencode, 4.4 cmux, 2.6 WindowServer, 
+# mac_free_gib=22.2
+14:52:38 load  6.67 11.18 13.21  | sum 36 | 7.3 mdworker_shared, 5.1 cmux, 4.8 claude, 4.3 WindowServer, 
+14:52:48 load  6.59 11.01 13.12  | sum 222 | 159.4 beam.smp, 25.5 beam.smp, 3.2 fseventsd, 2.5 mds, 
+14:52:58 load  5.88 10.71 12.99  | sum 24 | 3.4 claude, 3.1 mdworker_shared, 2.4 WindowServer, 2.3 Python, 
+# mac_free_gib=22.2
+14:53:09 load  8.93 11.19 13.13  | sum 161 | 55.0 beam.smp, 39.4 beam.smp, 36.6 beam.smp, 12.1 com.apple.DriverKit-AppleBCMWLAN, 
+14:53:19 load  8.62 11.05 13.06  | sum 563 | 241.7 fseventsd, 155.4 beam.smp, 76.2 Finder, 39.9 cp, 
+14:53:29 load  8.40 10.93 13.00  | sum 30 | 14.1 bash, 4.6 launchd, 3.1 cmux, 1.9 WindowServer, 
+# mac_free_gib=22.2
+14:53:39 load  11.56 11.49 13.17  | sum 323 | 34.9 beam.smp, 22.9 Python, 21.7 (Python), 21.4 Python, 
+14:53:49 load  16.30 12.51 13.51  | sum 378 | 66.4 go, 40.9 beam.smp, 24.0 Python, 22.4 Python, 
+14:53:59 load  20.29 13.49 13.85  | sum 268 | 25.3 beam.smp, 21.2 Python, 19.7 Python, 16.1 Python, 
+# mac_free_gib=21.9
+14:54:10 load  23.84 14.46 14.19  | sum 308 | 19.8 kasboek, 17.3 mediaanalysisd, 15.1 Python, 14.0 ps, 
+14:54:21 load  24.15 14.84 14.32  | sum 352 | 71.5 spreekuur.test, 57.5 fseventsd, 48.4 kasboek.test, 34.2 postgres:, 
+14:54:31 load  23.81 15.07 14.41  | sum 367 | 65.2 beam.smp, 54.7 kasboek.test, 53.4 spreekuur.test, 36.3 fseventsd, 
+# mac_free_gib=22.0
+14:54:42 load  23.77 15.35 14.52  | sum 290 | 51.9 spreekuur.test, 39.0 beam.smp, 38.5 fseventsd, 28.7 postgres:, 
+14:54:52 load  22.98 15.46 14.57  | sum 383 | 62.1 beam.smp, 42.3 kasboek.test, 34.7 Python, 33.9 spreekuur.test, 
+14:55:02 load  22.62 15.62 14.63  | sum 331 | 41.7 duetexpertd, 24.8 Python, 24.4 Python, 24.3 Python, 
+# mac_free_gib=22.1
+14:55:12 load  22.58 15.86 14.73  | sum 312 | 25.6 Python, 25.6 beam.smp, 25.0 Python, 23.5 Python, 
+14:55:22 load  22.42 16.06 14.82  | sum 229 | 48.1 fseventsd, 23.3 Python, 20.8 web.test, 16.9 postgres:, 
+14:55:32 load  20.02 15.83 14.75  | sum 162 | 36.2 Python, 17.6 fseventsd, 12.3 Python, 10.3 Python, 
+# mac_free_gib=22.2
+14:55:43 load  17.96 15.52 14.66  | sum 80 | 15.7 fseventsd, 9.7 WindowServer, 7.4 claude, 6.9 engine.test, 
+14:55:53 load  16.18 15.22 14.56  | sum 113 | 26.4 fseventsd, 22.0 Python, 15.3 com.apple.WebKit.WebContent, 11.1 engine.test, 
+14:56:03 load  13.99 14.79 14.41  | sum 176 | 44.6 homeenergyd, 44.4 fseventsd, 8.7 mds, 8.5 werk.test, 
+# mac_free_gib=22.2
+14:56:13 load  13.06 14.56 14.34  | sum 37 | 8.3 WindowServer, 5.2 WallpaperAerialsExtension, 2.7 VTDecoderXPCService, 2.7 claude, 
+14:56:23 load  11.28 14.13 14.19  | sum 129 | 32.8 com.apple.WebKit.WebContent, 31.5 fseventsd, 18.2 zwerm.test, 9.6 WindowServer, 
+14:56:33 load  9.70 13.70 14.03  | sum 115 | 72.9 mobileassetd, 12.7 bash, 6.5 WindowServer, 5.0 WallpaperAerialsExtension, 
+# mac_free_gib=22.2
+14:56:44 load  8.67 13.35 13.90  | sum 545 | 203.9 go, 95.6 fseventsd, 82.5 beam.smp, 47.0 (rm), 
+14:56:54 load  12.25 13.93 14.10  | sum 276 | 78.4 beam.smp, 70.2 beam.smp, 55.9 beam.smp, 20.3 com.apple.WebKit.WebContent, 
+14:57:04 load  11.26 13.67 14.01  | sum 61 | 12.2 bash, 9.8 go, 9.3 WindowServer, 6.5 WallpaperAerialsExtension, 
+# mac_free_gib=22.1
+14:57:14 load  12.76 13.90 14.08  | sum 365 | 24.6 Python, 23.2 Python, 23.1 Python, 22.8 Python, 
+14:57:25 load  30.90 17.65 15.41  | sum 614 | 230.5 compile, 71.1 DisplayLinkUserAgent, 41.8 WindowServer, 38.3 generativeexperiencesd, 
+14:57:35 load  34.10 18.76 15.83  | sum 437 | 23.8 Python, 23.6 WindowServer, 21.5 Python, 21.1 Python, 
+# mac_free_gib=21.9
+14:57:46 load  36.17 19.72 16.20  | sum 363 | 30.3 WindowServer, 30.2 (beam.smp), 26.7 com.apple.WebKit.WebContent, 20.2 Python, 
+14:57:56 load  40.54 21.17 16.76  | sum 417 | 46.6 go, 35.7 com.apple.WebKit.GPU, 34.1 WindowServer, 15.0 syspolicyd, 
+14:58:07 load  39.87 21.66 16.98  | sum 194 | 24.8 WindowServer, 22.8 Python, 22.7 cmux, 21.4 (Python), 
+# mac_free_gib=22.0
+14:58:17 load  36.86 21.61 17.02  | sum 330 | 50.1 beam.smp, 45.4 DisplayLinkUserAgent, 42.9 WindowServer, 28.0 Python, 
+14:58:27 load  33.44 21.39 16.99  | sum 469 | 27.8 Python, 27.7 Python, 27.4 Python, 24.7 Python, 
+14:58:38 load  31.52 21.55 17.12  | sum 545 | 73.7 com.apple.WebKit.WebContent.EnhancedSecurity, 70.3 com.apple.WebKit.WebContent.EnhancedSecurity, 68.6 beam.smp, 67.6 com.apple.WebKit.WebContent.EnhancedSecurity, 
+# mac_free_gib=22.0
+14:58:48 load  29.47 21.43 17.13  | sum 281 | 94.3 beam.smp, 46.7 mds, 40.6 WindowServer, 21.2 Python, 
+14:58:58 load  27.67 21.32 17.14  | sum 245 | 42.0 WindowServer, 35.8 beam.smp, 31.6 Python, 21.7 launchd, 
+14:59:08 load  25.28 21.01 17.08  | sum 376 | 25.9 Python, 25.0 Python, 24.4 Python, 24.2 top, 
+# mac_free_gib=22.0
+14:59:19 load  25.09 21.12 17.17  | sum 157 | 26.2 Python, 20.5 Python, 19.6 mobileassetd, 14.5 WindowServer, 
+14:59:29 load  21.77 20.54 17.01  | sum 235 | 46.8 runningboardd, 45.0 AccessibilitySettingsSearchExtension, 30.6 systemsettingsagent, 20.5 coreduetd, 
+14:59:39 load  19.84 20.16 16.91  | sum 107 | 27.7 systemsettingsagent, 25.4 corespotlightd, 14.4 spotlightknowledged.updater, 4.0 opendirectoryd, 
+# mac_free_gib=21.9
+14:59:50 load  17.53 19.66 16.77  | sum 11 | 3.0 opencode, 1.7 claude, 0.8 claude, 0.6 claude, 
+15:00:00 load  15.06 19.06 16.60  | sum 28 | 13.3 bash, 4.5 WindowServer, 1.3 opencode, 1.2 ControlCenter, 
+15:00:10 load  13.52 18.60 16.46  | sum 586 | 182.9 fseventsd, 77.3 beam.smp, 56.1 Finder, 51.8 mds_stores, 
+# mac_free_gib=21.6
+15:00:20 load  14.68 18.68 16.51  | sum 487 | 148.3 beam.smp, 64.0 beam.smp, 58.0 fseventsd, 54.8 spreekuur.test, 
+15:00:30 load  15.63 18.74 16.56  | sum 598 | 186.1 fseventsd, 80.7 beam.smp, 62.5 cp, 60.0 Finder, 
+15:00:40 load  15.29 18.56 16.52  | sum 258 | 58.5 spreekuur.test, 46.2 fseventsd, 16.2 kasboek.test, 15.3 bash, 
+# mac_free_gib=21.8
+15:00:51 load  17.13 18.84 16.64  | sum 495 | 110.3 beam.smp, 104.3 beam.smp, 72.3 kasboek.test, 45.3 beam.smp, 
+15:01:01 load  23.63 20.14 17.13  | sum 294 | 18.4 Python, 17.4 com.apple.WebKit.WebContent, 17.2 Python, 16.7 Python, 
+15:01:11 load  26.52 20.90 17.43  | sum 319 | 22.0 Python, 19.8 Python, 18.1 Python, 18.1 Python, 
+# mac_free_gib=21.8
+15:01:22 load  31.04 22.06 17.88  | sum 232 | 33.3 (beam.smp), 21.4 Python, 14.3 Python, 14.1 Python, 
+15:01:33 load  30.39 22.43 18.09  | sum 247 | 36.5 fseventsd, 29.6 kasboek.test, 26.7 Python, 18.1 postgres:, 
+15:01:43 load  26.32 21.82 17.93  | sum 170 | 25.8 Python, 25.3 fseventsd, 19.2 findmydevice-user-agent, 13.7 engine.test, 
+# mac_free_gib=21.8
+15:01:53 load  26.62 22.01 18.04  | sum 173 | 27.6 Python, 24.4 (beam.smp), 22.9 Python, 18.9 beam.smp, 
+15:02:03 load  24.24 21.65 17.96  | sum 348 | 50.1 beam.smp, 28.7 Python, 27.7 Python, 27.6 Python, 
+15:02:13 load  25.13 21.92 18.10  | sum 366 | 50.9 beam.smp, 28.0 Python, 26.8 Python, 26.7 Python, 
+# mac_free_gib=21.9
+15:02:24 load  24.65 21.94 18.15  | sum 250 | 32.0 Python, 28.4 (beam.smp), 21.4 Python, 17.3 Python, 
+15:02:34 load  21.88 21.43 18.01  | sum 136 | 61.7 fseventsd, 15.1 (rm), 13.4 mds, 11.9 mds_stores, 
+15:02:44 load  20.06 21.06 17.92  | sum 328 | 23.1 beam.smp, 20.1 Python, 19.2 Python, 16.0 Python, 
+# mac_free_gib=21.9
+15:02:55 load  18.40 20.67 17.82  | sum 154 | 58.4 zwerm.test, 27.4 Python, 13.2 fseventsd, 8.0 Python, 
+15:03:05 load  15.96 20.07 17.64  | sum 17 | 3.5 fseventsd, 2.9 cmux, 2.6 opencode, 1.6 zwerm.test, 
+15:03:15 load  13.66 19.45 17.44  | sum 56 | 16.0 spoor.test, 10.3 fseventsd, 6.4 opencode, 3.4 mds, 
+# mac_free_gib=21.9
+15:03:25 load  12.68 19.05 17.33  | sum 39 | 16.9 claude, 5.6 fseventsd, 2.9 zicht.test, 2.2 Finder, 
+15:03:35 load  11.35 18.56 17.17  | sum 47 | 11.5 mdworker_shared, 8.1 claude, 6.6 postgres:, 3.2 mdworker_shared, 
+15:03:45 load  9.92 18.01 16.99  | sum 123 | 72.1 go, 28.8 compile, 8.5 Python, 2.7 claude, 
+# mac_free_gib=21.7
+15:03:56 load  12.14 18.20 17.07  | sum 429 | 113.1 beam.smp, 99.3 beam.smp, 82.7 beam.smp, 48.3 mds, 
+15:04:06 load  12.25 18.01 17.02  | sum 665 | 199.6 fseventsd, 95.4 go, 66.8 cp, 66.3 cp, 
+15:04:16 load  12.59 17.89 16.99  | sum 335 | 128.2 beam.smp, 59.8 spreekuur.test, 41.2 beam.smp, 28.7 fseventsd, 
+# mac_free_gib=21.4
+15:04:26 load  13.11 17.83 16.97  | sum 193 | 63.0 kasboek.test, 44.4 fseventsd, 11.2 Finder, 9.7 postgres:, 
+15:04:36 load  11.79 17.39 16.83  | sum 147 | 36.1 kasboek.test, 33.0 fseventsd, 10.0 postgres:, 7.9 Finder, 
+15:04:46 load  10.30 16.89 16.66  | sum 203 | 63.1 fseventsd, 58.2 kasboek.test, 13.7 (postgres), 13.4 Finder, 
+# mac_free_gib=21.6
+15:04:56 load  9.24 16.44 16.50  | sum 80 | 27.0 engine.test, 10.7 (postgres), 9.6 fseventsd, 6.3 claude, 
+15:05:06 load  9.13 16.18 16.41  | sum 47 | 17.7 fseventsd, 8.2 engine.test, 5.2 claude, 3.3 opencode, 
+15:05:16 load  7.88 15.68 16.23  | sum 69 | 31.4 fseventsd, 8.7 engine.test, 8.4 opencode, 5.8 Finder, 
+# mac_free_gib=21.7
+15:05:27 load  6.90 15.21 16.05  | sum 67 | 22.1 fseventsd, 18.4 werk.test, 4.3 Finder, 3.8 mds, 
+15:05:37 load  5.98 14.74 15.88  | sum 9 | 4.0 cmux, 1.3 claude, 1.1 opencode, 1.0 claude, 
+15:05:47 load  5.60 14.37 15.73  | sum 46 | 14.5 fseventsd, 7.2 zwerm.test, 4.0 opencode, 3.9 mds, 
+# mac_free_gib=21.7
+15:05:57 load  5.80 14.13 15.63  | sum 300 | 99.0 fseventsd, 84.1 spotlightknowledged.updater, 36.8 mstreamd, 16.5 cfprefsd, 
+15:06:07 load  5.80 13.86 15.52  | sum 278 | 83.2 spotlightknowledged.updater, 77.2 fseventsd, 70.4 mediaanalysisd, 17.4 cfprefsd, 
+15:06:17 load  6.25 13.68 15.43  | sum 58 | 24.0 compile, 16.8 compile, 9.8 go, 1.2 opendirectoryd, 
+# mac_free_gib=21.6
+15:06:28 load  5.60 13.30 15.28  | sum 29 | 5.1 fseventsd, 4.8 XprotectService, 4.6 bash, 4.2 syspolicyd, 
+15:06:38 load  5.12 12.94 15.13  | sum 79 | 52.3 mediaanalysisd, 5.0 claude, 3.6 claude, 2.3 mdworker_shared, 
+15:06:48 load  6.07 12.89 15.08  | sum 17 | 5.2 com.apple.WebKit.WebContent, 3.0 opencode, 2.5 claude, 1.0 mdworker_shared, 
+# mac_free_gib=21.5
+15:06:58 load  5.44 12.53 14.93  | sum 36 | 13.0 bash, 3.6 opencode, 3.1 spotlightknowledged.updater, 2.0 Finder, 
+15:07:08 load  5.70 12.35 14.84  | sum 41 | 30.5 grep, 2.8 mdworker_shared, 2.2 opencode, 1.0 claude, 
+15:07:18 load  6.25 12.24 14.77  | sum 51 | 16.6 bash, 5.6 syspolicyd, 5.3 opendirectoryd, 4.0 bash, 
+# mac_free_gib=21.4
+15:07:28 load  8.71 12.48 14.81  | sum 290 | 247.3 beam.smp, 18.7 launchd, 4.0 claude, 2.9 claude, 
+15:07:38 load  12.29 13.11 15.00  | sum 192 | 76.8 beam.smp, 16.0 Python, 14.8 Python, 9.6 Python, 
+15:07:49 load  10.70 12.74 14.85  | sum 36 | 13.8 Python, 7.5 Python, 1.8 fseventsd, 1.5 opendirectoryd, 
+# mac_free_gib=21.5
+15:07:59 load  9.28 12.37 14.69  | sum 24 | 7.2 launchd, 7.0 claude, 1.8 Python, 0.9 Python, 
+15:08:09 load  8.60 12.13 14.58  | sum 60 | 25.6 Python, 11.8 mdworker_shared, 8.1 mediaanalysisd, 1.5 opendirectoryd, 
+15:08:19 load  7.65 11.81 14.44  | sum 45 | 22.3 Python, 6.3 claude, 3.0 claude, 1.8 opencode, 
+# mac_free_gib=21.5
+15:08:29 load  6.85 11.50 14.30  | sum 31 | 16.7 claude, 3.2 claude, 2.7 launchd, 1.5 WindowServer, 
+15:08:39 load  7.16 11.42 14.23  | sum 48 | 37.2 beam.smp, 2.4 claude, 1.6 fseventsd, 1.3 claude, 
+15:08:49 load  8.02 11.47 14.22  | sum 80 | 42.8 beam.smp, 16.1 claude, 5.0 claude, 2.2 postgres, 
+# mac_free_gib=21.5
+15:09:00 load  7.02 11.14 14.07  | sum 27 | 10.4 claude, 4.2 claude, 4.1 opencode, 2.0 claude, 
+15:09:10 load  6.17 10.82 13.92  | sum 19 | 5.0 cmux, 3.1 claude, 2.9 opencode, 1.2 claude, 
+15:09:20 load  6.01 10.63 13.82  | sum 289 | 203.4 beam.smp, 66.4 go, 4.7 claude, 4.4 cmux, 
+# mac_free_gib=21.4
+15:09:30 load  5.62 10.39 13.70  | sum 283 | 201.0 beam.smp, 43.3 beam.smp, 6.7 WindowServer, 3.3 WallpaperAerialsExtension, 
+15:09:40 load  5.85 10.28 13.62  | sum 40 | 9.4 WindowServer, 7.6 opencode, 5.3 beam.smp, 5.2 WallpaperAerialsExtension, 
+15:09:50 load  5.70 10.11 13.52  | sum 19 | 5.7 WindowServer, 4.4 WallpaperAerialsExtension, 1.8 opencode, 1.6 claude, 
+# mac_free_gib=21.4
+15:10:00 load  5.54 9.92 13.41  | sum 514 | 184.0 beam.smp, 122.1 beam.smp, 116.2 beam.smp, 32.5 fseventsd, 
+15:10:10 load  6.92 10.07 13.42  | sum 363 | 133.4 beam.smp, 86.4 beam.smp, 70.0 beam.smp, 20.6 fseventsd, 
+15:10:20 load  9.00 10.43 13.51  | sum 367 | 191.5 beam.smp, 100.2 beam.smp, 28.5 fseventsd, 11.3 Finder, 
+# mac_free_gib=21.4
+15:10:31 load  9.84 10.55 13.52  | sum 384 | 46.1 beam.smp, 27.3 Python, 24.5 Python, 23.8 Python, 
+15:10:41 load  12.38 11.06 13.66  | sum 310 | 23.2 (Python), 22.0 Python, 21.4 Python, 21.4 Python, 
+15:10:51 load  15.22 11.70 13.86  | sum 329 | 21.8 opencode, 21.3 beam.smp, 19.5 beam.smp, 16.7 Python, 
+# mac_free_gib=21.4
+15:11:02 load  19.44 12.74 14.20  | sum 250 | 26.6 beam.smp, 23.9 beam.smp, 19.8 Python, 18.8 Python, 
+15:11:13 load  18.49 12.77 14.19  | sum 41 | 8.6 WindowServer, 4.5 WallpaperAerialsExtension, 3.1 bash, 2.7 opendirectoryd, 
+15:11:23 load  16.34 12.49 14.08  | sum 93 | 34.8 searchpartyuseragent, 7.6 WindowServer, 6.1 claude, 5.1 WallpaperAerialsExtension, 
+# mac_free_gib=21.4
+15:11:33 load  15.13 12.36 14.02  | sum 136 | 70.2 beam.smp, 9.7 WindowServer, 5.0 WallpaperAerialsExtension, 4.7 postgres:, 
+15:11:43 load  15.81 12.60 14.08  | sum 333 | 24.3 Python, 23.9 Python, 20.6 Python, 19.3 Python, 
+15:11:53 load  17.05 12.97 14.19  | sum 317 | 24.9 Python, 20.6 Python, 20.0 Python, 19.6 com.apple.WebKit.WebContent, 
+# mac_free_gib=21.4
+15:12:04 load  18.79 13.54 14.38  | sum 349 | 22.8 Python, 17.7 Python, 16.8 Python, 16.3 Python, 
+15:12:14 load  17.69 13.49 14.35  | sum 73 | 22.5 Python, 9.3 WindowServer, 6.0 Python, 5.5 Python, 
+15:12:25 load  15.36 13.13 14.21  | sum 100 | 11.7 cmux, 11.5 cmux, 10.2 Python, 8.0 WindowServer, 
+# mac_free_gib=21.4
+15:12:35 load  15.22 13.16 14.21  | sum 154 | 53.9 beam.smp, 15.4 postgres:, 12.0 spreekuur.test, 12.0 fseventsd, 
+15:12:45 load  15.42 13.27 14.23  | sum 190 | 62.7 spreekuur.test, 20.1 Python, 11.8 Python, 9.6 WindowServer, 
+15:12:55 load  13.57 12.95 14.11  | sum 29 | 10.4 WindowServer, 5.5 WallpaperAerialsExtension, 3.0 VTDecoderXPCService, 1.5 opencode, 
+# mac_free_gib=21.4
+15:13:05 load  12.34 12.70 14.01  | sum 29 | 10.2 WindowServer, 5.1 Python, 4.4 WallpaperAerialsExtension, 2.5 VTDecoderXPCService, 
+15:13:15 load  10.67 12.33 13.86  | sum 29 | 10.6 WindowServer, 6.1 WallpaperAerialsExtension, 3.2 VTDecoderXPCService, 1.6 claude, 
+15:13:25 load  9.10 11.94 13.70  | sum 28 | 9.1 WindowServer, 5.5 WallpaperAerialsExtension, 2.8 VTDecoderXPCService, 2.6 claude, 
+# mac_free_gib=21.4
+15:13:36 load  7.85 11.58 13.55  | sum 40 | 11.7 claude, 9.6 WindowServer, 5.6 WallpaperAerialsExtension, 2.3 claude, 
+15:13:46 load  6.81 11.23 13.41  | sum 89 | 30.5 Python, 10.0 WindowServer, 6.9 claude, 6.9 claude, 
+15:13:56 load  6.63 11.04 13.31  | sum 263 | 109.4 fseventsd, 72.2 cp, 15.8 Finder, 14.5 mds, 
+# mac_free_gib=21.4
+15:14:06 load  7.91 11.19 13.34  | sum 502 | 186.4 beam.smp, 160.7 beam.smp, 63.1 beam.smp, 46.4 fseventsd, 
+15:14:16 load  8.27 11.16 13.30  | sum 40 | 13.9 bash, 7.7 WindowServer, 6.3 cmux, 5.2 WallpaperAerialsExtension, 
+15:14:26 load  10.09 11.44 13.38  | sum 285 | 47.1 beam.smp, 24.7 Python, 24.3 Python, 18.0 Python, 
+# mac_free_gib=21.4
+15:14:37 load  11.73 11.75 13.47  | sum 375 | 28.2 Python, 26.7 Python, 26.1 Python, 25.7 Python, 
+15:14:47 load  14.06 12.24 13.62  | sum 350 | 22.8 Python, 21.9 Python, 21.0 top, 20.7 Python, 
+15:14:58 load  16.45 12.81 13.80  | sum 312 | 30.8 Python, 20.8 Python, 20.0 Python, 19.5 Python, 
+# mac_free_gib=21.4
+15:15:09 load  16.37 12.93 13.83  | sum 36 | 9.6 WindowServer, 6.6 WallpaperAerialsExtension, 6.2 claude, 2.7 VTDecoderXPCService, 
+15:15:19 load  14.79 12.70 13.74  | sum 46 | 10.0 WindowServer, 4.4 bash, 3.7 WallpaperAerialsExtension, 3.1 opendirectoryd, 
+15:15:29 load  16.12 13.04 13.85  | sum 280 | 28.5 Python, 27.7 Python, 26.5 beam.smp, 24.8 cmux, 
+# mac_free_gib=21.4
+15:15:39 load  15.28 13.02 13.83  | sum 231 | 36.1 Python, 31.7 Python, 23.8 beam.smp, 21.9 Python, 
+15:15:50 load  16.42 13.34 13.93  | sum 235 | 35.1 beam.smp, 16.6 Python, 16.2 Python, 15.6 Python, 
+15:16:00 load  17.53 13.69 14.05  | sum 326 | 52.5 beam.smp, 26.8 Python, 26.3 Python, 26.2 Python, 
+# mac_free_gib=21.4
+15:16:10 load  15.44 13.37 13.93  | sum 48 | 11.7 fseventsd, 8.6 WindowServer, 4.9 WallpaperAerialsExtension, 3.0 mds_stores, 
+15:16:20 load  14.29 13.19 13.86  | sum 71 | 33.0 Python, 9.8 WindowServer, 7.2 claude, 4.3 WallpaperAerialsExtension, 
+15:16:30 load  14.89 13.37 13.92  | sum 126 | 30.8 Python, 10.6 Python, 7.5 WindowServer, 7.5 opendirectoryd, 
+# mac_free_gib=21.4
+15:16:41 load  13.22 13.06 13.80  | sum 29 | 9.4 WindowServer, 8.0 WallpaperAerialsExtension, 3.3 VTDecoderXPCService, 1.7 claude, 
+15:16:51 load  11.50 12.69 13.66  | sum 32 | 8.2 WindowServer, 4.2 WallpaperAerialsExtension, 2.4 VTDecoderXPCService, 2.2 bash, 
+15:17:01 load  9.96 12.32 13.52  | sum 34 | 12.3 WindowServer, 8.5 loginwindow, 5.4 WallpaperAerialsExtension, 3.4 claude, 
+# mac_free_gib=21.4
+15:17:11 load  9.07 12.05 13.41  | sum 30 | 9.4 WindowServer, 5.1 claude, 3.5 WallpaperAerialsExtension, 2.5 claude, 
+15:17:21 load  8.43 11.82 13.31  | sum 50 | 13.7 bash, 8.7 WindowServer, 5.8 WallpaperAerialsExtension, 3.8 claude, 
+15:17:31 load  8.15 11.64 13.23  | sum 491 | 164.4 beam.smp, 153.1 beam.smp, 109.8 beam.smp, 22.0 fseventsd, 
+# mac_free_gib=21.4
+15:17:41 load  9.28 11.77 13.25  | sum 369 | 180.4 fseventsd, 58.9 Finder, 31.4 mds_stores, 23.4 (rm), 
+15:17:51 load  8.69 11.56 13.16  | sum 257 | 185.4 beam.smp, 14.4 bash, 10.9 bash, 9.1 bash, 
+15:18:01 load  10.35 11.82 13.24  | sum 393 | 42.7 beam.smp, 39.5 beam.smp, 32.1 Python, 20.1 Python, 
+# mac_free_gib=21.4
+15:18:12 load  18.48 13.52 13.82  | sum 315 | 25.5 beam.smp, 21.1 Python, 17.6 Python, 17.3 Python, 
+15:18:23 load  19.61 13.93 13.97  | sum 374 | 26.3 cmux, 25.8 Python, 25.4 Python, 23.9 Python, 
+15:18:33 load  20.11 14.23 14.07  | sum 68 | 15.9 Python, 7.5 fseventsd, 6.5 WindowServer, 4.5 mds, 
+# mac_free_gib=21.4
+15:18:43 load  17.62 13.89 13.95  | sum 41 | 10.0 WindowServer, 7.9 claude, 6.7 claude, 4.8 WallpaperAerialsExtension, 
+15:18:53 load  16.38 13.75 13.90  | sum 222 | 126.6 beam.smp, 30.1 com.apple.WebKit.WebContent, 8.7 mdworker_shared, 7.6 WindowServer, 
+15:19:04 load  16.97 13.97 13.98  | sum 240 | 84.5 beam.smp, 19.6 fseventsd, 9.9 opendirectoryd, 9.0 mds, 
+# mac_free_gib=21.3
+15:19:15 load  19.18 14.60 14.20  | sum 303 | 28.3 beam.smp, 21.6 Python, 19.0 Python, 18.8 Python, 
+15:19:25 load  17.80 14.47 14.16  | sum 349 | 29.9 beam.smp, 21.3 Python, 15.0 Python, 14.4 Python, 
+15:19:35 load  17.38 14.50 14.17  | sum 97 | 26.5 Python, 19.5 Python, 6.9 WindowServer, 5.5 cmux, 
+# mac_free_gib=21.3
+15:19:45 load  15.02 14.09 14.03  | sum 61 | 11.2 cmux, 10.2 WindowServer, 9.5 cmux, 7.3 claude, 
+15:19:56 load  15.14 14.13 14.05  | sum 240 | 34.4 Python, 20.6 Python, 19.9 Python, 17.0 Python, 
+15:20:06 load  15.03 14.15 14.05  | sum 77 | 21.9 Python, 15.3 go, 7.3 WindowServer, 6.6 Python, 
+# mac_free_gib=21.2
+15:20:16 load  14.21 13.99 14.00  | sum 355 | 69.4 fseventsd, 66.3 spreekuur.test, 42.6 kasboek.test, 21.7 postgres:, 
+15:20:26 load  13.20 13.78 13.92  | sum 878 | 714.8 spoor.test, 44.6 spreekuur.test, 16.3 kasboek.test, 10.4 postgres:, 
+15:20:36 load  12.74 13.67 13.88  | sum 302 | 65.7 kasboek.test, 58.1 fseventsd, 28.2 web.test, 21.9 postgres:, 
+# mac_free_gib=20.9
+15:20:47 load  12.74 13.63 13.87  | sum 161 | 18.3 kasboek.test, 14.9 postgres:, 12.0 fseventsd, 9.9 zwerm.test, 
+15:20:57 load  11.54 13.35 13.76  | sum 126 | 28.0 fseventsd, 27.7 kasboek.test, 10.2 postgres:, 9.6 postgres:, 
+15:21:07 load  10.06 12.97 13.62  | sum 274 | 54.6 fseventsd, 53.7 beam.smp, 49.7 beam.smp, 45.2 beam.smp, 
+# mac_free_gib=21.1
+15:21:17 load  9.78 12.81 13.56  | sum 615 | 219.7 fseventsd, 142.0 beam.smp, 86.0 Finder, 72.1 cp, 
+15:21:27 load  10.19 12.80 13.55  | sum 54 | 12.2 werk.test, 11.6 bash, 8.2 WindowServer, 5.9 WallpaperAerialsExtension, 
+15:21:37 load  11.47 12.97 13.60  | sum 304 | 28.7 cmux, 23.7 claude, 16.5 Python, 16.1 beam.smp, 
+# mac_free_gib=21.1
+15:21:48 load  15.17 13.73 13.86  | sum 292 | 37.9 com.apple.WebKit.WebContent, 27.9 Python, 23.4 Python, 21.7 Python, 
+15:21:58 load  19.31 14.66 14.19  | sum 423 | 23.6 Python, 23.5 com.apple.WebKit.WebContent, 20.7 Python, 20.5 Python, 
+15:22:09 load  23.77 15.77 14.59  | sum 162 | 25.3 Python, 20.0 Python, 16.0 (Python), 12.2 Python, 
+# mac_free_gib=21.1
+15:22:19 load  26.27 16.57 14.88  | sum 225 | 25.2 Python, 25.1 Python, 24.8 Python, 22.5 Python, 
+15:22:29 load  23.24 16.39 14.85  | sum 64 | 18.3 fseventsd, 8.3 WindowServer, 7.6 zwerm.test, 4.4 Python, 
+15:22:39 load  20.93 16.11 14.77  | sum 223 | 32.6 beam.smp, 29.4 Python, 25.5 Python, 18.0 Python, 
+# mac_free_gib=21.1
+15:22:50 load  19.87 16.04 14.76  | sum 218 | 30.7 Python, 27.3 Python, 21.9 Python, 13.0 Python, 
+15:23:00 load  18.45 15.86 14.71  | sum 369 | 26.7 Python, 24.7 Python, 23.4 Python, 23.3 Python, 
+15:23:10 load  16.52 15.54 14.61  | sum 120 | 28.3 Python, 23.4 fseventsd, 15.6 Python, 7.4 WindowServer, 
+# mac_free_gib=21.1
+15:23:21 load  19.15 16.13 14.83  | sum 323 | 26.5 Python, 26.4 Python, 26.2 Python, 24.9 Python, 
+15:23:31 load  17.66 15.91 14.76  | sum 53 | 25.4 go, 8.4 WindowServer, 4.9 WallpaperAerialsExtension, 2.1 mds_stores, 
+15:23:41 load  16.99 15.81 14.74  | sum 267 | 36.7 beam.smp, 23.8 Python, 22.0 Python, 21.0 Python, 
+# mac_free_gib=20.8
+15:23:51 load  15.27 15.49 14.64  | sum 41 | 10.6 WindowServer, 6.0 WallpaperAerialsExtension, 3.4 Python, 3.2 VTDecoderXPCService, 
+15:24:01 load  14.03 15.21 14.55  | sum 416 | 72.7 spreekuur.test, 55.0 fseventsd, 44.3 XprotectService, 31.8 taal.test, 
+15:24:11 load  14.00 15.16 14.54  | sum 161 | 25.2 spreekuur.test, 24.5 fseventsd, 10.2 postgres:, 9.6 WindowServer, 
+# mac_free_gib=20.5
+15:24:22 load  14.89 15.33 14.61  | sum 347 | 54.3 com.apple.WebKit.WebContent, 53.0 kasboek.test, 50.8 spreekuur.test, 48.1 fseventsd, 
+15:24:32 load  14.84 15.30 14.60  | sum 202 | 36.1 spreekuur.test, 26.3 postgres:, 15.6 web.test, 15.5 fseventsd, 
+15:24:42 load  14.91 15.30 14.61  | sum 160 | 21.8 postgres:, 17.1 kasboek.test, 13.7 bash, 13.4 postgres:, 
+# mac_free_gib=20.6
+15:24:52 load  13.84 15.06 14.54  | sum 495 | 170.8 beam.smp, 163.3 beam.smp, 52.6 fseventsd, 19.5 kasboek.test, 
+15:25:02 load  13.07 14.86 14.47  | sum 229 | 80.2 fseventsd, 29.4 rm, 27.9 postgres:, 25.7 Finder, 
+15:25:12 load  11.81 14.54 14.36  | sum 110 | 31.7 fseventsd, 19.7 engine.test, 13.3 bash, 11.2 bash, 
+# mac_free_gib=20.7
+15:25:23 load  12.60 14.60 14.39  | sum 335 | 43.2 beam.smp, 39.9 beam.smp, 24.0 Python, 23.0 Python, 
+15:25:33 load  13.48 14.72 14.43  | sum 264 | 38.2 (beam.smp), 25.2 Python, 21.9 Python, 21.7 beam.smp, 
+15:25:43 load  16.07 15.23 14.61  | sum 236 | 28.4 (Python), 27.1 (Python), 26.6 (Python), 23.4 Python, 
+# mac_free_gib=20.7
+15:25:53 load  14.50 14.93 14.51  | sum 233 | 150.6 com.apple.WebKit.WebContent, 12.7 fseventsd, 12.2 Python, 8.6 WindowServer, 
+15:26:03 load  12.35 14.45 14.35  | sum 88 | 14.2 fseventsd, 11.7 WindowServer, 11.2 zwerm.test, 8.2 WallpaperAerialsExtension, 
+15:26:13 load  11.31 14.16 14.24  | sum 40 | 11.9 WindowServer, 7.8 WallpaperAerialsExtension, 6.1 VTDecoderXPCService, 5.5 claude, 
+# mac_free_gib=20.7
+15:26:24 load  11.42 14.09 14.22  | sum 132 | 33.0 Python, 11.6 Python, 11.5 com.apple.WebKit.WebContent, 8.9 WindowServer, 
+15:26:34 load  14.80 14.74 14.45  | sum 298 | 21.7 Python, 20.1 beam.smp, 18.3 beam.smp, 17.2 Python, 
+15:26:44 load  17.44 15.29 14.65  | sum 477 | 22.8 Python, 21.2 Python, 19.9 Python, 18.1 Python, 
+# mac_free_gib=20.7
+15:26:55 load  17.69 15.48 14.73  | sum 129 | 26.2 Python, 14.5 Python, 13.1 fseventsd, 7.2 claude, 
+15:27:05 load  15.51 15.09 14.60  | sum 91 | 36.3 go, 24.8 fseventsd, 7.7 WindowServer, 4.3 mds, 
+15:27:15 load  15.21 15.04 14.58  | sum 136 | 50.5 link, 27.5 link, 18.9 link, 12.6 go, 
+# mac_free_gib=20.4
+15:27:25 load  14.54 14.90 14.54  | sum 178 | 50.8 kasboek, 22.9 Python, 16.6 Python, 13.3 Python, 
+15:27:35 load  13.49 14.66 14.46  | sum 254 | 32.0 Python, 27.9 Python, 18.6 Python, 14.2 Python, 
+15:27:45 load  13.46 14.61 14.44  | sum 315 | 16.5 Python, 15.9 Python, 14.5 Python, 14.4 Python, 
+# mac_free_gib=20.5
+15:27:56 load  12.29 14.32 14.34  | sum 152 | 90.4 claude, 27.7 Python, 7.1 WindowServer, 3.6 WallpaperAerialsExtension, 
+15:28:06 load  10.64 13.90 14.19  | sum 45 | 9.4 WindowServer, 6.9 WallpaperAerialsExtension, 6.7 fseventsd, 3.7 mds_stores, 
+15:28:16 load  9.40 13.52 14.05  | sum 30 | 9.1 WindowServer, 4.6 WallpaperAerialsExtension, 4.2 claude, 2.2 VTDecoderXPCService, 
+# mac_free_gib=20.5
+15:28:27 load  8.78 13.26 13.95  | sum 29 | 9.9 WindowServer, 5.5 WallpaperAerialsExtension, 3.4 VTDecoderXPCService, 2.5 claude, 
+15:28:37 load  9.99 13.35 13.98  | sum 366 | 83.0 spreekuur.test, 61.2 fseventsd, 42.8 taal.test, 16.3 postgres:, 
+15:28:47 load  12.53 13.77 14.12  | sum 373 | 79.9 kasboek.test, 70.7 spreekuur.test, 42.4 postgres:, 38.4 fseventsd, 
+# mac_free_gib=20.2
+15:28:57 load  11.61 13.53 14.03  | sum 356 | 64.2 beam.smp, 57.8 kasboek.test, 54.2 fseventsd, 38.3 spreekuur.test, 
+15:29:07 load  12.00 13.55 14.03  | sum 322 | 66.7 kasboek.test, 34.3 fseventsd, 31.6 beam.smp, 30.0 Python, 
+15:29:17 load  15.16 14.19 14.25  | sum 199 | 59.7 kasboek.test, 43.8 fseventsd, 18.0 postgres:, 9.8 postgres:, 
+# mac_free_gib=20.3
+15:29:28 load  13.67 13.90 14.15  | sum 91 | 22.8 fseventsd, 10.9 WindowServer, 10.9 engine.test, 7.2 claude, 
+15:29:38 load  11.88 13.51 14.00  | sum 46 | 10.3 WindowServer, 7.0 WallpaperAerialsExtension, 4.3 fseventsd, 3.8 claude, 
+15:29:48 load  10.44 13.14 13.87  | sum 103 | 28.2 fseventsd, 18.9 (postgres), 10.8 WindowServer, 9.9 engine.test, 
+# mac_free_gib=20.4
+15:29:58 load  9.55 12.86 13.76  | sum 63 | 15.2 launchd, 9.8 WindowServer, 8.7 fseventsd, 5.1 WallpaperAerialsExtension, 
+15:30:08 load  9.70 12.78 13.72  | sum 161 | 28.8 cmux, 24.6 Python, 20.2 Python, 15.2 Python, 
+15:30:18 load  8.83 12.49 13.61  | sum 102 | 37.9 zwerm.test, 27.1 fseventsd, 8.1 WindowServer, 5.1 Finder, 
+# mac_free_gib=20.4
+15:30:28 load  7.70 12.13 13.46  | sum 86 | 16.8 fseventsd, 14.8 spoor.test, 11.6 launchd, 9.3 WindowServer, 
+15:30:39 load  8.39 12.13 13.45  | sum 72 | 24.7 fseventsd, 15.2 zicht.test, 7.4 WindowServer, 4.7 Finder, 
+15:30:49 load  7.33 11.78 13.31  | sum 32 | 9.7 bash, 7.2 WindowServer, 4.7 syspolicyd, 3.4 WallpaperAerialsExtension, 
+# mac_free_gib=20.4
+15:30:59 load  6.73 11.50 13.19  | sum 213 | 138.1 beam.smp, 16.4 fseventsd, 6.9 XprotectService, 6.8 WindowServer, 
+15:31:09 load  10.91 12.24 13.43  | sum 366 | 277.3 compile, 23.4 go, 22.2 Python, 7.5 WindowServer, 
+15:31:19 load  9.70 11.94 13.31  | sum 38 | 11.8 WindowServer, 5.6 WallpaperAerialsExtension, 3.2 claude, 3.0 VTDecoderXPCService, 
+# mac_free_gib=20.2
+15:31:29 load  10.20 11.96 13.30  | sum 38 | 9.5 WindowServer, 6.6 claude, 5.6 claude, 4.1 WallpaperAerialsExtension, 
+15:31:39 load  9.46 11.74 13.21  | sum 48 | 10.0 WindowServer, 9.5 claude, 8.1 claude, 6.1 WallpaperAerialsExtension, 
+15:31:49 load  8.16 11.39 13.07  | sum 48 | 10.8 WindowServer, 6.4 WallpaperAerialsExtension, 6.3 cmux, 4.6 claude, 
+# mac_free_gib=20.1
+15:32:00 load  6.57 10.88 12.86  | sum 71 | 28.5 grep, 12.7 WindowServer, 7.5 loginwindow, 5.4 WallpaperAerialsExtension, 
+15:32:10 load  6.35 10.69 12.76  | sum 51 | 16.4 beam.smp, 10.2 WindowServer, 4.7 WallpaperAerialsExtension, 2.8 VTDecoderXPCService, 
+15:32:20 load  5.75 10.42 12.64  | sum 192 | 100.0 postgres:, 46.5 grep, 16.1 cmux, 7.6 WindowServer, 
+# mac_free_gib=20.0
+15:32:30 load  5.25 10.16 12.52  | sum 92 | 76.5 beam.smp, 5.7 WindowServer, 3.2 WallpaperAerialsExtension, 1.6 VTDecoderXPCService, 
+15:32:40 load  5.23 9.99 12.44  | sum 63 | 29.4 cmux, 8.4 WindowServer, 6.0 claude, 4.6 Finder, 
+15:32:50 load  4.73 9.72 12.31  | sum 21 | 6.5 WindowServer, 5.8 WallpaperAerialsExtension, 2.4 VTDecoderXPCService, 1.7 claude, 
+# mac_free_gib=20.1
+15:33:00 load  4.87 9.58 12.23  | sum 63 | 16.5 bash, 13.6 WindowServer, 9.8 loginwindow, 4.5 WallpaperAerialsExtension, 
+15:33:10 load  5.25 9.51 12.18  | sum 52 | 20.4 cmux, 7.3 WindowServer, 5.4 bash, 4.9 syspolicyd, 
+15:33:21 load  4.52 9.22 12.04  | sum 94 | 33.0 cmux, 13.6 WindowServer, 10.2 cmux, 8.3 claude, 
+# mac_free_gib=20.1
+15:33:31 load  4.06 8.96 11.92  | sum 45 | 10.2 WindowServer, 8.5 claude, 5.5 WallpaperAerialsExtension, 4.9 claude, 
+15:33:41 load  3.58 8.70 11.79  | sum 94 | 16.5 cmux, 16.0 claude, 13.3 WindowServer, 10.8 claude, 
+15:33:51 load  3.26 8.46 11.67  | sum 43 | 11.7 WindowServer, 6.8 claude, 6.0 WallpaperAerialsExtension, 5.7 claude, 
+# mac_free_gib=20.1
+15:34:01 load  3.91 8.43 11.62  | sum 76 | 15.4 WindowServer, 12.0 claude, 11.7 mdworker_shared, 10.9 loginwindow, 
+15:34:11 load  3.62 8.22 11.51  | sum 38 | 10.2 WindowServer, 6.0 claude, 5.9 WallpaperAerialsExtension, 4.5 cmux, 
+15:34:21 load  3.85 8.11 11.43  | sum 205 | 98.1 Python, 61.0 com.apple.WebKit.WebContent, 13.3 com.apple.WebKit.Networking, 10.0 WindowServer, 
+# mac_free_gib=20.0
+15:34:32 load  3.56 7.91 11.32  | sum 64 | 24.8 cmux, 11.5 WindowServer, 4.1 WallpaperAerialsExtension, 4.1 claude, 
+15:34:42 load  3.16 7.68 11.20  | sum 40 | 11.3 claude, 9.0 WindowServer, 5.3 WallpaperAerialsExtension, 3.2 VTDecoderXPCService, 
+15:34:52 load  2.99 7.50 11.09  | sum 25 | 7.8 WindowServer, 4.1 WallpaperAerialsExtension, 3.2 claude, 2.1 VTDecoderXPCService, 
+# mac_free_gib=20.0
+15:35:02 load  3.32 7.41 11.02  | sum 35 | 10.0 WindowServer, 4.9 claude, 4.6 WallpaperAerialsExtension, 4.2 Finder, 
+15:35:12 load  3.40 7.30 10.94  | sum 72 | 12.1 top, 11.9 WallpaperAerialsExtension, 11.2 claude, 10.4 WindowServer, 
+15:35:22 load  3.40 7.17 10.85  | sum 66 | 17.5 claude, 11.5 WindowServer, 7.4 WallpaperAerialsExtension, 6.8 Finder, 
+# mac_free_gib=20.0
+15:35:33 load  3.26 7.02 10.75  | sum 36 | 9.7 WindowServer, 6.5 WallpaperAerialsExtension, 5.2 claude, 3.6 VTDecoderXPCService, 
+15:35:43 load  2.91 6.82 10.64  | sum 53 | 11.1 claude, 10.9 WindowServer, 7.8 WallpaperAerialsExtension, 3.7 claude, 
+15:35:53 load  7.22 7.64 10.88  | sum 357 | 93.2 duetexpertd, 91.3 com.apple.WebKit.WebContent, 55.0 DisplayLinkUserAgent, 41.0 WindowServer, 
+# mac_free_gib=19.0
+15:36:03 load  6.65 7.51 10.80  | sum 138 | 38.1 WindowServer, 19.5 DisplayLinkUserAgent, 14.9 com.apple.WebKit.GPU, 10.0 cmux, 
+15:36:13 load  6.16 7.37 10.71  | sum 114 | 32.2 WindowServer, 17.2 com.apple.WebKit.GPU, 14.1 DisplayLinkUserAgent, 10.5 com.apple.WebKit.WebContent, 
+15:36:23 load  6.82 7.47 10.71  | sum 185 | 48.5 com.apple.WebKit.WebContent, 30.6 WindowServer, 18.4 com.apple.WebKit.GPU, 14.4 DisplayLinkUserAgent, 
+# mac_free_gib=19.0
+15:36:34 load  6.51 7.39 10.64  | sum 575 | 165.2 compile, 123.7 compile, 83.1 compile, 35.2 link, 
+15:36:44 load  7.96 7.67 10.70  | sum 232 | 41.3 spreekuur.test, 33.8 fseventsd, 26.3 WindowServer, 14.7 com.apple.WebKit.GPU, 
+15:36:54 load  7.78 7.65 10.66  | sum 451 | 87.8 beam.smp, 61.9 kasboek.test, 59.2 fseventsd, 47.1 spreekuur.test, 
+# mac_free_gib=18.7
+15:37:04 load  7.68 7.63 10.62  | sum 393 | 72.4 fseventsd, 69.1 spreekuur.test, 47.0 kasboek.test, 30.2 Finder, 
+15:37:14 load  7.44 7.58 10.56  | sum 294 | 56.6 fseventsd, 33.3 kasboek.test, 24.6 WindowServer, 23.0 Finder, 
+15:37:24 load  7.50 7.59 10.53  | sum 309 | 110.7 beam.smp, 30.7 fseventsd, 18.7 WindowServer, 18.2 cmux, 
+# mac_free_gib=18.9
+15:37:35 load  8.16 7.72 10.54  | sum 343 | 24.1 claude, 20.8 WindowServer, 20.5 beam.smp, 19.2 Python, 
+15:37:45 load  11.66 8.48 10.78  | sum 283 | 97.1 claude, 33.4 Python, 26.5 Python, 26.4 Python, 
+15:37:55 load  9.58 8.18 10.63  | sum 65 | 9.3 WindowServer, 7.3 fseventsd, 7.0 syspolicyd, 5.3 trustd, 
+# mac_free_gib=18.9
+15:38:05 load  8.97 8.09 10.57  | sum 67 | 13.7 go, 10.8 WindowServer, 5.5 compile, 5.0 fseventsd, 
+15:38:15 load  9.44 8.22 10.59  | sum 214 | 91.1 com.apple.WebKit.WebContent, 41.0 WindowServer, 10.7 cmux, 9.9 postgres:, 
+15:38:25 load  8.83 8.13 10.53  | sum 413 | 152.7 beam.smp, 44.9 runningboardd, 43.2 systemsettingsagent, 32.4 coreduetd, 
+# mac_free_gib=18.9
+15:38:36 load  10.97 8.61 10.67  | sum 270 | 23.1 Python, 21.6 Python, 20.9 Python, 20.5 Python, 
+15:38:46 load  11.69 8.85 10.73  | sum 92 | 20.2 Python, 14.7 fseventsd, 13.5 zwerm.test, 6.3 WindowServer, 
+15:38:56 load  10.12 8.60 10.62  | sum 66 | 26.4 Python, 10.1 go, 6.7 WindowServer, 5.4 syspolicyd, 
+# mac_free_gib=18.9
+15:39:06 load  9.11 8.44 10.54  | sum 33 | 6.4 WindowServer, 4.5 com.apple.WebKit.WebContent, 3.0 fseventsd, 2.3 bash, 
+15:39:16 load  9.10 8.45 10.52  | sum 29 | 9.1 bash, 5.5 WindowServer, 3.6 com.apple.WebKit.WebContent, 3.4 syspolicyd, 
+15:39:26 load  8.68 8.39 10.47  | sum 153 | 105.6 go, 7.9 fseventsd, 7.7 claude, 6.4 WindowServer, 
+# mac_free_gib=18.7
+15:39:37 load  7.95 8.24 10.40  | sum 181 | 68.5 go, 39.5 link, 31.8 cmux, 10.8 bash, 
+15:39:47 load  8.41 8.33 10.40  | sum 184 | 147.6 beam.smp, 8.8 WindowServer, 5.8 fseventsd, 5.2 com.apple.WebKit.WebContent, 
+15:39:57 load  8.68 8.39 10.40  | sum 439 | 121.0 beam.smp, 53.4 fseventsd, 50.5 spreekuur.test, 48.8 kasboek.test, 
+# mac_free_gib=18.2
+15:40:07 load  9.76 8.62 10.46  | sum 443 | 91.5 web.test, 67.4 kasboek.test, 57.7 fseventsd, 34.3 postgres:, 
+15:40:17 load  12.68 9.28 10.67  | sum 302 | 36.6 Python, 29.7 Python, 28.1 fseventsd, 24.9 Python, 
+15:40:27 load  17.04 10.34 11.03  | sum 283 | 39.6 claude, 33.0 Python, 24.7 Python, 20.1 fseventsd, 
+# mac_free_gib=18.3
+15:40:38 load  15.80 10.29 11.00  | sum 296 | 69.2 fseventsd, 57.9 kasboek.test, 53.4 spreekuur.test, 23.4 mediaanalysisd, 
+15:40:48 load  14.28 10.15 10.94  | sum 166 | 31.3 fseventsd, 22.3 web.test, 21.3 kasboek.test, 9.9 Python, 
+15:40:58 load  14.08 10.24 10.97  | sum 152 | 53.6 fseventsd, 13.2 mdworker_shared, 13.1 mdworker_shared, 11.5 postgres:, 
+# mac_free_gib=18.5
+15:41:08 load  12.06 9.94 10.85  | sum 58 | 13.4 claude, 7.5 com.apple.WebKit.WebContent, 6.7 WindowServer, 5.5 fseventsd, 
+15:41:18 load  13.07 10.21 10.93  | sum 285 | 101.0 beam.smp, 36.6 fseventsd, 26.7 Python, 13.3 Python, 
+15:41:28 load  14.11 10.53 11.04  | sum 143 | 25.7 Python, 18.0 Python, 16.4 launchd, 10.7 (beam.smp), 
+# mac_free_gib=18.5
+15:41:38 load  12.77 10.36 10.97  | sum 74 | 24.9 Python, 12.2 fseventsd, 6.5 werk.test, 3.5 com.apple.WebKit.WebContent, 
+15:41:48 load  10.96 10.05 10.86  | sum 100 | 39.5 zwerm.test, 15.3 Python, 8.3 claude, 8.2 fseventsd, 
+15:41:59 load  11.05 10.10 10.86  | sum 47 | 34.1 claude, 4.9 launchd, 3.4 claude, 1.9 com.apple.WebKit.WebContent, 
+# mac_free_gib=18.5
+15:42:09 load  9.74 9.85 10.76  | sum 26 | 5.4 com.apple.WebKit.WebContent, 4.6 cmux, 2.7 WindowServer, 2.2 opencode, 
+15:42:19 load  9.20 9.72 10.71  | sum 28 | 4.9 com.apple.WebKit.WebContent, 4.5 zicht.test, 2.9 fseventsd, 2.6 postgres:, 
+15:42:29 load  8.25 9.50 10.62  | sum 47 | 11.8 fseventsd, 6.3 cmux, 3.8 mds, 3.5 com.apple.WebKit.WebContent, 
+# mac_free_gib=18.5
+15:42:39 load  7.75 9.35 10.55  | sum 50 | 19.5 fseventsd, 4.2 bash, 4.0 mds, 3.9 XprotectService, 
+15:42:49 load  7.03 9.15 10.46  | sum 147 | 82.9 kasboek, 36.1 top, 12.1 postgres:, 2.1 XprotectService, 
+15:42:59 load  6.96 9.06 10.42  | sum 38 | 17.6 fseventsd, 4.9 mds_stores, 3.3 mds, 2.7 Finder, 
+# mac_free_gib=18.2
+15:43:09 load  6.91 8.97 10.37  | sum 188 | 77.8 link, 48.0 link, 23.6 link, 14.0 go, 
+15:43:20 load  6.90 8.91 10.33  | sum 25 | 7.9 com.apple.WebKit.WebContent, 3.3 claude, 2.6 claude, 1.8 cmux, 
+15:43:30 load  6.07 8.66 10.23  | sum 53 | 10.6 ScreenTimeSettingsAgent, 9.7 claude, 7.4 claude, 7.3 com.apple.WebKit.WebContent, 
+# mac_free_gib=18.1
+15:43:40 load  5.86 8.53 10.16  | sum 140 | 65.9 spotlightknowledged.updater, 21.1 claude, 12.3 claude, 12.1 com.apple.WebKit.WebContent, 
+15:43:50 load  5.11 8.28 10.05  | sum 33 | 11.0 claude, 7.7 zsh, 3.7 com.apple.WebKit.WebContent, 2.1 cmux, 
+15:44:00 load  5.58 8.27 10.03  | sum 178 | 24.2 fseventsd, 19.3 postgres:, 15.4 postgres:, 13.5 example.test, 
+# mac_free_gib=17.8
+15:44:10 load  7.35 8.56 10.11  | sum 238 | 90.2 spreekuur.test, 36.9 fseventsd, 14.6 XprotectService, 13.5 postgres:, 
+15:44:20 load  7.30 8.51 10.07  | sum 288 | 78.5 kasboek.test, 46.0 fseventsd, 43.9 spreekuur.test, 25.3 postgres:, 
+15:44:30 load  6.79 8.36 10.00  | sum 363 | 162.1 corespotlightd, 83.0 kasboek.test, 41.8 fseventsd, 11.7 postgres:, 
+# mac_free_gib=17.9
+15:44:41 load  6.52 8.22 9.92  | sum 100 | 19.2 fseventsd, 17.0 kasboek.test, 12.2 postgres:, 6.3 Finder, 
+15:44:51 load  6.56 8.18 9.89  | sum 76 | 37.2 fseventsd, 8.0 engine.test, 6.9 Finder, 6.0 mds, 
+15:45:01 load  5.86 7.98 9.80  | sum 34 | 7.2 com.apple.WebKit.WebContent, 6.8 fseventsd, 3.0 engine.test, 2.5 claude, 
+# mac_free_gib=18.0
+15:45:11 load  5.35 7.80 9.71  | sum 106 | 46.2 fseventsd, 15.7 engine.test, 13.4 Finder, 7.6 mds, 
+15:45:21 load  5.90 7.84 9.70  | sum 59 | 14.2 fseventsd, 7.5 postgres:, 7.2 claude, 5.8 werk.test, 
+15:45:31 load  5.46 7.68 9.62  | sum 37 | 14.6 zwerm.test, 6.4 com.apple.WebKit.WebContent, 5.6 fseventsd, 2.8 claude, 
+# mac_free_gib=18.0
+15:45:42 load  5.02 7.51 9.54  | sum 20 | 3.8 fseventsd, 3.1 com.apple.WebKit.WebContent, 1.9 bash, 1.6 opendirectoryd, 
+15:45:52 load  5.12 7.44 9.49  | sum 60 | 15.5 spoor.test, 11.1 fseventsd, 8.4 claude, 4.8 com.apple.WebKit.WebContent, 
+15:46:02 load  5.60 7.47 9.48  | sum 52 | 8.7 zicht.test, 8.3 com.apple.WebKit.WebContent, 7.4 fseventsd, 7.2 claude, 
+# mac_free_gib=18.0
+15:46:12 load  6.57 7.61 9.50  | sum 187 | 60.1 (link), 58.9 (link), 57.7 (link), 2.7 com.apple.WebKit.WebContent, 
+15:46:22 load  6.43 7.54 9.46  | sum 310 | 152.2 compile, 121.8 compile, 9.8 link, 9.6 go, 
+15:46:32 load  6.12 7.44 9.40  | sum 39 | 12.3 fseventsd, 7.9 claude, 2.4 com.apple.WebKit.WebContent, 2.2 spotlightknowledged.updater, 
+# mac_free_gib=17.8
+15:46:42 load  5.55 7.27 9.32  | sum 20 | 7.7 com.apple.WebKit.WebContent, 2.2 claude, 2.1 opencode, 1.6 cmux, 
+15:46:52 load  5.45 7.20 9.27  | sum 14 | 4.3 claude, 3.2 Finder, 2.1 com.apple.WebKit.WebContent, 2.1 claude, 
+15:47:02 load  4.91 7.03 9.18  | sum 29 | 9.9 claude, 7.6 com.apple.WebKit.WebContent, 2.8 opencode, 1.7 cmux, 
+# mac_free_gib=17.8
+15:47:13 load  4.39 6.84 9.09  | sum 225 | 90.1 (compile), 77.6 compile, 40.4 go, 4.5 fseventsd, 
+15:47:23 load  4.54 6.80 9.05  | sum 14 | 3.4 claude, 3.0 com.apple.WebKit.WebContent, 1.1 cmux, 0.9 claude, 
+15:47:33 load  6.19 7.07 9.12  | sum 64 | 40.0 compile, 6.7 go, 4.5 com.apple.WebKit.WebContent, 1.9 claude, 
+# mac_free_gib=17.6
+15:47:43 load  5.71 6.94 9.04  | sum 135 | 109.4 go, 7.0 sysmond, 3.6 Finder, 3.5 com.apple.WebKit.WebContent, 
+15:47:53 load  5.14 6.77 8.96  | sum 283 | 166.9 go, 56.2 com.apple.WebKit.WebContent, 41.6 compile, 4.7 claude, 
+15:48:03 load  4.50 6.58 8.87  | sum 21 | 7.7 com.apple.WebKit.WebContent, 3.9 claude, 2.0 claude, 1.8 cmux, 
+# mac_free_gib=17.6
+15:48:14 load  4.04 6.41 8.78  | sum 28 | 7.2 Finder, 6.5 claude, 5.1 com.apple.WebKit.WebContent, 2.9 cmux, 
+15:48:24 load  3.57 6.24 8.69  | sum 285 | 63.8 universalaccessd, 56.7 com.apple.WebKit.WebContent, 27.0 WindowServer, 24.8 loginwindow, 
+15:48:34 load  3.70 6.18 8.64  | sum 107 | 61.1 claude, 11.3 WindowServer, 8.5 WallpaperAerialsExtension, 4.1 modelmanagerd, 
+# mac_free_gib=17.6
+15:48:44 load  3.28 6.01 8.55  | sum 28 | 7.4 WindowServer, 6.5 WallpaperAerialsExtension, 2.7 bash, 2.0 VTDecoderXPCService, 
+15:48:54 load  3.30 5.92 8.49  | sum 32 | 8.8 WindowServer, 7.5 com.apple.WebKit.WebContent, 3.2 WallpaperAerialsExtension, 3.2 claude, 
+15:49:04 load  3.62 5.91 8.46  | sum 54 | 13.5 cmux, 10.5 WindowServer, 6.6 claude, 5.2 WallpaperAerialsExtension, 
+# mac_free_gib=17.6
+15:49:14 load  3.44 5.79 8.39  | sum 29 | 9.1 WindowServer, 4.6 WallpaperAerialsExtension, 3.3 claude, 2.7 VTDecoderXPCService, 
+15:49:24 load  3.06 5.63 8.30  | sum 51 | 15.4 com.apple.WebKit.WebContent, 11.6 WindowServer, 6.4 WallpaperAerialsExtension, 3.7 VTDecoderXPCService, 
+15:49:34 load  3.82 5.71 8.29  | sum 23 | 7.2 WindowServer, 5.2 WallpaperAerialsExtension, 2.5 VTDecoderXPCService, 1.6 claude, 
+# mac_free_gib=17.5
+15:49:45 load  3.39 5.56 8.21  | sum 88 | 32.9 cmux, 13.2 WindowServer, 10.7 cmux, 7.8 claude, 
+15:49:55 load  3.24 5.46 8.14  | sum 35 | 9.8 WindowServer, 6.4 WallpaperAerialsExtension, 4.8 claude, 3.5 VTDecoderXPCService, 
+15:50:05 load  3.05 5.34 8.07  | sum 34 | 10.2 WindowServer, 6.5 WallpaperAerialsExtension, 3.6 VTDecoderXPCService, 3.3 claude, 
+# mac_free_gib=17.5
+15:50:15 load  3.60 5.38 8.05  | sum 29 | 9.5 WindowServer, 4.9 WallpaperAerialsExtension, 4.4 claude, 2.7 VTDecoderXPCService, 
+15:50:25 load  3.35 5.27 7.98  | sum 92 | 36.7 cmux, 13.4 WindowServer, 9.4 cmux, 7.9 claude, 
+15:50:35 load  4.02 5.34 7.97  | sum 148 | 65.3 kasboek.test, 37.5 corespotlightd, 9.4 WindowServer, 6.6 WallpaperAerialsExtension, 
+# mac_free_gib=17.5
+15:50:45 load  4.30 5.36 7.95  | sum 38 | 9.9 WindowServer, 6.8 WallpaperAerialsExtension, 4.9 claude, 4.1 claude, 
+15:50:56 load  3.79 5.22 7.87  | sum 33 | 10.0 WindowServer, 7.4 WallpaperAerialsExtension, 3.3 VTDecoderXPCService, 3.3 claude, 
+15:51:06 load  3.44 5.10 7.79  | sum 52 | 15.2 claude, 10.7 WindowServer, 4.6 WallpaperAerialsExtension, 4.6 claude, 
+# mac_free_gib=17.5
+15:51:16 load  3.15 4.98 7.72  | sum 26 | 7.1 WindowServer, 6.7 WallpaperAerialsExtension, 4.5 Finder, 2.5 cmux, 
+15:51:26 load  2.97 4.88 7.65  | sum 32 | 9.3 WindowServer, 4.0 WallpaperAerialsExtension, 3.4 bash, 2.7 VTDecoderXPCService, 
+15:51:36 load  4.04 5.05 7.68  | sum 42 | 15.0 cmux, 8.5 WindowServer, 4.7 WallpaperAerialsExtension, 4.1 claude, 
+# mac_free_gib=17.5
+15:51:46 load  4.09 5.03 7.64  | sum 29 | 8.4 WindowServer, 6.1 WallpaperAerialsExtension, 3.5 opencode, 3.3 VTDecoderXPCService, 
+15:51:56 load  3.61 4.89 7.56  | sum 39 | 11.2 WindowServer, 8.5 claude, 4.8 WallpaperAerialsExtension, 3.1 VTDecoderXPCService, 
+15:52:06 load  3.59 4.85 7.52  | sum 43 | 8.0 WindowServer, 7.9 go, 4.2 mdworker_shared, 3.8 WallpaperAerialsExtension, 
+# mac_free_gib=17.5
+15:52:17 load  3.27 4.74 7.44  | sum 40 | 12.2 WindowServer, 5.7 claude, 5.3 WallpaperAerialsExtension, 3.5 VTDecoderXPCService, 
+15:52:27 load  3.64 4.76 7.42  | sum 37 | 7.8 WindowServer, 6.4 fseventsd, 4.4 WallpaperAerialsExtension, 3.2 syspolicyd, 
+15:52:37 load  3.54 4.70 7.37  | sum 67 | 14.7 cmux, 12.0 claude, 10.6 WindowServer, 6.1 WallpaperAerialsExtension, 
+# mac_free_gib=17.5
+15:52:47 load  4.46 4.85 7.37  | sum 23 | 9.4 WindowServer, 3.8 WallpaperAerialsExtension, 2.3 VTDecoderXPCService, 1.9 claude, 
+15:52:57 load  4.00 4.74 7.30  | sum 34 | 10.1 WindowServer, 7.4 WallpaperAerialsExtension, 5.1 claude, 3.3 VTDecoderXPCService, 
+15:53:07 load  3.54 4.61 7.23  | sum 76 | 30.7 cmux, 9.1 WindowServer, 7.7 cmux, 6.7 WallpaperAerialsExtension, 
+# mac_free_gib=17.5
+15:53:17 load  3.16 4.49 7.16  | sum 48 | 13.0 cmux, 10.1 WindowServer, 6.4 WallpaperAerialsExtension, 3.2 VTDecoderXPCService, 
+15:53:27 load  2.97 4.41 7.10  | sum 35 | 8.7 WindowServer, 5.1 WallpaperAerialsExtension, 2.9 VTDecoderXPCService, 2.9 opencode, 
+15:53:37 load  3.46 4.46 7.08  | sum 366 | 86.2 spreekuur.test, 53.5 fseventsd, 42.9 XprotectService, 27.6 taal.test, 
+# mac_free_gib=17.0
+15:53:48 load  3.92 4.53 7.08  | sum 273 | 69.7 spreekuur.test, 51.2 fseventsd, 37.5 top, 15.0 postgres:, 
+15:53:58 load  3.62 4.45 7.02  | sum 177 | 43.4 kasboek.test, 42.2 spreekuur.test, 29.2 fseventsd, 11.2 postgres:, 
+15:54:08 load  4.48 4.61 7.04  | sum 229 | 56.1 kasboek.test, 56.1 fseventsd, 28.3 mediaanalysisd, 13.2 postgres:, 
+# mac_free_gib=17.1
+15:54:18 load  4.24 4.56 7.00  | sum 54 | 9.8 WindowServer, 7.9 WallpaperAerialsExtension, 7.3 postgres:, 4.5 postgres:, 
+15:54:29 load  3.74 4.44 6.93  | sum 95 | 26.4 postgres:, 15.1 fseventsd, 10.2 launchd, 9.6 WindowServer, 
+15:54:39 load  3.47 4.36 6.87  | sum 111 | 41.9 fseventsd, 18.7 engine.test, 9.6 Finder, 8.9 WindowServer, 
+# mac_free_gib=17.3
+15:54:49 load  3.25 4.28 6.81  | sum 69 | 23.5 fseventsd, 10.3 engine.test, 8.1 WindowServer, 4.8 Finder, 
+15:54:59 load  2.91 4.17 6.74  | sum 99 | 32.7 fseventsd, 11.7 werk.test, 11.4 WindowServer, 7.4 Finder, 
+15:55:09 load  2.61 4.07 6.67  | sum 87 | 47.7 zwerm.test, 8.7 fseventsd, 7.5 WindowServer, 3.6 claude, 
+# mac_free_gib=17.3
+15:55:19 load  2.91 4.08 6.65  | sum 34 | 9.9 WindowServer, 7.5 WallpaperAerialsExtension, 5.3 claude, 3.3 VTDecoderXPCService, 
+15:55:29 load  3.01 4.06 6.61  | sum 29 | 9.3 WindowServer, 4.4 WallpaperAerialsExtension, 2.5 VTDecoderXPCService, 1.9 claude, 
+15:55:39 load  3.15 4.06 6.58  | sum 47 | 10.5 WindowServer, 7.6 postgres:, 5.8 claude, 5.2 zicht.test, 
+# mac_free_gib=17.3
+15:55:50 load  2.90 3.97 6.52  | sum 92 | 51.3 compile, 9.8 WindowServer, 9.6 go, 5.4 VTDecoderXPCService, 
+15:56:00 load  3.51 4.07 6.53  | sum 108 | 57.8 go, 12.4 compile, 10.6 WindowServer, 6.9 loginwindow, 
+15:56:10 load  3.83 4.12 6.51  | sum 120 | 56.8 kasboek, 22.3 postgres:, 20.1 postgres:, 7.1 WindowServer, 
+# mac_free_gib=17.0
+15:56:20 load  3.98 4.15 6.49  | sum 37 | 8.7 WindowServer, 5.9 WallpaperAerialsExtension, 3.0 VTDecoderXPCService, 2.8 bash, 
+15:56:30 load  4.16 4.18 6.48  | sum 18 | 7.9 WindowServer, 3.7 WallpaperAerialsExtension, 1.7 VTDecoderXPCService, 1.5 opencode, 
+15:56:40 load  3.90 4.12 6.43  | sum 124 | 80.2 cmux, 16.7 WindowServer, 7.9 WallpaperAerialsExtension, 3.7 VTDecoderXPCService, 
+# mac_free_gib=16.9
+15:56:51 load  4.92 4.33 6.48  | sum 198 | 76.9 go, 41.1 link, 23.8 homeenergyd, 7.4 WindowServer, 
+15:57:01 load  5.60 4.50 6.51  | sum 332 | 66.0 kasboek, 42.5 fseventsd, 41.2 taal.test, 31.1 spreekuur.test, 
+15:57:11 load  5.71 4.56 6.51  | sum 784 | 646.2 spoor.test, 39.1 kasboek.test, 19.8 fseventsd, 13.0 spreekuur.test, 
+# mac_free_gib=16.5
+15:57:21 load  6.46 4.76 6.56  | sum 270 | 63.5 spreekuur.test, 56.6 kasboek.test, 38.0 PerfPowerServices, 19.6 runningboardd, 
+15:57:31 load  6.07 4.73 6.53  | sum 91 | 46.6 kasboek.test, 8.2 WindowServer, 5.6 WallpaperAerialsExtension, 4.3 web.test, 
+15:57:41 load  5.66 4.69 6.49  | sum 146 | 48.3 kasboek.test, 24.8 com.apple.WebKit.WebContent, 10.3 WindowServer, 10.0 fseventsd, 
+# mac_free_gib=16.6
+15:57:51 load  5.71 4.73 6.48  | sum 81 | 21.9 fseventsd, 8.5 WindowServer, 7.1 WallpaperAerialsExtension, 6.3 postgres:, 
+15:58:01 load  5.15 4.64 6.43  | sum 109 | 36.6 fseventsd, 18.4 engine.test, 12.7 WindowServer, 8.5 loginwindow, 
+15:58:11 load  4.66 4.56 6.38  | sum 68 | 15.4 postgres:, 14.9 fseventsd, 7.6 WindowServer, 5.3 claude, 
+# mac_free_gib=16.7
+15:58:22 load  4.94 4.62 6.38  | sum 100 | 30.6 werk.test, 12.4 WindowServer, 7.6 WallpaperAerialsExtension, 5.2 fseventsd, 
+15:58:32 load  4.34 4.50 6.32  | sum 32 | 7.0 WindowServer, 5.1 cmux, 4.8 WallpaperAerialsExtension, 3.7 claude, 
+15:58:42 load  3.97 4.42 6.27  | sum 66 | 13.1 fseventsd, 9.6 claude, 8.2 com.apple.WebKit.WebContent, 7.6 WindowServer, 
+# mac_free_gib=16.7
+15:58:52 load  4.74 4.57 6.30  | sum 101 | 36.2 fseventsd, 26.1 zwerm.test, 7.8 WindowServer, 7.6 Finder, 
+15:59:02 load  4.39 4.50 6.25  | sum 119 | 50.4 zicht.test, 21.8 fseventsd, 9.9 WindowServer, 5.5 WallpaperAerialsExtension, 
+15:59:12 load  3.95 4.40 6.20  | sum 30 | 9.7 bash, 6.9 WindowServer, 4.7 syspolicyd, 4.4 WallpaperAerialsExtension, 
+# mac_free_gib=16.7
+15:59:22 load  4.26 4.44 6.18  | sum 63 | 17.4 (go), 12.9 XprotectService, 7.5 WindowServer, 5.7 syspolicyd, 
+15:59:32 load  4.14 4.41 6.15  | sum 135 | 83.8 go, 12.7 XprotectService, 8.2 syspolicyd, 7.4 WindowServer, 
+15:59:42 load  3.73 4.32 6.09  | sum 36 | 10.1 WindowServer, 5.5 WallpaperAerialsExtension, 5.4 claude, 4.1 claude, 
+# mac_free_gib=16.6
+15:59:53 load  4.11 4.37 6.09  | sum 119 | 50.4 cmux, 15.1 XprotectService, 12.0 WindowServer, 3.7 go, 
+16:00:03 load  6.20 4.82 6.23  | sum 69 | 12.7 bash, 10.1 WindowServer, 5.2 bash, 4.4 bash, 
+16:00:13 load  6.64 4.96 6.26  | sum 41 | 17.4 go, 8.0 WindowServer, 4.2 WallpaperAerialsExtension, 2.5 VTDecoderXPCService, 
+# mac_free_gib=16.3
+16:00:23 load  7.88 5.29 6.36  | sum 105 | 31.8 claude, 16.6 go, 14.5 compile, 13.8 com.apple.WebKit.WebContent, 
+16:00:33 load  8.02 5.41 6.39  | sum 93 | 61.6 go, 8.0 WindowServer, 5.5 claude, 4.9 WallpaperAerialsExtension, 
+16:00:43 load  7.16 5.31 6.35  | sum 64 | 9.2 WindowServer, 8.6 claude, 7.5 WallpaperAerialsExtension, 5.7 AddressBookSourceSync, 
+# mac_free_gib=16.1
+16:00:54 load  6.58 5.25 6.31  | sum 103 | 37.4 com.apple.WebKit.WebContent, 19.0 cmux, 13.4 WindowServer, 12.2 claude, 
+16:01:04 load  6.69 5.31 6.32  | sum 247 | 64.7 fseventsd, 52.4 spreekuur.test, 16.8 postgres:, 16.1 Finder, 
+16:01:14 load  7.71 5.56 6.40  | sum 254 | 81.4 fseventsd, 60.5 spreekuur.test, 17.6 Finder, 14.8 mds, 
+# mac_free_gib=15.9
+16:01:24 load  8.43 5.79 6.47  | sum 203 | 58.9 fseventsd, 32.6 spreekuur.test, 21.6 kasboek.test, 16.9 Finder, 
+16:01:34 load  7.51 5.68 6.42  | sum 147 | 39.7 fseventsd, 32.9 kasboek.test, 8.6 Finder, 8.4 WindowServer, 
+16:01:44 load  7.69 5.77 6.45  | sum 129 | 37.9 fseventsd, 13.5 kasboek.test, 8.8 Finder, 8.7 WindowServer, 
+# mac_free_gib=16.0
+16:01:54 load  6.75 5.63 6.39  | sum 92 | 42.4 fseventsd, 8.8 WindowServer, 7.7 engine.test, 7.3 Finder, 
+16:02:04 load  6.95 5.71 6.41  | sum 85 | 20.6 postgres:, 13.4 engine.test, 12.7 fseventsd, 9.8 WindowServer, 
+16:02:15 load  7.50 5.87 6.46  | sum 50 | 14.1 fseventsd, 7.8 WindowServer, 5.6 engine.test, 4.6 WallpaperAerialsExtension, 
+# mac_free_gib=16.0
+16:02:25 load  6.80 5.77 6.41  | sum 64 | 12.5 WindowServer, 11.7 fseventsd, 5.6 WallpaperAerialsExtension, 4.6 claude, 
+16:02:35 load  7.43 5.94 6.47  | sum 30 | 9.6 WindowServer, 5.6 WallpaperAerialsExtension, 2.8 zwerm.test, 2.8 VTDecoderXPCService, 
+16:02:45 load  7.03 5.91 6.45  | sum 229 | 75.5 mediaanalysisd, 24.7 mdworker_shared, 23.2 mdworker_shared, 22.7 mdworker_shared, 
+# mac_free_gib=16.1
+16:02:55 load  6.11 5.75 6.39  | sum 48 | 10.6 WindowServer, 4.8 WallpaperAerialsExtension, 4.8 fseventsd, 3.8 spoor.test, 
+16:03:05 load  5.48 5.63 6.33  | sum 65 | 10.7 WindowServer, 5.7 fseventsd, 5.4 mdworker_shared, 5.2 WallpaperAerialsExtension, 
+16:03:15 load  5.11 5.54 6.29  | sum 30 | 8.8 go, 8.2 WindowServer, 4.6 WallpaperAerialsExtension, 2.2 VTDecoderXPCService, 
+# mac_free_gib=16.0
+16:03:26 load  7.11 5.94 6.42  | sum 143 | 83.7 go, 11.6 fseventsd, 7.3 WindowServer, 5.4 WallpaperAerialsExtension, 
+16:03:36 load  6.70 5.89 6.40  | sum 83 | 28.5 XprotectService, 9.2 fseventsd, 7.4 WindowServer, 5.5 WallpaperAerialsExtension, 
+16:03:46 load  5.97 5.76 6.35  | sum 33 | 9.5 WindowServer, 5.9 WallpaperAerialsExtension, 3.5 VTDecoderXPCService, 3.4 opencode, 
+# mac_free_gib=15.9
+16:03:56 load  5.21 5.60 6.29  | sum 46 | 21.8 claude, 8.4 WindowServer, 4.1 WallpaperAerialsExtension, 3.1 claude, 
+16:04:06 load  5.80 5.71 6.32  | sum 65 | 10.5 WindowServer, 8.9 claude, 5.8 AXVisualSupportAgent, 5.0 cmux, 
+16:04:16 load  5.65 5.69 6.30  | sum 58 | 19.2 cmux, 9.3 WindowServer, 5.3 WallpaperAerialsExtension, 5.2 claude, 
+# mac_free_gib=15.8
+16:04:26 load  5.50 5.65 6.28  | sum 33 | 9.8 WindowServer, 4.7 WallpaperAerialsExtension, 3.0 claude, 2.7 VTDecoderXPCService, 
+16:04:36 load  5.82 5.71 6.29  | sum 54 | 21.1 top, 8.0 WindowServer, 4.5 WallpaperAerialsExtension, 4.2 opendirectoryd, 
+16:04:47 load  5.40 5.62 6.25  | sum 47 | 15.6 claude, 9.8 WindowServer, 6.2 WallpaperAerialsExtension, 4.9 claude, 
+# mac_free_gib=15.9
+16:04:57 load  4.72 5.47 6.19  | sum 152 | 61.4 go, 12.6 (vet), 8.3 compile, 8.1 WindowServer, 
+16:05:07 load  4.37 5.37 6.15  | sum 66 | 8.8 WindowServer, 7.6 XprotectService, 6.6 syspolicyd, 6.1 WallpaperAerialsExtension, 
+16:05:17 load  4.32 5.33 6.12  | sum 38 | 8.5 WindowServer, 5.3 bash, 4.7 WallpaperAerialsExtension, 3.0 claude, 
+# mac_free_gib=15.7
+16:05:27 load  3.88 5.20 6.07  | sum 27 | 8.3 WindowServer, 8.1 go, 4.1 WallpaperAerialsExtension, 2.1 VTDecoderXPCService, 
+16:05:37 load  4.44 5.27 6.09  | sum 59 | 13.1 cmux, 9.3 WindowServer, 8.5 cmux, 4.3 WallpaperAerialsExtension, 
+16:05:47 load  5.39 5.45 6.14  | sum 22 | 8.8 WindowServer, 3.5 WallpaperAerialsExtension, 2.3 VTDecoderXPCService, 0.8 opendirectoryd, 
+# mac_free_gib=15.5
+16:05:58 load  4.71 5.30 6.08  | sum 63 | 24.8 cmux, 12.6 WindowServer, 5.3 WallpaperAerialsExtension, 4.6 claude, 
+16:06:08 load  5.20 5.39 6.10  | sum 58 | 31.5 mediaanalysisd, 10.1 WindowServer, 4.5 WallpaperAerialsExtension, 2.9 claude, 
+16:06:18 load  4.88 5.32 6.06  | sum 74 | 28.9 cmux, 19.8 Python, 8.3 WindowServer, 4.5 WallpaperAerialsExtension, 
+# mac_free_gib=15.5
+16:06:28 load  4.65 5.26 6.03  | sum 68 | 12.2 cmux, 10.0 WindowServer, 8.0 Python, 6.4 claude, 
+16:06:38 load  4.32 5.16 5.99  | sum 106 | 28.0 Python, 23.8 mediaanalysisd, 9.5 WindowServer, 7.1 mdworker_shared, 
+16:06:48 load  4.27 5.13 5.96  | sum 283 | 132.7 dotnet, 77.1 dotnet, 21.6 Python, 9.9 cmux, 
+# mac_free_gib=15.6
+16:06:58 load  4.06 5.05 5.93  | sum 309 | 246.1 Campfire.Cable.Tests, 24.0 launchd, 10.5 cmux, 8.6 WindowServer, 
+16:07:08 load  3.82 4.97 5.89  | sum 392 | 348.6 Campfire.Cable.Tests, 23.6 cmux, 8.0 WindowServer, 3.9 WallpaperAerialsExtension, 
+16:07:18 load  5.95 5.37 6.02  | sum 784 | 304.1 dotnet, 95.8 dotnet, 95.6 dotnet, 62.9 dotnet, 
+# mac_free_gib=15.6
+16:07:29 load  6.30 5.46 6.04  | sum 437 | 397.8 dotnet, 7.9 claude, 7.8 WindowServer, 4.1 WallpaperAerialsExtension, 
+16:07:39 load  5.95 5.41 6.02  | sum 31 | 9.6 claude, 6.9 WindowServer, 3.5 WallpaperAerialsExtension, 2.2 Finder, 
+16:07:49 load  5.34 5.30 5.97  | sum 33 | 11.0 WindowServer, 8.3 WallpaperAerialsExtension, 5.0 VTDecoderXPCService, 2.1 cmux, 
+# mac_free_gib=15.5
+16:07:59 load  4.83 5.19 5.92  | sum 48 | 16.8 claude, 9.7 WindowServer, 6.1 claude, 6.0 WallpaperAerialsExtension, 
+16:08:09 load  4.24 5.05 5.86  | sum 44 | 10.5 WindowServer, 8.3 mediaanalysisd, 8.1 WallpaperAerialsExtension, 4.7 claude, 
+16:08:19 load  3.90 4.95 5.82  | sum 39 | 9.8 WindowServer, 7.5 WallpaperAerialsExtension, 4.5 Finder, 3.4 VTDecoderXPCService, 
+# mac_free_gib=15.4
+16:08:30 load  3.54 4.83 5.77  | sum 77 | 40.4 claude, 10.0 WindowServer, 8.4 WallpaperAerialsExtension, 4.4 claude, 
+16:08:40 load  3.14 4.71 5.71  | sum 31 | 8.9 WindowServer, 7.4 WallpaperAerialsExtension, 3.4 opencode, 2.6 VTDecoderXPCService, 
+16:08:50 load  2.81 4.59 5.66  | sum 37 | 10.1 WindowServer, 10.0 claude, 5.5 WallpaperAerialsExtension, 3.8 VTDecoderXPCService, 
+# mac_free_gib=15.4
+16:09:00 load  2.53 4.47 5.60  | sum 51 | 11.1 WindowServer, 9.3 loginwindow, 5.1 fseventsd, 4.5 mds, 
+16:09:10 load  2.45 4.39 5.56  | sum 44 | 10.8 claude, 9.9 WindowServer, 5.5 WallpaperAerialsExtension, 3.7 VTDecoderXPCService, 
+16:09:20 load  2.38 4.31 5.52  | sum 366 | 34.6 Python, 30.9 Python, 29.4 Python, 28.9 Python, 
+# mac_free_gib=15.4
+16:09:31 load  3.96 4.59 5.60  | sum 56 | 20.1 Python, 7.8 WindowServer, 5.4 WallpaperAerialsExtension, 2.8 fseventsd, 
+16:09:41 load  3.51 4.47 5.55  | sum 69 | 21.1 (Python), 8.7 WindowServer, 7.6 fseventsd, 7.3 claude, 
+16:09:51 load  3.28 4.39 5.51  | sum 22 | 6.7 WindowServer, 3.8 WallpaperAerialsExtension, 1.9 VTDecoderXPCService, 1.4 com.apple.DriverKit-AppleBCMWLAN, 
+# mac_free_gib=15.4
+16:10:01 load  3.38 4.38 5.49  | sum 56 | 15.5 WindowServer, 13.0 loginwindow, 8.2 cmux, 5.3 WallpaperAerialsExtension, 
+16:10:11 load  3.26 4.31 5.45  | sum 28 | 8.8 claude, 7.0 WindowServer, 4.6 WallpaperAerialsExtension, 2.2 VTDecoderXPCService, 
+16:10:21 load  3.14 4.25 5.42  | sum 18 | 7.6 WindowServer, 5.1 WallpaperAerialsExtension, 2.3 VTDecoderXPCService, 1.0 claude, 
+# mac_free_gib=15.4
+16:10:31 load  3.11 4.21 5.39  | sum 30 | 6.8 WindowServer, 3.7 opendirectoryd, 3.6 WallpaperAerialsExtension, 3.1 bash, 
+16:10:42 load  3.02 4.16 5.35  | sum 28 | 6.9 WindowServer, 5.1 WallpaperAerialsExtension, 2.3 bash, 2.1 VTDecoderXPCService, 
+16:10:52 load  3.01 4.12 5.33  | sum 249 | 32.1 Python, 30.6 Python, 30.3 Python, 23.6 Python, 
+# mac_free_gib=15.4
+16:11:02 load  4.88 4.49 5.44  | sum 111 | 37.3 com.apple.WebKit.WebContent, 11.4 fseventsd, 11.0 WindowServer, 6.8 XprotectService, 
+16:11:12 load  4.43 4.41 5.40  | sum 88 | 46.2 cmux, 13.9 WindowServer, 5.5 WallpaperAerialsExtension, 3.4 com.apple.WebKit.WebContent, 
+16:11:22 load  4.07 4.33 5.36  | sum 435 | 61.0 kasboek.test, 47.3 XprotectService, 45.9 fseventsd, 40.7 spreekuur.test, 
+# mac_free_gib=14.9
+16:11:33 load  6.49 4.84 5.53  | sum 851 | 742.6 spoor.test, 16.8 fseventsd, 16.5 spreekuur.test, 8.9 postgres:, 
+16:11:43 load  8.27 5.29 5.69  | sum 295 | 76.2 kasboek.test, 58.6 spreekuur.test, 47.0 fseventsd, 17.8 web.test, 
+16:11:53 load  7.55 5.23 5.66  | sum 306 | 36.4 Python, 14.8 syspolicyd, 13.8 parsec-fbf, 13.2 Python, 
+# mac_free_gib=15.2
+16:12:03 load  9.90 5.88 5.89  | sum 155 | 34.7 fseventsd, 18.3 (Python), 13.4 kasboek.test, 9.7 postgres:, 
+16:12:13 load  8.69 5.75 5.84  | sum 32 | 7.1 WindowServer, 6.9 fseventsd, 5.8 WallpaperAerialsExtension, 1.9 VTDecoderXPCService, 
+16:12:24 load  8.23 5.75 5.84  | sum 76 | 20.9 fseventsd, 18.6 com.apple.WebKit.WebContent, 7.0 WindowServer, 6.5 engine.test, 
+# mac_free_gib=15.3
+16:12:34 load  7.82 5.74 5.83  | sum 94 | 28.1 fseventsd, 23.3 werk.test, 8.4 WindowServer, 6.6 WallpaperAerialsExtension, 
+16:12:44 load  7.71 5.78 5.84  | sum 43 | 9.9 fseventsd, 8.4 WindowServer, 4.9 WallpaperAerialsExtension, 2.9 claude, 
+16:12:54 load  6.84 5.65 5.80  | sum 62 | 11.1 WindowServer, 10.1 com.apple.WebKit.WebContent, 9.7 fseventsd, 5.1 WallpaperAerialsExtension, 
+# mac_free_gib=15.3
+16:13:04 load  7.53 5.83 5.86  | sum 171 | 21.7 Python, 12.6 (Python), 12.1 Python, 11.8 Python, 
+16:13:14 load  6.67 5.71 5.81  | sum 113 | 41.9 fseventsd, 10.7 zwerm.test, 9.1 mds, 8.9 WindowServer, 
+16:13:24 load  5.88 5.57 5.76  | sum 269 | 230.4 spoor.test, 7.3 WindowServer, 4.3 WallpaperAerialsExtension, 3.4 bash, 
+# mac_free_gib=15.3
+16:13:34 load  5.42 5.48 5.73  | sum 419 | 29.3 Python, 28.2 Python, 28.0 Python, 27.2 Python, 
+16:13:45 load  6.25 5.66 5.79  | sum 143 | 59.3 compile, 16.4 go, 15.7 Python, 7.9 Python, 
+16:13:55 load  5.68 5.56 5.75  | sum 133 | 63.1 go, 37.4 compile, 7.3 WindowServer, 6.2 fseventsd, 
+# mac_free_gib=15.1
+16:14:05 load  5.75 5.57 5.75  | sum 121 | 57.2 kasboek, 12.3 fseventsd, 10.4 XprotectService, 8.3 WindowServer, 
+16:14:15 load  5.25 5.47 5.72  | sum 34 | 7.8 WindowServer, 4.2 WallpaperAerialsExtension, 2.8 claude, 2.2 opendirectoryd, 
+16:14:25 load  4.68 5.34 5.67  | sum 75 | 22.6 fseventsd, 11.0 WindowServer, 7.1 claude, 6.4 WallpaperAerialsExtension, 
+# mac_free_gib=15.0
+16:14:35 load  4.27 5.23 5.62  | sum 97 | 27.9 cmux, 18.0 com.apple.WebKit.WebContent, 12.6 WindowServer, 7.4 Finder, 
+16:14:45 load  5.12 5.38 5.67  | sum 274 | 37.3 mdworker_shared, 35.6 mdworker_shared, 32.3 mds, 23.1 mdworker_shared, 
+16:14:56 load  6.59 5.70 5.78  | sum 60 | 23.8 go, 8.4 WindowServer, 6.4 claude, 5.3 WallpaperAerialsExtension, 
+# mac_free_gib=15.9
+16:15:06 load  8.14 6.07 5.91  | sum 371 | 67.5 taal.test, 64.7 fseventsd, 60.6 spreekuur.test, 45.7 kasboek.test, 
+16:15:16 load  8.77 6.28 5.99  | sum 249 | 41.6 kasboek.test, 37.3 fseventsd, 29.6 postgres:, 26.1 spreekuur.test, 
+16:15:26 load  8.58 6.32 6.01  | sum 212 | 41.8 fseventsd, 41.6 kasboek.test, 35.5 claude, 17.5 postgres:, 
+# mac_free_gib=15.6
+16:15:37 load  8.34 6.34 6.02  | sum 151 | 53.1 kasboek.test, 37.4 fseventsd, 8.9 mds, 8.5 WindowServer, 
+16:15:47 load  7.37 6.20 5.97  | sum 111 | 20.1 fseventsd, 19.9 kasboek.test, 9.2 WindowServer, 5.9 WallpaperAerialsExtension, 
+16:15:57 load  7.20 6.20 5.97  | sum 105 | 28.1 fseventsd, 11.6 WindowServer, 11.0 engine.test, 8.1 universalaccessd, 
+# mac_free_gib=15.7
+16:16:07 load  6.87 6.16 5.96  | sum 148 | 46.7 fseventsd, 25.3 mediaanalysisd, 18.4 engine.test, 9.1 mdworker_shared, 
+16:16:17 load  6.12 6.03 5.92  | sum 71 | 25.6 Python, 9.4 WindowServer, 6.6 werk.test, 4.7 WallpaperAerialsExtension, 
+16:16:27 load  5.41 5.88 5.86  | sum 36 | 8.9 WindowServer, 7.0 Python, 5.2 WallpaperAerialsExtension, 2.8 VTDecoderXPCService, 
+# mac_free_gib=15.7
+16:16:37 load  4.80 5.73 5.81  | sum 112 | 48.0 fseventsd, 17.1 zwerm.test, 9.3 Finder, 9.0 mds, 
+16:16:47 load  4.46 5.63 5.77  | sum 38 | 10.0 Python, 8.2 WindowServer, 4.6 WallpaperAerialsExtension, 3.8 claude, 
+16:16:58 load  4.00 5.49 5.72  | sum 103 | 21.4 Python, 12.9 go, 12.2 XprotectService, 8.6 zicht.test, 
+# mac_free_gib=15.7
+16:17:08 load  4.07 5.46 5.71  | sum 138 | 48.9 top, 26.1 Python, 7.8 WindowServer, 7.2 bash, 
+16:17:18 load  4.23 5.44 5.70  | sum 51 | 15.9 go, 6.9 WindowServer, 4.2 syspolicyd, 3.3 bash, 
+16:17:28 load  5.14 5.59 5.75  | sum 133 | 66.4 compile, 48.1 go, 7.6 WindowServer, 4.7 WallpaperAerialsExtension, 
+# mac_free_gib=15.5
+16:17:38 load  5.35 5.62 5.76  | sum 80 | 29.7 XprotectService, 8.4 syspolicyd, 8.2 claude, 7.9 WindowServer, 
+16:17:48 load  4.99 5.53 5.72  | sum 52 | 13.8 WindowServer, 9.8 VTDecoderXPCService, 8.1 WallpaperAerialsExtension, 3.4 opencode, 
