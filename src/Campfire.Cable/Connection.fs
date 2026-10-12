@@ -456,7 +456,14 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
             | null -> ()
             | trace -> trace.WriteDone frames
         // A ring has no publish numbers.
-        let ordered = config.PublishOrder && not config.RingLog
+        let ordered = config.PublishOrder && not config.RingLog && BenchFlip.get "order" <> "stream" && BenchFlip.get "log" <> "ring"
+        let maxBatch =
+            match BenchFlip.get "batch" with
+            | null -> config.MaxWriteBatch
+            | text ->
+                match Int32.TryParse text with
+                | true, n when n > 0 -> n
+                | _ -> config.MaxWriteBatch
         let merge = if ordered then Merge() else Unchecked.defaultof<Merge>
         let readerTask = readLoop (Reader(stream, deflate)) channel.Writer wake stop.Token
 
@@ -557,7 +564,7 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
 
                         // While the probe is out, writes are held (bounded: no more is read from the streams once a batch is held).
                         let holding = not (isNull probe)
-                        if running && closing.IsNone && not (holding && pending.Count >= config.MaxWriteBatch) then
+                        if running && closing.IsNone && not (holding && pending.Count >= maxBatch) then
                             // The internal channel carries raw payloads. Round 4 verifier: it is read before the streams, and a remote
                             // disconnect (a ban, a sign-out, a revoked membership) stops the reading there, so nothing published after the
                             // revocation goes out ahead of the goodbye (read second, up to a batch of later frames did). What the streams
@@ -573,7 +580,7 @@ let run (server: Server<'U>) (stream: Stream) (deflate: bool) (request: ConnectR
 
                             // Whatever is ready goes out in the same write.
                             if closing.IsNone then
-                                match (if ordered then merge.Drain(readers, pending, config.MaxWriteBatch) else drain readers pending config.MaxWriteBatch) with
+                                match (if ordered then merge.Drain(readers, pending, maxBatch) else drain readers pending maxBatch) with
                                 | Drained.Lagged ->
                                     note "lagged" 0L
                                     closing <- ValueSome lagged

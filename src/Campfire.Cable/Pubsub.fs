@@ -817,7 +817,7 @@ and [<Sealed>] Hub(capacity: int, lagBytes: int64, ring: bool, onCut: Action<int
                 | Some group -> group
                 | None ->
                     let group: GroupBase =
-                        if ring then RingGroup(identifier, capacity) else LogGroup(identifier, capacity, lagBytes, stats, onCut)
+                        if ring || BenchFlip.get "log" = "ring" then RingGroup(identifier, capacity) else LogGroup(identifier, capacity, lagBytes, stats, onCut)
                     streams[broadcasting] <- Array.append groups [| group |]
                     if CableTrace.Enabled then CableTrace.GroupCreated(group.Id, broadcasting, identifier)
                     group

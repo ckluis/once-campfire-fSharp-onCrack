@@ -889,3 +889,12 @@ let ``hub budget (verifier): the subscriber furthest behind is cut first, wherev
     let got = drainAll young
     Assert.Equal(500, got.Length)
     got |> List.iteri (fun i text -> Assert.StartsWith($"\"{i}q", text))
+
+[<Fact>]
+let ``the bench flip file changes nothing unless CAMPFIRE_CABLE_FLIP_FILE names one`` () =
+    // Unit R5.3: the switch the alternating benches use is off in production and in tests (a deployment that set it by accident would only
+    // be reading a missing file).
+    Assert.Null(Environment.GetEnvironmentVariable "CAMPFIRE_CABLE_FLIP_FILE")
+    Assert.False BenchFlip.enabled
+    for key in [ "order"; "batch"; "log"; "hold" ] do
+        Assert.Null(BenchFlip.get key)

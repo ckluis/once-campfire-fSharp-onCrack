@@ -83,7 +83,10 @@ module BroadcastNames =
 [<Sealed>]
 type BroadcastOrder(stallMs: int, holdUs: int) =
     let gate = obj ()
-    let holdTicks = int64 holdUs * System.Diagnostics.Stopwatch.Frequency / 1_000_000L
+    let holdTicks0 = int64 holdUs * System.Diagnostics.Stopwatch.Frequency / 1_000_000L
+    // Benches only (`BenchFlip`, unit R5.3): `hold=US` in the flip file replaces `holdUs`, looked at most every 20 ms.
+    let mutable holdTicks = holdTicks0
+    let mutable flipChecked = 0L
     // Wakes held for the line (under `gate`), marked with `heldToken`; `heldSince` is when the first was held (0: none).
     let mutable held = System.Collections.Generic.List<Wake>()
     let mutable heldToken = WakeBatch.NewToken()
@@ -113,6 +116,12 @@ type BroadcastOrder(stallMs: int, holdUs: int) =
             null
         else
             let now = System.Diagnostics.Stopwatch.GetTimestamp()
+            if BenchFlip.enabled && now - flipChecked >= System.Diagnostics.Stopwatch.Frequency / 50L then
+                flipChecked <- now
+                holdTicks <-
+                    match System.Int32.TryParse(BenchFlip.get "hold") with
+                    | true, us when us >= 0 -> int64 us * System.Diagnostics.Stopwatch.Frequency / 1_000_000L
+                    | _ -> holdTicks0
             let idle = next = System.Threading.Volatile.Read(&reserved) && waiting.Count = 0
             if force || idle || holdTicks = 0L || now - heldSince >= holdTicks then
                 let taken = held.ToArray()
@@ -171,7 +180,7 @@ type BroadcastOrder(stallMs: int, holdUs: int) =
                     let taken = this.TakeHeld false
                     if isNull taken && held.Count > 0 then
                         // Held for a busy line: whatever happens next, they are set within `holdUs`.
-                        let due = max 1 ((holdUs + 999) / 1000)
+                        let due = max 1 (int ((holdTicks * 1_000_000L / System.Diagnostics.Stopwatch.Frequency + 999L) / 1000L))
                         match holdTimer with
                         | null -> holdTimer <- new System.Threading.Timer((fun _ -> this.HoldExpired()), null, due, System.Threading.Timeout.Infinite)
                         | t -> t.Change(due, System.Threading.Timeout.Infinite) |> ignore
