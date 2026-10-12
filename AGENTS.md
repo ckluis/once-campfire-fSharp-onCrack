@@ -110,9 +110,15 @@ one shared log, with a bound.
   one client) and counts a subscriber whose connection has waited `Hub.ReaderBoundAfter` (250 ms, `CAMPFIRE_CABLE_PRESSURE_READER_MS`) on one socket write
   (`Wake.WriteWaitSince`) as not behind: a slow reader, which waiting posters cannot help. (Leaving such subscribers out of the count altogether closed the gate more often
   under bin/reliability's cable profiles, 10-15% fewer messages a second.) `CablePressureTests` (App) are the gate's tests.
-- **The hub's total** (round 4 verifier): a group's budget bounds one backlog, not how many there are (every room, private stream and identifier is a group with its own
-  copy of the frames). `CAMPFIRE_CABLE_HUB_BYTES` (1 GiB, `Hub.TotalBudget`) bounds all logs together: over it a pool item (`Hub.Shed`, at most every 10 ms, and from the
-  heartbeat's `Trim`) cuts the subscribers in the oldest chunk of the log that would free the most, until under. Each group's newest chunk (up to 256 frames) is never shed.
+- **The hub's total** (round 4 verifier, closed in unit R5.2): a group's budget bounds one backlog, not how many there are (every room, private stream and identifier is a
+  group with its own copy of the frames, and one client may subscribe 64 times under identifiers of its own: `MaxSubscriptions`; Rails has no limit, and an unbounded write queue
+  per connection). `CAMPFIRE_CABLE_HUB_BYTES` (1 GiB, `Hub.TotalBudget`) bounds all logs together. Over it a pool item (`Hub.Shed`, at most every 10 ms, and from the
+  heartbeat's `Trim`) first has every log empty the slots of its head chunk that all its subscribers have read (`LogGroup.Compact`: what a log holds is what some subscriber has yet to read,
+  not the chunk it is in; the heartbeat does it too), so a client that reads pins nothing however many streams it has; if the logs still hold more, it cuts the subscribers with the most
+  bytes yet to read, in any chunk of any log, until under. Round 4 cut only whole oldest chunks and never a group's newest, so clients
+  that read nothing held 160 MB each outside the total. A cut subscriber's group is emptied at once; its connection closes (`reconnect: true`) and its other groups go with it.
+  `PubsubTests` ("total: ...") and `ProtocolTests` (64 variants over real sockets) are the attack tests; "emptying read slots ..." holds Compact to the lock-free readers (a reader
+  writes its index before it moves its chunk; Compact reads the chunk, then the index).
 - **Measuring it:** `bench/reliability/run OUT --apps oncrack --profiles cable --rounds 1` runs upstream's `bin/reliability` (the verification repo's
   `oncrack-reliability-working` branch, its tmpfs copy at `/mnt/cfv` in colima, `--workspace /mnt/cfv/ws`) with the descriptor limit raised (a login shell's 1,024 refused the 64
   posters of cable_heavy beside 1,000 clients: every app's first baseline row said 13 posts and 18 million refusals), a Pss sampler and the Mac's load beside it;

@@ -333,6 +333,60 @@ let ``lagging subscribers are disconnected with reconnect`` () =
         })
 
 [<Fact>]
+let ``clients with 64 identifier variants that read nothing are cut at the hub's total, and a reader of the same stream is not`` () =
+    // Unit R5.2. Each variant is a group of its own with its own copy of every frame, so a client that subscribes 64 times and reads
+    // nothing pins 64 copies of whatever is posted; three of them, 3 x 64 x 60 x 40 KB, would be 460 MB against a total of 16 MB.
+    let budget = 16L * 1024L * 1024L
+    withServer { testConfig with HubBytes = budget } (fun app ->
+        task {
+            let hub = app.Server.Hub
+            let! reader = connect app 1UL
+            let! _ = reader.NextText()
+            do! reader.Subscribe(room 1)
+            let! _ = reader.NextText()
+            let attackers = Collections.Generic.List<Client>()
+            for a in 0..2 do
+                let! client = connect app 1UL
+                let! _ = client.NextText()
+                for v in 0..63 do
+                    do! client.Subscribe(identifier (object' [ "channel", str "RoomChannel"; "room_id", int' 1; "variant", int' (a * 64 + v) ]))
+                attackers.Add client
+            // The server has them all (the attackers read none of the confirmations).
+            let sw = Stopwatch.StartNew()
+            while hub.GroupCount "room:room-1" < 193 && sw.Elapsed < TimeSpan.FromSeconds 10.0 do
+                do! Task.Delay 20
+            Assert.Equal(193, hub.GroupCount "room:room-1")
+
+            let payload = str (String('x', 40_000))
+            let received = ref 0
+            let reading =
+                task {
+                    while received.Value < 60 do
+                        let! frame = reader.NextText()
+                        if frame.Contains "\"type\":\"disconnect\"" then failwith "the reader was cut"
+                        if frame.Contains "xxxx" then received.Value <- received.Value + 1
+                }
+            for _ in 1..60 do
+                app.Server.Broadcast("room:room-1", payload) |> ignore
+                do! Task.Delay 5
+            do! reading
+            Assert.Equal(60, received.Value)
+
+            // The cut connections are closed, their groups gone, and what the logs hold is within the total.
+            let sw = Stopwatch.StartNew()
+            while hub.GroupCount "room:room-1" > 1 && sw.Elapsed < TimeSpan.FromSeconds 20.0 do
+                do! Task.Delay 50
+            Assert.Equal(1, hub.GroupCount "room:room-1")
+            // (Enough were cut to get under the total; closing a connection takes the rest of its groups with it.)
+            Assert.True(hub.CutCount > 0L, $"{hub.CutCount} cut")
+            Assert.True(hub.RetainedBytes <= budget, $"{hub.RetainedBytes} retained")
+            Assert.True(hub.RetainedPeakBytes <= 160L * 1024L * 1024L, $"{hub.RetainedPeakBytes} peak")
+            for client in attackers do
+                (client :> IDisposable).Dispose()
+            (reader :> IDisposable).Dispose()
+        })
+
+[<Fact>]
 let ``pings every three seconds with a unix timestamp`` () =
     withServer testConfig (fun app ->
         task {

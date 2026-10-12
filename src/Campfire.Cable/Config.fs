@@ -19,8 +19,8 @@ type Config =
       /// onCrack (unit R4.5): the most a broadcasting's log holds behind its oldest subscriber. A subscriber further behind is
       /// disconnected with `reconnect: true`; anything nearer loses nothing. `CAMPFIRE_CABLE_LAG_BYTES`.
       LagBytes: int64
-      /// Round 4 verifier: the most all broadcastings' logs hold together; over it the furthest-behind subscribers are cut
-      /// (`Hub.TotalBudget`). `CAMPFIRE_CABLE_HUB_BYTES` (1 GiB).
+      /// Round 4 verifier, unit R5.2: the most all broadcastings' logs hold together, counting every chunk and every frame some subscriber
+      /// has yet to read; over it the subscribers with the most yet to read are cut (`Hub.TotalBudget`). `CAMPFIRE_CABLE_HUB_BYTES` (1 GiB).
       HubBytes: int64
       /// onCrack (unit R4.5): a post waits (`Broadcasts.AwaitRoom`) while more than half of its room's subscribers are more than this many frames
       /// behind, so a room fed faster than it can be fanned out holds a bounded backlog instead of cutting its clients; 0 never waits.

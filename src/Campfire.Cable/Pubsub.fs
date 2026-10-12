@@ -324,6 +324,9 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
     let mutable receivers: Subscriber[] = Array.zeroCreate 4
     let mutable count = 0
     let mutable retired = false
+    // Unit R5.2: slots of the head chunk below `freedIndex` are emptied (every subscriber is past them), `freedBytes` of frames.
+    let mutable freedIndex = 0
+    let mutable freedBytes = 0L
     let mutable tally = 0L
     let mutable tallyAt = 0L
     let verdictTicks = Diagnostics.Stopwatch.Frequency / 100L
@@ -335,8 +338,33 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
             let chunk = receivers[i].Chunk
             if chunk.Id < oldest.Id then oldest <- chunk
         if oldest.Id > head.Id then
-            if not retired then stats.Add(-(oldest.Start - head.Start))
+            if not retired then stats.Add(-(oldest.Start - head.Start - freedBytes))
             head <- oldest
+            freedIndex <- 0
+            freedBytes <- 0L
+
+    /// Where `chunk`'s slot `index` is in the log, in bytes written before it (`written` for the next frame to come): the chunk's start plus
+    /// the frames ahead of the slot (a head chunk's emptied slots are counted in `freedBytes`). Under `gate`.
+    let position (chunk: Chunk) (index: int) : int64 =
+        if index >= chunk.Filled then
+            match chunk.Next with
+            | null -> written
+            | next -> next.Start
+        else
+            let mutable at = chunk.Start
+            let mutable from = 0
+            if obj.ReferenceEquals(chunk, head) then
+                at <- at + freedBytes
+                from <- freedIndex
+            for k in from .. index - 1 do
+                at <- at + int64 chunk.Frames[k].Bytes.Length
+            at
+
+    /// Bytes `subscriber` has yet to read. Under `gate`. The chunk is read before the index, and a reader writes the index before it
+    /// moves the chunk (`Locate`), so the pair is never ahead of the subscriber; an older one only reads as further behind.
+    let unread (subscriber: Subscriber) : int64 =
+        let chunk = subscriber.Chunk
+        written - position chunk subscriber.IndexSeen
 
     /// Cuts the subscribers in the oldest chunk, adding their wakes to `cut` (made when needed). Under `gate`; `trim` after.
     let cutHead (cut: Collections.Generic.List<Wake> | null) : Collections.Generic.List<Wake> | null =
@@ -467,30 +495,63 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
         lock gate (fun () ->
             if not retired then
                 retired <- true
-                stats.Add(-(written - head.Start)))
+                stats.Add(-(written - head.Start - freedBytes)))
 
     /// Frees what no subscriber can read: the heartbeat calls it, so a log that nobody publishes to any more does not hold what
-    /// its subscribers have since read.
-    member _.Trim() : unit =
-        lock gate (fun () -> if not (obj.ReferenceEquals(head, tail)) then trim ())
+    /// its subscribers have since read. Unit R5.2: that includes the frames of the head chunk that every subscriber is past.
+    member this.Trim() : unit = this.Compact()
 
-    /// Bytes this log holds now (from its oldest chunk).
-    member _.Retained = lock gate (fun () -> written - head.Start)
-
-    /// Round 4 verifier: bytes the log holds before its newest chunk, which cutting the subscribers behind it would free.
-    member _.Sheddable = lock gate (fun () -> trim (); tail.Start - head.Start)
-
-    /// Round 4 verifier: cuts the subscribers in the oldest chunk, for the hub's budget across groups (`Hub.TotalBudget`). Their
-    /// wakes, or null when only the newest chunk is held.
-    member _.ShedOldest() : Collections.Generic.List<Wake> | null =
+    /// Unit R5.2: moves `head` to the oldest chunk a subscriber is in, then empties the slots of that chunk that every subscriber has
+    /// read (a log with no subscribers holds nothing), so the bytes retained are the bytes some subscriber has yet to read, not the
+    /// chunk they are in. Readers take no lock, and this never takes anything from one: it empties slots below the lowest index
+    /// any subscriber in the chunk is seen at, and an index only grows (a stale reading is lower, which empties less).
+    member _.Compact() : unit =
         lock gate (fun () ->
             trim ()
-            if obj.ReferenceEquals(head, tail) then
+            let mutable upTo = head.Filled
+            for i in 0 .. count - 1 do
+                let subscriber = receivers[i]
+                // The chunk first, then the index: a subscriber moving to the next chunk has written its index 0 before the chunk.
+                if obj.ReferenceEquals(subscriber.Chunk, head) then
+                    let index = subscriber.IndexSeen
+                    if index < upTo then upTo <- index
+            if upTo > freedIndex then
+                let mutable freed = 0L
+                for i in freedIndex .. upTo - 1 do
+                    freed <- freed + int64 head.Frames[i].Bytes.Length
+                    head.Frames[i] <- Unchecked.defaultof<Frame>
+                freedIndex <- upTo
+                freedBytes <- freedBytes + freed
+                if not retired then stats.Add(-freed))
+
+    /// Bytes this log holds now: what some subscriber has yet to read, from the oldest chunk's emptied part on.
+    member _.Retained = lock gate (fun () -> written - head.Start - freedBytes)
+
+    /// Unit R5.2: adds `(unread bytes, this log, subscriber)` for every subscriber that has something to read (the hub's total sheds
+    /// the furthest behind first).
+    member this.Collect(into: Collections.Generic.List<struct (int64 * LogGroup * Subscriber)>) : unit =
+        lock gate (fun () ->
+            for i in 0 .. count - 1 do
+                let subscriber = receivers[i]
+                let behind = unread subscriber
+                if behind > 0L then into.Add(struct (behind, this, subscriber)))
+
+    /// Unit R5.2: cuts `subscriber` (as `cutHead` does), and frees what that leaves nobody to read. Its wake, or null if it has left.
+    member this.CutOne(subscriber: Subscriber) : Wake | null =
+        lock gate (fun () ->
+            let at = Array.IndexOf(receivers, subscriber, 0, count)
+            if at < 0 then
                 null
             else
-                let cut = cutHead null
-                trim ()
-                cut)
+                (match subscriber.Wake.Trace with
+                 | null -> ()
+                 | trace -> trace.Event("overrun", int64 subscriber.Group.Id, head.Id))
+                subscriber.MarkOverrun()
+                receivers[at] <- receivers[count - 1]
+                receivers[count - 1] <- Unchecked.defaultof<_>
+                Volatile.Write(&count, count - 1)
+                this.Compact()
+                subscriber.Wake)
 
     /// Finds `subscriber`'s next slot, following the link out of a chunk it has read to the end.
     static member private Locate(subscriber: Subscriber, chunk: byref<Chunk>, index: byref<int>) : bool =
@@ -503,8 +564,9 @@ and [<Sealed>] internal LogGroup(identifier: string | null, chunkSize: int, budg
             | next ->
                 chunk <- next
                 index <- 0
-                subscriber.MoveTo next
+                // The index first: a thread looking at where this subscriber is (`Compact`) reads the chunk, then the index.
                 subscriber.Index <- 0
+                subscriber.MoveTo next
                 (match subscriber.Wake.Trace with
                  | null -> ()
                  | trace -> trace.Cross(subscriber.Group.Id, next.Id))
@@ -605,6 +667,7 @@ and [<Sealed>] internal RingGroup(identifier: string | null, capacity: int) =
 /// One subscription's place in a group's log (or ring).
 and [<Sealed>] Subscriber internal (group: GroupBase, hub: Hub, broadcasting: string, wake: Wake, start: int64, chunk0: Chunk, index0: int) =
     let mutable chunk = chunk0
+    let mutable index = index0
     let mutable stopped = 0
     let mutable overrun = 0
 
@@ -618,7 +681,12 @@ and [<Sealed>] Subscriber internal (group: GroupBase, hub: Hub, broadcasting: st
 
     /// The log's place: the chunk, which the group's `trim` reads from its own thread, and the next slot in it.
     member internal _.Chunk: Chunk = Volatile.Read(&chunk)
-    member val internal Index = index0 with get, set
+    member internal _.Index
+        with get () = index
+        and set (value: int) = index <- value
+
+    /// The next slot, as another thread sees it (`Compact`, `Collect`): a place at or behind where the reader is.
+    member internal _.IndexSeen = Volatile.Read(&index)
     member internal _.MoveTo(next: Chunk) : unit = Volatile.Write(&chunk, next)
 
     /// The group cut this subscriber for being more than its budget behind; it is out of the group and reads nothing more.
@@ -701,29 +769,35 @@ and [<Sealed>] Hub(capacity: int, lagBytes: int64, ring: bool, onCut: Action<int
             )
             |> ignore
 
-    /// Round 4 verifier: while the logs hold more than `TotalBudget`, cuts the subscribers in the oldest chunk of the log that could
-    /// free the most (its subscribers are the furthest behind, in bytes), one chunk at a time. The newest chunk of every log is
-    /// never shed: what is left over the budget then is the groups' newest chunks.
+    /// Unit R5.2: brings the logs under `TotalBudget`. First every log empties the slots its subscribers have read (what a chunk holds
+    /// beyond that is not memory anyone needs), so a client that reads, however many streams it has, pins nothing. If the logs still
+    /// hold more, the subscribers with the most bytes yet to read, in any chunk of any log, are cut one at a time until they do not:
+    /// the memory over the total is held by clients that are not reading, and a log left without subscribers holds nothing. Rails
+    /// holds all of it, in a per-connection queue that never ends.
     member internal _.Shed() : unit =
-        let mutable going = true
-        while going && stats.Retained > Volatile.Read(&totalBudget) do
-            let mutable largest: LogGroup | null = null
-            let mutable most = 0L
+        if stats.Retained > Volatile.Read(&totalBudget) then
+            let logs = Collections.Generic.List<LogGroup>()
             for groups in streams.Values do
                 for group in groups do
                     match group with
-                    | :? LogGroup as log ->
-                        let sheddable = log.Sheddable
-                        if sheddable > most then
-                            most <- sheddable
-                            largest <- log
+                    | :? LogGroup as log -> logs.Add log
                     | _ -> ()
-            match largest with
-            | null -> going <- false
-            | log ->
-                match log.ShedOldest() with
-                | null -> ()
-                | wakes -> LogGroup.CutLater(wakes, stats, onCut, Volatile.Read(&totalBudget))
+            for log in logs do
+                log.Compact()
+            if stats.Retained > Volatile.Read(&totalBudget) then
+                let behind = Collections.Generic.List<struct (int64 * LogGroup * Subscriber)>()
+                for log in logs do
+                    log.Collect behind
+                behind.Sort(fun (struct (a, _, _)) (struct (b, _, _)) -> b.CompareTo a)
+                let cut = Collections.Generic.List<Wake>()
+                let mutable i = 0
+                while i < behind.Count && stats.Retained > Volatile.Read(&totalBudget) do
+                    let struct (_, log, subscriber) = behind[i]
+                    match log.CutOne subscriber with
+                    | null -> ()
+                    | wake -> cut.Add wake
+                    i <- i + 1
+                if cut.Count > 0 then LogGroup.CutLater(cut, stats, onCut, Volatile.Read(&totalBudget))
 
     member this.Broadcast(broadcasting: string, payload: string) : int =
         let bytes = Encoding.UTF8.GetBytes payload
@@ -789,7 +863,8 @@ and [<Sealed>] Hub(capacity: int, lagBytes: int64, ring: bool, onCut: Action<int
     /// Round 4 verifier: how long a connection waits on one socket write before `Congested` treats it as limited by its reader.
     static member val ReaderBoundAfter = TimeSpan.FromMilliseconds 250.0 with get, set
 
-    /// Frees the log behind the oldest subscriber of every group (the heartbeat calls it).
+    /// Frees the log behind the oldest subscriber of every group, and what every subscriber has read of the chunk it is in (the heartbeat
+    /// calls it).
     member this.Trim() : unit =
         for groups in streams.Values do
             for group in groups do

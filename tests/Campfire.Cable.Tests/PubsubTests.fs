@@ -282,6 +282,169 @@ let ``log: a subscriber that never reads is cut once 70 MB have been published p
     Assert.Equal(Error RecvStatus.Lagged, recv never)
     Assert.True(hub.RetainedPeakBytes <= budget + 256L * 1410L, $"{hub.RetainedPeakBytes}")
 
+// Unit R5.2: the memory bound. What a log holds is what some subscriber has yet to read, not the chunk it is in, and the hub's total
+// is kept by cutting the clients furthest behind, in whatever chunk; a client that reads is never cut however many streams it has.
+
+[<Fact>]
+let ``log: what is retained is what some subscriber has yet to read, not the chunk it is in`` () =
+    // Chunks of 8 frames of 4 bytes (32 bytes).
+    let hub = Hub(8)
+    let slow = hub.Subscribe("room", null, Wake())
+    let quick = hub.Subscribe("room", null, Wake())
+    for i in 0..99 do
+        hub.Broadcast("room", $"{i:D4}") |> ignore
+    drainAll quick |> ignore
+    hub.Trim()
+    Assert.Equal(400L, hub.RetainedBytes)
+    // The slow one reads 50 of 100: six chunks and two frames of the seventh. The log keeps the 50 it has yet to read, not the 56 of
+    // the chunks it is in.
+    for _ in 1..50 do
+        recv slow |> ignore
+    hub.Trim()
+    Assert.Equal(200L, hub.RetainedBytes)
+    // Reading on finds every frame that is left, in order.
+    Assert.Equal<string list>([ for i in 50..99 -> $"{i:D4}" ], drainAll slow)
+    hub.Trim()
+    Assert.Equal(0L, hub.RetainedBytes)
+    // And what comes after is read in full, from a chunk that was emptied in its first slots.
+    hub.Broadcast("room", "tail") |> ignore
+    Assert.Equal(Ok "tail", recv slow)
+    Assert.Equal(Ok "tail", recv quick)
+    // A subscriber added into the middle of a chunk that has been emptied sees exactly what comes after it.
+    let late = hub.Subscribe("room", null, Wake())
+    hub.Broadcast("room", "next") |> ignore
+    Assert.Equal<string list>([ "next" ], drainAll late)
+
+[<Fact>]
+let ``log: emptying read slots while one publisher and eight readers run loses and reorders nothing`` () =
+    let hub = Hub(16, Int64.MaxValue, false)
+    let readers = 8
+    let subscribers = [| for _ in 1..readers -> hub.Subscribe("room", null, Wake()) |]
+    let total = ref 0
+    let running = ref true
+    let deadline = Diagnostics.Stopwatch.StartNew()
+    let readerTasks =
+        [| for r in 0 .. readers - 1 ->
+               System.Threading.Tasks.Task.Run(fun () ->
+                   let random = Random(r)
+                   let mutable next = 0
+                   let mutable finished = false
+                   while not finished do
+                       match recv subscribers[r] with
+                       | Ok text ->
+                           if text <> string next then failwith $"reader {r}: expected {next}, got {text}"
+                           next <- next + 1
+                           if random.Next 20000 = 0 then Threading.Thread.Sleep(random.Next 20)
+                       | Error RecvStatus.Empty ->
+                           if not (Volatile.Read(&running.contents)) && next = Volatile.Read(&total.contents) then finished <- true else Threading.Thread.Yield() |> ignore
+                       | Error status -> failwith $"reader {r}: {status}"
+                   next) |]
+    // Two threads empty read slots (the heartbeat's trim, the total's shed) as fast as they can.
+    let compactors =
+        [| for _ in 1..2 ->
+               System.Threading.Tasks.Task.Run(fun () ->
+                   while Volatile.Read(&running.contents) do
+                       hub.Trim()) |]
+    let publisher =
+        System.Threading.Tasks.Task.Run(fun () ->
+            let mutable i = 0
+            while deadline.Elapsed < TimeSpan.FromSeconds 2.0 do
+                hub.Broadcast("room", string i) |> ignore
+                i <- i + 1
+            Volatile.Write(&total.contents, i)
+            Volatile.Write(&running.contents, false))
+    publisher.Wait()
+    System.Threading.Tasks.Task.WaitAll compactors
+    let counts = readerTasks |> Array.map (fun t -> t.Result)
+    for count in counts do
+        Assert.Equal(total.Value, count)
+    Assert.True(total.Value > 1000, $"published {total.Value}")
+    Assert.Equal(0L, hub.CutCount)
+
+/// A connection's subscribers: 64 identifier variants of one stream, on one wake.
+let private variantsOf (hub: Hub) (connection: int) (wake: Wake) : Subscriber[] =
+    [| for v in 0..63 -> hub.Subscribe("room", $"\"c{connection}v{v}\"", wake) |]
+
+[<Fact>]
+let ``total: connections that read nothing, each with 64 identifier variants of one stream, are held to the hub's total`` () =
+    // 4 KB frames, chunks of 256: a log's newest chunk alone holds a megabyte. A client of 64 variants that reads nothing pins 64
+    // copies, 64 MB; round 4's total never reached the newest chunk, so any number of such clients held any amount.
+    let budget = 32L * 1024L * 1024L
+    let hub = Hub(256)
+    hub.TotalBudget <- budget
+    let payload = String('x', 4000)
+    let attackers = [| for c in 0..39 -> variantsOf hub c (Wake()) |]
+    let readerWakes = [| for _ in 1..8 -> Wake() |]
+    let readers = readerWakes |> Array.mapi (fun c wake -> variantsOf hub (1000 + c) wake)
+    let received = Array.create 8 0
+    for _ in 1..200 do
+        hub.Broadcast("room", payload) |> ignore
+        hub.Shed()
+        // Every reader reads everything on each of its 64 streams as it goes; no attacker reads.
+        for c in 0..7 do
+            for s in readers[c] do
+                received[c] <- received[c] + (drainAll s).Length
+        Assert.True(hub.RetainedBytes <= budget, $"{hub.RetainedBytes} retained, over {budget}")
+    // 40 x 64 x 200 frames of 4 KB is 2 GB held without the bound. A broadcast adds 3,072 copies of 4 KB (12 MB) before the total looks.
+    Assert.True(hub.RetainedPeakBytes <= budget + 3072L * 4100L, $"{hub.RetainedPeakBytes} peak")
+    for c in 0..7 do
+        Assert.Equal(64 * 200, received[c])
+    Assert.True(hub.CutCount > 0L)
+    // What was cut was attackers' (a reader's streams all read on, whole), and nothing else.
+    let lagged = attackers |> Array.sumBy (fun subs -> subs |> Array.filter (fun s -> recv s = Error RecvStatus.Lagged) |> Array.length)
+    Assert.Equal(hub.CutCount, int64 lagged)
+
+[<Fact>]
+let ``total: connections that read all they are sent, 64 variants each, are never cut and hold almost nothing`` () =
+    // The total is over one broadcast's fan-out (2,560 copies of 4 KB, all unread when it is published), as it is for any real hub.
+    let budget = 24L * 1024L * 1024L
+    let hub = Hub(256)
+    hub.TotalBudget <- budget
+    let payload = String('x', 4000)
+    let connections = [| for c in 0..39 -> variantsOf hub c (Wake()) |]
+    let mutable peak = 0L
+    for _ in 1..300 do
+        hub.Broadcast("room", payload) |> ignore
+        for subs in connections do
+            for s in subs do
+                Assert.Equal(1, (drainAll s).Length)
+        hub.Shed()
+        peak <- max peak hub.RetainedBytes
+    // 2,560 groups of up to 300 frames of 4 KB would be 3 GB in the newest chunks; read, they hold nothing once the total looks.
+    Assert.Equal(0L, hub.CutCount)
+    Assert.True(peak <= budget, $"{peak}")
+    hub.Trim()
+    Assert.Equal(0L, hub.RetainedBytes)
+
+[<Fact>]
+let ``total: the client furthest behind is cut first, in any chunk, and the others are left to read`` () =
+    // Chunks of 4 frames of 1,000 bytes; the total is 100 KB.
+    let hub = Hub(4)
+    hub.TotalBudget <- 100_000L
+    let payload = String('x', 1000)
+    let far = hub.Subscribe("a", null, Wake())
+    let farB = hub.Subscribe("b", null, Wake())
+    let mid = hub.Subscribe("a", null, Wake())
+    let near = hub.Subscribe("a", null, Wake())
+    // 90 frames to "a" and 30 to "b". The near one reads all of "a" as it goes, the middle one only the first 40.
+    for i in 0..89 do
+        hub.Broadcast("a", payload) |> ignore
+        drainAll near |> ignore
+        if i < 40 then drainAll mid |> ignore
+    for _ in 0..29 do
+        hub.Broadcast("b", payload) |> ignore
+    // Held: "a" from the far one's place (90 frames), "b" from the other far one's (30).
+    hub.Trim()
+    Assert.Equal(120_000L, hub.RetainedBytes)
+    hub.Shed()
+    // Cutting the far one of "a" lets "a" go down to the middle one's 50 frames: 80 KB all told, so it stops there.
+    Assert.Equal(1L, hub.CutCount)
+    Assert.Equal(Error RecvStatus.Lagged, recv far)
+    Assert.Equal(80_000L, hub.RetainedBytes)
+    Assert.Equal(30, (drainAll farB).Length)
+    Assert.Equal(50, (drainAll mid).Length)
+    Assert.Equal(0, (drainAll near).Length)
+
 [<Fact>]
 let ``a broadcast sets the wake of every subscriber`` () =
     task {
