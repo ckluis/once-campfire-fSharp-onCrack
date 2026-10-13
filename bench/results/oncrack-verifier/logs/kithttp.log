@@ -1,0 +1,145 @@
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.73
+plain: 1500 requests, 181 differ; statuses {200: 376, 201: 27, 204: 30, 302: 91, 303: 19, 304: 41, 400: 146, 404: 604, 406: 97, 422: 3, 500: 66}
+====
+POST /fresh HTTP/1.1
+host: localhost
+accept: image/png
+accept-encoding: gzip, deflate, br
+sec-fetch-site: bogus
+x-http-method-override: patch
+content-type: multipart/form-data; boundary=----fz
+content-length: 63
+connection: close
+
+------fz
+Content-Disposition: form-data; name="x"
+
+truncated
+  rust status 404  f# status 404
+   only f#:   ('content-length', '44')
+====
+PUT /rooms/abc HTTP/1.1
+host: chat.example.com
+accept-encoding: *
+sec-fetch-site: none
+origin: http://chat.example.com
+referer: http://chat.example.com/rooms/3
+x-user: admin
+content-type: multipart/form-data; boundary=----fz
+content-length: 63
+connection: close
+
+------fz
+Content-Disposition: form-data; name="x"
+
+truncated
+  rust status 404  f# status 404
+   only f#:   ('content-length', '44')
+====
+POST /admin HTTP/1.1
+host: chat.example.com
+accept-encoding: *
+connection: close
+
+
+  rust status 404  f# status 404
+   only f#:   ('content-length', '44')
+====
+PUT /redirect?to=see_other HTTP/1.1
+host: chat.example.com
+accept: text/javascript
+if-none-match: 
+accept-encoding: gzip, deflate, br
+sec-fetch-site: cross-site
+referer: https://evil.example/x
+x-user: admin
+x-requested-with: XMLHttpRequest
+content-type: application/x-www-form-urlencoded
+content-length: 27
+connection: close
+
+_method=patch&user[name]=Jo
+  rust status 404  f# status 404
+   only f#:   ('content-length', '44')
+====
+POST /file?path=%2Fnonexistent HTTP/1.1
+host: chat.example.com
+accept-encoding: *
+connection: close
+
+
+  rust status 404  f# status 404
+   only f#:   ('content-length', '44')
+ssl: 1500 requests, 82 differ; statuses {200: 371, 201: 27, 204: 30, 302: 91, 303: 19, 304: 40, 400: 146, 404: 627, 406: 74, 422: 9, 500: 66}
+====
+GET /messages?format=json HTTP/1.1
+host: chat.example.com
+accept: image/png
+if-modified-since: Wed, 01 May 2024 00:00:00 GMT
+accept-encoding: gzip, deflate, br
+sec-fetch-site: cross-site
+origin: http://localhost
+referer: http://chat.example.com/rooms/3
+x-user: admin
+connection: close
+
+
+  rust status 200  f# status 200
+   only f#:   ('content-length', '28')
+====
+POST /admin HTTP/1.1
+host: other.example
+accept: application/xml
+if-none-match: 
+accept-encoding: gzip, deflate, br
+sec-fetch-site: bogus
+connection: close
+
+
+  rust status 404  f# status 404
+   only f#:   ('content-length', '129')
+====
+GET /messages?format=json HTTP/1.1
+host: localhost
+if-none-match: "a", "b"
+accept-encoding: gzip, deflate, br
+sec-fetch-site: none
+x-user: jo
+connection: close
+
+
+  rust status 200  f# status 200
+   only f#:   ('content-length', '28')
+====
+OPTIONS /messages.xml HTTP/1.1
+host: chat.example.com
+accept-encoding: *
+referer: https://evil.example/x
+turbo-frame: x
+connection: close
+
+
+  rust status 404  f# status 404
+   only f#:   ('content-length', '129')
+====
+PATCH /messages.xml HTTP/1.1
+host: chat.example.com
+accept: application/json
+if-none-match: "a", "b"
+accept-encoding: gzip, deflate, br
+cookie: session_token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkluUnZhekV5TXlJPSIsImV4cCI6IjIwNDQtMDYtMDFUMTI6MDA6MDAuMDAwWiIsInB1ciI6ImNvb2tpZS5zZXNzaW9uX3Rva2VuIn19--a36a96cd79792c0f265999125e88fb833eb7dc62; last_room=7
+sec-fetch-site: same-site
+x-requested-with: XMLHttpRequest
+content-type: application/x-www-form-urlencoded
+content-length: 45
+connection: close
+
+message[body]=hi&message[client_message_id]=1
+  rust status 404  f# status 404
+   only f#:   ('content-length', '60')
+EXIT=1

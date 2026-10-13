@@ -1,0 +1,29 @@
+{
+ "run": "bin/pixel-parity --seeds default --only 'realtime/**,interactions/sidebar/**'",
+ "image": "campfire-candidate-oncrack on campfire-oncrack:app sha256:12969a1861f3 (eae5beb)",
+ "seed": "default",
+ "cells": 116,
+ "statuses": {
+  "pass": 116
+ },
+ "pixel_equal": 116,
+ "states": [
+  "interactions/sidebar/new_ping",
+  "interactions/sidebar/new_ping/touch",
+  "interactions/sidebar/read_after_visit",
+  "interactions/sidebar/unread",
+  "realtime/attachment_sent",
+  "realtime/boost_removed",
+  "realtime/boosted",
+  "realtime/message_deleted",
+  "realtime/message_edited",
+  "realtime/message_sent",
+  "realtime/new_room_in_sidebar",
+  "realtime/presence_read",
+  "realtime/removed_from_room",
+  "realtime/room_deleted_then_send",
+  "realtime/typing/many",
+  "realtime/typing/one",
+  "realtime/unread_in_sidebar"
+ ]
+}

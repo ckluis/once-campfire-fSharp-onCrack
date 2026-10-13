@@ -1,0 +1,38 @@
+date: 2026-10-11T01:34:19-04:00
+app: oncrack, clients: 500, prefix: none, runs: 12, fresh: 1, secs: 15
+app env: CAMPFIRE_CABLE_VERIFY=1
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-verify2 (6920635 (dirty files under src/: 0) at 2026-10-11T04:57:25Z)
+repo HEAD: 0eaed8f
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[01:35:29] load before run: 1.28 2.61 2.92 (waited 70s)
+[01:35:31] host probe before run: {"spin_ms": 59.81, "spin_ms_max_cpu": 62.34, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.076} (waited 70s)
+[01:35:35] oncrack: container up, cold start 269ms
+MISS run 1 500 clients (target): 30 ERROR/WARN lines in the app's log
+[01:36:06] oncrack: container up, cold start 206ms
+MISS run 2 500 clients (target): 33 ERROR/WARN lines in the app's log
+[01:46:49] oncrack: container up, cold start 227ms
+MISS run 3 500 clients (target): 33 ERROR/WARN lines in the app's log
+[02:02:49] oncrack: container up, cold start 213ms
+MISS run 4 500 clients (target): 32 ERROR/WARN lines in the app's log
+[02:03:20] oncrack: container up, cold start 185ms
+MISS run 5 500 clients (target): 28 ERROR/WARN lines in the app's log
+[02:03:52] oncrack: container up, cold start 197ms
+MISS run 6 500 clients (target): 33 ERROR/WARN lines in the app's log
+[02:04:23] oncrack: container up, cold start 202ms
+MISS run 7 500 clients (target): 31 ERROR/WARN lines in the app's log
+[02:04:54] oncrack: container up, cold start 190ms
+MISS run 8 500 clients (target): 31 ERROR/WARN lines in the app's log
+[02:05:26] oncrack: container up, cold start 193ms
+MISS run 9 500 clients (target): 33 ERROR/WARN lines in the app's log
+[02:05:57] oncrack: container up, cold start 192ms
+MISS run 10 500 clients (target): 33 ERROR/WARN lines in the app's log
+[02:06:28] oncrack: container up, cold start 191ms
+MISS run 11 500 clients (target): 33 ERROR/WARN lines in the app's log
+[02:07:00] oncrack: container up, cold start 215ms
+MISS run 12 500 clients (target): 33 ERROR/WARN lines in the app's log
+[02:07:27] done: 12 phases, 12 with a problem
+exit 0

@@ -1,0 +1,14 @@
+616826 futex calls in 5 s, 23474 requests: 26.28 per request
+  .NET                 24.10/req
+  campfire-db-wri      2.07/req
+  campfire-db-che      0.06/req
+  request-log          0.04/req
+  Kestrel              0.00/req
+top stacks:
+   9.81/req  .NET: System.Threading.LowLevelLifoSemaphore.WaitForSignal
+   2.85/req  .NET: System.Threading.PortableThreadPool+WorkerThread.MaybeAddWorkingWorker <- System.Threading.ThreadPoolWorkQueue.Dispatch
+   2.06/req  campfire-db-wri: Campfire.Db.WriteQueue.TakeGroup
+   1.58/req  .NET: Campfire.Db.Conn.step <- Campfire.App.Integrations.IntegrationJobs+push@31.Invoke <- Campfire.Db.DbRun.attempt <- Campfire.Db.Database.Read <- Campfire.App.Integrations.IntegrationJobs+pushMessage@27.MoveNext <- System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start
+   1.02/req  .NET: Campfire.Db.Database.WriteInline <- <StartupCode$campfire>.$AppState+Write@91[System.__Canon].MoveNext <- System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start <- Campfire.App.Controllers.MessagesController+createMessageInLine@220-3.Invoke <- <StartupCode$Campfire-Kit>.$Actions+Bind@29[System.__Canon,Sy
+   1.01/req  .NET: Campfire.Db.Conn.step <- Campfire.App.Integrations.WebPushPool.Queue <- Campfire.App.Integrations.IntegrationJobs+push@31.Invoke <- Campfire.Db.DbRun.attempt <- Campfire.Db.Database.Read <- Campfire.App.Integrations.IntegrationJobs+pushMessage@27.MoveNext
+   1.00/req  .NET: System.Threading.PortableThreadPool+WorkerThread.MaybeAddWorkingWorker <- System.Threading.Channels.AsyncOperation.SignalCompletion <- System.Threading.Channels.ChannelUtilities.DangerousSetOperations <- System.Threading.Channels.BoundedChannel`1+BoundedChannelWriter[System.__Canon].TryWrite <- Campfire.Db.Wri

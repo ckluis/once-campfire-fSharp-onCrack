@@ -1,0 +1,51 @@
+# host load during review-fwd2 (ps -A, non-VM processes: top 4 by %CPU and the sum of all, every 10 s; loadavg)
+00:28:19 load  5.23 11.89 18.05  | sum 62 | 37.3 claude, 3.7 cmux, 3.2 Finder, 1.7 zsh, 
+00:28:29 load  4.65 11.55 17.85  | sum 27 | 6.7 Python, 4.6 claude, 1.9 claude, 1.7 Finder, 
+00:28:39 load  4.17 11.22 17.66  | sum 29 | 9.2 claude, 7.3 claude, 2.0 claude, 1.7 Python, 
+# quiet after 20s; session starts
+00:28:45 load  3.84 11.03 17.56  | sum 34 | 10.0 claude, 8.6 cmux, 3.8 Finder, 1.8 Python, 
+# mac_free_gib=17.7
+00:28:55 load  4.18 10.87 17.42  | sum 10 | 1.9 trustd, 1.8 tccd, 1.5 syspolicyd, 1.1 claude, 
+00:29:05 load  4.92 10.81 17.32  | sum 12 | 1.6 claude, 1.3 syspolicyd, 1.2 opendirectoryd, 1.0 claude, 
+00:29:15 load  5.23 10.68 17.20  | sum 33 | 19.4 Python, 1.5 bash, 1.3 syspolicyd, 1.3 claude, 
+# mac_free_gib=17.7
+00:29:25 load  5.66 10.59 17.10  | sum 18 | 5.9 claude, 1.8 syspolicyd, 1.5 opendirectoryd, 1.3 trustd, 
+00:29:35 load  5.80 10.46 16.97  | sum 39 | 25.5 Python, 3.7 mediaanalysisd, 1.3 syspolicyd, 1.0 claude, 
+00:29:45 load  6.06 10.36 16.86  | sum 17 | 2.6 bash, 2.4 opendirectoryd, 1.2 notifyd, 1.1 logd, 
+# mac_free_gib=17.7
+00:29:56 load  6.11 10.23 16.74  | sum 22 | 3.4 fseventsd, 3.1 bash, 2.9 mds, 2.0 mds_stores, 
+00:30:06 load  5.84 10.04 16.59  | sum 9 | 1.3 bash, 0.8 syspolicyd, 0.8 claude, 0.8 claude, 
+00:30:16 load  5.93 9.92 16.48  | sum 66 | 26.2 Python, 5.2 fseventsd, 4.8 trustd, 4.7 tccd, 
+# mac_free_gib=17.7
+00:30:26 load  7.33 10.09 16.46  | sum 230 | 40.8 spreekuur.test, 25.0 fseventsd, 19.9 kasboek, 16.8 postgres:, 
+00:30:36 load  9.68 10.50 16.53  | sum 210 | 45.7 fseventsd, 20.2 spreekuur.test, 19.7 mds_stores, 18.8 kasboek.test, 
+00:30:46 load  11.23 10.80 16.56  | sum 149 | 22.9 fseventsd, 12.9 bash, 11.4 spreekuur.test, 10.3 taal.test, 
+# mac_free_gib=17.5
+00:30:56 load  11.71 10.92 16.54  | sum 279 | 71.5 kasboek.test, 40.3 spreekuur.test, 34.6 postgres:, 23.7 fseventsd, 
+00:31:06 load  12.93 11.21 16.58  | sum 201 | 28.2 postgres:, 25.7 fseventsd, 25.2 grep, 21.5 kasboek.test, 
+00:31:16 load  12.10 11.09 16.47  | sum 234 | 54.8 beam.smp, 21.3 postgres:, 14.1 bash, 11.3 fseventsd, 
+# mac_free_gib=17.5
+00:31:26 load  13.67 11.46 16.54  | sum 259 | 52.1 beam.smp, 51.3 beam.smp, 22.4 fseventsd, 12.7 bash, 
+00:31:36 load  15.40 11.91 16.64  | sum 330 | 68.4 beam.smp, 38.9 beam.smp, 25.0 fseventsd, 23.8 beam.smp, 
+00:31:46 load  23.40 13.72 17.23  | sum 367 | 52.6 beam.smp, 25.2 beam.smp, 17.2 Python, 16.0 Python, 
+# mac_free_gib=17.6
+00:31:56 load  33.56 16.21 18.07  | sum 309 | 80.1 beam.smp, 32.6 mds, 27.6 Python, 13.0 beam.smp, 
+00:32:06 load  36.47 17.41 18.47  | sum 338 | 85.4 beam.smp, 82.7 beam.smp, 30.0 mediaanalysisd, 17.6 kasboek.test, 
+00:32:16 load  35.41 17.83 18.61  | sum 367 | 158.0 beam.smp, 93.9 beam.smp, 41.2 beam.smp, 15.9 bash, 
+# mac_free_gib=17.7
+00:32:26 load  34.33 18.16 18.72  | sum 484 | 141.4 beam.smp, 95.3 beam.smp, 58.0 beam.smp, 43.1 beam.smp, 
+00:32:36 load  33.30 18.47 18.82  | sum 430 | 95.4 beam.smp, 72.2 beam.smp, 65.7 beam.smp, 53.9 beam.smp, 
+00:32:46 load  31.26 18.52 18.83  | sum 335 | 191.0 beam.smp, 34.3 beam.smp, 25.5 beam.smp, 15.0 beam.smp, 
+# mac_free_gib=17.7
+00:32:57 load  31.21 19.14 19.05  | sum 352 | 100.5 beam.smp, 60.4 beam.smp, 45.9 mobileassetd, 38.7 postgres:, 
+00:33:07 load  29.52 19.19 19.07  | sum 323 | 100.8 beam.smp, 91.1 beam.smp, 68.0 beam.smp, 14.1 engine.test, 
+00:33:17 load  27.78 19.15 19.05  | sum 345 | 94.8 beam.smp, 68.7 beam.smp, 54.0 beam.smp, 35.4 beam.smp, 
+# mac_free_gib=17.7
+00:33:27 load  26.93 19.24 19.09  | sum 413 | 280.9 beam.smp, 45.9 beam.smp, 23.9 beam.smp, 23.3 beam.smp, 
+00:33:37 load  29.62 20.07 19.38  | sum 504 | 293.2 beam.smp, 61.7 beam.smp, 46.3 top, 29.4 beam.smp, 
+00:33:47 load  28.74 20.20 19.44  | sum 406 | 193.5 beam.smp, 77.3 beam.smp, 31.2 beam.smp, 15.3 beam.smp, 
+# mac_free_gib=17.6
+00:33:57 load  28.67 20.47 19.54  | sum 458 | 100.0 beam.smp, 99.2 (beam.smp), 57.3 beam.smp, 49.5 beam.smp, 
+00:34:07 load  26.53 20.29 19.49  | sum 486 | 177.5 beam.smp, 109.6 beam.smp, 91.1 beam.smp, 23.0 beam.smp, 
+00:34:17 load  26.10 20.42 19.55  | sum 538 | 204.5 beam.smp, 150.6 beam.smp, 100.0 beam.smp, 17.9 fseventsd, 
+# session ended 00:34:17

@@ -1,0 +1,52 @@
+[15:25:51] load before run: 1.27 1.68 1.63 (waited 0s)
+[15:25:53] host probe before run: {"spin_ms": 60.45, "spin_ms_max_cpu": 62.04, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.088} (waited 0s)
+[15:26:42] oncrack 1000 clients: 671.4 msgs/s delivered to all, 671.6 posts/s
+syscalls over 3 s of the saturated phase, per delivered marked frame (671,408/s):
+  syscalls:sys_enter_sendto                           1/s   0.000 per delivery
+  syscalls:sys_enter_sendmsg                    132,207/s   0.197 per delivery
+  syscalls:sys_enter_write                          148/s   0.000 per delivery
+  syscalls:sys_enter_writev                           0/s   0.000 per delivery
+  syscalls:sys_enter_futex                        8,141/s   0.012 per delivery
+  syscalls:sys_enter_epoll_pwait                    957/s   0.001 per delivery
+  context-switches                                6,039/s   0.009 per delivery
+samples 20168
+
+threads (comm):
+   94.6%  .NET
+    4.7%  campfire-db-wri
+    0.4%  campfire-db-che
+    0.3%  request-log
+    0.1%  Kestrel
+
+layers (inclusive; a sample can be in several):
+   73.0%  cable: Campfire.Cable
+   10.5%  Kestrel transport (sockets, IOQueue, SocketSender)
+    1.7%  Kestrel pipes and upgraded stream
+   82.9%  thread pool dispatch
+   87.2%  posting (app: messages#create, render, db)
+    2.0%  GC
+   60.8%  kernel TCP send
+    0.5%  kernel TCP recv/epoll
+    6.7%  futex/scheduler
+
+self:
+   15.8%  __arch_copy_from_user
+    4.3%  _raw_spin_unlock_irqrestore
+    3.2%  __pi_clear_page
+    2.3%  handle_softirqs
+    1.8%  stub InitThreadManagerPerfMapData<JIT_CopiedWriteBarriers>
+    1.7%  __wake_up_sync_key
+    1.5%  arch_counter_get_cntvct
+    1.4%  instance valuetype [System.Runtime]System.Threading.Tasks.ValueTask [Campfire.Cable] Campfire.Cable.Socket+Writer::SendGather
+    1.4%  arch_local_irq_restore
+    1.4%  instance valuetype Campfire.Cable.RecvStatus [Campfire.Cable] Campfire.Cable.RingGroup::TryRead
+    1.4%  net_rx_action
+    1.1%  try_charge_memcg
+    1.0%  page_counter_try_charge
+    1.0%  valuetype Campfire.Cable.Connection/Drained [Campfire.Cable] Campfire.Cable.Connection::drain
+    0.9%  __local_bh_enable_ip
+    0.9%  memset
+    0.8%  instance void [Campfire.Cable] Campfire.Cable.Connection+run@404[System.__Canon]::MoveNext
+    0.8%  free_unref_page_prepare
+    0.7%  __syscall_cancel_arch
+-> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-fanout/tail/perf2/ring-1000b/perf-oncrack-1000.txt

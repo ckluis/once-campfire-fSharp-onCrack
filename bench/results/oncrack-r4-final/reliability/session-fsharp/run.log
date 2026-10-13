@@ -1,0 +1,52 @@
+1791678488 fsharp round 1: cable 1000/1000 subscribed, 0 disconnected, 4343/4343 delivered to all, 289.1 msgs/s
+1791678515 fsharp round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 5292/5292 delivered to all, 344.5 msgs/s
+1791678544 fsharp round 2: cable 1000/1000 subscribed, 0 disconnected, 4377/4377 delivered to all, 291.5 msgs/s
+1791678630 fsharp round 2: cable_heavy 1000/1000 subscribed, 4 disconnected, 4769/5154 delivered to all, 310.4 msgs/s
+1791678657 fsharp round 3: cable 1000/1000 subscribed, 0 disconnected, 3218/3218 delivered to all, 214.3 msgs/s
+1791678684 fsharp round 3: cable_heavy 1000/1000 subscribed, 0 disconnected, 4379/4379 delivered to all, 282.9 msgs/s
+1791678684 {
+1791678684   "fsharp": {
+1791678684     "cable": {
+1791678684       "clients": 1000,
+1791678684       "posters": 4,
+1791678684       "subscribed": [
+1791678684         1000,
+1791678684         1000,
+1791678684         1000
+1791678684       ],
+1791678684       "disconnected": [
+1791678684         0,
+1791678684         0,
+1791678684         0
+1791678684       ],
+1791678684       "delivered_to_all": [
+1791678684         "4343/4343",
+1791678684         "4377/4377",
+1791678684         "3218/3218"
+1791678684       ],
+1791678684       "median_delivered_msgs_per_sec": 289.1,
+1791678684       "median_all_clients_p99_ms": 144.511
+1791678684     },
+1791678684     "cable_heavy": {
+1791678684       "clients": 1000,
+1791678684       "posters": 64,
+1791678684       "subscribed": [
+1791678684         1000,
+1791678684         1000,
+1791678684         1000
+1791678684       ],
+1791678684       "disconnected": [
+1791678684         0,
+1791678684         4,
+1791678684         0
+1791678684       ],
+1791678684       "delivered_to_all": [
+1791678684         "5292/5292",
+1791678684         "4769/5154",
+1791678684         "4379/4379"
+1791678684       ],
+1791678684       "median_delivered_msgs_per_sec": 310.4,
+1791678684       "median_all_clients_p99_ms": 875.007
+1791678684     }
+1791678684   }
+1791678684 }

@@ -1,0 +1,134 @@
+# host load during mixed-1 (ps -A, non-VM processes: top 4 by %CPU and the sum of all, every 10 s; loadavg)
+22:24:47 load  14.22 14.51 12.64  | sum 345 | 155.2 spoor.test, 26.1 Python, 17.8 Python, 17.0 Python, 
+22:24:57 load  12.85 14.21 12.56  | sum 37 | 4.8 fseventsd, 4.2 syspolicyd, 3.9 trustd, 3.5 tccd, 
+22:25:07 load  11.18 13.81 12.43  | sum 53 | 32.8 go, 4.0 fseventsd, 3.2 trustd, 2.6 tccd, 
+22:25:17 load  10.25 13.52 12.34  | sum 136 | 75.7 go, 28.2 compile, 5.8 fseventsd, 3.3 opendirectoryd, 
+22:25:27 load  8.97 13.14 12.22  | sum 25 | 4.2 opendirectoryd, 3.8 syspolicyd, 3.3 logd, 2.8 bash, 
+22:25:37 load  9.42 13.09 12.21  | sum 313 | 27.1 Python, 24.5 Python, 24.4 Python, 24.4 Python, 
+22:25:47 load  8.88 12.85 12.14  | sum 58 | 9.5 Python, 6.9 Python, 5.4 fseventsd, 4.3 syspolicyd, 
+22:25:57 load  7.74 12.48 12.02  | sum 19 | 2.5 Astropad, 2.2 claude, 2.1 claude, 1.8 trustd, 
+22:26:07 load  8.54 12.48 12.02  | sum 517 | 83.6 beam.smp, 74.7 fseventsd, 64.6 kasboek.test, 45.5 spreekuur.test, 
+22:26:18 load  12.94 13.30 12.32  | sum 215 | 32.7 Python, 28.6 Python, 28.5 fseventsd, 10.3 Python, 
+22:26:28 load  12.09 13.11 12.26  | sum 300 | 82.5 spreekuur.test, 52.9 kasboek.test, 41.0 fseventsd, 27.4 taal.test, 
+22:26:38 load  11.39 12.93 12.21  | sum 295 | 72.9 kasboek.test, 48.6 fseventsd, 31.0 spreekuur.test, 19.8 postgres:, 
+22:26:48 load  10.33 12.65 12.12  | sum 140 | 36.9 fseventsd, 24.5 kasboek.test, 10.2 engine.test, 6.9 Finder, 
+22:26:58 load  9.20 12.33 12.01  | sum 165 | 53.2 fseventsd, 33.2 zwerm.test, 17.3 postgres:, 12.4 postgres:, 
+22:27:08 load  8.08 11.99 11.89  | sum 91 | 24.0 fseventsd, 17.7 cmux, 7.9 engine.test, 4.9 trustd, 
+22:27:18 load  8.27 11.89 11.86  | sum 126 | 39.2 werk.test, 27.2 fseventsd, 7.5 mdworker_shared, 6.8 syspolicyd, 
+22:27:28 load  7.31 11.57 11.74  | sum 73 | 14.3 cmux, 9.0 fseventsd, 8.1 zwerm.test, 6.5 syspolicyd, 
+22:27:38 load  6.57 11.27 11.63  | sum 51 | 8.8 trustd, 7.3 tccd, 7.1 syspolicyd, 4.3 cmux, 
+22:27:48 load  6.58 11.11 11.57  | sum 112 | 20.4 beam.smp, 14.5 fseventsd, 12.4 mdworker_shared, 11.2 postgres:, 
+22:27:58 load  6.11 10.86 11.48  | sum 97 | 33.7 launchd, 30.9 claude, 4.8 trustd, 4.1 tccd, 
+22:28:08 load  5.62 10.60 11.38  | sum 94 | 25.7 spoor.test, 23.5 fseventsd, 5.2 cmux, 4.6 opendirectoryd, 
+22:28:18 load  5.13 10.33 11.27  | sum 19 | 3.4 trustd, 3.4 syspolicyd, 2.7 tccd, 2.1 cmux, 
+# quiet after 210s; session starts
+22:28:28 load  8.16 10.79 11.42  | sum 361 | 100.3 (compile), 15.0 Python, 14.5 Python, 13.4 Python, 
+# mac_free_gib=17.8
+22:28:38 load  13.73 11.91 11.81  | sum 170 | 26.4 Python, 25.4 compile, 15.0 Python, 12.6 Python, 
+22:28:48 load  12.83 11.78 11.77  | sum 87 | 29.8 mds, 10.6 XprotectService, 9.8 cmux, 7.7 syspolicyd, 
+22:28:58 load  11.70 11.57 11.70  | sum 164 | 70.6 link, 38.0 go, 21.8 launchd, 9.2 claude, 
+# mac_free_gib=17.5
+22:29:08 load  14.35 12.12 11.89  | sum 253 | 19.6 Python, 18.9 Python, 18.4 Python, 15.1 Python, 
+22:29:18 load  13.53 12.02 11.85  | sum 91 | 25.5 Python, 12.3 fseventsd, 6.2 syspolicyd, 5.7 opendirectoryd, 
+22:29:28 load  12.68 11.88 11.81  | sum 42 | 23.5 launchd, 4.1 cmux, 2.5 claude, 2.3 trustd, 
+# mac_free_gib=17.6
+22:29:38 load  11.51 11.66 11.73  | sum 39 | 14.6 bash, 8.7 mdworker_shared, 4.5 syspolicyd, 1.7 mds_stores, 
+22:29:48 load  11.05 11.55 11.69  | sum 24 | 3.5 opendirectoryd, 3.4 bash, 2.4 syspolicyd, 2.3 logd, 
+22:29:58 load  9.73 11.25 11.58  | sum 44 | 19.3 launchd, 14.2 bash, 2.4 cmux, 1.6 trustd, 
+# mac_free_gib=17.5
+22:30:08 load  12.83 11.84 11.78  | sum 280 | 23.5 Python, 16.3 Python, 16.2 Python, 14.8 Python, 
+22:30:18 load  15.37 12.44 12.00  | sum 131 | 94.4 ReportCrashService, 6.2 Python, 5.7 syspolicyd, 3.3 fseventsd, 
+22:30:29 load  14.08 12.26 11.94  | sum 26 | 8.6 launchd, 3.9 nsattributedstringagent, 1.8 runningboardd, 1.0 coresymbolicationd, 
+# mac_free_gib=17.0
+22:30:39 load  13.07 12.10 11.89  | sum 368 | 21.4 beam.smp, 20.6 Python, 19.3 Python, 18.2 Python, 
+22:30:49 load  16.60 12.90 12.17  | sum 139 | 27.7 Python, 22.2 mds, 8.8 syspolicyd, 7.8 opendirectoryd, 
+22:30:59 load  15.74 12.84 12.16  | sum 44 | 12.5 Python, 4.0 trustd, 3.9 launchd, 3.9 claude, 
+# mac_free_gib=17.0
+22:31:09 load  14.54 12.68 12.11  | sum 20 | 4.5 trustd, 4.3 tccd, 3.4 syspolicyd, 3.4 Python, 
+22:31:19 load  13.38 12.49 12.05  | sum 54 | 11.5 claude, 7.7 cmux, 4.4 opendirectoryd, 4.1 trustd, 
+22:31:29 load  14.80 12.85 12.18  | sum 58 | 10.3 coreaudiod, 4.4 mediaremoted, 4.2 opendirectoryd, 3.9 launchd, 
+# mac_free_gib=17.0
+22:31:39 load  13.60 12.65 12.12  | sum 160 | 141.1 beam.smp, 2.7 fseventsd, 1.9 trustd, 1.6 tccd, 
+22:31:49 load  15.18 13.02 12.26  | sum 184 | 30.2 beam.smp, 26.8 Python, 26.2 Python, 22.7 Python, 
+22:31:59 load  13.77 12.79 12.19  | sum 14 | 3.6 trustd, 2.2 syspolicyd, 1.8 tccd, 1.8 launchd, 
+# mac_free_gib=17.0
+22:32:09 load  12.57 12.57 12.11  | sum 47 | 29.3 cmux, 4.5 trustd, 3.6 tccd, 3.1 syspolicyd, 
+22:32:19 load  14.14 12.88 12.23  | sum 259 | 29.7 beam.smp, 17.8 Python, 16.0 Python, 15.7 Python, 
+22:32:29 load  14.44 13.00 12.28  | sum 30 | 6.4 syspolicyd, 6.0 trustd, 4.6 tccd, 2.6 fseventsd, 
+# mac_free_gib=17.0
+22:32:39 load  13.43 12.83 12.23  | sum 11 | 2.4 claude, 2.2 trustd, 1.8 tccd, 1.7 syspolicyd, 
+22:32:49 load  12.27 12.61 12.15  | sum 17 | 3.7 Finder, 3.1 cmux, 2.6 trustd, 1.9 syspolicyd, 
+22:32:59 load  10.92 12.31 12.05  | sum 60 | 16.5 claude, 12.2 cmux, 7.4 Finder, 4.8 trustd, 
+# mac_free_gib=17.0
+22:33:09 load  10.39 12.15 12.00  | sum 13 | 3.5 claude, 2.1 claude, 1.7 trustd, 1.4 tccd, 
+22:33:19 load  9.65 11.93 11.92  | sum 11 | 1.8 cmux, 1.6 claude, 1.3 trustd, 1.0 tccd, 
+22:33:29 load  9.03 11.72 11.85  | sum 11 | 2.2 trustd, 1.2 tccd, 1.2 claude, 1.0 syspolicyd, 
+# mac_free_gib=17.0
+22:33:39 load  8.65 11.55 11.78  | sum 7 | 1.3 claude, 1.0 trustd, 0.9 tccd, 0.7 syspolicyd, 
+22:33:49 load  8.03 11.31 11.70  | sum 7 | 1.4 trustd, 1.2 tccd, 1.0 syspolicyd, 0.7 claude, 
+22:33:59 load  7.73 11.14 11.63  | sum 14 | 9.3 claude, 0.8 trustd, 0.7 tccd, 0.6 syspolicyd, 
+# mac_free_gib=17.0
+22:34:09 load  7.44 10.97 11.56  | sum 25 | 4.6 claude, 4.3 cmux, 4.1 Finder, 1.6 securityd, 
+22:34:20 load  7.37 10.84 11.51  | sum 10 | 2.2 claude, 0.9 claude, 0.8 trustd, 0.7 tccd, 
+22:34:30 load  6.83 10.61 11.42  | sum 39 | 15.1 top, 5.1 claude, 3.5 claude, 2.1 opendirectoryd, 
+# mac_free_gib=17.0
+22:34:40 load  6.85 10.49 11.37  | sum 14 | 3.3 syspolicyd, 3.0 cmux, 1.3 claude, 1.2 claude, 
+22:34:50 load  7.10 10.43 11.34  | sum 22 | 5.3 trustd, 4.2 tccd, 3.4 syspolicyd, 2.0 cmux, 
+22:35:00 load  6.78 10.25 11.26  | sum 29 | 7.6 loginwindow, 4.4 WindowServer, 3.3 claude, 2.8 cmux, 
+# mac_free_gib=17.0
+22:35:10 load  7.12 10.21 11.23  | sum 19 | 6.0 claude, 3.2 syspolicyd, 1.7 cmux, 1.4 trustd, 
+22:35:20 load  6.65 10.00 11.15  | sum 21 | 4.3 trustd, 3.5 tccd, 2.7 syspolicyd, 2.1 cmux, 
+22:35:30 load  6.55 9.87 11.09  | sum 21 | 6.9 claude, 2.6 trustd, 2.2 tccd, 1.9 syspolicyd, 
+# mac_free_gib=17.0
+22:35:40 load  6.31 9.71 11.02  | sum 17 | 3.2 claude, 2.8 trustd, 2.8 cmux, 2.2 tccd, 
+22:35:50 load  6.43 9.62 10.97  | sum 27 | 11.3 (Python), 2.4 trustd, 2.2 cmux, 1.9 tccd, 
+22:36:00 load  6.35 9.50 10.91  | sum 26 | 5.2 loginwindow, 4.3 syspolicyd, 3.3 claude, 2.6 trustd, 
+# mac_free_gib=17.0
+22:36:10 load  6.22 9.37 10.85  | sum 39 | 6.7 trustd, 5.5 syspolicyd, 5.1 tccd, 3.7 opendirectoryd, 
+22:36:20 load  6.73 9.37 10.83  | sum 26 | 5.7 trustd, 5.0 tccd, 4.9 syspolicyd, 2.4 bash, 
+22:36:30 load  6.85 9.31 10.79  | sum 356 | 37.4 beam.smp, 27.9 Python, 15.3 Python, 13.6 Python, 
+# mac_free_gib=17.0
+22:36:40 load  12.11 10.35 11.15  | sum 174 | 58.6 mds, 34.9 Python, 12.3 Python, 9.8 mds_stores, 
+22:36:50 load  10.79 10.13 11.06  | sum 16 | 6.3 Python, 1.7 trustd, 1.5 tccd, 1.1 syspolicyd, 
+22:37:00 load  9.66 9.91 10.97  | sum 29 | 7.2 loginwindow, 5.1 Python, 2.8 WindowServer, 2.7 claude, 
+# mac_free_gib=17.0
+22:37:10 load  13.44 10.68 11.22  | sum 281 | 24.4 Python, 24.2 Python, 21.9 Python, 20.6 Python, 
+22:37:20 load  17.06 11.57 11.54  | sum 97 | 28.8 Python, 23.5 Python, 6.1 sample, 5.8 Python, 
+22:37:35 load  14.14 11.20 11.40  | sum 55 | 12.6 claude, 10.7 cmux, 6.1 trustd, 4.9 tccd, 
+# mac_free_gib=17.0
+22:37:45 load  13.03 11.06 11.35  | sum 44 | 13.8 bash, 7.6 syspolicyd, 6.9 trustd, 5.5 tccd, 
+22:37:55 load  12.04 10.91 11.29  | sum 44 | 5.7 trustd, 5.4 tccd, 5.3 syspolicyd, 3.8 claude, 
+22:38:05 load  10.88 10.70 11.21  | sum 64 | 30.5 fseventsd, 8.3 mds_stores, 7.3 mds, 3.1 trustd, 
+# mac_free_gib=17.0
+22:38:15 load  10.13 10.54 11.15  | sum 152 | 94.8 beam.smp, 6.2 fseventsd, 4.3 postgres:, 3.3 syspolicyd, 
+22:38:25 load  13.81 11.31 11.42  | sum 201 | 34.2 beam.smp, 23.2 Python, 21.7 com.apple.WebKit.WebContent, 16.2 Python, 
+22:38:35 load  13.59 11.35 11.43  | sum 54 | 21.9 Python, 5.4 mediaanalysisd, 2.7 syspolicyd, 2.4 trustd, 
+# mac_free_gib=17.0
+22:38:45 load  12.34 11.16 11.36  | sum 18 | 1.7 claude, 1.6 syspolicyd, 1.4 claude, 1.3 trustd, 
+22:38:55 load  14.91 11.73 11.56  | sum 233 | 21.3 Python, 17.4 Python, 17.0 Python, 16.2 Python, 
+22:39:05 load  14.63 11.79 11.58  | sum 28 | 11.3 Python, 2.0 trustd, 1.6 fseventsd, 1.5 syspolicyd, 
+# mac_free_gib=17.0
+22:39:15 load  13.30 11.60 11.52  | sum 7 | 1.4 trustd, 1.2 syspolicyd, 1.0 tccd, 1.0 claude, 
+22:39:25 load  12.48 11.48 11.48  | sum 61 | 14.6 claude, 14.3 bash, 8.9 cmux, 4.2 Finder, 
+22:39:35 load  11.64 11.33 11.42  | sum 21 | 3.4 opendirectoryd, 3.1 bash, 2.1 syspolicyd, 2.0 logd, 
+# mac_free_gib=17.0
+22:39:45 load  10.85 11.17 11.37  | sum 20 | 11.3 bash, 3.7 syspolicyd, 1.0 cmux, 1.0 claude, 
+22:39:56 load  16.27 12.28 11.75  | sum 185 | 25.6 Python, 21.8 beam.smp, 18.4 Python, 10.8 Python, 
+22:40:06 load  15.69 12.29 11.76  | sum 6 | 2.2 Python, 0.5 trustd, 0.5 cmux, 0.5 claude, 
+# mac_free_gib=17.0
+22:40:16 load  14.11 12.06 11.69  | sum 41 | 19.7 Python, 5.0 trustd, 4.1 tccd, 3.8 syspolicyd, 
+22:40:26 load  14.98 12.29 11.77  | sum 281 | 21.8 Python, 20.5 Python, 19.2 Python, 18.2 Python, 
+22:40:36 load  16.11 12.64 11.90  | sum 74 | 22.2 Python, 8.9 syspolicyd, 5.2 Python, 5.1 Python, 
+# mac_free_gib=17.0
+22:40:46 load  15.02 12.52 11.87  | sum 9 | 2.5 trustd, 2.1 tccd, 1.9 syspolicyd, 1.0 opencode, 
+22:40:56 load  14.10 12.41 11.83  | sum 39 | 12.2 bash, 7.3 cmux, 5.0 syspolicyd, 3.1 claude, 
+22:41:06 load  13.32 12.29 11.80  | sum 35 | 5.9 trustd, 5.8 syspolicyd, 5.2 tccd, 3.4 opendirectoryd, 
+# mac_free_gib=17.0
+22:41:16 load  15.29 12.73 11.96  | sum 26 | 13.8 bash, 2.0 trustd, 2.0 fseventsd, 1.7 claude, 
+22:41:26 load  15.86 12.93 12.04  | sum 238 | 17.8 Python, 17.7 Python, 17.5 Python, 17.4 Python, 
+22:41:36 load  18.07 13.50 12.25  | sum 78 | 20.1 Python, 6.7 syspolicyd, 6.7 Python, 6.7 cmux, 
+# mac_free_gib=17.0
+22:41:46 load  16.66 13.35 12.21  | sum 17 | 5.0 trustd, 4.3 tccd, 3.1 syspolicyd, 0.7 DisplayLinkUserAgent, 
+22:41:56 load  15.33 13.18 12.16  | sum 157 | 112.2 beam.smp, 10.9 fseventsd, 6.7 claude, 3.8 trustd, 
+22:42:06 load  20.64 14.39 12.60  | sum 292 | 56.3 mds, 34.5 Python, 32.8 Python, 28.5 Python, 
+# session ended 22:42:06

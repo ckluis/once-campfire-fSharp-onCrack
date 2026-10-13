@@ -1,0 +1,17 @@
+[14:07:35] load before run: 1.43 2.83 2.23 (waited 90s)
+[14:07:38] host busy: {"spin_ms": 62.6, "spin_ms_max_cpu": 70.91, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.127}
+[14:07:52] host busy: {"spin_ms": 79.44, "spin_ms_max_cpu": 91.27, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.43}
+[14:08:05] host probe before run: {"spin_ms": 60.45, "spin_ms_max_cpu": 65.64, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.088} (waited 110s)
+merge #1                     ready  1000 failed 0    1372.7 msgs/s  server 3.73 cores  2.66 us/del  loadgen 2.48 cores  1.80 us/del  paced p50 4.711 p99 14.863  sat p99 90.367
+stream #1                    ready  1000 failed 0    1510.3 msgs/s  server 3.61 cores  2.39 us/del  loadgen 2.69 cores  1.78 us/del  paced p50 4.843 p99 39.935  sat p99 89.023
+stream #2                    ready  1000 failed 0    1622.8 msgs/s  server 3.58 cores  2.21 us/del  loadgen 2.74 cores  1.69 us/del  paced p50 4.879 p99 15.751  sat p99 68.799
+merge #2                     ready  1000 failed 0    1841.0 msgs/s  server 3.72 cores  2.00 us/del  loadgen 2.87 cores  1.56 us/del  paced p50 10.159 p99 18.799  sat p99 84.159
+merge #3                     ready  1000 failed 0    1443.6 msgs/s  server 3.62 cores  2.51 us/del  loadgen 2.69 cores  1.86 us/del  paced p50 5.763 p99 12.271  sat p99 72.383
+stream #3                    ready  1000 failed 0    1425.5 msgs/s  server 3.60 cores  2.54 us/del  loadgen 2.56 cores  1.79 us/del  paced p50 4.671 p99 12.375  sat p99 79.679
+stream #4                    ready  1000 failed 0    1320.4 msgs/s  server 3.58 cores  2.66 us/del  loadgen 2.50 cores  1.90 us/del  paced p50 4.687 p99 33.247  sat p99 81.727
+merge #4                     ready  1000 failed 0    1529.3 msgs/s  server 3.54 cores  2.32 us/del  loadgen 2.63 cores  1.72 us/del  paced p50 4.275 p99 9.239  sat p99 157.439
+merge #5                     ready  1000 failed 0    1576.2 msgs/s  server 3.69 cores  2.29 us/del  loadgen 2.71 cores  1.72 us/del  paced p50 4.695 p99 23.391  sat p99 79.295
+stream #5                    ready  1000 failed 0    1616.7 msgs/s  server 3.53 cores  2.18 us/del  loadgen 2.67 cores  1.65 us/del  paced p50 4.411 p99 8.951  sat p99 181.247
+stream #6                    ready  1000 failed 0    1765.1 msgs/s  server 3.78 cores  2.14 us/del  loadgen 2.87 cores  1.62 us/del  paced p50 3.977 p99 16.735  sat p99 69.311
+merge #6                     ready  1000 failed 0    1767.3 msgs/s  server 3.78 cores  2.14 us/del  loadgen 2.87 cores  1.62 us/del  paced p50 3.943 p99 11.599  sat p99 73.343
+-> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-fanout/flip1

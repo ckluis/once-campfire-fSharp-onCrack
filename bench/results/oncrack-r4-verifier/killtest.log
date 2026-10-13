@@ -1,0 +1,49 @@
+run faae3ff7: acked 2644, non-200 0, connection errors 208 (after the kill)
+stored 2644 distinct tokens (2644 rows); unacknowledged but stored 0
+LOST acknowledged posts: 0 []
+DUPLICATED: 0 []
+acknowledged without a search-index row: 0 []
+room page after restart: status 200; newest acknowledged post on it: True
+journal_mode wal
+exit=0
+Traceback (most recent call last):
+  File "/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-verifier/killtest.py", line 23, in <module>
+    cookie = sign_in()
+             ^^^^^^^^^
+  File "/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-verifier/killtest.py", line 17, in sign_in
+    c.request("POST", "/session", body, {"Content-Type": "application/x-www-form-urlencoded", "Sec-Fetch-Site": "same-origin"})
+  File "/usr/lib/python3.12/http/client.py", line 1365, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/lib/python3.12/http/client.py", line 1411, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.12/http/client.py", line 1360, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.12/http/client.py", line 1120, in _send_output
+    self.send(msg)
+  File "/usr/lib/python3.12/http/client.py", line 1064, in send
+    self.connect()
+  File "/usr/lib/python3.12/http/client.py", line 1030, in connect
+    self.sock = self._create_connection(
+                ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+  File "/usr/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+exit=1
+run f3d2cc28: acked 11672, non-200 0, connection errors 192 (after the kill)
+stored 11685 distinct tokens (11685 rows); unacknowledged but stored 13
+LOST acknowledged posts: 0 []
+DUPLICATED: 0 []
+acknowledged without a search-index row: 0 []
+room page after restart: status 200; newest acknowledged post on it: True
+journal_mode wal
+exit=0
+run e6635d93: acked 19612, non-200 0, connection errors 208 (after the kill)
+stored 19612 distinct tokens (19612 rows); unacknowledged but stored 0
+LOST acknowledged posts: 0 []
+DUPLICATED: 0 []
+acknowledged without a search-index row: 0 []
+room page after restart: status 200; newest acknowledged post on it: True
+journal_mode wal
+exit=0

@@ -1,0 +1,27 @@
+date: 2026-10-11T00:34:31-04:00
+app: oncrack, clients: 500, prefix: none, runs: 12, fresh: 0, secs: 15
+app env: CAMPFIRE_CABLE_VERIFY=1 CAMPFIRE_CABLE_GATHER=off DOTNET_GCgen0size=0x100000 DOTNET_GCgen0MaxBudget=100000
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-verify (4d6f89c (dirty files under src/: 0) at 2026-10-11T04:27:37Z)
+repo HEAD: 5c36250
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[00:35:51] load before run: 1.27 3.26 3.54 (waited 80s)
+[00:35:54] host probe before run: {"spin_ms": 60.53, "spin_ms_max_cpu": 63.74, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.089} (waited 80s)
+[00:35:58] oncrack: container up, cold start 293ms
+ok   run 1 500 clients (target): 44773/44773 messages, 2983.7 msg/s, drain 0.0 s
+ok   run 2 500 clients (target): 42746/42746 messages, 2848.6 msg/s, drain 0.0 s
+ok   run 3 500 clients (target): 44608/44608 messages, 2973.2 msg/s, drain 0.0 s
+ok   run 4 500 clients (target): 45268/45268 messages, 3016.8 msg/s, drain 0.0 s
+ok   run 5 500 clients (target): 44062/44062 messages, 2936.6 msg/s, drain 0.0 s
+ok   run 6 500 clients (target): 39694/39694 messages, 2645.7 msg/s, drain 0.0 s
+ok   run 7 500 clients (target): 34665/34665 messages, 2310.4 msg/s, drain 0.0 s
+ok   run 8 500 clients (target): 36341/36341 messages, 2422.0 msg/s, drain 0.0 s
+ok   run 9 500 clients (target): 34936/34936 messages, 2327.4 msg/s, drain 0.0 s
+ok   run 10 500 clients (target): 39534/39534 messages, 2635.0 msg/s, drain 0.0 s
+MISS run 11 500 clients (target): 1 ERROR/WARN lines in the app's log
+ok   run 12 500 clients (target): 40658/40658 messages, 2709.5 msg/s, drain 0.0 s
+[00:41:34] done: 12 phases, 1 with a problem
+exit 0

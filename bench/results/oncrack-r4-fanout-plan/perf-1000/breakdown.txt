@@ -1,0 +1,23 @@
+samples 30932
+
+inclusive:
+   80.7%  cable connection loop (Connection.run)
+   77.6%    Writer.Send (frames to the socket)
+   15.9%      Memmove into the pooled send buffer
+   60.5%      the send syscall (SystemNative_Send)
+    1.6%    drain (reading the rings)
+    2.4%  publishing (Group.Publish, WakeBatch, BroadcastOrder)
+    0.2%  Wake.Set
+    9.7%  posting: MessagesController
+    7.6%  posting: views
+   15.4%  posting: db (incl. sqlite)
+    5.0%  Kestrel HTTP (the posts)
+    1.5%  GC
+    0.5%  thread pool semaphore / futex
+
+the send syscall, by kind (shares of all samples):
+   18.4%  copy_from_user (per byte)
+   16.8%  loopback receive softirq, charged to the sender (per skb)
+   10.7%  page and skb allocation, memcg charge (per byte, mostly)
+    8.0%  transmit path (per skb)
+    6.6%  the rest of the syscall: entry, lock_sock, tcp_sendmsg bookkeeping (per send)

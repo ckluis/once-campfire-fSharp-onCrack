@@ -1,0 +1,8 @@
+== cached load 5.23 5.58 6.04
+c=16  hold                                       144044 answers/s     24.3 us CPU/answer      6.9 KB/answer   [cpu 24 24 25 26 24]
+== hold load 5.80 5.70 6.05
+c=16  hold                                       136732 answers/s     24.9 us CPU/answer      7.3 KB/answer   [cpu 26 26 25 25 25]
+== hold load 5.79 5.71 6.04
+c=16  hold                                       135371 answers/s     25.2 us CPU/answer      7.3 KB/answer   [cpu 25 25 25 25 25]
+== cached load 6.01 5.78 6.04
+c=16  hold                                       147415 answers/s     23.1 us CPU/answer      6.9 KB/answer   [cpu 23 23 23 23 23]

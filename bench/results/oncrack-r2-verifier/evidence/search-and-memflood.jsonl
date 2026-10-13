@@ -1,0 +1,5 @@
+{"case": "search_body_edit_visible", "check": "search page (Third)", "app": "oncrack", "build": "2ea9ae9 mounted", "env": [], "now": true, "after_1.5s": true, "status": [200, 200]}
+{"case": "search_body_edit_visible", "check": "search page (Third)", "app": "oncrack", "build": "64a714d image", "env": ["CAMPFIRE_READ_CACHE=off", "CAMPFIRE_FAST_PATH=off"], "now": false, "after_1.5s": false, "status": [200, 200]}
+{"case": "search_body_edit_visible", "check": "search page (Third)", "app": "rust", "build": "ccece30 image", "env": [], "now": false, "after_1.5s": false, "status": [200, 200]}
+{"group": "memory", "app": "oncrack", "build": "2ea9ae9 mounted", "env": [], "urls": 20000, "pad": 7000, "requests": 40000, "secs": 23.9, "anon_mb_before": 22, "anon_mb_after": 103, "non200": 0}
+{"group": "memory", "app": "oncrack", "build": "64a714d image", "env": [], "urls": 20000, "pad": 7000, "requests": 40000, "secs": 23.3, "anon_mb_before": 21, "anon_mb_after": 362, "non200": 0}

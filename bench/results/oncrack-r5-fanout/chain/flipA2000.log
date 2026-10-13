@@ -1,0 +1,83 @@
+[15:04:41] load before run: 1.38 1.42 1.60 (waited 20s)
+[15:04:44] host probe before run: {"spin_ms": 61.08, "spin_ms_max_cpu": 61.74, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.099} (waited 20s)
+[15:05:34] load before run: 1.48 1.48 1.61 (waited 30s)
+[15:05:36] host probe before run: {"spin_ms": 60.24, "spin_ms_max_cpu": 64.05, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.084} (waited 30s)
+merge #1                     ready  2000 failed 0    1017.2 msgs/s  server 3.83 cores  1.90 us/del  loadgen 2.94 cores  1.44 us/del  paced p50 10.943 p99 21.519  sat p99 144.511
+    host 1.084 1.07
+[15:06:27] load before run: 1.44 1.52 1.62 (waited 30s)
+[15:06:30] host probe before run: {"spin_ms": 59.89, "spin_ms_max_cpu": 62.95, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.078} (waited 30s)
+stream #1                    ready  2000 failed 0     979.2 msgs/s  server 3.76 cores  1.89 us/del  loadgen 2.89 cores  1.47 us/del  paced p50 6.271 p99 17.007  sat p99 158.847
+    host 1.078 1.078
+[15:07:10] load before run: 1.27 1.48 1.60 (waited 20s)
+[15:07:13] host probe before run: {"spin_ms": 63.31, "spin_ms_max_cpu": 65.38, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.139} (waited 20s)
+ring #1                      ready  2000 failed 0     694.0 msgs/s  server 3.34 cores  2.46 us/del  loadgen 2.42 cores  1.73 us/del  paced p50 8.011 p99 10.703  sat p99 312.319
+    host 1.139 1.428
+[15:07:35] load before run: 1.49 1.51 1.61 (waited 0s)
+[15:07:39] host busy: {"spin_ms": 89.81, "spin_ms_max_cpu": 114.39, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.616}
+[15:07:52] host probe before run: {"spin_ms": 59.11, "spin_ms_max_cpu": 60.77, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.064} (waited 10s)
+stream #2                    ready  2000 failed 0     923.4 msgs/s  server 3.78 cores  2.09 us/del  loadgen 2.92 cores  1.58 us/del  paced p50 6.327 p99 17.647  sat p99 152.575
+    host 1.064 1.076
+[15:08:33] load before run: 1.44 1.50 1.60 (waited 20s)
+[15:08:35] host probe before run: {"spin_ms": 60.51, "spin_ms_max_cpu": 63.07, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.089} (waited 20s)
+ring #2                      ready  2000 failed 0     863.5 msgs/s  server 3.50 cores  1.98 us/del  loadgen 2.68 cores  1.55 us/del  paced p50 6.519 p99 16.367  sat p99 303.871
+    host 1.089 1.044
+[15:09:26] load before run: 1.30 1.50 1.59 (waited 30s)
+[15:09:29] host probe before run: {"spin_ms": 59.94, "spin_ms_max_cpu": 79.39, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.079} (waited 30s)
+merge #2                     ready  2000 failed 0     989.8 msgs/s  server 3.76 cores  1.86 us/del  loadgen 2.88 cores  1.45 us/del  paced p50 7.403 p99 23.199  sat p99 149.759
+    host 1.079 1.074
+[15:10:00] load before run: 1.42 1.51 1.59 (waited 10s)
+[15:10:03] host probe before run: {"spin_ms": 61.46, "spin_ms_max_cpu": 70.67, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.106} (waited 10s)
+ring #3                      ready  2000 failed 0     780.0 msgs/s  server 3.59 cores  2.35 us/del  loadgen 2.79 cores  1.79 us/del  paced p50 7.383 p99 10.463  sat p99 324.863
+    host 1.106 1.092
+[15:10:53] load before run: 1.34 1.52 1.59 (waited 30s)
+[15:11:05] host busy: {"spin_ms": 200.96, "spin_ms_max_cpu": 565.37, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 3.616}
+[15:11:18] host probe before run: {"spin_ms": 59.38, "spin_ms_max_cpu": 61.26, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.069} (waited 40s)
+merge #3                     ready  2000 failed 0     895.1 msgs/s  server 3.85 cores  2.13 us/del  loadgen 2.95 cores  1.64 us/del  paced p50 7.327 p99 22.815  sat p99 155.775
+    host 1.069 1.951
+[15:12:03] load before run: 1.30 1.49 1.58 (waited 20s)
+[15:12:11] host busy: {"spin_ms": 100.15, "spin_ms_max_cpu": 513.98, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.802}
+[15:12:24] host probe before run: {"spin_ms": 60.12, "spin_ms_max_cpu": 62.28, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.082} (waited 30s)
+stream #3                    ready  2000 failed 0     812.5 msgs/s  server 3.83 cores  2.35 us/del  loadgen 2.93 cores  1.80 us/del  paced p50 6.979 p99 12.199  sat p99 163.839
+    host 1.082 2.313
+[15:12:48] load before run: 1.39 1.47 1.57 (waited 0s)
+[15:12:51] host probe before run: {"spin_ms": 62.7, "spin_ms_max_cpu": 65.06, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.128} (waited 0s)
+merge #4                     ready  2000 failed 0     961.6 msgs/s  server 3.76 cores  1.93 us/del  loadgen 2.87 cores  1.49 us/del  paced p50 7.059 p99 23.791  sat p99 198.399
+    host 1.128 1.068
+[15:13:42] load before run: 1.37 1.50 1.57 (waited 30s)
+[15:13:44] host probe before run: {"spin_ms": 58.17, "spin_ms_max_cpu": 60.36, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.047} (waited 30s)
+stream #4                    ready  2000 failed 0     771.2 msgs/s  server 3.70 cores  2.40 us/del  loadgen 2.74 cores  1.77 us/del  paced p50 6.443 p99 18.943  sat p99 271.103
+    host 1.047 1.072
+[15:14:15] load before run: 1.46 1.51 1.57 (waited 10s)
+[15:14:18] host probe before run: {"spin_ms": 60.76, "spin_ms_max_cpu": 64.09, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.093} (waited 10s)
+ring #4                      ready  2000 failed 0     245.3 msgs/s  server 3.69 cores  7.39 us/del  loadgen 1.50 cores  3.05 us/del  paced p50 9.463 p99 34.495  sat p99 1300.479
+    host 1.093 2.185
+[15:15:05] load before run: 1.47 1.55 1.58 (waited 20s)
+[15:15:08] host probe before run: {"spin_ms": 59.9, "spin_ms_max_cpu": 62.65, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.078} (waited 20s)
+stream #5                    ready  2000 failed 0     903.1 msgs/s  server 3.78 cores  2.07 us/del  loadgen 2.94 cores  1.62 us/del  paced p50 7.627 p99 28.287  sat p99 147.967
+    host 1.078 2.192
+[15:16:03] load before run: 1.33 1.55 1.58 (waited 30s)
+[15:16:06] host probe before run: {"spin_ms": 64.6, "spin_ms_max_cpu": 73.59, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.163} (waited 30s)
+ring #5                      ready  2000 failed 0     922.1 msgs/s  server 3.78 cores  2.03 us/del  loadgen 2.91 cores  1.58 us/del  paced p50 6.723 p99 21.967  sat p99 159.743
+    host 1.163 1.087
+[15:16:58] load before run: 1.35 1.57 1.59 (waited 30s)
+[15:17:01] host probe before run: {"spin_ms": 57.7, "spin_ms_max_cpu": 58.94, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.038} (waited 30s)
+merge #5                     ready  2000 failed 0     983.0 msgs/s  server 3.79 cores  1.91 us/del  loadgen 2.96 cores  1.47 us/del  paced p50 18.095 p99 24.319  sat p99 141.695
+    host 1.038 1.059
+[15:17:52] load before run: 1.30 1.56 1.59 (waited 30s)
+[15:18:00] host busy: {"spin_ms": 140.74, "spin_ms_max_cpu": 415.75, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 2.533}
+[15:18:23] host busy: {"spin_ms": 247.57, "spin_ms_max_cpu": 558.82, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 4.455}
+[15:18:36] host probe before run: {"spin_ms": 61.38, "spin_ms_max_cpu": 66.09, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.105} (waited 50s)
+ring #6                      ready  2000 failed 0     925.8 msgs/s  server 3.73 cores  2.07 us/del  loadgen 2.93 cores  1.58 us/del  paced p50 7.091 p99 31.167  sat p99 154.495
+    host 1.105 1.107
+[15:19:19] load before run: 1.37 1.51 1.57 (waited 20s)
+[15:19:24] host busy: {"spin_ms": 86.2, "spin_ms_max_cpu": 170.37, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.551}
+[15:19:36] host probe before run: {"spin_ms": 63.89, "spin_ms_max_cpu": 69.6, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.15} (waited 30s)
+merge #6                     ready  2000 failed 0     778.3 msgs/s  server 3.64 cores  2.39 us/del  loadgen 2.71 cores  1.74 us/del  paced p50 7.003 p99 18.319  sat p99 269.055
+    host 1.15 1.921
+[15:20:02] load before run: 1.37 1.49 1.55 (waited 0s)
+[15:20:06] host busy: {"spin_ms": 78.1, "spin_ms_max_cpu": 89.41, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.405}
+[15:20:19] host busy: {"spin_ms": 73.34, "spin_ms_max_cpu": 89.82, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.32}
+[15:20:32] host probe before run: {"spin_ms": 63.6, "spin_ms_max_cpu": 67.32, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.144} (waited 20s)
+stream #6                    ready  2000 failed 0     806.6 msgs/s  server 3.80 cores  2.35 us/del  loadgen 2.89 cores  1.79 us/del  paced p50 6.839 p99 107.711  sat p99 162.943
+    host 1.144 1.097
+-> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-fanout/chain/flipA2000

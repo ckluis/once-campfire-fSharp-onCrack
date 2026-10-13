@@ -1,0 +1,4 @@
+pixel-parity: oncrack vs the Rails reference, screenshot layer only, seeds default
+pixel-parity: VM free 43G, parity/out 327M
+seed default: 104/104 screenshots pixel-equal  [454s]
+pixel-parity: PASSED, the UI is pixel-identical in 454s; reports under /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/parity/out/pixel-parity-r5-final/F

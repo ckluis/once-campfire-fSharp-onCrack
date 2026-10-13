@@ -1,0 +1,45 @@
+1791676504 rails: overload room_show 64 clients 2919.2 valid req/s, 0 errors, 0 invalid
+1791676512 rails: overload room_show 256 clients 4710.8 valid req/s, 0 errors, 0 invalid
+1791676522 rails: overload messages_page 64 clients 4395.8 valid req/s, 0 errors, 0 invalid
+1791676530 rails: overload messages_page 256 clients 3351.9 valid req/s, 0 errors, 0 invalid
+1791676540 rails: overload sidebar 64 clients 3154.3 valid req/s, 0 errors, 0 invalid
+1791676548 rails: overload sidebar 256 clients 5293.0 valid req/s, 0 errors, 0 invalid
+1791676558 rails: overload search 64 clients 5106.6 valid req/s, 0 errors, 0 invalid
+1791676566 rails: overload search 256 clients 4859.4 valid req/s, 0 errors, 0 invalid
+1791676609 rails round 1: cable 1000/1000 subscribed, 0 disconnected, 451/451 delivered to all, 17.7 msgs/s
+1791676644 rails round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 333/333 delivered to all, 18.6 msgs/s
+1791676657 rust: overload room_show 64 clients 44427.1 valid req/s, 0 errors, 0 invalid
+1791676665 rust: overload room_show 256 clients 29518.0 valid req/s, 0 errors, 0 invalid
+1791676675 rust: overload messages_page 64 clients 14366.0 valid req/s, 0 errors, 0 invalid
+1791676683 rust: overload messages_page 256 clients 30317.4 valid req/s, 0 errors, 0 invalid
+1791676693 rust: overload sidebar 64 clients 53029.2 valid req/s, 0 errors, 0 invalid
+1791676701 rust: overload sidebar 256 clients 48866.6 valid req/s, 0 errors, 0 invalid
+1791676711 rust: overload search 64 clients 28891.8 valid req/s, 0 errors, 0 invalid
+1791676719 rust: overload search 256 clients 37880.8 valid req/s, 0 errors, 0 invalid
+1791676748 rust round 1: cable 1000/1000 subscribed, 0 disconnected, 5203/5203 delivered to all, 346.5 msgs/s
+1791676835 rust round 1: cable_heavy 1000/1000 subscribed, 939 disconnected, 58/68922 delivered to all, 3.9 msgs/s
+1791676849 c: overload room_show 64 clients 92960.1 valid req/s, 0 errors, 0 invalid
+1791676857 c: overload room_show 256 clients 94400.8 valid req/s, 0 errors, 6 invalid
+1791676867 c: overload messages_page 64 clients 95956.1 valid req/s, 0 errors, 0 invalid
+1791676875 c: overload messages_page 256 clients 92747.5 valid req/s, 0 errors, 15 invalid
+1791676885 c: overload sidebar 64 clients 83742.3 valid req/s, 0 errors, 0 invalid
+1791676893 c: overload sidebar 256 clients 83548.2 valid req/s, 0 errors, 17 invalid
+1791676903 c: overload search 64 clients 84030.4 valid req/s, 0 errors, 0 invalid
+1791676911 c: overload search 256 clients 94617.3 valid req/s, 0 errors, 7 invalid
+1791677118 c round 1: cable 119/1000 subscribed, 837 disconnected, 14/46950 delivered to all, 0.9 msgs/s
+1791677324 c round 1: cable_heavy 89/1000 subscribed, 861 disconnected, 80/51042 delivered to all, 5.3 msgs/s
+1791677330 /mnt/cfv/rel/bench/contracts.rb:63:in `block (2 levels) in prepare': search: differs from seed SQL (RuntimeError)
+1791677330 	from /mnt/cfv/rel/bench/contracts.rb:48:in `each'
+1791677330 	from /mnt/cfv/rel/bench/contracts.rb:48:in `block in prepare'
+1791677330 	from /usr/lib/ruby/3.2.0/net/http.rb:1570:in `start'
+1791677330 	from /mnt/cfv/rel/bench/contracts.rb:47:in `prepare'
+1791677330 	from /mnt/cfv/rel/bench/reliability.rb:105:in `block in <top (required)>'
+1791677330 	from /mnt/cfv/rel/bench/reliability.rb:141:in `block (3 levels) in <top (required)>'
+1791677330 	from /mnt/cfv/rel/bench/reliability.rb:138:in `each'
+1791677330 	from /mnt/cfv/rel/bench/reliability.rb:138:in `block (2 levels) in <top (required)>'
+1791677330 	from /mnt/cfv/rel/bench/reliability.rb:136:in `each'
+1791677330 	from /mnt/cfv/rel/bench/reliability.rb:136:in `block in <top (required)>'
+1791677330 	from /mnt/cfv/rel/bench/reliability.rb:135:in `times'
+1791677330 	from /mnt/cfv/rel/bench/reliability.rb:135:in `<top (required)>'
+1791677330 	from bin/reliability:5:in `require_relative'
+1791677330 	from bin/reliability:5:in `<main>'

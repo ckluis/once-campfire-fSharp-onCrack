@@ -1,0 +1,482 @@
+{
+ "c": {
+  "cable": {
+   "clients": 1000,
+   "median": {
+    "complete": 118,
+    "disconnected": 854,
+    "drain": 0.0,
+    "errors": 0,
+    "msgs": 7.9,
+    "p99": 26.895,
+    "posted": 40668,
+    "pss": 71.0,
+    "ready": 124
+   },
+   "posters": 4,
+   "rounds": {
+    "complete": [
+     118
+    ],
+    "disconnected": [
+     854
+    ],
+    "drain": [
+     0.0
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     7.9
+    ],
+    "p99": [
+     26.895
+    ],
+    "posted": [
+     40668
+    ],
+    "pss": [
+     71.0
+    ],
+    "ready": [
+     124
+    ],
+    "round": [
+     1
+    ]
+   }
+  },
+  "cable_heavy": {
+   "clients": 1000,
+   "median": {
+    "complete": 15,
+    "disconnected": 829,
+    "drain": 0.0,
+    "errors": 0,
+    "msgs": 1.0,
+    "p99": 39.039,
+    "posted": 35967,
+    "pss": 72.6,
+    "ready": 224
+   },
+   "posters": 64,
+   "rounds": {
+    "complete": [
+     15
+    ],
+    "disconnected": [
+     829
+    ],
+    "drain": [
+     0.0
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     1.0
+    ],
+    "p99": [
+     39.039
+    ],
+    "posted": [
+     35967
+    ],
+    "pss": [
+     72.6
+    ],
+    "ready": [
+     224
+    ],
+    "round": [
+     1
+    ]
+   }
+  }
+ },
+ "oncrack": {
+  "cable": {
+   "clients": 1000,
+   "median": {
+    "complete": 6586,
+    "disconnected": 0,
+    "drain": 0.0,
+    "errors": 0,
+    "msgs": 438.8,
+    "p99": 94.271,
+    "posted": 6586,
+    "pss": 271.8,
+    "ready": 1000
+   },
+   "posters": 4,
+   "rounds": {
+    "complete": [
+     6586
+    ],
+    "disconnected": [
+     0
+    ],
+    "drain": [
+     0.0
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     438.8
+    ],
+    "p99": [
+     94.271
+    ],
+    "posted": [
+     6586
+    ],
+    "pss": [
+     271.8
+    ],
+    "ready": [
+     1000
+    ],
+    "round": [
+     1
+    ]
+   }
+  },
+  "cable_heavy": {
+   "clients": 1000,
+   "median": {
+    "complete": 88,
+    "disconnected": 945,
+    "drain": 0.0,
+    "errors": 0,
+    "msgs": 5.9,
+    "p99": 417.023,
+    "posted": 127210,
+    "pss": 685.6,
+    "ready": 1000
+   },
+   "posters": 64,
+   "rounds": {
+    "complete": [
+     88
+    ],
+    "disconnected": [
+     945
+    ],
+    "drain": [
+     0.0
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     5.9
+    ],
+    "p99": [
+     417.023
+    ],
+    "posted": [
+     127210
+    ],
+    "pss": [
+     685.6
+    ],
+    "ready": [
+     1000
+    ],
+    "round": [
+     1
+    ]
+   }
+  }
+ },
+ "oncrack-cached": {
+  "cable": {
+   "clients": 1000,
+   "median": {
+    "complete": 9116,
+    "disconnected": 0,
+    "drain": 0.0,
+    "errors": 0,
+    "msgs": 607.3,
+    "p99": 41.375,
+    "posted": 9116,
+    "pss": 279.7,
+    "ready": 1000
+   },
+   "posters": 4,
+   "rounds": {
+    "complete": [
+     9116
+    ],
+    "disconnected": [
+     0
+    ],
+    "drain": [
+     0.0
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     607.3
+    ],
+    "p99": [
+     41.375
+    ],
+    "posted": [
+     9116
+    ],
+    "pss": [
+     279.7
+    ],
+    "ready": [
+     1000
+    ],
+    "round": [
+     1
+    ]
+   }
+  },
+  "cable_heavy": {
+   "clients": 1000,
+   "median": {
+    "complete": 0,
+    "disconnected": 869,
+    "drain": 0.0,
+    "errors": 0,
+    "msgs": 0.0,
+    "p99": null,
+    "posted": 78103,
+    "pss": 714.1,
+    "ready": 1000
+   },
+   "posters": 64,
+   "rounds": {
+    "complete": [
+     0
+    ],
+    "disconnected": [
+     869
+    ],
+    "drain": [
+     0.0
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     0.0
+    ],
+    "p99": [
+     null
+    ],
+    "posted": [
+     78103
+    ],
+    "pss": [
+     714.1
+    ],
+    "ready": [
+     1000
+    ],
+    "round": [
+     1
+    ]
+   }
+  }
+ },
+ "rails": {
+  "cable": {
+   "clients": 1000,
+   "median": {
+    "complete": 387,
+    "disconnected": 0,
+    "drain": 0.0,
+    "errors": 0,
+    "msgs": 25.4,
+    "p99": 833.535,
+    "posted": 387,
+    "pss": 3130.6,
+    "ready": 1000
+   },
+   "posters": 4,
+   "rounds": {
+    "complete": [
+     387
+    ],
+    "disconnected": [
+     0
+    ],
+    "drain": [
+     0.0
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     25.4
+    ],
+    "p99": [
+     833.535
+    ],
+    "posted": [
+     387
+    ],
+    "pss": [
+     3130.6
+    ],
+    "ready": [
+     1000
+    ],
+    "round": [
+     1
+    ]
+   }
+  },
+  "cable_heavy": {
+   "clients": 1000,
+   "median": {
+    "complete": 552,
+    "disconnected": 0,
+    "drain": 0.0,
+    "errors": 0,
+    "msgs": 21.7,
+    "p99": 24084.479,
+    "posted": 552,
+    "pss": 3136.5,
+    "ready": 1000
+   },
+   "posters": 64,
+   "rounds": {
+    "complete": [
+     552
+    ],
+    "disconnected": [
+     0
+    ],
+    "drain": [
+     0.0
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     21.7
+    ],
+    "p99": [
+     24084.479
+    ],
+    "posted": [
+     552
+    ],
+    "pss": [
+     3136.5
+    ],
+    "ready": [
+     1000
+    ],
+    "round": [
+     1
+    ]
+   }
+  }
+ },
+ "rust": {
+  "cable": {
+   "clients": 1000,
+   "median": {
+    "complete": 6770,
+    "disconnected": 0,
+    "drain": 0.01,
+    "errors": 0,
+    "msgs": 450.9,
+    "p99": 126.847,
+    "posted": 6770,
+    "pss": 98.7,
+    "ready": 1000
+   },
+   "posters": 4,
+   "rounds": {
+    "complete": [
+     6770
+    ],
+    "disconnected": [
+     0
+    ],
+    "drain": [
+     0.01
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     450.9
+    ],
+    "p99": [
+     126.847
+    ],
+    "posted": [
+     6770
+    ],
+    "pss": [
+     98.7
+    ],
+    "ready": [
+     1000
+    ],
+    "round": [
+     1
+    ]
+   }
+  },
+  "cable_heavy": {
+   "clients": 1000,
+   "median": {
+    "complete": 64,
+    "disconnected": 899,
+    "drain": 0.0,
+    "errors": 0,
+    "msgs": 4.3,
+    "p99": 356.607,
+    "posted": 65151,
+    "pss": 126.8,
+    "ready": 1000
+   },
+   "posters": 64,
+   "rounds": {
+    "complete": [
+     64
+    ],
+    "disconnected": [
+     899
+    ],
+    "drain": [
+     0.0
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     4.3
+    ],
+    "p99": [
+     356.607
+    ],
+    "posted": [
+     65151
+    ],
+    "pss": [
+     126.8
+    ],
+    "ready": [
+     1000
+    ],
+    "round": [
+     1
+    ]
+   }
+  }
+ }
+}

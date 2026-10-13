@@ -1,0 +1,17 @@
+round  arm       msgs/s  cpu us/deliv  Pss MB  loadgen cores valid
+r1     before    1387.6          2.68   293.0           2.72 yes
+r1     after     1592.4          2.40   292.8           2.87 yes
+r2     before    1474.8          2.49   297.9           2.74 yes
+r2     after     1262.5          2.87   287.6           2.54 yes
+r3     before    1593.2          2.39   297.0           2.90 yes
+r3     after     1659.8          2.29   292.1           2.90 yes
+r4     before     943.5          3.95   289.6           2.24 yes
+r4     after      525.6          6.82   288.8           1.53 yes
+r5     before     918.7          3.98   294.0           2.12 yes
+r5     after     1696.6          2.24   301.8           2.91 yes
+r6     before    1598.6          2.39   302.2           2.89 yes
+r6     after     1666.5          2.29   302.4           2.90 yes
+
+per-round after/before CPU per delivery: 0.893 1.156 0.959 1.727 0.562 0.958 | median 0.958
+before: median msgs/s 1431, CPU/delivery 2.58 us, Pss 295.5 MB
+after: median msgs/s 1626, CPU/delivery 2.34 us, Pss 292.5 MB

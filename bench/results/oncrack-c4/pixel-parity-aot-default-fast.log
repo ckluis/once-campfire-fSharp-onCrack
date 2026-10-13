@@ -1,0 +1,5 @@
+pixel-parity: oncrack vs the Rails reference, screenshot layer only, seeds default (fast: chromium, light, no breakpoint sweep)
+seed default: capturing again (attempt 2): auth/sign_in/rate_limited
+seed default: capturing again (attempt 3): auth/sign_in/rate_limited
+seed default: 361/361 screenshots pixel-equal  [1415s]
+pixel-parity: PASSED, the UI is pixel-identical in 1415s; reports under /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/c4/pixel-aot

@@ -1,0 +1,215 @@
+{
+ "app": "oncrack",
+ "rep": 1,
+ "cold_start_ms": 236,
+ "memory": {
+  "idle_current_mb": 29,
+  "idle_anon_mb": 15,
+  "peak_current_mb": 792,
+  "peak_anon_mb": 289,
+  "cgroup_peak_mb": 794
+ },
+ "http": [
+  {
+   "avg_bytes": 1994,
+   "conc": 16,
+   "errors": 0,
+   "gzip": true,
+   "latency": {
+    "max_ms": 14.327,
+    "mean_ms": 1.28,
+    "n": 99531,
+    "p50_ms": 1.118,
+    "p90_ms": 1.693,
+    "p99_ms": 5.471
+   },
+   "ok": 99531,
+   "path": "POST /rooms/201306877/messages",
+   "rps": 12439.0,
+   "secs": 8.0,
+   "statuses": {
+    "200": 99531
+   },
+   "cost": {
+    "wall_s": 8.0,
+    "server_usage_us": 24685700,
+    "server_user_us": 19487271,
+    "server_system_us": 5198428,
+    "loadgen_user_us": 2005142,
+    "loadgen_system_us": 2120086,
+    "n": 99531,
+    "server_cpu_us_per_req": 248.0,
+    "server_user_us_per_req": 195.8,
+    "server_system_us_per_req": 52.2,
+    "loadgen_cpu_us_per_req": 41.4,
+    "server_cores_busy": 3.08,
+    "loadgen_cores_busy": 0.52
+   },
+   "route": "post_message",
+   "warmup": {
+    "secs": 36.0,
+    "windows_rps": [
+     6532.8,
+     7808.1,
+     9424.1,
+     11971.8,
+     12668.8,
+     12735.4,
+     12655.8,
+     12612.2,
+     12620.3,
+     12502.1,
+     12238.6,
+     12093.0,
+     12294.1,
+     12317.1,
+     12193.0,
+     12217.8,
+     12438.2,
+     12306.9
+    ],
+    "reason": "settled",
+    "window_secs": 2.0,
+    "settled": true,
+    "tail_rps": 12321.0
+   },
+   "host_probe_after": {
+    "spin_ms": 59.47,
+    "spin_ms_max_cpu": 61.86,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 57.2,
+    "ratio": 1.04
+   }
+  },
+  {
+   "avg_bytes": 1994,
+   "conc": 64,
+   "errors": 0,
+   "gzip": true,
+   "latency": {
+    "max_ms": 19.919,
+    "mean_ms": 3.88,
+    "n": 131780,
+    "p50_ms": 3.571,
+    "p90_ms": 5.755,
+    "p99_ms": 9.695
+   },
+   "ok": 131780,
+   "path": "POST /rooms/201306877/messages",
+   "rps": 16459.8,
+   "secs": 8.01,
+   "statuses": {
+    "200": 131780
+   },
+   "cost": {
+    "wall_s": 8.01,
+    "server_usage_us": 26614472,
+    "server_user_us": 22735923,
+    "server_system_us": 3878549,
+    "loadgen_user_us": 2381901,
+    "loadgen_system_us": 2459927,
+    "n": 131780,
+    "server_cpu_us_per_req": 202.0,
+    "server_user_us_per_req": 172.5,
+    "server_system_us_per_req": 29.4,
+    "loadgen_cpu_us_per_req": 36.7,
+    "server_cores_busy": 3.32,
+    "loadgen_cores_busy": 0.6
+   },
+   "route": "post_message",
+   "warmup": {
+    "secs": 40.0,
+    "windows_rps": [
+     15628.7,
+     16357.2,
+     16514.0,
+     16395.6,
+     16211.1,
+     16497.8,
+     16377.8,
+     16591.7,
+     16419.6,
+     16408.6,
+     16592.8,
+     16527.4,
+     15640.9,
+     15322.9,
+     15220.7,
+     15892.3,
+     16766.5,
+     16293.7,
+     16635.0,
+     15544.4
+    ],
+    "reason": "settled",
+    "window_secs": 2.0,
+    "settled": true,
+    "tail_rps": 16157.7
+   },
+   "host_probe_after": {
+    "spin_ms": 58.93,
+    "spin_ms_max_cpu": 61.86,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 57.2,
+    "ratio": 1.03
+   }
+  }
+ ],
+ "cable": [],
+ "upload": {},
+ "loadavg_start": "1.48 0.79 0.90 1/203 2256985",
+ "loadavg_end": "5.39 2.28 1.43 1/247 2260350",
+ "post_rows": [
+  {
+   "phase": "warm-up",
+   "conc": 16,
+   "ok": 419700,
+   "statuses": {
+    "200": 419700
+   },
+   "rows": 419700
+  },
+  {
+   "phase": "run",
+   "conc": 16,
+   "ok": 99531,
+   "statuses": {
+    "200": 99531
+   },
+   "rows": 99531
+  },
+  {
+   "phase": "warm-up",
+   "conc": 64,
+   "ok": 649029,
+   "statuses": {
+    "200": 649029
+   },
+   "rows": 649029
+  },
+  {
+   "phase": "run",
+   "conc": 64,
+   "ok": 131780,
+   "statuses": {
+    "200": 131780
+   },
+   "rows": 131780
+  }
+ ],
+ "probe": [],
+ "host_probe_start": {
+  "spin_ms": 57.94,
+  "spin_ms_max_cpu": 59.15,
+  "cpus": "0-3,4-7",
+  "baseline_ms": 57.2,
+  "ratio": 1.013
+ },
+ "host_probe_end": {
+  "spin_ms": 57.77,
+  "spin_ms_max_cpu": 59.51,
+  "cpus": "0-3,4-7",
+  "baseline_ms": 57.2,
+  "ratio": 1.01
+ }
+}

@@ -1,0 +1,35 @@
+xUnit.net v3 In-Process Runner v3.2.0+9e422989c1 (64-bit .NET 10.0.12)
+  Discovering: Attack.Tests
+  Discovered:  Attack.Tests
+  Starting:    Attack.Tests
+A4: 200 checks, 0 failures; writer 217 writes in 169 groups, largest 7
+A4   stored sample: wombatx w8n1q
+A4   stored sample: wombatx w3n1q
+A2: room version cells 0 -> 1 after 40000 requests for rooms that don't exist; managed heap 35046 KB -> 35135 KB (2 bytes per request kept)
+A5 sample frame: "<turbo-stream action=\"append\" target=\"messages_rooms_closed_486777696\"><template>\n  <div id=\"message_34fb4973-d273-4e3d-8fbb-bb1385f37872\" class=\"message \" data-controller=\"reply\" data-user-id=\"127326141\" data-message-id=\"933434638\" data-message-timestamp=\"1791597911407\" data-message-updated-at=\"1791597911408\" data-sort-value=\"1791597911407\" data-messages-target=\"message\" data-search-results-target=\"message\" data-refresh-room-target=\"message\" data-reply-composer-outlet=\"#composer\">\n    <h2 class=\"message__day-separator\"><time datetime=\"2026-10-10T02:05:11Z\" d
+A5: group commit : 320 frames, 320 message ids, 0 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 75 groups, largest 16
+A1: 0 stale of 1500 checks; cache hits 19924, misses 8285, stored 7062
+A6 /rooms/486777696: etag W/"81f132130430659cf6ea6da6a9f21ef4", David conditional 304, Jason with David's etag 200
+A6 /rooms/486777696/messages: etag W/"8dc0ca15e3968b06e8c5caeddc628ca2", David conditional 304, Jason with David's etag 304
+A6 /rooms/486777696/messages?before=933434550: etag W/"fdf42c204a8eda3b5e3242cf922eec05", David conditional 304, Jason with David's etag 304
+A6 /users/me/sidebar: etag W/"87e3b52f5a7defbeaacd094f797976d3", David conditional 304, Jason with David's etag 200
+A6 /searches?q=the: etag W/"a9e73887f7f5e83520831f64f468e8e6", David conditional 304, Jason with David's etag 200
+A6 /searches: etag W/"15186efb7a5d2d267d433288b712a075", David conditional 304, Jason with David's etag 200
+A6 messages page of a room that does not exist, with a real content ETag: 404
+A6 /rooms/486777696: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A6 /users/me/sidebar: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A6 /searches?q=the: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A6 /rooms/486777696/messages: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A1c: David starts as Administrator; button shown: True
+A1c: 0 sidebars of 1500 disagreed with the committed role
+A8: page 416018 bytes; 4000 distinct keys, stored 4001; managed heap 48.4 MB -> 54.4 MB (would be 1587 MB unbounded)
+A3: 0 bad of 600 checks; hits 8075 misses 9654 stored 3595
+A9 /rooms/486777696: miss [(last_room=486777696, path=/;samesite=lax)] | hit [(last_room=486777696, path=/;samesite=lax)] | hits so far 2
+A9 /rooms/201306877: miss [] | hit [] | hits so far 4
+A9 /rooms/486777696/messages: miss [] | hit [] | hits so far 6
+A9 /users/me/sidebar: miss [] | hit [] | hits so far 8
+A9 /searches?q=the: miss [] | hit [] | hits so far 10
+A1b: 0 stale sidebars of 1500
+  Finished:    Attack.Tests (ID = '70a08f1d87bbf649f694aae4a91c85c65d8ca83b512d3256f6bc52bb9b97416d')
+=== TEST EXECUTION SUMMARY ===
+   Attack.Tests  Total: 11, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 40.270s

@@ -1,0 +1,94 @@
+oncrack round 1: room_show 16 clients 140801.8 req/s
+oncrack round 1: messages_page 16 clients 153661.0 req/s
+oncrack round 1: sidebar 16 clients 159336.4 req/s
+oncrack round 1: search 16 clients 155411.4 req/s
+oncrack-cached round 1: room_show 16 clients 129784.0 req/s
+oncrack-cached round 1: messages_page 16 clients 137351.4 req/s
+oncrack-cached round 1: sidebar 16 clients 160423.9 req/s
+oncrack-cached round 1: search 16 clients 147747.8 req/s
+oncrack-cached round 2: room_show 16 clients 143816.8 req/s
+oncrack-cached round 2: messages_page 16 clients 139792.4 req/s
+oncrack-cached round 2: sidebar 16 clients 147402.7 req/s
+oncrack-cached round 2: search 16 clients 119150.5 req/s
+oncrack round 2: room_show 16 clients 131897.3 req/s
+oncrack round 2: messages_page 16 clients 139592.8 req/s
+oncrack round 2: sidebar 16 clients 150471.1 req/s
+oncrack round 2: search 16 clients 147693.8 req/s
+oncrack round 3: room_show 16 clients 124058.6 req/s
+oncrack round 3: messages_page 16 clients 121351.7 req/s
+oncrack round 3: sidebar 16 clients 142201.1 req/s
+oncrack round 3: search 16 clients 133080.8 req/s
+oncrack-cached round 3: room_show 16 clients 112642.3 req/s
+oncrack-cached round 3: messages_page 16 clients 118073.7 req/s
+oncrack-cached round 3: sidebar 16 clients 98712.9 req/s
+oncrack-cached round 3: search 16 clients 126750.5 req/s
+{
+  "oncrack": {
+    "room_show": {
+      "median_rps": 131897.3,
+      "runs": [
+        140801.8,
+        131897.3,
+        124058.6
+      ]
+    },
+    "messages_page": {
+      "median_rps": 139592.8,
+      "runs": [
+        153661.0,
+        139592.8,
+        121351.7
+      ]
+    },
+    "sidebar": {
+      "median_rps": 150471.1,
+      "runs": [
+        159336.4,
+        150471.1,
+        142201.1
+      ]
+    },
+    "search": {
+      "median_rps": 147693.8,
+      "runs": [
+        155411.4,
+        147693.8,
+        133080.8
+      ]
+    }
+  },
+  "oncrack-cached": {
+    "room_show": {
+      "median_rps": 129784.0,
+      "runs": [
+        129784.0,
+        143816.8,
+        112642.3
+      ]
+    },
+    "messages_page": {
+      "median_rps": 137351.4,
+      "runs": [
+        137351.4,
+        139792.4,
+        118073.7
+      ]
+    },
+    "sidebar": {
+      "median_rps": 147402.7,
+      "runs": [
+        160423.9,
+        147402.7,
+        98712.9
+      ]
+    },
+    "search": {
+      "median_rps": 126750.5,
+      "runs": [
+        147747.8,
+        119150.5,
+        126750.5
+      ]
+    }
+  }
+}

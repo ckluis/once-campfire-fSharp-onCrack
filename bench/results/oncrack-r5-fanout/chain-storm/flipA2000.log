@@ -1,0 +1,6 @@
+[14:44:40] load before run: 1.29 2.46 2.32 (waited 60s)
+[14:44:43] host busy: {"spin_ms": 75.7, "spin_ms_max_cpu": 80.98, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.362}
+[14:44:57] host busy: {"spin_ms": 70.38, "spin_ms_max_cpu": 82.35, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.266}
+[14:45:10] host busy: {"spin_ms": 63.02, "spin_ms_max_cpu": 74.02, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.134}
+[14:45:22] host busy: {"spin_ms": 61.66, "spin_ms_max_cpu": 64.64, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.11}
+[14:45:35] host probe before run: {"spin_ms": 60.38, "spin_ms_max_cpu": 62.84, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.087} (waited 100s)

@@ -1,0 +1,142 @@
+{
+ "_about": "bin/pixel-parity (lean matrix: every state on Chromium desktop and phone, light and dark, the smoke states on Firefox and WebKit, the breakpoint sweep) against the Rails reference, on campfire-candidate-oncrack built from da1e92f, 2026-10-07/08. Made by review/pixel_parity.py from the gitignored reports under parity/out/pixel-parity-round1-final/.",
+ "total": {
+  "equal": 940,
+  "screenshots": 940,
+  "flaky": 0,
+  "different": 0,
+  "not_captured": 0
+ },
+ "seeds": {
+  "crowd": {
+   "equal": 24,
+   "screenshots": 24,
+   "different": [],
+   "not_captured": [],
+   "flaky": 0,
+   "by_engine": {
+    "chromium": {
+     "equal": 24,
+     "screenshots": 24
+    }
+   },
+   "reports": [
+    "parity/out/pixel-parity-round1-final/small/crowd/report.json"
+   ],
+   "retries": []
+  },
+  "custom_styles": {
+   "equal": 32,
+   "screenshots": 32,
+   "different": [],
+   "not_captured": [],
+   "flaky": 0,
+   "by_engine": {
+    "chromium": {
+     "equal": 32,
+     "screenshots": 32
+    }
+   },
+   "reports": [
+    "parity/out/pixel-parity-round1-final/small/custom_styles/report.json"
+   ],
+   "retries": []
+  },
+  "default": {
+   "equal": 860,
+   "screenshots": 860,
+   "different": [],
+   "not_captured": [],
+   "flaky": 0,
+   "by_engine": {
+    "chromium": {
+     "equal": 788,
+     "screenshots": 788
+    },
+    "firefox": {
+     "equal": 36,
+     "screenshots": 36
+    },
+    "webkit": {
+     "equal": 36,
+     "screenshots": 36
+    }
+   },
+   "reports": [
+    "parity/out/pixel-parity-round1-final/A/default/report.json",
+    "parity/out/pixel-parity-round1-final/B/default/report.json",
+    "parity/out/pixel-parity-round1-final/C/default/report.json",
+    "parity/out/pixel-parity-round1-final/D/default/report.json",
+    "parity/out/pixel-parity-round1-final/E/default/report.json",
+    "parity/out/pixel-parity-round1-final/F/default/report.json",
+    "parity/out/pixel-parity-round1-final/G/default/report.json",
+    "parity/out/pixel-parity-round1-final/H/default/report.json",
+    "parity/out/pixel-parity-round1-final/I/default-retry1/report.json",
+    "parity/out/pixel-parity-round1-final/I/default-retry2/report.json",
+    "parity/out/pixel-parity-round1-final/I/default/report.json",
+    "parity/out/pixel-parity-round1-final/I-retry/default-retry1/report.json",
+    "parity/out/pixel-parity-round1-final/I-retry/default/report.json",
+    "parity/out/pixel-parity-round1-final/J/default/report.json"
+   ],
+   "retries": [
+    "parity/out/pixel-parity-round1-final/I/default-retry1/report.json",
+    "parity/out/pixel-parity-round1-final/I/default-retry2/report.json",
+    "parity/out/pixel-parity-round1-final/I-retry/default-retry1/report.json",
+    "parity/out/pixel-parity-round1-final/I-retry/default/report.json"
+   ]
+  },
+  "first_run": {
+   "equal": 16,
+   "screenshots": 16,
+   "different": [],
+   "not_captured": [],
+   "flaky": 0,
+   "by_engine": {
+    "chromium": {
+     "equal": 16,
+     "screenshots": 16
+    }
+   },
+   "reports": [
+    "parity/out/pixel-parity-round1-final/small/first_run/report.json"
+   ],
+   "retries": []
+  },
+  "restricted": {
+   "equal": 8,
+   "screenshots": 8,
+   "different": [],
+   "not_captured": [],
+   "flaky": 0,
+   "by_engine": {
+    "chromium": {
+     "equal": 8,
+     "screenshots": 8
+    }
+   },
+   "reports": [
+    "parity/out/pixel-parity-round1-final/small/restricted/report.json"
+   ],
+   "retries": []
+  }
+ },
+ "room_capture": {
+  "seed": "default",
+  "state": "rooms/show/busy/last_page",
+  "cell": "chromium-desktop-light",
+  "status": "pass",
+  "report": "parity/out/pixel-parity-round1-final/C/default/report.json",
+  "layers_equal": [
+   "pixels",
+   "server",
+   "live",
+   "aria",
+   "network",
+   "cable"
+  ],
+  "png_sha256": {
+   "reference": "ac7420e6d0a8941463402fbeddc90f4972c50c0a7c4f935e637345164c13d0b8",
+   "candidate": "ac7420e6d0a8941463402fbeddc90f4972c50c0a7c4f935e637345164c13d0b8"
+  }
+ }
+}

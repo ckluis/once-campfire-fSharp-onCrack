@@ -1,0 +1,212 @@
+{
+ "app": "oncrack",
+ "rep": 1,
+ "cold_start_ms": 253,
+ "memory": {
+  "idle_current_mb": 28,
+  "idle_anon_mb": 15,
+  "peak_current_mb": 478,
+  "peak_anon_mb": 177,
+  "cgroup_peak_mb": 479
+ },
+ "http": [
+  {
+   "avg_bytes": 2097,
+   "conc": 1,
+   "errors": 0,
+   "gzip": true,
+   "latency": {
+    "max_ms": 7.223,
+    "mean_ms": 0.23,
+    "n": 34014,
+    "p50_ms": 0.214,
+    "p90_ms": 0.272,
+    "p99_ms": 0.4
+   },
+   "ok": 34014,
+   "path": "POST /rooms/201306877/messages",
+   "rps": 4251.7,
+   "secs": 8.0,
+   "statuses": {
+    "200": 34014
+   },
+   "cost": {
+    "wall_s": 8.0,
+    "server_usage_us": 15471568,
+    "server_user_us": 10960061,
+    "server_system_us": 4511507,
+    "loadgen_user_us": 340488,
+    "loadgen_system_us": 306835,
+    "n": 34014,
+    "server_cpu_us_per_req": 454.9,
+    "server_user_us_per_req": 322.2,
+    "server_system_us_per_req": 132.6,
+    "loadgen_cpu_us_per_req": 19.0,
+    "server_cores_busy": 1.93,
+    "loadgen_cores_busy": 0.08
+   },
+   "route": "post_message",
+   "warmup": {
+    "secs": 30.0,
+    "windows_rps": [
+     1998.5,
+     2670.2,
+     3948.1,
+     4275.4,
+     4293.1,
+     4279.5,
+     4217.2,
+     4273.6,
+     4263.4,
+     4275.5,
+     4318.2,
+     4280.9,
+     4249.4,
+     4236.0,
+     4288.0
+    ],
+    "reason": "settled",
+    "window_secs": 2.0,
+    "settled": true,
+    "tail_rps": 4257.8
+   },
+   "host_probe_after": {
+    "spin_ms": 59.08,
+    "spin_ms_max_cpu": 61.16,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 55.57,
+    "ratio": 1.063
+   }
+  },
+  {
+   "avg_bytes": 2097,
+   "conc": 16,
+   "errors": 0,
+   "gzip": true,
+   "latency": {
+    "max_ms": 851.967,
+    "mean_ms": 1.31,
+    "n": 97216,
+    "p50_ms": 0.868,
+    "p90_ms": 1.379,
+    "p99_ms": 4.679
+   },
+   "ok": 97216,
+   "path": "POST /rooms/201306877/messages",
+   "rps": 12151.0,
+   "secs": 8.0,
+   "statuses": {
+    "200": 97216
+   },
+   "cost": {
+    "wall_s": 8.0,
+    "server_usage_us": 17685729,
+    "server_user_us": 14151185,
+    "server_system_us": 3534544,
+    "loadgen_user_us": 1484879,
+    "loadgen_system_us": 1543549,
+    "n": 97216,
+    "server_cpu_us_per_req": 181.9,
+    "server_user_us_per_req": 145.6,
+    "server_system_us_per_req": 36.4,
+    "loadgen_cpu_us_per_req": 31.2,
+    "server_cores_busy": 2.21,
+    "loadgen_cores_busy": 0.38
+   },
+   "route": "post_message",
+   "warmup": {
+    "secs": 30.6,
+    "windows_rps": [
+     16010.7,
+     16173.9,
+     16053.2,
+     16247.6,
+     16231.6,
+     16065.5,
+     16302.6,
+     16380.9,
+     16040.0,
+     15602.6,
+     15643.3,
+     12797.4,
+     5488.9,
+     12941.0,
+     12521.6
+    ],
+    "reason": "fixed",
+    "window_secs": 2.0,
+    "settled": false,
+    "tail_rps": 10317.2
+   },
+   "host_probe_after": {
+    "spin_ms": 58.28,
+    "spin_ms_max_cpu": 65.77,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 55.57,
+    "ratio": 1.049
+   }
+  }
+ ],
+ "cable": [],
+ "upload": {},
+ "loadavg_start": "0.35 1.44 1.83 1/190 371971",
+ "loadavg_end": "2.55 1.86 1.94 1/231 374843",
+ "post_rows": [
+  {
+   "route": "post_message",
+   "phase": "warm-up",
+   "conc": 1,
+   "ok": 119761,
+   "statuses": {
+    "200": 119761
+   },
+   "rows": 119761
+  },
+  {
+   "route": "post_message",
+   "phase": "run",
+   "conc": 1,
+   "ok": 34014,
+   "statuses": {
+    "200": 34014
+   },
+   "rows": 34014
+  },
+  {
+   "route": "post_message",
+   "phase": "warm-up",
+   "conc": 16,
+   "ok": 449421,
+   "statuses": {
+    "200": 449421
+   },
+   "rows": 449421
+  },
+  {
+   "route": "post_message",
+   "phase": "run",
+   "conc": 16,
+   "ok": 97216,
+   "statuses": {
+    "200": 97216
+   },
+   "rows": 97216
+  }
+ ],
+ "probe": [],
+ "host_probe_start": {
+  "spin_ms": 59.31,
+  "spin_ms_max_cpu": 61.17,
+  "cpus": "0-3,4-7",
+  "baseline_ms": 55.57,
+  "ratio": 1.067
+ },
+ "host_probe_end": {
+  "spin_ms": 58.15,
+  "spin_ms_max_cpu": 59.48,
+  "cpus": "0-3,4-7",
+  "baseline_ms": 55.57,
+  "ratio": 1.046
+ },
+ "seed": "default"
+}

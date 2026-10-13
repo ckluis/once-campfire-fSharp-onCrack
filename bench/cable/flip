@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# One onCrack container, one cable setting flipped between load generator runs (unit R5.3). Run inside colima, like bench/run:
+#
+#   bench/cable/flip [--clients 1000] [--reps 4] [--secs 8] [--arms "merge@ stream@order=stream"] [--out DIR] [--tag TEXT]
+#
+# An arm is "NAME@KEY=VAL+KEY=VAL" (empty settings: the build's defaults). The app runs with CAMPFIRE_CABLE_FLIP_FILE (src/Campfire.Cable/Config.fs,
+# `BenchFlip`: "order=stream", "batch=N"), which each connection reads when it starts; before every run this writes the arm's settings to
+# that file, so the arms alternate seconds apart in the same warm process (the order turns by one each rep) and the host's drift lands on
+# every arm in turn. Prints one line per run as bench/cable/ab does, then each arm's median and the per-rep ratios to the first arm. Prints, per run: delivered msgs/s, the load generator's and the server's
+# cores busy over the saturated phase (the cgroup's cpu.stat for the server, /proc/self/stat for the load generator) and their CPU
+# per delivery, and the paced p50/p99 to all clients.
+set -euo pipefail
+ARGS=("$@")
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+set --
+export SERVER_CPUS=${SERVER_CPUS:-0-3} LOADGEN_CPUS=${LOADGEN_CPUS:-4-7}
+export WORK=${WORK:-/var/tmp/campfire-bench-work}
+BENCH_RUN_LIB=1 source "$ROOT/bench/run"
+set -- "${ARGS[@]}"
+APP=oncrack CLIENTS=1000 REPS=4 SECS=8 ARMS="merge@ stream@order=stream" OUT=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --app) APP=$2; shift 2 ;;
+    --clients) CLIENTS=$2; shift 2 ;;
+    --reps) REPS=$2; shift 2 ;;
+    --secs) SECS=$2; shift 2 ;;
+    --arms) ARMS=$2; shift 2 ;;
+    --out) OUT=$2; shift 2 ;;
+    *) echo "unknown option $1" >&2; exit 2 ;;
+  esac
+done
+OUT=${OUT:-/var/tmp/cable-ab-$(date +%Y%m%d-%H%M%S)}
+mkdir -p "$OUT"
+FLIPDIR=${FLIPDIR:-/var/tmp/campfire-flip}
+mkdir -p "$FLIPDIR"; chmod 1777 "$FLIPDIR"; : > "$FLIPDIR/flip"; chmod 666 "$FLIPDIR/flip"
+DOCKER_EXTRA_ARGS=(-v "$FLIPDIR:/flip")
+ONCRACK_EXTRA_ENV="${ONCRACK_EXTRA_ENV:+$ONCRACK_EXTRA_ENV }CAMPFIRE_CABLE_FLIP_FILE=/flip/flip"
+wait_for_quiet
+start_app "$APP" >/dev/null
+CG=$(cgroup_dir)
+sleep 3
+cookie=$(lg login --base "$BASE" --email "$EMAIL" --password "$PASSWORD" | python3 -c 'import json,sys; print(json.load(sys.stdin)["cookie"])')
+scrape=$(lg scrape --base "$BASE" --cookie "$cookie" --room "$ROOM")
+csrf=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["csrf"] or "")' "$scrape")
+streams=$(python3 -c 'import json,sys; print(",".join(json.loads(sys.argv[1])["streams"]))' "$scrape")
+run_one() {
+  local label=$1 variant=$2 tag=$3
+  local kind=${variant%%[:/]*} threads="" extra="" rest
+  rest=${variant#"$kind"}
+  [[ "$rest" = :* ]] && { threads=${rest#:}; threads=${threads%%/*}; }
+  [[ "$rest" = */* ]] && extra=${rest#*/}
+  local pm=$OUT/$tag
+  taskset -c "$PROCMEM_CPUS" python3 "$BENCH/lib/procmem.py" sample "$CG" "$pm.jsonl" & PROCMEM=$!
+  local a=(--client "$kind"); [ -n "$threads" ] && a+=(--threads "$threads"); [ -n "$extra" ] && a+=(${extra//,/ })
+  local res; res=$(lg cable --base "$BASE" --cookie "$cookie" --room "$ROOM" --csrf "$csrf" --streams "$streams" \
+    --clients "$CLIENTS" --tput-secs "$SECS" --posters "$CABLE_POSTERS" "${a[@]}" 2> "$pm.stderr")
+  sleep 0.5; kill "$PROCMEM" 2>/dev/null || true; wait "$PROCMEM" 2>/dev/null || true; PROCMEM=""
+  echo "$res" > "$pm.json"
+  python3 "$BENCH/lib/procmem.py" phases "$pm.jsonl" "$pm.stderr" > "$pm.phases.json"
+  python3 - "$label" "$pm.json" "$pm.phases.json" <<'PY'
+import json, sys
+label, r, ph = sys.argv[1], json.load(open(sys.argv[2])), json.load(open(sys.argv[3]))
+t, s = r["throughput"], ph["saturated"]
+n = t["complete"] * r["ready"]
+srv, lg = s.get("server_cpu_ms", 0), s.get("loadgen_cpu_ms", 0)
+w = s.get("window_ms") or 1
+lw = s.get("loadgen_window_ms") or 1
+lat = r["latency"]["all_clients"]
+print(f"{label:28s} ready {r['ready']:5d} failed {r['failed']}  {t['delivered_msgs_per_sec']:8.1f} msgs/s  server {srv / w:4.2f} cores {srv * 1000 / max(n, 1):5.2f} us/del"
+      f"  loadgen {lg / lw:4.2f} cores {lg * 1000 / max(n, 1):5.2f} us/del  paced p50 {lat.get('p50_ms')} p99 {lat.get('p99_ms')}  sat p99 {t['all_clients'].get('p99_ms')}")
+PY
+}
+set_arm() { local settings=${1#*@}; printf '%s\n' ${settings//+/ } > "$FLIPDIR/flip"; }
+# One short run first, so the JIT and the pools are warm for the measured ones.
+set_arm "x@"; run_one warm raw:3 warm >/dev/null || true
+read -ra ARMV <<< "$ARMS"; n=${#ARMV[@]}
+for rep in $(seq 1 "$REPS"); do
+  for k in $(seq 0 $((n - 1))); do
+    arm=${ARMV[$(( (k + rep - 1) % n ))]}; name=${arm%%@*}
+    set_arm "$arm"
+    # The host's share of the CPUs before and after the run (bench/lib/hostprobe.py: 1.0 is the quietest ever seen): other work on the Mac
+    # moves the VM's vCPUs, and a run that overlapped it is marked on its line ("host B A") for bench/results/oncrack-r5-fanout/scripts/flip-table.py.
+    HOST_MAX_RATIO=${FLIP_MAX_RATIO:-1.25} LOAD_WAIT_SECS=${FLIP_WAIT_SECS:-90} wait_for_quiet >&2
+    pb=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["ratio"])' "$HOST_PROBE" 2>/dev/null || echo 0)
+    run_one "$name #$rep" raw:3 "$name-$rep"
+    pa=$(host_probe | python3 -c 'import json,sys; print(json.load(sys.stdin)["ratio"])' 2>/dev/null || echo 0)
+    echo "    host $pb $pa"; sleep 2
+  done
+done
+docker rm -f "$CONTAINER" >/dev/null; rm -rf "${WORK:?}/${APP:?}"
+echo "-> $OUT"

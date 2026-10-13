@@ -1,0 +1,96 @@
+{
+ "cloc": "2.10 (sha256 bf59272455172108072a0a106379f7509fd4349bdcfd85203bac038ccd286d83)",
+ "options": "--by-file --skip-uniqueness",
+ "static_data_excluded": {
+  "rust": [
+   "crates/storage/src/tables.rs",
+   "crates/campfire/src/integrations/search/word_ranges.rs",
+   "crates/db/src/fixtures.rs",
+   "crates/views/src/helpers/translations_table.rs"
+  ],
+  "c": [
+   "src/storage/marcel_tables.h"
+  ],
+  "fsharp": [
+   "src/Campfire.Storage/Tables.fs",
+   "src/Campfire.Views/Helpers/UnicodeTables.fs",
+   "src/Campfire.Db/Fixtures.fs",
+   "src/Campfire.RichText/Unicode/WordRanges.fs",
+   "src/Campfire.App/Integrations/SearchWordRanges.fs",
+   "src/Campfire.Views/Helpers/TranslationsTable.fs"
+  ]
+ },
+ "counts": {
+  "Rails": {
+   "revision": "0aa339d",
+   "backend_code": 4443,
+   "backend_code_with_static_data": 4443,
+   "template_code": 1054,
+   "total": 5497,
+   "kloc": 5.5,
+   "kloc_with_static_data": 5.5
+  },
+  "Rust": {
+   "revision": "f9dca47",
+   "backend_code": 30090,
+   "backend_code_with_static_data": 34241,
+   "template_code": 873,
+   "total": 30963,
+   "kloc": 31.0,
+   "kloc_with_static_data": 35.1
+  },
+  "C": {
+   "revision": "cd0cbe4",
+   "backend_code": 94910,
+   "backend_code_with_static_data": 108371,
+   "template_code": 0,
+   "total": 94910,
+   "kloc": 94.9,
+   "kloc_with_static_data": 108.4
+  },
+  "F# port": {
+   "revision": "2e6c08e (image campfire-fsharp:app; checkout 9954ad0 changes no src/)",
+   "backend_code": 38180,
+   "backend_code_with_static_data": 42475,
+   "template_code": 0,
+   "total": 38180,
+   "kloc": 38.2,
+   "kloc_with_static_data": 42.5,
+   "files": 327,
+   "html5ever_port_code": 3582,
+   "kloc_without_html5ever": 34.6
+  },
+  "onCrack": {
+   "revision": "ee5a2e9 (HEAD; src/ equals 6abc183)",
+   "backend_code": 41898,
+   "backend_code_with_static_data": 46193,
+   "template_code": 0,
+   "total": 41898,
+   "kloc": 41.9,
+   "kloc_with_static_data": 46.2,
+   "files": 335,
+   "html5ever_port_code": 3582,
+   "kloc_without_html5ever": 38.3
+  }
+ },
+ "calibration": {
+  "Rails 0aa339d": {
+   "published_backend": 4443,
+   "mine_backend": 4443,
+   "published_template": 1054,
+   "mine_template": 1054
+  },
+  "Rust 6838ead": {
+   "published_backend": 29784,
+   "mine_backend": 30085,
+   "mine_backend_with_static_data": 34236,
+   "published_template": 873,
+   "mine_template": 873
+  },
+  "C ddaafaf": {
+   "published_backend": 94816,
+   "mine_backend": 94910,
+   "mine_backend_with_static_data": 108371
+  }
+ }
+}

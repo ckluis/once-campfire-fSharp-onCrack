@@ -1,0 +1,728 @@
+{
+  "metadata": {
+    "verification_revision": "eed4105f4f5f38faa0159ce68852e2e0aec0fac1",
+    "started_at": "2026-10-13T07:31:11Z",
+    "seed_sha256": "34f66576459374726934205fa0f213e81a82fc3eff8c00db74721f7b7c614a7f",
+    "server_cpus": "0-3",
+    "client_cpus": "4-7",
+    "network": "host",
+    "rounds": 3,
+    "profiles": [
+      "overload",
+      "cable"
+    ],
+    "loadgen_sha256": "4568f79e1ce238f4f48b6ece5327a09d1c37e7087c79117a9970291d08bda0de",
+    "options": {
+      "apps": "rails,rust,c,oncrack,oncrack-cached,oncrack-prev",
+      "rounds": 3,
+      "port": 25130,
+      "cpus": "0-3",
+      "client_cpus": "4-7",
+      "profiles": "overload,cable",
+      "overload_concurrencies": "64,256",
+      "overload_duration": 8,
+      "overload_routes": "room_show,messages_page,sidebar,search",
+      "cable_clients": 1000,
+      "cable_tput_secs": 15,
+      "cable_posters": 4,
+      "cable_heavy_posters": 64
+    },
+    "images": {
+      "rails": "sha256:a9a31e4b152dcb98c40481e1daba5cfe7d9e119c79a9c87dcd46261cbd910368",
+      "rust": "sha256:b0e047159ee217631110f99c318fcb5c40ace80aa5f9803325b6bd06589454ef",
+      "c": "sha256:51001f452cc56b2ca1ca8694a6b107ece42b4fcb11a822ecbf7200aac2d9fa62",
+      "oncrack": "sha256:bfcbb4633485c87c7c9bc9c11e7ad0a6a313d7f9bf900fa73da01b48569144f3",
+      "oncrack-cached": "sha256:bfcbb4633485c87c7c9bc9c11e7ad0a6a313d7f9bf900fa73da01b48569144f3",
+      "oncrack-prev": "sha256:8f72c45842b48a3841931f9644593c2f2aff48da4eff54e150ca3b4b6bd90ec2"
+    },
+    "source_revisions": {
+      "rails": {
+        "head": "0aa339d81e0501841e3f23f0dd6e9b2e06e6b60d",
+        "dirty": false
+      },
+      "rust": {
+        "head": "f9dca47e592fdcd23a75e4c8b6b97f5d452ccdc1",
+        "dirty": false
+      },
+      "c": {
+        "head": "cd0cbe4b24bcee0aa6ad75e6bc29d4e773628332",
+        "dirty": false
+      },
+      "oncrack": {
+        "head": "ee5a2e91795e7c8892757af2cf2561666c7c6e93",
+        "dirty": false
+      },
+      "oncrack-cached": {
+        "head": "ee5a2e91795e7c8892757af2cf2561666c7c6e93",
+        "dirty": false
+      },
+      "oncrack-prev": {
+        "head": "21791e2fbcecab160da296f18d711cc1801ea1c0",
+        "dirty": false
+      }
+    },
+    "complete": true
+  },
+  "results": {
+    "rails": {
+      "overload": [
+        {
+          "route": "room_show",
+          "conc": 64,
+          "median_valid_rps": 4875.9,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 36.319
+        },
+        {
+          "route": "room_show",
+          "conc": 256,
+          "median_valid_rps": 5086.9,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 173.695
+        },
+        {
+          "route": "messages_page",
+          "conc": 64,
+          "median_valid_rps": 4710.6,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 49.151
+        },
+        {
+          "route": "messages_page",
+          "conc": 256,
+          "median_valid_rps": 4497.9,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 179.839
+        },
+        {
+          "route": "sidebar",
+          "conc": 64,
+          "median_valid_rps": 4126.7,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 44.799
+        },
+        {
+          "route": "sidebar",
+          "conc": 256,
+          "median_valid_rps": 4928.3,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 203.007
+        },
+        {
+          "route": "search",
+          "conc": 64,
+          "median_valid_rps": 4622.9,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 38.047
+        },
+        {
+          "route": "search",
+          "conc": 256,
+          "median_valid_rps": 5269.1,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 157.055
+        }
+      ],
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          0,
+          0,
+          0
+        ],
+        "delivered_to_all": [
+          "428/428",
+          "301/301",
+          "420/420"
+        ],
+        "median_delivered_msgs_per_sec": 27.5,
+        "median_all_clients_p99_ms": 1511.423
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          0,
+          0,
+          0
+        ],
+        "delivered_to_all": [
+          "705/705",
+          "545/545",
+          "356/356"
+        ],
+        "median_delivered_msgs_per_sec": 18.5,
+        "median_all_clients_p99_ms": 15876.095
+      }
+    },
+    "rust": {
+      "overload": [
+        {
+          "route": "room_show",
+          "conc": 64,
+          "median_valid_rps": 36795.3,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 3.807
+        },
+        {
+          "route": "room_show",
+          "conc": 256,
+          "median_valid_rps": 35984.6,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 13.447
+        },
+        {
+          "route": "messages_page",
+          "conc": 64,
+          "median_valid_rps": 35931.9,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 3.859
+        },
+        {
+          "route": "messages_page",
+          "conc": 256,
+          "median_valid_rps": 35419.5,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 13.471
+        },
+        {
+          "route": "sidebar",
+          "conc": 64,
+          "median_valid_rps": 44660.8,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 3.377
+        },
+        {
+          "route": "sidebar",
+          "conc": 256,
+          "median_valid_rps": 56294.5,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 9.207
+        },
+        {
+          "route": "search",
+          "conc": 64,
+          "median_valid_rps": 54680.4,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 2.799
+        },
+        {
+          "route": "search",
+          "conc": 256,
+          "median_valid_rps": 48064.0,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 11.615
+        }
+      ],
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          0,
+          0,
+          0
+        ],
+        "delivered_to_all": [
+          "7608/7608",
+          "7799/7799",
+          "7605/7605"
+        ],
+        "median_delivered_msgs_per_sec": 506.8,
+        "median_all_clients_p99_ms": 44.607
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          944,
+          902,
+          959
+        ],
+        "delivered_to_all": [
+          "65/76602",
+          "64/68190",
+          "65/77958"
+        ],
+        "median_delivered_msgs_per_sec": 4.3,
+        "median_all_clients_p99_ms": 408.063
+      }
+    },
+    "c": {
+      "overload": [
+        {
+          "route": "room_show",
+          "conc": 64,
+          "median_valid_rps": 97557.0,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.379
+        },
+        {
+          "route": "room_show",
+          "conc": 256,
+          "median_valid_rps": 89202.1,
+          "errors": 0,
+          "invalid_responses": 15,
+          "median_p99_ms": 5.251
+        },
+        {
+          "route": "messages_page",
+          "conc": 64,
+          "median_valid_rps": 99111.8,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.173
+        },
+        {
+          "route": "messages_page",
+          "conc": 256,
+          "median_valid_rps": 96323.2,
+          "errors": 0,
+          "invalid_responses": 41,
+          "median_p99_ms": 4.847
+        },
+        {
+          "route": "sidebar",
+          "conc": 64,
+          "median_valid_rps": 107748.0,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.067
+        },
+        {
+          "route": "sidebar",
+          "conc": 256,
+          "median_valid_rps": 109828.8,
+          "errors": 0,
+          "invalid_responses": 51,
+          "median_p99_ms": 3.519
+        },
+        {
+          "route": "search",
+          "conc": 64,
+          "median_valid_rps": 102466.8,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.126
+        },
+        {
+          "route": "search",
+          "conc": 256,
+          "median_valid_rps": 104824.0,
+          "errors": 0,
+          "invalid_responses": 88,
+          "median_p99_ms": 3.775
+        }
+      ],
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          344,
+          285,
+          95
+        ],
+        "disconnected": [
+          918,
+          940,
+          876
+        ],
+        "delivered_to_all": [
+          "43/62699",
+          "122/56812",
+          "181/79494"
+        ],
+        "median_delivered_msgs_per_sec": 8.1,
+        "median_all_clients_p99_ms": 48.607
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          116,
+          110,
+          238
+        ],
+        "disconnected": [
+          809,
+          848,
+          821
+        ],
+        "delivered_to_all": [
+          "67/66217",
+          "24/58385",
+          "15/51202"
+        ],
+        "median_delivered_msgs_per_sec": 1.6,
+        "median_all_clients_p99_ms": 54.015
+      }
+    },
+    "oncrack": {
+      "overload": [
+        {
+          "route": "room_show",
+          "conc": 64,
+          "median_valid_rps": 211367.1,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.043
+        },
+        {
+          "route": "room_show",
+          "conc": 256,
+          "median_valid_rps": 196107.3,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.053
+        },
+        {
+          "route": "messages_page",
+          "conc": 64,
+          "median_valid_rps": 225413.2,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.085
+        },
+        {
+          "route": "messages_page",
+          "conc": 256,
+          "median_valid_rps": 218411.4,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.195
+        },
+        {
+          "route": "sidebar",
+          "conc": 64,
+          "median_valid_rps": 250343.3,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 0.886
+        },
+        {
+          "route": "sidebar",
+          "conc": 256,
+          "median_valid_rps": 257083.7,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.123
+        },
+        {
+          "route": "search",
+          "conc": 64,
+          "median_valid_rps": 238608.8,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 0.875
+        },
+        {
+          "route": "search",
+          "conc": 256,
+          "median_valid_rps": 242023.0,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.067
+        }
+      ],
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          0,
+          0,
+          0
+        ],
+        "delivered_to_all": [
+          "9282/9282",
+          "9182/9182",
+          "9141/9141"
+        ],
+        "median_delivered_msgs_per_sec": 611.7,
+        "median_all_clients_p99_ms": 42.367
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          0,
+          0,
+          0
+        ],
+        "delivered_to_all": [
+          "13571/13571",
+          "12737/12737",
+          "13608/13608"
+        ],
+        "median_delivered_msgs_per_sec": 738.3,
+        "median_all_clients_p99_ms": 9338.879
+      }
+    },
+    "oncrack-cached": {
+      "overload": [
+        {
+          "route": "room_show",
+          "conc": 64,
+          "median_valid_rps": 215544.0,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 0.841
+        },
+        {
+          "route": "room_show",
+          "conc": 256,
+          "median_valid_rps": 199881.7,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.223
+        },
+        {
+          "route": "messages_page",
+          "conc": 64,
+          "median_valid_rps": 238084.2,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 0.859
+        },
+        {
+          "route": "messages_page",
+          "conc": 256,
+          "median_valid_rps": 233803.5,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.045
+        },
+        {
+          "route": "sidebar",
+          "conc": 64,
+          "median_valid_rps": 258824.5,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 0.915
+        },
+        {
+          "route": "sidebar",
+          "conc": 256,
+          "median_valid_rps": 269078.9,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.057
+        },
+        {
+          "route": "search",
+          "conc": 64,
+          "median_valid_rps": 247412.6,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 0.878
+        },
+        {
+          "route": "search",
+          "conc": 256,
+          "median_valid_rps": 247644.2,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.231
+        }
+      ],
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          0,
+          0,
+          0
+        ],
+        "delivered_to_all": [
+          "8025/8025",
+          "9294/9294",
+          "8400/8400"
+        ],
+        "median_delivered_msgs_per_sec": 559.7,
+        "median_all_clients_p99_ms": 49.247
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          0,
+          0,
+          0
+        ],
+        "delivered_to_all": [
+          "11761/11761",
+          "13725/13725",
+          "12988/12988"
+        ],
+        "median_delivered_msgs_per_sec": 705.4,
+        "median_all_clients_p99_ms": 10215.423
+      }
+    },
+    "oncrack-prev": {
+      "overload": [
+        {
+          "route": "room_show",
+          "conc": 64,
+          "median_valid_rps": 165544.8,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.448
+        },
+        {
+          "route": "room_show",
+          "conc": 256,
+          "median_valid_rps": 169272.5,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.831
+        },
+        {
+          "route": "messages_page",
+          "conc": 64,
+          "median_valid_rps": 220230.5,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 0.827
+        },
+        {
+          "route": "messages_page",
+          "conc": 256,
+          "median_valid_rps": 179716.0,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.747
+        },
+        {
+          "route": "sidebar",
+          "conc": 64,
+          "median_valid_rps": 216686.2,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.187
+        },
+        {
+          "route": "sidebar",
+          "conc": 256,
+          "median_valid_rps": 216872.9,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.647
+        },
+        {
+          "route": "search",
+          "conc": 64,
+          "median_valid_rps": 207246.5,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.051
+        },
+        {
+          "route": "search",
+          "conc": 256,
+          "median_valid_rps": 196527.2,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.655
+        }
+      ],
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          0,
+          0,
+          0
+        ],
+        "delivered_to_all": [
+          "8682/8682",
+          "8934/8934",
+          "8751/8751"
+        ],
+        "median_delivered_msgs_per_sec": 583.0,
+        "median_all_clients_p99_ms": 48.287
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          860,
+          833,
+          844
+        ],
+        "delivered_to_all": [
+          "1/78325",
+          "51/69389",
+          "117/49412"
+        ],
+        "median_delivered_msgs_per_sec": 3.4,
+        "median_all_clients_p99_ms": 483.583
+      }
+    }
+  }
+}

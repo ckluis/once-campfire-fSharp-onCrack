@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Unit R4.5: runs upstream's bin/reliability (the combined verification branch, in the VM's tmpfs copy at /mnt/cfv) for onCrack and
+# keeps beside its output what the harness does not record: a timestamp on every progress line, the container's Pss twice a second
+# (sampler.py, for the peak during cable_heavy) and the Mac's load every 5 s (other sessions' builds).
+#
+#   bench/reliability/run OUT_DIR [reliability arguments]      e.g. --apps oncrack --profiles cable --rounds 1
+#
+# Environment (passed to the harness): ONCRACK_IMAGE, ONCRACK_BENCH_ENV, ONCRACK_CACHED_IMAGE, ONCRACK_CACHED_BENCH_ENV, and any
+# other *_IMAGE / *_BENCH_ENV the apps in --apps need. bench/reliability/summarize prints the table.
+#
+# The descriptor limit is raised first: a login shell's 1,024 holds the 1,000 Cable clients but not the 64 closed-loop posters of
+# cable_heavy beside them, whose connections then fail at once (18 million refused posts, 13 delivered, for every app: the first
+# baseline session's cable_heavy rows).
+set -euo pipefail
+[ $# -ge 1 ] || { echo "usage: $0 OUT_DIR [reliability args]" >&2; exit 2; }
+out=$1; shift
+mkdir -p "$out"
+out=$(cd "$out" && pwd)
+harness=${CFV:-/mnt/cfv/once-campfire-verification}
+here=$(cd "$(dirname "$0")" && pwd)
+exports=""
+for v in ONCRACK_IMAGE ONCRACK_BENCH_ENV ONCRACK_CACHED_IMAGE ONCRACK_CACHED_BENCH_ENV ONCRACK_PREV_IMAGE ONCRACK_PREV_BENCH_ENV FSHARP_BENCH_ENV RUST_IMAGE C_IMAGE FSHARP_IMAGE RAILS_IMAGE RAILS_BENCH_ENV; do
+  if [ -n "${!v:-}" ]; then exports="$exports export $v=$(printf %q "${!v}");"; fi
+done
+args=$(printf '%q ' "$@")
+( while sleep 5; do echo "$(date +%s) $(uptime | sed 's/.*load averages*: //')"; done ) > "$out/host-load.txt" &
+loadpid=$!
+trap 'kill $loadpid 2>/dev/null || true' EXIT
+colima ssh -- bash -c "
+  $exports
+  ulimit -n 65536 || ulimit -n \$(ulimit -Hn)
+  cd '$harness'
+  sudo python3 '$here/sampler.py' '$out/memory.jsonl' &
+  trap 'sudo kill \$(cat $out/sampler.pid) 2>/dev/null || true' EXIT
+  ruby bin/reliability --workspace /mnt/cfv/ws --cpus 0-3 --client-cpus 4-7 $args 2>&1 | while IFS= read -r line; do echo \"\$(date +%s) \$line\"; done
+" | tee "$out/run.log" || true
+# The harness's output directory is the newest in its tmp; its JSON (not its logs, which are megabytes) is kept.
+mkdir -p "$out/harness-output"
+colima ssh -- bash -c "d=\$(ls -td '$harness'/tmp/bench/reliability/*/ | head -1); cp \"\$d\"/*.json '$out/harness-output/'"

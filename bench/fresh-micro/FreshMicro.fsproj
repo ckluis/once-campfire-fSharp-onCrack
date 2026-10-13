@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Tier 1 for the fresh authorization check (onCrack unit R4.3): the whole app in this process, served by its own front server on
+       loopback over a copy of a parity seed, and N keep-alive connections reading one page as one member. It alternates windows
+       between the check's variants (`FreshHold`) in one warm process and prints answers/s, process CPU and bytes allocated per
+       answer. The clients run in the same process, so CPU per answer includes theirs (a fixed few microseconds); compare variants,
+       never report its numbers as results. Not in the solution. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Campfire.App/Campfire.App.fsproj" />
+  </ItemGroup>
+</Project>

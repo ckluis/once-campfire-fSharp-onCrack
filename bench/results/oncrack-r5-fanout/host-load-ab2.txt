@@ -1,0 +1,184 @@
+# host load during ab2 (ps -A, non-VM processes: top 4 by %CPU and the sum of all, every 10 s; loadavg)
+# quiet after 0s; session starts
+14:12:26 load  5.70 9.18 11.53  | sum 121 | 97.9 beam.smp, 9.0 cmux, 3.5 claude, 2.9 Finder, 
+# mac_free_gib=14.7
+14:12:37 load  5.30 8.98 11.43  | sum 138 | 41.2 kasboek.test, 16.2 bash, 14.1 Python, 9.8 XprotectService, 
+14:12:47 load  5.69 8.94 11.39  | sum 829 | 700.1 beam.smp, 55.6 beam.smp, 16.5 mdworker_shared, 12.0 Siri, 
+14:12:57 load  9.81 9.72 11.64  | sum 513 | 232.7 beam.smp, 76.0 beam.smp, 29.3 beam.smp, 28.5 beam.smp, 
+# mac_free_gib=14.7
+14:13:07 load  10.73 9.92 11.69  | sum 195 | 146.2 beam.smp, 27.9 Python, 2.7 kasboek.test, 2.0 mds, 
+14:13:17 load  10.08 9.81 11.63  | sum 626 | 458.0 beam.smp, 39.6 beam.smp, 23.6 go, 16.6 Python, 
+14:13:27 load  10.63 9.95 11.65  | sum 346 | 89.1 beam.smp, 68.7 beam.smp, 55.4 compile, 50.2 beam.smp, 
+# mac_free_gib=14.5
+14:13:38 load  12.33 10.34 11.77  | sum 432 | 202.4 beam.smp, 108.0 beam.smp, 98.8 beam.smp, 3.9 mediaanalysisd, 
+14:13:48 load  11.76 10.28 11.74  | sum 305 | 100.2 beam.smp, 97.6 beam.smp, 39.2 fseventsd, 18.9 Python, 
+14:13:58 load  13.01 10.58 11.83  | sum 414 | 114.4 beam.smp, 104.6 beam.smp, 73.4 beam.smp, 60.8 beam.smp, 
+# mac_free_gib=14.3
+14:14:08 load  15.36 11.17 12.02  | sum 625 | 111.2 beam.smp, 108.1 link, 100.9 beam.smp, 89.3 link, 
+14:14:18 load  16.81 11.63 12.17  | sum 391 | 91.5 beam.smp, 82.8 beam.smp, 82.6 beam.smp, 38.9 link, 
+14:14:28 load  15.94 11.61 12.16  | sum 488 | 205.5 beam.smp, 113.3 beam.smp, 95.0 beam.smp, 10.5 XprotectService, 
+# mac_free_gib=14.0
+14:14:39 load  16.57 11.87 12.24  | sum 518 | 136.7 beam.smp, 112.3 beam.smp, 87.9 beam.smp, 84.9 beam.smp, 
+14:14:49 load  22.76 13.30 12.74  | sum 335 | 153.4 go, 53.9 mobileassetd, 27.8 modelcatalogd, 17.7 compile, 
+14:14:59 load  23.10 13.70 12.89  | sum 341 | 158.7 beam.smp, 121.9 beam.smp, 10.3 bash, 10.2 postgres:, 
+# mac_free_gib=13.8
+14:15:09 load  19.30 13.32 12.77  | sum 348 | 165.3 beam.smp, 108.4 beam.smp, 15.5 fseventsd, 10.0 bash, 
+14:15:19 load  17.58 13.15 12.72  | sum 422 | 355.9 beam.smp, 38.2 beam.smp, 8.4 postgres:, 7.5 fseventsd, 
+14:15:29 load  15.42 12.83 12.61  | sum 345 | 189.8 beam.smp, 125.5 beam.smp, 14.2 opencode, 3.5 mds, 
+# mac_free_gib=13.8
+14:15:40 load  15.16 12.85 12.62  | sum 299 | 63.9 beam.smp, 43.4 fseventsd, 34.6 postgres:, 28.4 taal.test, 
+14:15:50 load  16.24 13.15 12.73  | sum 724 | 588.3 spoor.test, 55.0 kasboek.test, 19.8 fseventsd, 9.1 mds, 
+14:16:00 load  14.06 12.79 12.60  | sum 464 | 47.0 mds, 47.0 fseventsd, 36.7 mdworker_shared, 31.8 mdworker_shared, 
+# mac_free_gib=13.6
+14:16:10 load  15.58 13.14 12.73  | sum 807 | 449.4 beam.smp, 79.3 kasboek.test, 33.7 fseventsd, 24.2 mds, 
+14:16:20 load  21.14 14.41 13.18  | sum 341 | 149.7 beam.smp, 41.5 kasboek.test, 30.2 mdworker_shared, 19.0 mds, 
+14:16:30 load  22.33 14.90 13.37  | sum 729 | 214.4 beam.smp, 195.3 mds_stores, 174.6 mds, 47.9 fseventsd, 
+# mac_free_gib=13.5
+14:16:40 load  21.93 15.05 13.44  | sum 412 | 362.8 beam.smp, 13.9 postgres:, 8.1 fseventsd, 5.9 cmux, 
+14:16:50 load  21.54 15.20 13.51  | sum 165 | 104.6 beam.smp, 25.4 postgres:, 8.5 fseventsd, 7.3 engine.test, 
+14:17:00 load  18.77 14.81 13.39  | sum 487 | 212.6 beam.smp, 80.3 mediaanalysisd, 66.7 mds, 17.4 fseventsd, 
+# mac_free_gib=13.6
+14:17:11 load  16.91 14.54 13.31  | sum 782 | 730.9 beam.smp, 15.8 fseventsd, 5.8 werk.test, 4.7 postgres:, 
+14:17:21 load  15.50 14.32 13.25  | sum 148 | 136.1 go, 3.8 fseventsd, 1.4 claude, 0.9 claude, 
+14:17:31 load  13.27 13.88 13.11  | sum 41 | 14.8 fseventsd, 7.4 zwerm.test, 4.1 beam.smp, 3.0 mds, 
+# mac_free_gib=13.6
+14:17:41 load  11.85 13.56 13.00  | sum 327 | 182.0 beam.smp, 43.9 com.apple.WebKit.WebContent, 29.3 fseventsd, 20.1 zwerm.test, 
+14:17:51 load  12.17 13.56 13.01  | sum 64 | 26.1 fseventsd, 18.5 zicht.test, 3.8 mds, 3.7 Finder, 
+14:18:01 load  10.82 13.22 12.89  | sum 317 | 146.4 beam.smp, 97.3 mediaanalysisd, 12.1 mdworker_shared, 11.5 mdworker_shared, 
+# mac_free_gib=13.6
+14:18:11 load  9.77 12.92 12.79  | sum 348 | 192.2 (beam.smp), 69.4 link, 42.3 link, 14.3 (postgres), 
+14:18:21 load  10.19 12.91 12.79  | sum 150 | 95.5 beam.smp, 39.1 go, 3.4 claude, 2.3 claude, 
+14:18:32 load  10.30 12.84 12.76  | sum 107 | 94.8 beam.smp, 3.8 claude, 2.2 claude, 2.0 claude, 
+# mac_free_gib=13.3
+14:18:42 load  9.47 12.58 12.67  | sum 140 | 125.3 beam.smp, 7.2 mobileassetd, 1.2 Finder, 1.2 claude, 
+14:18:52 load  11.68 12.95 12.80  | sum 129 | 99.8 beam.smp, 11.4 bash, 4.2 claude, 3.2 syspolicyd, 
+14:19:02 load  11.81 12.93 12.79  | sum 221 | 197.3 beam.smp, 9.7 bash, 4.0 syspolicyd, 3.5 claude, 
+# mac_free_gib=13.3
+14:19:12 load  10.60 12.64 12.69  | sum 44 | 13.7 Python, 7.8 claude, 7.1 cmux, 3.8 Finder, 
+14:19:22 load  10.56 12.55 12.66  | sum 615 | 224.4 beam.smp, 118.2 mds_stores, 35.6 mds, 31.3 mdworker_shared, 
+14:19:32 load  11.08 12.58 12.67  | sum 572 | 253.9 mds_stores, 137.4 beam.smp, 28.1 mds, 21.7 mdworker_shared, 
+# mac_free_gib=13.4
+14:19:43 load  10.79 12.47 12.63  | sum 320 | 316.2 beam.smp, 0.8 claude, 0.6 claude, 0.4 sleep, 
+14:19:53 load  9.52 12.14 12.51  | sum 502 | 455.0 beam.smp, 21.2 mds, 6.4 mdworker_shared, 3.8 lsd, 
+14:20:03 load  8.60 11.85 12.40  | sum 781 | 661.6 beam.smp, 84.8 mds, 7.8 claude, 7.4 lsd, 
+# mac_free_gib=13.3
+14:20:13 load  9.56 11.94 12.43  | sum 124 | 116.2 beam.smp, 2.1 claude, 1.6 claude, 0.9 Finder, 
+14:20:23 load  11.18 12.21 12.51  | sum 752 | 685.2 beam.smp, 49.0 com.apple.WebKit.WebContent, 7.4 claude, 2.3 claude, 
+14:20:33 load  10.88 12.12 12.48  | sum 180 | 152.6 beam.smp, 9.9 cmux, 3.8 claude, 3.2 Finder, 
+# mac_free_gib=13.3
+14:20:44 load  11.25 12.16 12.49  | sum 168 | 155.3 beam.smp, 4.7 cmux, 2.2 opencode, 1.2 claude, 
+14:20:54 load  10.90 12.06 12.45  | sum 49 | 15.6 cmux, 14.0 com.apple.WebKit.WebContent, 11.5 beam.smp, 3.0 com.apple.WebKit.GPU, 
+14:21:04 load  9.90 11.81 12.35  | sum 14 | 2.7 modelmanagerd, 1.6 postgres, 1.3 Siri, 1.2 fseventsd, 
+# mac_free_gib=13.3
+14:21:14 load  8.76 11.50 12.24  | sum 577 | 156.3 beam.smp, 66.6 mds, 65.1 mds_stores, 32.3 mdworker_shared, 
+14:21:24 load  10.82 11.85 12.35  | sum 820 | 477.2 beam.smp, 112.5 mds_stores, 32.5 mds, 23.4 mdworker_shared, 
+14:21:34 load  10.45 11.73 12.31  | sum 890 | 563.1 beam.smp, 177.5 mds, 52.7 mds_stores, 8.6 lsd, 
+# mac_free_gib=13.3
+14:21:44 load  10.11 11.63 12.26  | sum 117 | 108.0 beam.smp, 4.8 cmux, 1.3 claude, 0.7 claude, 
+14:21:54 load  9.01 11.34 12.15  | sum 139 | 112.5 beam.smp, 10.2 mds, 3.7 Finder, 3.1 modelmanagerd, 
+14:22:04 load  9.05 11.27 12.12  | sum 510 | 444.4 beam.smp, 45.8 mds, 4.9 Siri, 3.2 mds_stores, 
+# mac_free_gib=13.3
+14:22:15 load  8.48 11.02 12.01  | sum 103 | 96.7 beam.smp, 2.2 fseventsd, 0.8 com.apple.WebKit.WebContent, 0.5 claude, 
+14:22:25 load  8.71 10.99 11.99  | sum 125 | 113.6 beam.smp, 4.7 fseventsd, 2.5 mds, 0.8 mds_stores, 
+14:22:35 load  9.47 11.07 12.01  | sum 178 | 151.7 beam.smp, 7.8 postgres:, 5.0 claude, 2.9 fseventsd, 
+# mac_free_gib=13.4
+14:22:45 load  8.99 10.92 11.94  | sum 61 | 19.0 XprotectService, 13.0 bash, 11.0 syspolicyd, 4.6 go, 
+14:22:55 load  8.55 10.76 11.87  | sum 43 | 19.5 bash, 11.0 claude, 3.6 opencode, 2.9 syspolicyd, 
+14:23:05 load  8.54 10.69 11.83  | sum 28 | 16.6 bash, 3.1 syspolicyd, 2.1 claude, 2.0 opencode, 
+# mac_free_gib=13.3
+14:23:15 load  7.61 10.42 11.72  | sum 17 | 13.8 bash, 0.9 claude, 0.5 opencode, 0.3 postgres, 
+14:23:25 load  6.75 10.14 11.61  | sum 22 | 13.8 bash, 4.2 syspolicyd, 1.1 fseventsd, 1.0 claude, 
+14:23:35 load  6.01 9.87 11.50  | sum 23 | 11.5 bash, 3.6 syspolicyd, 2.9 claude, 1.3 claude, 
+# mac_free_gib=13.4
+14:23:46 load  5.24 9.58 11.37  | sum 35 | 14.4 bash, 7.6 claude, 5.2 cmux, 2.0 syspolicyd, 
+14:23:56 load  4.74 9.33 11.26  | sum 24 | 14.4 bash, 4.3 syspolicyd, 1.2 com.apple.WebKit.WebContent, 1.0 claude, 
+14:24:06 load  4.25 9.07 11.15  | sum 25 | 6.4 bash, 4.8 claude, 3.1 syspolicyd, 2.7 Finder, 
+# mac_free_gib=13.4
+14:24:16 load  3.99 8.85 11.05  | sum 39 | 19.2 cmux, 14.1 bash, 2.2 claude, 1.0 opencode, 
+14:24:26 load  4.10 8.71 10.97  | sum 29 | 15.7 bash, 4.0 claude, 3.6 claude, 2.2 opencode, 
+14:24:36 load  5.38 8.83 10.99  | sum 121 | 44.0 go, 24.8 fseventsd, 15.0 bash, 11.8 mds_stores, 
+# mac_free_gib=20.6
+14:24:46 load  6.42 8.95 11.01  | sum 83 | 18.4 Python, 15.7 Python, 12.8 Python, 7.2 syspolicyd, 
+14:24:56 load  6.81 8.95 10.98  | sum 17 | 3.9 claude, 1.9 imagent, 1.5 claude, 1.3 opendirectoryd, 
+14:25:07 load  6.35 8.79 10.90  | sum 4 | 1.4 claude, 1.1 opendirectoryd, 0.5 com.apple.DriverKit-AppleBCMWLAN, 0.3 claude, 
+# mac_free_gib=24.6
+14:25:17 load  5.60 8.55 10.79  | sum 24 | 6.9 claude, 4.3 claude, 3.6 claude, 2.4 opencode, 
+14:25:27 load  4.97 8.32 10.68  | sum 83 | 21.2 cmux, 16.6 claude, 16.1 cmux, 7.2 Finder, 
+14:25:37 load  6.02 8.42 10.69  | sum 136 | 26.7 Python, 21.4 Python, 21.2 claude, 7.1 opendirectoryd, 
+# mac_free_gib=24.7
+14:25:47 load  5.71 8.28 10.61  | sum 28 | 8.8 claude, 8.5 Finder, 1.8 claude, 1.5 com.apple.DriverKit-AppleBCMWLAN, 
+14:25:57 load  4.99 8.04 10.50  | sum 27 | 17.1 claude, 3.1 claude, 1.2 com.apple.DriverKit-AppleBCMWLAN, 0.8 mds_stores, 
+14:26:07 load  4.37 7.80 10.39  | sum 102 | 64.2 mediaanalysisd, 18.3 claude, 4.0 opencode, 3.2 Finder, 
+# mac_free_gib=24.6
+14:26:18 load  4.01 7.61 10.29  | sum 42 | 19.9 claude, 10.2 (cmux), 2.6 cmux, 2.0 com.apple.DriverKit-AppleBCMWLAN, 
+14:26:28 load  5.13 7.73 10.30  | sum 57 | 8.1 Python, 5.8 claude, 5.5 opendirectoryd, 5.5 fseventsd, 
+14:26:38 load  4.65 7.54 10.20  | sum 56 | 10.4 cmux, 10.1 (cmux), 8.8 claude, 7.7 cmux, 
+# mac_free_gib=24.6
+14:26:48 load  4.95 7.50 10.16  | sum 87 | 31.2 cmux, 18.2 com.apple.WebKit.WebContent, 12.5 claude, 6.9 com.apple.WebKit.Networking, 
+14:26:58 load  7.10 7.87 10.25  | sum 335 | 107.9 compile, 83.0 compile, 82.0 compile, 14.1 claude, 
+14:27:08 load  8.20 8.08 10.30  | sum 69 | 28.7 go, 11.3 link, 10.5 claude, 5.3 claude, 
+# mac_free_gib=24.3
+14:27:19 load  9.06 8.28 10.34  | sum 185 | 37.7 beam.smp, 19.0 fseventsd, 11.3 Python, 10.2 Python, 
+14:27:29 load  10.78 8.68 10.46  | sum 351 | 82.4 mediaanalysisd, 79.0 postgres:, 42.7 kasboek.test, 18.9 Python, 
+14:27:39 load  9.83 8.54 10.39  | sum 142 | 86.8 postgres:, 32.0 kasboek.test, 7.4 (cmux), 6.2 postgres:, 
+# mac_free_gib=24.2
+14:27:49 load  9.09 8.42 10.33  | sum 23 | 8.7 claude, 4.6 claude, 2.4 claude, 1.5 Finder, 
+14:27:59 load  8.16 8.24 10.24  | sum 155 | 80.5 postgres:, 51.7 kasboek.test, 10.4 postgres:, 2.4 Finder, 
+14:28:09 load  7.30 8.05 10.15  | sum 323 | 162.5 beam.smp, 92.4 postgres:, 28.0 claude, 14.8 kasboek.test, 
+# mac_free_gib=24.1
+14:28:20 load  9.24 8.45 10.27  | sum 244 | 71.4 postgres:, 51.5 kasboek.test, 25.6 mediaanalysisd, 20.7 Python, 
+14:28:30 load  8.75 8.37 10.22  | sum 186 | 149.2 claude, 12.2 cmux, 7.2 cmux, 6.1 claude, 
+14:28:40 load  7.48 8.11 10.10  | sum 131 | 96.1 wc, 7.3 cmux, 6.2 fseventsd, 3.7 mds_stores, 
+# mac_free_gib=24.2
+14:28:50 load  8.03 8.20 10.11  | sum 125 | 97.6 awk, 4.7 identityservicesd, 3.5 ugrep, 2.4 com.apple.WebKit.Networking, 
+14:29:00 load  7.70 8.13 10.06  | sum 156 | 100.0 awk, 15.6 XprotectService, 7.8 loginwindow, 7.1 cmux, 
+14:29:10 load  8.77 8.34 10.12  | sum 173 | 76.5 awk, 19.8 Python, 11.8 cmux, 11.6 Python, 
+# mac_free_gib=24.1
+14:29:21 load  11.00 8.84 10.27  | sum 147 | 97.9 awk, 27.8 XprotectService, 9.3 syspolicyd, 5.6 claude, 
+14:29:31 load  9.86 8.66 10.19  | sum 121 | 100.0 awk, 6.5 Finder, 4.0 claude, 2.2 Python, 
+14:29:41 load  8.72 8.46 10.10  | sum 168 | 98.2 awk, 39.7 go, 9.6 claude, 4.5 cmux, 
+# mac_free_gib=24.1
+14:29:51 load  8.08 8.33 10.04  | sum 104 | 99.0 awk, 1.4 com.apple.DriverKit-AppleBCMWLAN, 1.0 ugrep, 0.8 opencode, 
+14:30:01 load  8.91 8.48 10.07  | sum 419 | 48.1 go, 40.6 intelligenceplatformd, 37.3 awk, 22.6 compile, 
+14:30:11 load  14.12 9.73 10.49  | sum 404 | 97.9 awk, 52.9 fseventsd, 36.9 postgres:, 28.9 Python, 
+# mac_free_gib=23.6
+14:30:22 load  13.10 9.65 10.46  | sum 318 | 98.2 awk, 71.2 kasboek.test, 60.1 fseventsd, 17.8 postgres:, 
+14:30:32 load  11.79 9.48 10.39  | sum 161 | 41.5 kasboek.test, 36.7 fseventsd, 18.8 postgres:, 15.9 zwerm.test, 
+14:30:42 load  10.59 9.30 10.31  | sum 172 | 42.6 go, 40.9 fseventsd, 11.6 kasboek.test, 10.0 Finder, 
+# mac_free_gib=23.8
+14:30:52 load  13.90 10.03 10.55  | sum 273 | 28.7 Python, 28.4 Python, 24.3 Python, 22.0 Python, 
+14:31:02 load  28.16 13.11 11.64  | sum 595 | 78.5 DisplayLinkUserAgent, 66.1 WindowServer, 46.6 com.apple.WebKit.GPU, 39.9 Python, 
+14:31:13 load  27.13 13.39 11.75  | sum 480 | 44.6 runningboardd, 43.8 fseventsd, 43.6 deleted, 38.2 mobileassetd, 
+# mac_free_gib=23.7
+14:31:23 load  25.20 13.42 11.78  | sum 370 | 69.8 go, 42.2 WindowServer, 35.8 Python, 35.2 com.apple.WebKit.WebContent, 
+14:31:34 load  25.44 13.85 11.95  | sum 483 | 106.7 com.apple.WebKit.WebContent, 88.2 linkd, 88.1 eligibilityd, 33.3 WindowServer, 
+14:31:44 load  21.91 13.48 11.84  | sum 481 | 52.9 compile, 51.8 compile, 38.0 beam.smp, 37.0 compile, 
+# mac_free_gib=23.6
+14:31:54 load  20.76 13.50 11.87  | sum 316 | 57.8 beam.smp, 40.0 postgres:, 32.8 WindowServer, 25.4 com.apple.WebKit.GPU, 
+14:32:05 load  19.83 13.55 11.90  | sum 291 | 95.5 postgres:, 45.3 WindowServer, 20.6 com.apple.WebKit.GPU, 19.4 DisplayLinkUserAgent, 
+14:32:15 load  17.30 13.22 11.81  | sum 239 | 99.4 postgres:, 33.5 WindowServer, 20.6 DisplayLinkUserAgent, 20.2 com.apple.WebKit.GPU, 
+# mac_free_gib=23.5
+14:32:25 load  15.19 12.90 11.71  | sum 346 | 97.5 postgres:, 38.9 WindowServer, 21.7 com.apple.WebKit.GPU, 18.7 fseventsd, 
+14:32:35 load  13.23 12.55 11.60  | sum 255 | 98.5 postgres:, 44.0 WindowServer, 20.4 com.apple.WebKit.GPU, 19.1 DisplayLinkUserAgent, 
+14:32:45 load  13.90 12.70 11.66  | sum 310 | 39.4 WindowServer, 37.3 Python, 24.1 cmux, 19.1 Python, 
+# mac_free_gib=23.5
+14:32:56 load  14.09 12.79 11.71  | sum 155 | 97.1 postgres:, 6.0 fseventsd, 5.0 syspolicyd, 4.7 trustd, 
+14:33:06 load  13.19 12.64 11.66  | sum 172 | 91.2 postgres:, 22.6 WindowServer, 8.4 fseventsd, 6.1 cmux, 
+14:33:16 load  13.02 12.61 11.67  | sum 411 | 77.2 kasboek.test, 60.6 postgres:, 56.4 go, 19.8 WindowServer, 
+# mac_free_gib=23.2
+14:33:26 load  11.48 12.30 11.57  | sum 249 | 98.2 postgres:, 36.0 cmux, 32.7 com.apple.WebKit.WebContent, 28.4 WindowServer, 
+14:33:36 load  11.46 12.26 11.57  | sum 391 | 41.5 go, 28.8 WindowServer, 22.4 cmux, 22.0 Python, 
+14:33:47 load  10.97 12.14 11.53  | sum 288 | 90.7 postgres:, 50.7 claude, 42.7 WindowServer, 17.8 cmux, 
+# mac_free_gib=23.1
+14:33:57 load  10.79 12.05 11.51  | sum 813 | 188.0 kasboek.test, 80.1 postgres:, 45.0 WindowServer, 45.0 postgres:, 
+14:34:07 load  11.10 12.08 11.52  | sum 235 | 98.8 postgres:, 34.0 WindowServer, 20.5 mediaanalysisd, 15.7 cmux, 
+14:34:17 load  10.89 12.01 11.50  | sum 395 | 100.0 postgres:, 63.8 mobileassetd, 33.4 modelcatalogd, 16.7 WindowServer, 
+# mac_free_gib=23.0
+14:34:27 load  9.59 11.70 11.40  | sum 460 | 26.9 beam.smp, 23.8 Python, 23.7 Python, 22.9 Python, 
+14:34:38 load  10.86 11.90 11.48  | sum 154 | 20.1 Python, 18.3 Python, 16.7 WindowServer, 16.3 postgres:, 
+14:34:48 load  11.13 11.94 11.49  | sum 153 | 98.8 postgres:, 14.1 WindowServer, 11.1 cmux, 5.7 claude, 
+# mac_free_gib=23.0
+14:34:58 load  10.96 11.87 11.48  | sum 147 | 80.7 postgres:, 17.3 WindowServer, 14.4 bash, 6.5 claude, 
+14:35:08 load  10.73 11.79 11.45  | sum 192 | 54.4 postgres:, 17.2 claude, 15.5 WindowServer, 14.4 bash, 
+14:35:18 load  9.53 11.50 11.35  | sum 150 | 100.0 postgres:, 15.9 WindowServer, 9.9 cmux, 6.9 com.apple.WebKit.WebContent, 
+# session ended 14:35:18

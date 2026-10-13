@@ -1,0 +1,12 @@
+xUnit.net v3 In-Process Runner v3.2.0+9e422989c1 (64-bit .NET 10.0.12)
+  Discovering: Attack.Tests
+  Discovered:  Attack.Tests
+  Starting:    Attack.Tests
+A4: 200 checks, 0 failures; writer 217 writes in 168 groups, largest 5
+A4   stored sample: wombatx w8n1q
+A4   stored sample: wombatx w6n1q
+A5 sample frame: "\u003cturbo-stream action=\"append\" target=\"messages_rooms_closed_486777696\"\u003e\u003ctemplate\u003e\n  \u003cdiv id=\"message_94453b65-2fd8-4c96-b6ad-c64dcf25ca70\" class=\"message \" data-controller=\"reply\" data-user-id=\"127326141\" data-message-id=\"933434638\" data-message-timestamp=\"1791402744299\" data-message-updated-at=\"1791402744299\" data-sort-value=\"1791402744299\" data-messages-target=\"message\" data-search-results-target=\"message\" data-refresh-room-target=\"message\" data-reply-composer-outlet=\"#composer\"\u003e\n    \u003ch2 class=\"message__day-separator\"\u003e\
+A5: group commit on: 320 frames, 320 message ids, 100 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 70 groups, largest 14
+  Finished:    Attack.Tests (ID = '70a08f1d87bbf649f694aae4a91c85c65d8ca83b512d3256f6bc52bb9b97416d')
+=== TEST EXECUTION SUMMARY ===
+   Attack.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 5.733s

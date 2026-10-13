@@ -1,0 +1,19 @@
+[05:25:03] load before run: 1.38 1.98 1.71 (waited 20s)
+[05:25:06] host probe before run: {"spin_ms": 57.96, "spin_ms_max_cpu": 59.56, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.043} (waited 20s)
+cold start (docker run to /up): 220 ms; pid 486792; seed default; env: CAMPFIRE_MEM_LOG_MS=1000 CAMPFIRE_CABLE_GATHER=off
+  cable:1000                   done
+smaps at the end (MB): rss, anon, mappings
+  [anon]                                     177.9   177.9   584
+  /memfd:doublemapper (deleted)               22.7     0.0   301
+  [heap]                                      17.0    17.0     1
+  System.Private.CoreLib.dll                  13.8     0.2     5
+  libcoreclr.so                                5.3     0.3     9
+  libcrypto.so.3                               4.5     0.5     4
+  libclrjit.so                                 3.5     0.1     7
+  FSharp.Core.dll                              3.3     0.1     5
+managed heap (the 256 GB reservation's committed part): 175.0 MB anon; anon elsewhere: 23.1 MB (glibc heaps and arenas, SQLite, libvips, stacks, the runtime)
+largest anonymous mappings (size MB, anon MB, perms): 3/1/rw-p, 0/0/rw-p, 0/0/rw-p, 0/0/rw-p, 0/0/rw-p, 8/0/rw-p
+phase                      cur peak anon peak pss peak | end: cur  anon   pss   rss  thr   GC at end (committed/heap/frag MB, gen0/1/2/loh, gcs, pause ms)
+cable:1000                      288       207      293  |     272   198   286   293   35   170/85/0  0/19/55/9  47/16/8  316
+idle:5                          271       198      286  |     270   198   286   294   35   169/108/35  10/33/54/9  50/17/9  331
+whole run: peak current 288 MB, anon 207 MB, Pss 293 MB (cgroup memory.peak 327 MB); cold start 220 ms

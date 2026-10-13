@@ -1,0 +1,244 @@
+{
+  "metadata": {
+    "verification_revision": "eed4105f4f5f38faa0159ce68852e2e0aec0fac1",
+    "started_at": "2026-10-10T16:59:12Z",
+    "seed_sha256": "fef46014007cc69a97517b90ae122e0e043734e3760eb0f292078fefecacb7f4",
+    "server_cpus": "0-3",
+    "client_cpus": "4-7",
+    "network": "host",
+    "rounds": 1,
+    "profiles": [
+      "overload",
+      "cable"
+    ],
+    "loadgen_sha256": "351a66af1ea13003b845c24a63c59d7e5d2d46ddf101aa5c0e0b78e0a0869b1e",
+    "options": {
+      "apps": "oncrack,oncrack-cached",
+      "rounds": 1,
+      "port": 25130,
+      "cpus": "0-3",
+      "client_cpus": "4-7",
+      "profiles": "overload,cable",
+      "overload_concurrencies": "64,256",
+      "overload_duration": 8,
+      "overload_routes": "room_show,messages_page,sidebar,search",
+      "cable_clients": 1000,
+      "cable_tput_secs": 15,
+      "cable_posters": 4,
+      "cable_heavy_posters": 64
+    },
+    "images": {
+      "oncrack": "sha256:264415b710199770aea426eb7fa23b67d8b102110fa75c589e399dacba039c27",
+      "oncrack-cached": "sha256:264415b710199770aea426eb7fa23b67d8b102110fa75c589e399dacba039c27"
+    },
+    "source_revisions": {
+      "oncrack": {
+        "head": "f635d859eca307e334bd53feaa1b90899908398e",
+        "dirty": false
+      },
+      "oncrack-cached": {
+        "head": "f635d859eca307e334bd53feaa1b90899908398e",
+        "dirty": false
+      }
+    },
+    "complete": true
+  },
+  "results": {
+    "oncrack": {
+      "overload": [
+        {
+          "route": "room_show",
+          "conc": 64,
+          "median_valid_rps": 176479.2,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.185
+        },
+        {
+          "route": "room_show",
+          "conc": 256,
+          "median_valid_rps": 166573.6,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.715
+        },
+        {
+          "route": "messages_page",
+          "conc": 64,
+          "median_valid_rps": 200388.1,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.034
+        },
+        {
+          "route": "messages_page",
+          "conc": 256,
+          "median_valid_rps": 196141.7,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.515
+        },
+        {
+          "route": "sidebar",
+          "conc": 64,
+          "median_valid_rps": 217769.5,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 0.963
+        },
+        {
+          "route": "sidebar",
+          "conc": 256,
+          "median_valid_rps": 225752.2,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.291
+        },
+        {
+          "route": "search",
+          "conc": 64,
+          "median_valid_rps": 214507.4,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 0.888
+        },
+        {
+          "route": "search",
+          "conc": 256,
+          "median_valid_rps": 197866.1,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.891
+        }
+      ],
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          0
+        ],
+        "delivered_to_all": [
+          "8453/8453"
+        ],
+        "median_delivered_msgs_per_sec": 563.1,
+        "median_all_clients_p99_ms": 47.007
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          0
+        ],
+        "delivered_to_all": [
+          "13/13"
+        ],
+        "median_delivered_msgs_per_sec": 0.9,
+        "median_all_clients_p99_ms": 15007.743
+      }
+    },
+    "oncrack-cached": {
+      "overload": [
+        {
+          "route": "room_show",
+          "conc": 64,
+          "median_valid_rps": 178492.3,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.288
+        },
+        {
+          "route": "room_show",
+          "conc": 256,
+          "median_valid_rps": 143556.4,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 6.967
+        },
+        {
+          "route": "messages_page",
+          "conc": 64,
+          "median_valid_rps": 207412.3,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 0.964
+        },
+        {
+          "route": "messages_page",
+          "conc": 256,
+          "median_valid_rps": 173020.5,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 5.295
+        },
+        {
+          "route": "sidebar",
+          "conc": 64,
+          "median_valid_rps": 172300.4,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.935
+        },
+        {
+          "route": "sidebar",
+          "conc": 256,
+          "median_valid_rps": 243382.7,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.009
+        },
+        {
+          "route": "search",
+          "conc": 64,
+          "median_valid_rps": 192211.3,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 1.401
+        },
+        {
+          "route": "search",
+          "conc": 256,
+          "median_valid_rps": 205107.5,
+          "errors": 0,
+          "invalid_responses": 0,
+          "median_p99_ms": 4.427
+        }
+      ],
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          0
+        ],
+        "delivered_to_all": [
+          "7326/7326"
+        ],
+        "median_delivered_msgs_per_sec": 487.9,
+        "median_all_clients_p99_ms": 80.383
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000
+        ],
+        "disconnected": [
+          0
+        ],
+        "delivered_to_all": [
+          "13/13"
+        ],
+        "median_delivered_msgs_per_sec": 0.9,
+        "median_all_clients_p99_ms": 15007.743
+      }
+    }
+  }
+}

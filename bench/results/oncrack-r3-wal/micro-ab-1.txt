@@ -1,0 +1,40 @@
+WARN campfire_db: WAL restart took 155 ms
+WARN campfire_db: WAL restart took 311 ms
+  wal_defer=off c=16: WAL restarts so far 286, longest 1586 ms, deferred 12492
+  wal_defer=off c=16: 96 answers over 100 ms, slowest 1591 ms
+WARN campfire_db: WAL restart took 258 ms
+WARN campfire_db: WAL restart took 619 ms
+WARN campfire_db: WAL restart took 865 ms
+  base c=16: WAL restarts so far 303, longest 1586 ms, deferred 20275
+  base c=16: 48 answers over 100 ms, slowest 869 ms
+WARN campfire_db: WAL restart took 220 ms
+WARN campfire_db: WAL restart took 808 ms
+WARN campfire_db: WAL restart took 414 ms
+WARN campfire_db: WAL restart took 233 ms
+  wal_defer=off c=16: WAL restarts so far 338, longest 1586 ms, deferred 20275
+  wal_defer=off c=16: 64 answers over 100 ms, slowest 814 ms
+WARN campfire_db: WAL restart took 107 ms
+WARN campfire_db: WAL checkpoint couldn't finish (PASSIVE)
+WARN campfire_db: WAL restart took 665 ms
+  base c=16: WAL restarts so far 374, longest 1586 ms, deferred 23981
+  base c=16: 32 answers over 100 ms, slowest 671 ms
+WARN campfire_db: WAL restart took 381 ms
+WARN campfire_db: WAL restart took 159 ms
+WARN campfire_db: WAL restart took 341 ms
+WARN campfire_db: WAL restart took 289 ms
+  wal_defer=off c=16: WAL restarts so far 411, longest 1586 ms, deferred 23981
+  wal_defer=off c=16: 64 answers over 100 ms, slowest 387 ms
+c=16  base                                         9086 posts/s    411.4 us CPU/post    268.0 KB/post   [cpu 506 381 411 393]
+c=16  wal_defer=off                                9026 posts/s    411.3 us CPU/post      0.0 KB/post   [cpu 432 411 406 399]
+  base c=64: WAL restarts so far 518, longest 1586 ms, deferred 23994
+  base c=64: WAL restarts so far 541, longest 1586 ms, deferred 24012
+  wal_defer=off c=64: WAL restarts so far 558, longest 1586 ms, deferred 24012
+WARN campfire_db: WAL checkpoint couldn't finish (PASSIVE)
+  base c=64: WAL restarts so far 576, longest 1586 ms, deferred 24145
+  wal_defer=off c=64: WAL restarts so far 598, longest 1586 ms, deferred 24145
+  base c=64: WAL restarts so far 618, longest 1586 ms, deferred 24145
+  wal_defer=off c=64: WAL restarts so far 640, longest 1586 ms, deferred 24145
+  base c=64: WAL restarts so far 656, longest 1586 ms, deferred 24147
+  wal_defer=off c=64: WAL restarts so far 679, longest 1586 ms, deferred 24147
+c=64  base                                        13952 posts/s    387.9 us CPU/post    149.6 KB/post   [cpu 343 388 366 420]
+c=64  wal_defer=off                               15338 posts/s    354.2 us CPU/post    149.7 KB/post   [cpu 420 354 344 338]

@@ -1,0 +1,148 @@
+{
+  "metadata": {
+    "verification_revision": "a05b344d4c1f70f886c48130b56b41bc4d7296c5",
+    "response_validation": "route-contract-v1",
+    "started_at": "2026-10-09T18:58:48Z",
+    "seed_sha256": "bc5a851525b4abd5b51dd23ed9fb947761a27d9d4fff4be75c5dda018e8e7c2e",
+    "server_cpus": "0-3",
+    "client_cpus": "4-7",
+    "network": "host",
+    "gzip": true,
+    "duration": 8,
+    "concurrencies": "16",
+    "rounds": 3,
+    "loadgen_sha256": "351a66af1ea13003b845c24a63c59d7e5d2d46ddf101aa5c0e0b78e0a0869b1e",
+    "routes": "room_show,messages_page,sidebar,search",
+    "profile": "mixed-read-write-v1",
+    "mixed_writer": {
+      "clients": 1,
+      "maximum_writes_per_second": 10,
+      "room": 201306877,
+      "catch_up": false
+    },
+    "images": {
+      "oncrack": "sha256:bbe75e76cd580124c1bb2834e4aa5376e4b1be0012b225bc22baf6e624cf8f8c",
+      "oncrack-cached": "sha256:bbe75e76cd580124c1bb2834e4aa5376e4b1be0012b225bc22baf6e624cf8f8c"
+    },
+    "image_labels": {
+      "oncrack": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.revision": "4ac9b2b3bd7e60aeffa829e8225ebf10d5c80248",
+        "org.opencontainers.image.source": ""
+      },
+      "oncrack-cached": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.revision": "4ac9b2b3bd7e60aeffa829e8225ebf10d5c80248",
+        "org.opencontainers.image.source": ""
+      }
+    },
+    "source_revisions": {
+      "oncrack": {
+        "head": "4ac9b2b3bd7e60aeffa829e8225ebf10d5c80248",
+        "dirty": false
+      },
+      "oncrack-cached": {
+        "head": "4ac9b2b3bd7e60aeffa829e8225ebf10d5c80248",
+        "dirty": false
+      }
+    },
+    "preflight_only": false,
+    "topology": {
+      "oncrack": {
+        "processes": 1,
+        "runtime": ".NET (Kestrel)",
+        "cable": "native",
+        "jobs": "in-process",
+        "response_cache_mb": "64"
+      },
+      "oncrack-cached": {
+        "processes": 1,
+        "runtime": ".NET (Kestrel)",
+        "cable": "native",
+        "jobs": "in-process",
+        "response_cache_mb": "64"
+      }
+    },
+    "runtimes": {
+      "oncrack": "oncrack",
+      "oncrack-cached": "oncrack"
+    },
+    "search_order": {
+      "oncrack": "id",
+      "oncrack-cached": "id"
+    },
+    "complete": true
+  },
+  "mixed_results": {
+    "oncrack": {
+      "room_show": {
+        "median_rps": 131897.3,
+        "runs": [
+          140801.8,
+          131897.3,
+          124058.6
+        ]
+      },
+      "messages_page": {
+        "median_rps": 139592.8,
+        "runs": [
+          153661.0,
+          139592.8,
+          121351.7
+        ]
+      },
+      "sidebar": {
+        "median_rps": 150471.1,
+        "runs": [
+          159336.4,
+          150471.1,
+          142201.1
+        ]
+      },
+      "search": {
+        "median_rps": 147693.8,
+        "runs": [
+          155411.4,
+          147693.8,
+          133080.8
+        ]
+      }
+    },
+    "oncrack-cached": {
+      "room_show": {
+        "median_rps": 129784.0,
+        "runs": [
+          129784.0,
+          143816.8,
+          112642.3
+        ]
+      },
+      "messages_page": {
+        "median_rps": 137351.4,
+        "runs": [
+          137351.4,
+          139792.4,
+          118073.7
+        ]
+      },
+      "sidebar": {
+        "median_rps": 147402.7,
+        "runs": [
+          160423.9,
+          147402.7,
+          98712.9
+        ]
+      },
+      "search": {
+        "median_rps": 126750.5,
+        "runs": [
+          147747.8,
+          119150.5,
+          126750.5
+        ]
+      }
+    }
+  }
+}

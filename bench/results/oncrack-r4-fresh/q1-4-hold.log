@@ -1,0 +1,11 @@
+[08:49:18] load before run: 1.37 2.33 2.67 (waited 60s)
+[08:49:21] host busy: {"spin_ms": 61.41, "spin_ms_max_cpu": 63.5, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.105}
+[08:49:34] host probe before run: {"spin_ms": 59.5, "spin_ms_max_cpu": 61.13, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.071} (waited 70s)
+[08:50:05] oncrack rep 1: room_show c=1 18016.5 rps; server 30.0 us/req (user 16.8 sys 13.3 , 0.54 cores); loadgen 20.1 us/req ( 0.36 cores); {'200': 108101} err 0
+[08:50:32] oncrack rep 1: room_show c=16 88668.0 rps; server 40.1 us/req (user 24.0 sys 16.1 , 3.55 cores); loadgen 31.2 us/req ( 2.76 cores); {'200': 532242} err 0
+[08:50:58] oncrack rep 1: messages_page c=1 5858.0 rps; server 84.6 us/req (user 47.9 sys 36.7 , 0.49 cores); loadgen 56.5 us/req ( 0.33 cores); {'200': 35149} err 0
+[08:51:24] oncrack rep 1: messages_page c=16 79170.7 rps; server 41.2 us/req (user 24.2 sys 17.0 , 3.26 cores); loadgen 33.3 us/req ( 2.63 cores); {'200': 475099} err 0
+### CPU per request (cgroup cpu.stat of the container, unprofiled; median [min–max] over reps)
+
+| Route | c | Rust CPU µs/req | onCrack CPU µs/req | onCrack / Rust | Rust user+sys | onCrack user+sys | Rust req/s | onCrack req/s | Cores busy: Rust / onCrack server, load generator |
+|---|---|---|---|---|---|---|---|---|---|

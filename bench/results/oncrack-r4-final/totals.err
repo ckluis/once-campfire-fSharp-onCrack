@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r4-final/totals.py", line 50, in <module>
+    ok, au, bad, n, peak, r = session(d)
+  File "/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r4-final/totals.py", line 38, in session
+    med[a, r] = statistics.median(v)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/statistics.py", line 430, in median
+    raise StatisticsError("no median for empty data")
+statistics.StatisticsError: no median for empty data

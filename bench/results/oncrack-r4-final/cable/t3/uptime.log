@@ -1,0 +1,20 @@
+18:26:47 rust rep 1 start:  18:26:47 up 42 min,  1 user,  load average: 1.15, 3.76, 4.06
+18:28:43 rust rep 1 end:    18:28:43 up 44 min,  1 user,  load average: 4.43, 4.08, 4.13
+18:29:54 fsharp rep 1 start:  18:29:54 up 45 min,  1 user,  load average: 1.43, 3.24, 3.83
+18:32:03 fsharp rep 1 end:    18:32:03 up 47 min,  1 user,  load average: 3.17, 3.17, 3.72
+18:32:53 oncrack rep 1 start:  18:32:53 up 48 min,  1 user,  load average: 1.37, 2.68, 3.52
+18:36:02 oncrack rep 1 end:    18:36:02 up 51 min,  1 user,  load average: 4.41, 3.07, 3.49
+18:37:12 oncrack rep 2 start:  18:37:12 up 52 min,  1 user,  load average: 1.37, 2.43, 3.23
+18:39:22 oncrack rep 2 end:    18:39:22 up 54 min,  1 user,  load average: 4.36, 3.04, 3.33
+18:40:32 fsharp rep 2 start:  18:40:32 up 55 min,  1 user,  load average: 1.35, 2.40, 3.09
+18:42:28 fsharp rep 2 end:    18:42:28 up 57 min,  1 user,  load average: 3.97, 2.92, 3.19
+18:43:29 rust rep 2 start:  18:43:29 up 58 min,  1 user,  load average: 1.45, 2.39, 2.99
+18:45:24 rust rep 2 end:    18:45:24 up  1:00,  1 user,  load average: 4.86, 3.31, 3.25
+18:46:44 rust rep 3 start:  18:46:44 up  1:02,  1 user,  load average: 1.28, 2.53, 2.97
+18:49:22 rust rep 3 end:    18:49:22 up  1:04,  1 user,  load average: 4.80, 3.11, 3.09
+18:50:32 fsharp rep 3 start:  18:50:32 up  1:05,  1 user,  load average: 1.49, 2.46, 2.86
+18:53:45 fsharp rep 3 end:    18:53:45 up  1:09,  1 user,  load average: 1.35, 2.24, 2.71
+19:04:34 fsharp rep 3 start:  19:04:34 up  1:19,  1 user,  load average: 0.02, 0.26, 1.33
+19:06:31 fsharp rep 3 end:    19:06:31 up  1:21,  1 user,  load average: 3.93, 1.51, 1.65
+19:07:31 oncrack rep 3 start:  19:07:31 up  1:22,  1 user,  load average: 1.44, 1.23, 1.55
+19:09:40 oncrack rep 3 end:    19:09:40 up  1:25,  1 user,  load average: 4.46, 2.41, 1.93

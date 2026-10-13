@@ -1,1 +1,309 @@
-# once-campfire-fSharp-onCrack
+# onCrack: Campfire in F#, unchained
+
+[ONCE Campfire](https://github.com/basecamp/once-campfire) in F# (ASP.NET Core and Falco), forked from the
+[F# port](https://github.com/ckluis/once-campfire-fSharp) with one constraint dropped. The port does the same work per
+request as the Rust port. onCrack may do any work it likes, as long as two rules hold:
+
+- **The UI stays pixel-identical to Rails.** 944 of 944 parity screenshots are equal, on every seed, on the final code.
+- **It stays correct.** No stale or cross-user data, every write committed before it is answered, durability as Rails
+  has it (`journal_mode=wal`, `synchronous=normal`). Anything weaker is an opt-in setting, off by default.
+
+The story, with every measured version on one chart and every number linked to the file it came from, is the
+[project page](https://ckluis.github.io/once-campfire-fSharp-onCrack/) (`index.html`, built by `site/build.py`).
+The brief and rules are [`plans/oncrack.md`](plans/oncrack.md); the closing report is
+[`bench/results/oncrack-r5-final.md`](bench/results/oncrack-r5-final.md).
+
+## Claim one: faster
+
+Measured with Basecamp's own harness ([once-campfire-verification](https://github.com/basecamp/once-campfire-verification)),
+16 clients, against current upstream Rust `f9dca47` and C `cd0cbe4`, in one Linux VM (colima) on an Apple M4, four
+CPUs for the server and four for the load generator. Default settings, which re-check the session and room membership on
+every cache hit, as upstream's contract asks.
+
+| | over Rust | over C | over the F# port | over Rails |
+|---|---:|---:|---:|---:|
+| Normal profile (five workloads), per session | 2.11-4.74x | 1.41-3.81x | | |
+| Normal profile, three sessions pooled | 3.76x | 2.40x | 5.25x | 35.7x |
+| Mixed profile (reads while a writer posts), pooled | 3.76x | 2.26x | 6.78x | 56.4x |
+| CPU per room page (Rust and C spend this much more) | 3.79x | 2.93x | | |
+
+**Quote the range, not one number.** Four of the six sessions ran beside other projects' work on the same Mac and
+broke the plan's noise rule; each session's own result is in the first row. onCrack is ahead of Rust and C at the median
+in every workload of every session. 224 million timed responses were checked against the harness's content contract,
+with 0 errors. Source: [`bench/results/oncrack-r5-final/RESULTS.md`](bench/results/oncrack-r5-final/RESULTS.md).
+
+Action Cable fan-out (one message to every client, this project's cable suite, the one quiet session of three):
+1.65x, 1.24x, 1.17x and 1.01x Rust at 100, 500, 1,000 and 2,000 clients. At 2,000 they are level: both servers
+spend most of their time in the kernel's `sendmsg`.
+
+## Claim two: more runnable in production
+
+[PR #6](https://github.com/basecamp/once-campfire-verification/pull/6)'s reliability profiles, 3 rounds each:
+
+| `cable_heavy`: 1,000 clients, 64 posters with no limit | Clients cut | Messages that reached every client |
+|---|---:|---|
+| **onCrack** | **0 / 0 / 0** | all of them, 710-741 a second |
+| Rust `f9dca47` | 902-959 | 64-65 of 68,000-78,000 |
+| C `cd0cbe4` | 809-848 | 15-67 of 51,000-66,000 |
+| Rails | 0 / 0 / 0 | all of them, 17-24 a second |
+
+This is a different policy, not a free win. onCrack keeps every reader and slows the posters down instead: in this
+profile the slowest client gets a message 8-10 s after it is posted, and the Cable backlog takes about 1 GB of memory
+(capped by `CAMPFIRE_CABLE_HUB_BYTES`, 1 GiB) against Rust's 125 MB. Source:
+[`bench/results/oncrack-r5-final/reliability/RESULTS.md`](bench/results/oncrack-r5-final/reliability/RESULTS.md).
+
+## What onCrack does that the port does not
+
+- **Keeps finished pages.** A versioned read cache keeps rendered and gzipped pages until a commit changes what they
+  show. Who may see a kept page is decided again on every request (`CAMPFIRE_FRESH_AUTH`, on by default).
+  Out-of-process writes to the database are seen through SQLite's WAL index.
+- **Commits concurrent writes together.** Group commit: one transaction for every write already queued, each still
+  committed before its caller hears back.
+- **Serves cache hits from the front server** without a trip through the app, and sends gzipped answers with a
+  `Content-Length`.
+- **Cable** writes a batch of frames in one gathered `sendmsg`. A shared, byte-bounded log keeps every subscriber that
+  is reading, cuts only the ones that stall, and holds posters while most of a room is far behind.
+- **Native AOT** as an opt-in image (`--build-arg NATIVE_AOT=true`): about 95 ms cold start.
+
+Each change was adversarially verified in its round; the units and their reports are in `bench/results/oncrack-*.md`.
+
+## What it costs
+
+- **Memory.** About 2.4-2.9x Rust's in the cable suite.
+- **Latency at low load.** Rust answers paced Cable traffic faster at 100 clients (3.3 against 5.2 ms at the median).
+- **Code.** 41.9 thousand lines by upstream's counting rules, against Rust's 31.0 and the port's 38.2.
+
+Still open: no harness repeat on a quiet host yet, a possible 12-14% more CPU per post than round three's build, and
+two Linux Cable timing tests that pass two runs in three.
+
+## Settings
+
+The defaults are the measured configuration. The ones a deployment is most likely to touch:
+
+| Setting | Default | What it does |
+|---|---|---|
+| `CAMPFIRE_FRESH_AUTH` | on | Re-check session and membership on every cache hit. `0` reuses the cached decision (faster; not upstream's contract). |
+| `CAMPFIRE_RESPONSE_CACHE_MB` | | One budget for both response caches; `0` turns them off. |
+| `CAMPFIRE_GROUP_COMMIT` | on | `off` commits one write per transaction. |
+| `CAMPFIRE_CABLE_HUB_BYTES` | 1 GiB | The most all Cable logs hold together; over it, the subscribers furthest behind are cut. |
+| `CAMPFIRE_CABLE_LAG_BYTES` | 256 MB | The most one broadcasting's log holds behind its oldest subscriber. |
+
+Every other `CAMPFIRE_*` switch is documented where it is read (`src/**/Config.fs`) and in [`AGENTS.md`](AGENTS.md).
+
+## Running it
+
+With [ONCE](https://github.com/basecamp/once), or Docker directly, as with the Rust port (the image is a drop-in for
+the reference's: uid 1000, `/rails`, `/rails/storage/{db,files,backups}`, ports 80 and 443, the ONCE hooks):
+
+```sh
+docker build -t campfire-oncrack:app --build-arg APP_VERSION=... --build-arg GIT_REVISION=... .
+docker run -d -p 80:80 -p 443:443 \
+  -e SECRET_KEY_BASE=... -e VAPID_PUBLIC_KEY=... -e VAPID_PRIVATE_KEY=... \
+  -e TLS_DOMAIN=chat.example.com \
+  -v campfire:/rails/storage \
+  campfire-oncrack:app
+```
+
+`TLS_DOMAIN` enables automatic Let's Encrypt certificates; `DISABLE_SSL` enables plain HTTP. The settings are in
+[`Config.fs`](src/Campfire.App/Config.fs) (the app's) and [`Front/Config.fs`](src/Campfire.Kit/Front/Config.fs) (Thruster's).
+For local development, `dotnet run --project src/Campfire.App -- server` with `SECRET_KEY_BASE` (or
+`SECRET_KEY_BASE_DUMMY=1`) set and libvips installed (`HTTP_PORT=3000` avoids port 80).
+
+## Development
+
+```sh
+git submodule update --init
+bin/verify          # Release build with warnings as errors, then every test
+```
+
+See [`AGENTS.md`](AGENTS.md) for the layout and working rules.
+
+## Known differences
+
+The differences the Rust port lists from Rails apply here too (see its README). Differences
+specific to this port are listed below, each citing the reference file it departs from.
+
+- **Application** (`Campfire.App`; `rust/crates/campfire` is the port it follows):
+  - `VAPID_SUBJECT` without a `TLS_DOMAIN` defaults to this project's URL (`https://github.com/ckluis/once-campfire-fsharp`);
+    Rust's names its own. Tested by `ConfigTests` ("vapid subject defaults to the tls domain").
+  - A response header whose first line is empty reaches the wire as a line of its own (the first line of a
+    `Content-Disposition` that begins with a line break, which Puma writes), where Kestrel's `Append` would drop a
+    lone empty value; the kit hands such a name's values over as one list. Tested by `AdapterTests` ("a header whose
+    first line is empty is written as a line of its own") and `AppTests` ("proxied blobs write odd dispositions as
+    puma does").
+  - Route recognition looks a path's routes up by its first segment and tries their regexes in table order (Rust asks a
+    `RegexSet` for the first of a verb's patterns that match). The answer is the same for every path of the
+    generated corpus. Tested by `RouteTableTests` ("recognizes like a first match scan").
+  - The `jemalloc` options of `main.rs` have no counterpart: .NET's GC is configured in the project file (server GC,
+    tiered PGO); only the transparent-huge-page opt-out (`prctl`) is kept, on Linux.
+  - `GET /rooms/:room_id/refresh?since=` clamps a `since` too large for the clock to the end of the .NET `DateTime` range
+    (Rust: the end of jiff's), which only matters to what `created_at >` is compared with: no row is newer than either end,
+    and every row is newer than the low one. Reference: `app/controllers/rooms/refreshes_controller.rb`.
+  - Logs are `Microsoft.Extensions.Logging`'s console lines (`RAILS_LOG_LEVEL` or `CAMPFIRE_LOG` set the level), not
+    `tracing`'s; the request lines come from the front server as Thruster's did.
+  - The outbound HTTP clients (opengraph, Web Push, bot webhooks; `Integrations/Http.fs`) write the HTTP/1.1 exchange
+    themselves over a stream, as Rust does over hyper's client connection, and verify TLS peers with .NET's `SslStream`
+    (the operating system's CA store, no revocation checks) where Rust uses rustls with the system's certificates. The
+    request line and headers go out as `Net::HTTP` writes them, in its order and spelling, which `WebhookTests`
+    ("delivers like the reference") and `WebPushTests` ("delivers to the pinned address with the gems headers") compare.
+    A gzip reply is inflated through .NET's `GZipStream` and `ZLibStream` read in 64 KB steps, so a bomb is stopped
+    within 64 KB of the limit (Rust: within the decoder's 32 KB buffer); tested by `HttpTests`.
+  - Web Push's VAPID signature is ECDSA with a random nonce (`ECDsa`), where Rust's p256 signs deterministically
+    (RFC 6979); both verify under the public key, which `WebPushTests` ("signs the vapid header like the gem") checks.
+  - An unfurl, a webhook delivery and a push that run past their deadline have their connection closed under the read
+    in progress (Rust drops the future); the answer is the same ("Failed to respond within N seconds", no content, a
+    read timeout). Tested by `OpengraphTests` ("gives up on a trickling page"), `WebhookTests` ("gives up on a trickling reply").
+  - The opengraph `<meta>` scanner steps through UTF-16 units where Rust's steps through bytes; everything it matches is
+    ASCII, so it splits the same places. `FILES_AND_MEDIA_URL_REGEX` is .NET's regex engine (non-backtracking) where
+    Rust uses the `regex` crate: `\b` and `\S` can differ from Rust's on characters that are only marks or letter numbers.
+
+- **Web app manifest** (`Campfire.Views/Templates/Pwa/Manifest.fs`; reference `app/views/pwa/manifest.json.erb`):
+  the account name and the logo URLs are JSON strings, where Rails HTML-escaped them inside the JSON (a small logo's
+  `src` reads `/account/logo?size=small&amp;v=...` there, `&v=` here and in the Rust port, which lists the same
+  difference). With an account logo the manifest differs from Rails in that one byte run, so parity's
+  `pwa/manifest/custom_styles` cell reports it for this port and for Rust alike: both `allowlist.yml` files list only
+  `pwa/manifest`, which doesn't match the sub-state, and ours is kept no larger than Rust's. Tested by `ParityATests`
+  ("pwa manifest is valid json whatever the account is called").
+
+- **Response headers set before the response exists** (`Ctx.SetHeader`, e.g. `X-Version` in a before-action)
+  keep every line of a multi-line value. The Rust port keeps only the first line; Puma writes them all
+  (puma 7.2.1, `Puma::Request#str_headers`, the reference's server). Tested by `AdapterTests`
+  ("header values go out as UTF-8 and without control characters").
+
+- **Front server** (`Campfire.Kit`, Thruster's job; Thruster 0.1.23 is the reference, `rust/crates/kit/src/front`
+  the port it follows):
+  - Idle HTTP/1 connections close at `HTTP_IDLE_TIMEOUT`, as Go's `http.Server` (Thruster) closed them. The
+    Rust port closes them at the shorter of that and `HTTP_READ_TIMEOUT`, because hyper's header timer also
+    runs while a connection waits; Kestrel's keep-alive timer doesn't. Tested by `FrontTests`
+    ("closes idle and slow connections").
+  - Kestrel always sends `Date`, so the app's own listener on `TARGET_PORT` sends one, where Puma (and the
+    Rust port) send none.
+  - Request head limits are hyper's, not Puma's: up to 417,792 bytes of headers (431 past that) and a 65,534-byte
+    URI (414 past that; Kestrel limits the whole request line, so the edge moves by the method's length). Kestrel's
+    own 8 KB line and 32 KB headers refused cookies and URLs Rails serves. Puma stops at
+    112 KB of headers and answers 400 above 12 KB of URI (10 KB of query), where this port and the Rust port serve
+    them. Tested by `AdapterTests` ("a request head as large as puma and hyper accept is served").
+  - Three request-line rules are fixed in Kestrel's parser and can't be configured, so they differ from Puma's and
+    hyper's: a `%00` in the path is 400 (Rails and Rust redirect or route it as any path); an absolute-form target
+    whose authority differs from `Host` is 400 (both serve it); an HTTP/1.0 request is answered with an
+    `HTTP/1.1` status line (both answer `HTTP/1.0`). Tested by `AdapterTests` ("kestrel's request line rules differ
+    from puma's and hyper's in three recorded ways").
+  - Cleartext HTTP/2 (`H2C_ENABLED`) on a port that also serves HTTP/1.1 reads each connection's first
+    bytes for HTTP/2's preface and tells Kestrel which protocol to speak through an internal Kestrel
+    feature (`Campfire.Kit/Front/Conn.fs`, `FrontH2c`); if a Kestrel release changes it, the port serves
+    HTTP/1.1 only and logs a warning. Tested by `FrontTests` ("speaks h2c only when enabled").
+  - Compressed responses carry the same decoded bytes as Rust's, not the same compressed bytes (.NET's
+    deflate and ZstdSharp are not flate2 and libzstd); the Rust test that pins the SHA-256 of a spliced gzip
+    member checks the ETag and the decoded body instead.
+  - `HTTP_IDLE_TIMEOUT`, `HTTP_READ_TIMEOUT` and `HTTP_WRITE_TIMEOUT` above 49 days are clamped to 49 days,
+    the longest .NET's timers can wait. Thruster and the Rust port accept any number of seconds; a value
+    that large means "never" in all three. Tested by `FrontConfigTests`.
+  - Certificates are ordered by a small RFC 8555 client of our own (`Front/Acme.fs`) in place of
+    instant-acme, in autocert's cache layout as Rust writes it. It sends `User-Agent`, which RFC 8555
+    requires (Pebble refuses requests without it), and renews at most once an hour for CAs whose
+    certificates live less than 30 days.
+
+- **Request and response handling** (`Campfire.Kit`; `rust/crates/kit/src/{adapter,ctx,params,request}.rs` is
+  the port it follows, the reference is Rails 8.1 on Puma 7.2.1):
+  - A request for a method a route doesn't have is Rails' 404 page (`ActionController::RoutingError`, as in
+    `reference/config/routes.rb`: no route, no `Allow`). Rust's axum router also answers with the 404
+    (`method_not_allowed_fallback`) but still adds an `Allow` header; ASP.NET's doesn't. Tested by
+    `AdapterTests` ("a HEAD answered 304 has no content length, and an unknown method is a 404 without Allow").
+  - Kestrel doesn't write `Content-Length: 0` for a HEAD that answers 204 or 304, where Rust's hyper does.
+    Puma writes a `Content-Length` only when the response has one (`Puma::Request#prepare_response`, which
+    skips it for 204), and Rails sets none on a 304. Tested by the same test.
+  - `Ctx.Json(status, Value)` writes floats as the json gem does (`1e+15`, `0.00000015`: `Json.generate`),
+    which is what `render json:` gives in Rails (json 2.21.2 in the reference). Rust's `Ctx::json` goes through
+    serde_json (`1000000000000000.0`, `1.5e-7`). Tested by `RailsCompat.Tests` ("floats match the json gem").
+  - `Adapter.route` and `routeAny` match through ASP.NET endpoint routing, which compares literal segments
+    without regard to case (`/PAGE` is `/page`) and ignores a trailing slash. Rails is case-sensitive
+    (`/Rooms/1` is a 404; `reference/config/routes.rb`, Journey) and, like ASP.NET, ignores the slash; axum,
+    which Rust uses, is strict about both. Pinned by `AdapterTests` (same test as above). The app must
+    not depend on the difference: an unknown-case path is a 200 here and a 404 in the references.
+  - The files a multipart body spooled are deleted when the request ends (`Adapter.cleanUp`), as Rails'
+    `Rack::TempfileReaper` does. In Rust a `TempPath` goes when the `UploadedFile` drops, so an app that
+    kept the file past the request could still read it there. Tested by `AdapterTests` ("a multipart body
+    over the limit is 413 and leaves no temp files").
+  - A request header with a byte outside visible ASCII (0x20-0x7e, and tab) is treated as absent, as Rust's
+    `HeaderValue::to_str` does; Rails/Rack would hand the app its bytes. Tested by `AdapterTests` ("a header
+    with anything but visible ascii in it is no header").
+
+- **Cable** (`Campfire.Cable`; `rust/crates/cable` is the port it follows, Action Cable 8.1 on Puma, with
+  websocket-driver, is the reference): the `101 Switching Protocols` is written by Kestrel, so `Connection` is
+  `Upgrade` (as websocket-driver writes it; Rust writes `upgrade`), and it carries `Date` and, unless the
+  host turns it off, `Server`, which neither websocket-driver nor Rust sends. Tested by `ProtocolTests` ("the
+  101 answers as websocket-driver does, plus the host's Date").
+
+- **Views** (`Campfire.Views`; `rust/crates/views` is the port it follows). None of these changes a byte of
+  output, which `bin/views-differential` compares with the Rust crate's on thousands of cases:
+  - The view fragment cache counts what the page-splicing layer keeps for each fragment (its SHA-256 and compressed
+    pieces) in the fragment's entry, and drops them with it. Rust keeps them in a bounded map in the kit, keyed by
+    the address of the fragment's `Arc`, which a .NET object can't be found by (and `Campfire.Views` may not
+    reference `Campfire.Kit`). A fragment's entry therefore costs its bytes plus its pieces' as of the last time it
+    was used, and a page's fragments that keep being shown stay while the rest age out. Tested by
+    `FragmentCacheTests` ("fragments a page keeps showing stay while the rest age out, pieces and SHA included").
+  - A template digest in a fragment's key is a hash of the names of the template modules it renders, not of their
+    source text (`ActionView::Digestor`, `include_str!` in Rust): the templates are compiled in and the cache doesn't
+    outlive the process, so the digest only has to be stable within it.
+  - `capitalize`, `User#initials`' word boundary and the case of a name's first letters use tables generated from
+    Rust's standard library (`bin/views-differential --unicode`), not .NET's own casing, which leaves out special
+    casing (`ß` is `SS`), the Turkish dotless i and characters Unicode added since. Rust's `capitalize` is what
+    the references' `String#capitalize` is closest to; a name whose first letter has special casing prints as Rust
+    prints it. Tested by `HelpersTests` ("capitalizes like rust") and the differential's every-code-point cases.
+  - `String#downcase` of a user's name (the room forms' `data-value`) is Rust's `str::to_lowercase`, final-sigma rule included
+    (`ΑΣ` is `ας`, `ΑΣΑ` is `ασα`), from `Case_Ignorable` and `Cased` ranges generated from Rust's standard library with the
+    other Unicode tables. .NET's `ToLowerInvariant` writes `σ` for every sigma and leaves out special casing. Tested by
+    `HelpersTests` ("to_lowercase ...") and the differential's sigma cases and every code point.
+  - Timestamps in cache keys and `to_fs(:epoch)` are `DateTimeOffset`s, which hold 100 ns where jiff holds 1 ns.
+    A key shows microseconds, so no key differs; a record dated before 1970 or outside the years 1 to 9999 is not
+    representable (no record is).
+- **onCrack** (`bench/results/oncrack-r2-post.md`, unit R2.2):
+  - A post into a room that isn't a direct one marks unread only the memberships that aren't unread yet
+    (`reference/app/models/room.rb`, `unread_memberships`, rewrites every disconnected member's `unread_at` and
+    `updated_at` with each post). So after two posts a member who read neither has `unread_at` at the first post's
+    time where Rails stores the second's. Rails reads the column only for being set (`Membership#unread?`, the `unread`
+    scope), so a rollback to Rails shows the same state; direct rooms keep Rails' rewrite, because the sidebar's
+    `cache membership` fragment is keyed by the row. `CAMPFIRE_POST_UNREAD_SKIP=off` writes as Rails does. Current
+    upstream Rails (basecamp/once-campfire#336) keeps the first unread post's time too. Tested by `PostPathTests` ("a post
+    marks unread who wasn't, keeps who was, ...", "a post into a direct room still rewrites ...") and by `bin/db-differential`
+    (two posts into hq while its members are unread: byte-equal with the switch off, and with it on, only `unread_at` naming an
+    earlier post).
+  - A post's search-index row and unread marks (`after_create_commit`) commit in the post's own transaction, after it
+    (`CAMPFIRE_POST_ON_COMMIT=off` commits them after, as Rails does). A failing statement of them still reaches the
+    caller after the post committed. Tested by `GroupCommitTests` ("on-commit work commits with its write ...").
+- **onCrack** (`bench/results/oncrack-r2-front.md`, unit R2.3):
+  - A page the front server replays (`FastStore`) carries an `X-Runtime` measured from when the front server took the request
+    (Rails' `Rack::Runtime` times its own stack), and its session's activity refresh (`reference/app/controllers/concerns/authentication.rb`,
+    `resume_session`, at most hourly) happens on the first request after it falls due, which a replay never answers: replays stop a
+    second before it is due. The body, status and every other header are the app's answer to the same request bytes. Tested by
+    `FastPathTests`. `CAMPFIRE_FAST_PATH=off` answers every request through the app.
+- **onCrack** (`bench/results/oncrack-r3-fresh-auth.md`, unit R3.2):
+  - Authorization on a cache hit is fresh by default, as in Rails and upstream's contract: every request reads its session and
+    user rows, a cached room or messages page is served after a membership query finds the row, and a front-server replay first
+    runs one narrow query for the session, its user and the membership (`FreshAuth` in `src/Campfire.Db/Session.fs`).
+    `CAMPFIRE_FRESH_AUTH=0` is onCrack's opt-in: a hit reuses the decision its miss made, kept under the version counters and
+    dropped on any commit by any connection. The answers are the same under every attack the tests make (`FreshAuthTests`,
+    `ForeignWriteTests`, both run in both modes); the work per hit is not, and that mode is not comparable with upstream's numbers.
+- **onCrack** (`bench/results/oncrack-r2-verifier.md`, the round 2 verifier's findings):
+  - The messages page (`messages#index`) has no `fresh_when`: its ETag is `Rack::ETag`'s digest of the page, and it has no
+    `Last-Modified` (`reference/app/controllers/messages_controller.rb` has `fresh_when @messages`, an ETag of the records' cache
+    keys and a `Last-Modified` of their latest `updated_at`). Those validators don't move when another connection edits a body,
+    a creator or a boost without touching the message, so a client kept its stale page as a 304, in Rails 90b3300 and Rust ccece30
+    as well. A 304 still answers an unchanged page. Upstream Rails, Rust, Go and Elixir have since made the same change. Tested by
+    `MessagesTests` ("index pages with conditional gets") and `ForeignWriteTests`.
+  - Fragments are kept per database epoch, which moves with every commit another connection makes (a Rails console, a second
+    container, the sqlite3 shell; `Versions.Sync` in `src/Campfire.Db/Versions.fs`). Fragment keys are the records' timestamps,
+    as Rails' are, so in Rails 90b3300 an edit that leaves them alone keeps its old fragment until the cache drops it; here
+    the next request renders it again. Tested by `ForeignWriteTests` ("timestamp free foreign edits invalidate nested fragments
+    and validators").
+  - `Accept-Encoding` reads `Q=` as a quality, as `q=` (RFC 9110: parameter names are case-insensitive), in the front server
+    and in `Rack::Deflater`'s place. Thruster, Rack 3 and Rust ccece30 read `gzip;Q=0` as q=1 and gzip the answer. Tested by
+    `VerifierRound2Tests` and `DeflaterTests` ("q values read like rack").
+  - `CAMPFIRE_RESPONSE_CACHE_MB`, upstream's one response cache budget, sets both of onCrack's when they are not given (0 turns
+    both off; N gives a fifth to the read cache and the rest to the fast path), and `CAMPFIRE_READ_CACHE_MB=0` or
+    `CAMPFIRE_FAST_PATH_MB=0` turns that cache off (both fell back to their defaults before). Tested by `VerifierRound2Tests`.
+
+## License
+
+MIT ([`MIT-LICENSE`](MIT-LICENSE)). onCrack and the F# port are © 2026 Chris Kluis; Campfire, the Rust port, its parity
+harness and vectors are © 37signals, LLC.

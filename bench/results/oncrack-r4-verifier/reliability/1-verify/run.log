@@ -1,0 +1,36 @@
+1791661901 oncrack round 1: cable 1000/1000 subscribed, 0 disconnected, 5053/5053 delivered to all, 336.7 msgs/s
+1791661932 oncrack round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 7392/7392 delivered to all, 384.1 msgs/s
+1791661932 {
+1791661932   "oncrack": {
+1791661932     "cable": {
+1791661932       "clients": 1000,
+1791661932       "posters": 4,
+1791661932       "subscribed": [
+1791661932         1000
+1791661932       ],
+1791661932       "disconnected": [
+1791661932         0
+1791661932       ],
+1791661932       "delivered_to_all": [
+1791661932         "5053/5053"
+1791661932       ],
+1791661932       "median_delivered_msgs_per_sec": 336.7,
+1791661932       "median_all_clients_p99_ms": 111.231
+1791661932     },
+1791661932     "cable_heavy": {
+1791661932       "clients": 1000,
+1791661932       "posters": 64,
+1791661932       "subscribed": [
+1791661932         1000
+1791661932       ],
+1791661932       "disconnected": [
+1791661932         0
+1791661932       ],
+1791661932       "delivered_to_all": [
+1791661932         "7392/7392"
+1791661932       ],
+1791661932       "median_delivered_msgs_per_sec": 384.1,
+1791661932       "median_all_clients_p99_ms": 12369.919
+1791661932     }
+1791661932   }
+1791661932 }

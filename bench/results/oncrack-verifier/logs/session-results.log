@@ -1,0 +1,204 @@
+# Every attack-test result line and every kill-test result the onCrack verifier saw, in the order it saw them (ANSI colours removed,
+# lines cut at 400 characters). Extracted from the verifier's tool output in the round 1 session; earlier runs include the verifier's
+# own test fixes (A3, A4, A5 and A9 failed first on bugs in the scratch tests, not in onCrack, and were corrected before the counted runs).
+
+A1: 93 stale of 1500 checks; cache hits 24788, misses 6612, stored 5994
+A1   after rename to 'David 5': meta 'David 4', template 'David 4'
+A1     next request: meta 'David 4'
+A1   after rename to 'David 67': meta 'David 66', template 'David 66'
+A1     next request: meta 'David 67'
+A1   after rename to 'David 72': meta 'David 71', template 'David 71'
+A1     next request: meta 'David 72'
+   Attack.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 12.641s
+----
+A1b: 0 stale sidebars of 1500
+   Attack.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 16.499s
+A1   after rename to 'David 9': meta 'David 8', template 'David 8'
+A1     next request: meta 'David 8'
+A1   after rename to 'David 18': meta 'David 17', template 'David 17'
+A1     next request: meta 'David 17'
+A1   after rename to 'David 36': meta 'David 35', template 'David 35'
+A1     next request: meta 'David 35'
+A1b   after 'Davo 55x' the sidebar says 'Davo 54x'
+A1b   after 'Davo 105x' the sidebar says 'Davo 103x'
+A1b   after 'Davo 136x' the sidebar says 'Davo 135x'
+A1b   after 'Davo 137x' the sidebar says 'Davo 136x'
+A1b   after 'Davo 208x' the sidebar says 'Davo 206x'
+   Attack.Tests  Total: 2, Errors: 0, Failed: 2, Skipped: 0, Not Run: 0, Time: 17.170s
+----
+A1: 75 stale of 1500 checks; cache hits 23901, misses 6651, stored 6081
+A1b: 50 stale sidebars of 1500
+   Attack.Tests  Total: 2, Errors: 0, Failed: 2, Skipped: 0, Not Run: 0, Time: 15.730s
+A1: 0 stale of 1500 checks; cache hits 0, misses 0, stored 0
+A1b: 0 stale sidebars of 1500
+   Attack.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 17.642s
+----
+A6 /rooms/486777696: etag W/"81f132130430659cf6ea6da6a9f21ef4", David conditional 304, Jason with David's etag 200
+A6 /rooms/486777696/messages: etag W/"a6b75e9a08b3ba92078a0bdbc31f151e", David conditional 304, Jason with David's etag 304
+A6 /rooms/486777696/messages?before=933434550: etag W/"5338cbfeadd1e20b0a5395d58173bbbe", David conditional 304, Jason with David's etag 304
+A6 /users/me/sidebar: etag W/"87e3b52f5a7defbeaacd094f797976d3", David conditional 304, Jason with David's etag 200
+A6 /searches?q=the: etag W/"125bffd74e57d4b59425d12d9840d56b", David conditional 304, Jason with David's etag 200
+A6 /searches: etag W/"15186efb7a5d2d267d433288b712a075", David conditional 304, Jason with David's etag 200
+A6 /rooms/486777696: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A6 /users/me/sidebar: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A6 /searches?q=the: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A6 /rooms/486777696/messages: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A6   /rooms/486777696/messages: Jason got 304 for David's ETag
+A6   /rooms/486777696/messages?before=933434550: Jason got 304 for David's ETag
+A3: 300 bad of 600 checks; hits 9375 misses 9626 stored 3787
+A3   round 1 removed: search finds the room's message
+A3   round 2 removed: search finds the room's message
+A3   round 3 removed: search finds the room's message
+A3   round 4 removed: search finds the room's message
+A3   round 5 removed: search finds the room's message
+   Attack.Tests  Total: 3, Errors: 0, Failed: 3, Skipped: 0, Not Run: 0, Time: 12.913s
+----
+A2: room version cells 0 -> 8 after 40000 requests for rooms that don't exist; managed heap 1647 KB -> 16510 KB (380 bytes per request kept)
+A3: 0 bad of 600 checks; hits 11735 misses 9413 stored 3226
+   Attack.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 14.278s
+A6 /rooms/486777696: etag W/"81f132130430659cf6ea6da6a9f21ef4", David conditional 304, Jason with David's etag 200
+A6 /rooms/486777696/messages: etag W/"a6b75e9a08b3ba92078a0bdbc31f151e", David conditional 304, Jason with David's etag 304
+A6 /rooms/486777696/messages?before=933434550: etag W/"5338cbfeadd1e20b0a5395d58173bbbe", David conditional 304, Jason with David's etag 304
+A6 /users/me/sidebar: etag W/"87e3b52f5a7defbeaacd094f797976d3", David conditional 304, Jason with David's etag 200
+A6 /searches?q=the: etag W/"125bffd74e57d4b59425d12d9840d56b", David conditional 304, Jason with David's etag 200
+A6 /searches: etag W/"15186efb7a5d2d267d433288b712a075", David conditional 304, Jason with David's etag 200
+A6 /rooms/486777696: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A6 /users/me/sidebar: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A6 /searches?q=the: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A6 /rooms/486777696/messages: html 200 Some(text/html; charset=utf-8), json 406 Some(application/json; charset=UTF-8), turbo-stream 406 Some(text/html; charset=UTF-8)
+A6   /rooms/486777696/messages: Jason got 304 for David's ETag
+A6   /rooms/486777696/messages?before=933434550: Jason got 304 for David's ETag
+   Attack.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 1.207s
+----
+A2: room version cells 0 -> 40000 after 40000 requests for rooms that don't exist; managed heap 1646 KB -> 24592 KB (587 bytes per request kept)
+   Attack.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 7.395s
+----
+A2: room version cells 0 -> 0 after 40000 requests for rooms that don't exist; managed heap 1645 KB -> 16973 KB (392 bytes per request kept)
+   Attack.Tests  Total: 1, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 7.988s
+----
+A4: 200 checks, 400 failures; writer 217 writes in 159 groups, largest 7
+A4   wombatx8n25q stored 0 times
+A4   wombatx8n24q stored 0 times
+A4   wombatx8n23q stored 0 times
+A4   wombatx8n22q stored 0 times
+A4   wombatx8n21q stored 0 times
+A4   wombatx8n20q stored 0 times
+A4   wombatx8n19q stored 0 times
+A4   wombatx8n18q stored 0 times
+A5: group commit : 320 frames, 0 message ids, 0 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 333 writes / 71 groups, largest 15
+   Attack.Tests  Total: 3, Errors: 0, Failed: 2, Skipped: 0, Not Run: 0, Time: 10.441s
+----
+A4: 200 checks, 400 failures; writer 217 writes in 148 groups, largest 5
+A4   kind 'after wombatx#n#q replied': 200
+A4   kind 'stored # times': 200
+A4   search after wombatx3n18q replied
+A4   search after wombatx6n15q replied
+A4   search after wombatx8n14q replied
+A4   search after wombatx1n24q replied
+A4   stored sample: wombatx7n1q
+A4   stored sample: wombatx5n1q
+A5 sample frame: "\u003cturbo-stream action=\"append\" target=\"messages_rooms_closed_486777696\"\u003e\u003ctemplate\u003e\n  \u003cdiv id=\"message_3e9e4f70-738e-4c25-8897-78f804ae4183\" class=\"message \" data-controller=\"reply\" data-user-id=\"127326141\" data-message-id=\"933434638\" data-message-timestamp=\"1791402713542\" data-message-updated-at=\"1791402713542\" data-sort-value=\"17914027
+A5: group commit : 320 frames, 0 message ids, 0 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 73 groups, largest 14
+----
+A4: 200 checks, 0 failures; writer 217 writes in 168 groups, largest 5
+A4   stored sample: wombatx w8n1q
+A4   stored sample: wombatx w6n1q
+A5: group commit on: 320 frames, 320 message ids, 100 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 70 groups, largest 14
+   Attack.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 5.733s
+A4: 200 checks, 0 failures; writer 217 writes in 217 groups, largest 1
+A4   stored sample: wombatx w2n1q
+A4   stored sample: wombatx w8n1q
+A5: group commit off: 320 frames, 320 message ids, 40 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 337 groups, largest 1
+   Attack.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 7.090s
+----
+rep 1 A5: group commit on: 320 frames, 320 message ids, 92 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 72 groups, largest 15
+rep 1 A5: group commit off: 320 frames, 320 message ids, 49 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 337 groups, largest 1
+rep 2 A5: group commit on: 320 frames, 320 message ids, 93 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 95 groups, largest 14
+rep 2 A5: group commit off: 320 frames, 320 message ids, 38 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 337 groups, largest 1
+rep 3 A5: group commit on: 320 frames, 320 message ids, 95 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 84 groups, largest 14
+rep 3 A5: group commit off: 320 frames, 320 message ids, 33 adjacent inversions (broadcast before an earlier commit), lagged 0; writer 337 writes / 337 groups, largest 1
+----
+run 1e8a447c: acked 2205, non-200 0, connection errors 208 (after the kill)
+stored 2210 distinct tokens (2210 rows); unacknowledged but stored 5
+LOST acknowledged posts: 0 []
+DUPLICATED: 0 []
+acknowledged without a search-index row: 0 []
+room page after restart: status 200; newest acknowledged post on it: True
+journal_mode wal
+----
+run f389e066: acked 973, non-200 0, connection errors 224 (after the kill)
+stored 978 distinct tokens (978 rows); unacknowledged but stored 5
+LOST acknowledged posts: 0 []
+DUPLICATED: 0 []
+acknowledged without a search-index row: 0 []
+room page after restart: status 200; newest acknowledged post on it: True
+journal_mode wal
+run 2820d2b3: acked 6478, non-200 0, connection errors 208 (after the kill)
+stored 6485 distinct tokens (6485 rows); unacknowledged but stored 7
+LOST acknowledged posts: 0 []
+DUPLICATED: 0 []
+acknowledged without a search-index row: 0 []
+room page after restart: status 200; newest acknowledged post on it: True
+journal_mode wal
+----
+   Attack.Tests  Total: 0
+   Attack.Tests  Total: 0
+----
+A1c: David starts as Administrator; button shown: True
+A1c: 750 sidebars of 1500 disagreed with the committed role
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+   Attack.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 4.770s
+A1c: David starts as Administrator; button shown: True
+A1c: 750 sidebars of 1500 disagreed with the committed role
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+   Attack.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 5.354s
+----
+A1c: David starts as Administrator; button shown: True
+A1c: 79 sidebars of 1500 disagreed with the committed role
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+A1c   after David became Administrator the sidebar's New Chat Room button shown=False
+A1c   after David became Member the sidebar's New Chat Room button shown=True
+A1c   after David became Member the sidebar's New Chat Room button shown=True
+   Attack.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 7.134s
+A1c: David starts as Administrator; button shown: True
+A1c: 0 sidebars of 1500 disagreed with the committed role
+   Attack.Tests  Total: 1, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 7.120s
+----
+A8: page 416018 bytes; 4000 distinct keys, stored 4001; managed heap 8.1 MB -> 20.5 MB (would be 1587 MB unbounded)
+   Attack.Tests  Total: 1, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 1.416s
+----
+A9 /rooms/486777696: miss [(last_room, expires=Sun, 07 Oct 2046 19:59:31 GMT;path=/;samesite=lax); (session_token, expires=Sun, 07 Oct 2046 19:59:31 GMT;httponly;path=/;samesite=lax)] | hit [(last_room, expires=Sun, 07 Oct 2046 19:59:31 GMT;path=/;samesite=lax)] | hits so far 2
+   Attack.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 0.691s
+A9 /rooms/486777696: miss [(last_room, expires=Sun, 07 Oct 2046 19:59:32 GMT;path=/;samesite=lax); (session_token, expires=Sun, 07 Oct 2046 19:59:32 GMT;httponly;path=/;samesite=lax)] | hit [(last_room, expires=Sun, 07 Oct 2046 19:59:32 GMT;path=/;samesite=lax)] | hits so far 0
+   Attack.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 0.828s
+----
+A9 /rooms/486777696: miss [(last_room, expires=Sun, 07 Oct 2046 19:59:46 GMT;path=/;samesite=lax)] | hit [(last_room, expires=Sun, 07 Oct 2046 19:59:47 GMT;path=/;samesite=lax)] | hits so far 2
+   Attack.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 0.972s
+A9 /rooms/486777696: miss [(last_room, expires=Sun, 07 Oct 2046 19:59:48 GMT;path=/;samesite=lax)] | hit [(last_room, expires=Sun, 07 Oct 2046 19:59:48 GMT;path=/;samesite=lax)] | hits so far 0
+A9 /rooms/201306877: miss [] | hit [] | hits so far 0
+A9 /rooms/486777696/messages: miss [] | hit [] | hits so far 0
+A9 /users/me/sidebar: miss [] | hit [] | hits so far 0
+A9 /searches?q=the: miss [] | hit [] | hits so far 0
+   Attack.Tests  Total: 1, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 1.025s
+----
+A9 /rooms/486777696: miss [(last_room=486777696, path=/;samesite=lax)] | hit [(last_room=486777696, path=/;samesite=lax)] | hits so far 2
+A9 /rooms/201306877: miss [] | hit [] | hits so far 4
+A9 /rooms/486777696/messages: miss [] | hit [] | hits so far 6
+A9 /users/me/sidebar: miss [] | hit [] | hits so far 8
+A9 /searches?q=the: miss [] | hit [] | hits so far 10
+   Attack.Tests  Total: 1, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 1.313s
+A9 /rooms/486777696: miss [(last_room=486777696, path=/;samesite=lax)] | hit [(last_room=486777696, path=/;samesite=lax)] | hits so far 0
+A9 /rooms/201306877: miss [] | hit [] | hits so far 0
+A9 /rooms/486777696/messages: miss [] | hit [] | hits so far 0
+A9 /users/me/sidebar: miss [] | hit [] | hits so far 0
+A9 /searches?q=the: miss [] | hit [] | hits so far 0
+   Attack.Tests  Total: 1, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 1.042s

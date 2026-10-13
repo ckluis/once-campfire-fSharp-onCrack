@@ -1,0 +1,7 @@
+pixel-parity: oncrack vs the Rails reference, screenshot layer only, seeds default,custom_styles (fast: chromium, light, no breakpoint sweep)
+pixel-parity: VM free 39G, parity/out 11M
+seed default: 14/14 screenshots pixel-equal  [46s]
+pixel-parity: VM free 39G, parity/out 14M
+seed custom_styles: 2/2 screenshots pixel-equal  [19s]
+pixel-parity: PASSED, the UI is pixel-identical in 65s; reports under /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/parity/out/pixel-parity-r4-final-fast/b
+bin/pixel-parity --fast --seeds default,custom_styles --only 'search/**' --ou  0.07s user 0.10s system 0% cpu 1:05.45 total

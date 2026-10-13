@@ -1,0 +1,191 @@
+{
+ "_about": "bin/pixel-parity (lean matrix: every state on Chromium desktop and phone, light and dark, the smoke states on Firefox and WebKit, the breakpoint sweep) against the Rails reference, on campfire-candidate-oncrack built from d708910 (HEAD; src/ equals 2ea9ae9, the last code change), 2026-10-09. Made by pixel_parity.py from the gitignored reports under parity/out/pixel-parity-r3-final/.",
+ "total": {
+  "equal": 940,
+  "screenshots": 940,
+  "flaky": 0,
+  "different": 0,
+  "not_captured": 0
+ },
+ "seeds": {
+  "crowd": {
+   "equal": 24,
+   "screenshots": 24,
+   "different": [],
+   "not_captured": [],
+   "flaky": 0,
+   "by_engine": {
+    "chromium": {
+     "equal": 24,
+     "screenshots": 24
+    }
+   },
+   "reports": [
+    "parity/out/pixel-parity-r3-final/small/crowd/report.json"
+   ],
+   "retries": []
+  },
+  "custom_styles": {
+   "equal": 32,
+   "screenshots": 32,
+   "different": [],
+   "not_captured": [],
+   "flaky": 0,
+   "by_engine": {
+    "chromium": {
+     "equal": 32,
+     "screenshots": 32
+    }
+   },
+   "reports": [
+    "parity/out/pixel-parity-r3-final/small/custom_styles/report.json"
+   ],
+   "retries": []
+  },
+  "default": {
+   "equal": 860,
+   "screenshots": 860,
+   "different": [],
+   "not_captured": [],
+   "flaky": 0,
+   "by_engine": {
+    "chromium": {
+     "equal": 788,
+     "screenshots": 788
+    },
+    "firefox": {
+     "equal": 36,
+     "screenshots": 36
+    },
+    "webkit": {
+     "equal": 36,
+     "screenshots": 36
+    }
+   },
+   "reports": [
+    "parity/out/pixel-parity-r3-final/A/default/report.json",
+    "parity/out/pixel-parity-r3-final/B/default-retry1/report.json",
+    "parity/out/pixel-parity-r3-final/B/default-retry2/report.json",
+    "parity/out/pixel-parity-r3-final/B/default/report.json",
+    "parity/out/pixel-parity-r3-final/C/default/report.json",
+    "parity/out/pixel-parity-r3-final/D/default/report.json",
+    "parity/out/pixel-parity-r3-final/E/default/report.json",
+    "parity/out/pixel-parity-r3-final/F/default/report.json",
+    "parity/out/pixel-parity-r3-final/G/default/report.json",
+    "parity/out/pixel-parity-r3-final/H/default/report.json",
+    "parity/out/pixel-parity-r3-final/I/default/report.json",
+    "parity/out/pixel-parity-r3-final/J/default/report.json",
+    "parity/out/pixel-parity-r3-final/K/default/report.json",
+    "parity/out/pixel-parity-r3-final/L/default/report.json"
+   ],
+   "retries": [
+    "parity/out/pixel-parity-r3-final/B/default-retry1/report.json",
+    "parity/out/pixel-parity-r3-final/B/default-retry2/report.json"
+   ]
+  },
+  "first_run": {
+   "equal": 16,
+   "screenshots": 16,
+   "different": [],
+   "not_captured": [],
+   "flaky": 0,
+   "by_engine": {
+    "chromium": {
+     "equal": 16,
+     "screenshots": 16
+    }
+   },
+   "reports": [
+    "parity/out/pixel-parity-r3-final/small/first_run/report.json"
+   ],
+   "retries": []
+  },
+  "restricted": {
+   "equal": 8,
+   "screenshots": 8,
+   "different": [],
+   "not_captured": [],
+   "flaky": 0,
+   "by_engine": {
+    "chromium": {
+     "equal": 8,
+     "screenshots": 8
+    }
+   },
+   "reports": [
+    "parity/out/pixel-parity-r3-final/small/restricted/report.json"
+   ],
+   "retries": []
+  }
+ },
+ "slices": {
+  "A": {
+   "only": "account/**,errors/**,pwa/**,welcome/**",
+   "screenshots": 120
+  },
+  "B": {
+   "only": "auth/**",
+   "screenshots": 62
+  },
+  "C": {
+   "only": "autocompletable/**,bot_api/**,search/**",
+   "screenshots": 30
+  },
+  "D": {
+   "only": "users/**",
+   "screenshots": 72
+  },
+  "E": {
+   "only": "interactions/composer**,interactions/copy_link**,interactions/edit_**,interactions/flash_**",
+   "screenshots": 78
+  },
+  "F": {
+   "only": "interactions/a**,interactions/b**,interactions/l**,interactions/m**,interactions/n**,interactions/p**,interactions/q**,interactions/r**,interactions/s**,interactions/t**",
+   "screenshots": 104
+  },
+  "G": {
+   "only": "messages/a**,messages/b**,messages/c**,messages/e**,messages/f**,messages/i**,messages/l**",
+   "screenshots": 72
+  },
+  "H": {
+   "only": "messages/m**,messages/o**,messages/p**,messages/s**,messages/t**,messages/v**",
+   "screenshots": 48
+  },
+  "I": {
+   "only": "realtime/**",
+   "screenshots": 104
+  },
+  "J": {
+   "only": "rooms/closeds**,rooms/directs**,rooms/involvement**,rooms/refresh**",
+   "screenshots": 56
+  },
+  "K": {
+   "only": "rooms/opens**",
+   "screenshots": 26
+  },
+  "L": {
+   "only": "rooms/show**",
+   "screenshots": 88
+  }
+ },
+ "slice_overlap": [],
+ "room_capture": {
+  "seed": "default",
+  "state": "rooms/show/busy/last_page",
+  "cell": "chromium-desktop-light",
+  "status": "pass",
+  "report": "parity/out/pixel-parity-r3-final/L/default/report.json",
+  "layers_equal": [
+   "pixels",
+   "server",
+   "live",
+   "aria",
+   "network",
+   "cable"
+  ],
+  "png_sha256": {
+   "reference": "ac7420e6d0a8941463402fbeddc90f4972c50c0a7c4f935e637345164c13d0b8",
+   "candidate": "ac7420e6d0a8941463402fbeddc90f4972c50c0a7c4f935e637345164c13d0b8"
+  }
+ }
+}

@@ -1,0 +1,113 @@
+date: 2026-10-13T06:32:28-04:00
+host: 6.8.0-117-generic, , 8 threads, 5GB
+server cpus: 0-3 (nproc 4); loadgen cpus: 4-7; network: host
+env: WEB_CONCURRENCY=3 JOB_CONCURRENCY=3 RAILS_MAX_THREADS=5 
+rust extra env: 
+fsharp extra env: 
+oncrack extra env: CAMPFIRE_FRESH_AUTH=0
+user agent: (none)
+oncrack image: campfire-oncrack:r3final sha256:e34e485ff87ddd3d1fdb7f5dbebe6f2a1a563b3b8f6ccb5f403f31b6fbc753a4 2026-10-13T04:46:33.001661448-04:00 built from commit: 37c5988
+repo HEAD: 3e6a300 (dirty: 0 files under src/ and rust/)
+work dir (seed copies): /var/tmp/campfire-bench-work (ext4)
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11), built with rust:1.98.1-trixie
+seed: default (realistic workloads: crowd; classic: default); realistic concs 16, MIX_POSTERS 1, SPREAD_POSTERS 1, POST_RATE 0, POSTING_USERS 32, SEARCH_QUERIES 200, REAL_USERS 0 (0: all)
+schedule: apps oncrack, reps 3; suites: http; http secs 8, concs 1 16, routes room_show messages_page sidebar search post_message, warm-up 30s at each route and concentration, idle 5s
+log retention: 2 x 10m (json-file)
+[07:29:12] load before run: 0.30 0.29 1.13 (waited 0s)
+[07:29:29] host busy: {"spin_ms": 224.77, "spin_ms_max_cpu": 900.96, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 4.045}
+[07:29:51] host busy: {"spin_ms": 120.45, "spin_ms_max_cpu": 776.92, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 2.168}
+[07:30:14] host busy: {"spin_ms": 123.21, "spin_ms_max_cpu": 692.63, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 2.217}
+[07:30:27] host busy: {"spin_ms": 80.04, "spin_ms_max_cpu": 96.82, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.44}
+[07:30:40] host busy: {"spin_ms": 61.75, "spin_ms_max_cpu": 62.97, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.111}
+[07:30:53] host busy: {"spin_ms": 62.73, "spin_ms_max_cpu": 65.53, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.129}
+[07:31:06] host busy: {"spin_ms": 62.64, "spin_ms_max_cpu": 65.51, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.127}
+[07:31:19] host busy: {"spin_ms": 74.47, "spin_ms_max_cpu": 92.15, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.34}
+[07:31:32] host busy: {"spin_ms": 63.37, "spin_ms_max_cpu": 68.13, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.14}
+[07:31:55] host busy: {"spin_ms": 140.53, "spin_ms_max_cpu": 716.68, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 2.529}
+[07:32:32] host busy: {"spin_ms": 636.47, "spin_ms_max_cpu": 1075.99, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 11.454}
+[07:32:57] host busy: {"spin_ms": 167.37, "spin_ms_max_cpu": 729.26, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 3.012}
+[07:33:21] host busy: {"spin_ms": 169.85, "spin_ms_max_cpu": 607.15, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 3.056}
+[07:33:45] host busy: {"spin_ms": 213.45, "spin_ms_max_cpu": 624.91, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 3.841}
+[07:34:08] host busy: {"spin_ms": 140.91, "spin_ms_max_cpu": 833.64, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 2.536}
+[07:34:31] host busy: {"spin_ms": 215.81, "spin_ms_max_cpu": 663.71, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 3.884}
+[07:34:55] host busy: {"spin_ms": 141.32, "spin_ms_max_cpu": 708.94, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 2.543}
+[07:35:24] host busy: {"spin_ms": 497.94, "spin_ms_max_cpu": 644.92, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 8.961}
+[07:35:49] host busy: {"spin_ms": 222.78, "spin_ms_max_cpu": 684.37, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 4.009}
+[07:36:14] host busy: {"spin_ms": 263.86, "spin_ms_max_cpu": 665.44, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 4.748}
+[07:36:38] host busy: {"spin_ms": 347.14, "spin_ms_max_cpu": 565.97, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 6.247}
+[07:37:05] host busy: {"spin_ms": 254.97, "spin_ms_max_cpu": 636.16, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 4.588}
+[07:37:20] host busy: {"spin_ms": 102.72, "spin_ms_max_cpu": 142.09, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.848}
+[07:37:33] host busy: {"spin_ms": 74.65, "spin_ms_max_cpu": 84.06, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.343}
+[07:37:46] host probe before run: {"spin_ms": 60.95, "spin_ms_max_cpu": 63.7, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.097} (waited 240s)
+[07:37:46] oncrack rep 3: starting (load: 0.38 0.42 0.84)
+[07:37:51] oncrack rep 3: cold start 386ms, idle 29MB (anon 15MB)
+[07:39:57] oncrack rep 3: room_show c=1 683.1 rps p50 0.268 p99 23.087 {'200': 5468} err 0 cpu 567.5 us/req; warm-up 90.1 s reached the maximum tail 1798.4 host 8.215 
+[07:41:46] oncrack rep 3: room_show c=16 10609.4 rps p50 0.252 p99 29.023 {'200': 85073} err 0 cpu 164.8 us/req; warm-up 90.6 s reached the maximum tail 5311.3 host 2.034 
+[07:43:40] oncrack rep 3: messages_page c=1 4867.6 rps p50 0.124 p99 1.441 {'200': 38942} err 0 cpu 101.7 us/req; warm-up 90.1 s reached the maximum tail 1675.9 host 4.665 
+[07:45:24] oncrack rep 3: messages_page c=16 77492.0 rps p50 0.136 p99 1.213 {'200': 619984} err 0 cpu 31.0 us/req; warm-up 90.6 s reached the maximum tail 82880.0 host 1.738 
+[07:47:13] oncrack rep 3: sidebar c=1 706.4 rps p50 0.225 p99 24.111 {'200': 5664} err 0 cpu 593.5 us/req; warm-up 90.0 s reached the maximum tail 1427.2 host 1.954 
+[07:48:59] oncrack rep 3: sidebar c=16 121358.0 rps p50 0.102 p99 0.543 {'200': 970953} err 0 cpu 23.4 us/req; warm-up 90.7 s reached the maximum tail 102510.3 host 1.606 
+[07:50:48] oncrack rep 3: search c=1 2128.5 rps p50 0.144 p99 7.719 {'200': 17056} err 0 cpu 204.5 us/req; warm-up 90.1 s reached the maximum tail 6614.6 host 3.254 
+[07:51:40] oncrack rep 3: search c=16 128797.0 rps p50 0.1 p99 0.487 {'200': 1030461} err 0 cpu 23.1 us/req; warm-up 32.0 s settled tail 122865.3 host 1.939 
+[07:53:27] oncrack rep 3: post_message c=1 1071.3 rps p50 0.86 p99 2.511 {'200': 8572} err 0 cpu 1072.6 us/req; warm-up 90.3 s reached the maximum tail 844.3 host 1.812 
+[07:54:49] oncrack rep 3: post_message c=16 5584.8 rps p50 2.471 p99 11.263 {'200': 44688} err 0 cpu 496.6 us/req; warm-up 68.6 s settled tail 5444.1 host 1.792 
+[07:54:54] oncrack rep 3: done -> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-climb/r3-cached/oncrack-3.json
+onCrack in /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-climb/r3-cached against the stored Rust and F# port medians (bench/results/phase7-final, 3 reps each, one session)
+
+| Workload | c | onCrack req/s | F# port stored | **onCrack / F# port** | Rust stored | **onCrack / Rust (vs stored Rust baseline)** | onCrack CPU us/req | F# port | Rust |
+|---|---|---|---|---|---|---|---|---|---|
+| room page | 16 | 122,941 [10,609-155,775] | 40,422 | **3.041x** | 28,623 | **4.295x** | 24.1 [19-165] | 93.6 | 122.4 |
+| room page | 1 | 6,777 [683-22,593] | 7,617 | **0.890x** | 6,481 | **1.046x** | 65.1 [22-568] | 208.7 | 142.1 |
+| messages page | 16 | 154,179 [77,492-154,626] | 37,836 | **4.075x** | 30,063 | **5.129x** | 22.0 [22-31] | 102.2 | 114.2 |
+| messages page | 1 | 18,415 [4,868-23,646] | 8,312 | **2.216x** | 6,822 | **2.699x** | 27.8 [21-102] | 199.3 | 139.2 |
+| sidebar | 16 | 133,333 [121,358-170,948] | 37,555 | **3.550x** | 28,238 | **4.722x** | 20.4 [19-23] | 101.8 | 123.2 |
+| sidebar | 1 | 25,333 [706-27,280] | 8,000 | **3.167x** | 6,196 | **4.088x** | 19.2 [18-594] | 181.0 | 149.0 |
+| search | 16 | 166,477 [128,797-169,291] | 34,070 | **4.886x** | 26,606 | **6.257x** | 19.5 [19-23] | 107.3 | 123.9 |
+| search | 1 | 3,328 [2,128-23,548] | 6,055 | **0.550x** | 5,646 | **0.590x** | 122.8 [21-204] | 315.1 | 158.3 |
+| post a message | 16 | 6,011 [5,585-7,261] | 8,905 | **0.675x** | 7,174 | **0.838x** | 293.7 [259-497] | 353.0 | 385.6 |
+| post a message | 1 | 1,627 [1,071-2,227] | 3,052 | **0.533x** | 2,779 | **0.585x** | 463.0 [373-1,073] | 629.1 | 403.7 |
+
+Checks:
+  note messages_page c=1: warm-up did not settle (reached the maximum)
+  note messages_page c=1: host probe 1.11 after the window (noisy host)
+  note messages_page c=1: warm-up did not settle (reached the maximum)
+  note messages_page c=1: host probe 4.665 after the window (noisy host)
+  note messages_page c=16: warm-up did not settle (reached the maximum)
+  note messages_page c=16: host probe 1.164 after the window (noisy host)
+  note messages_page c=16: host probe 1.107 after the window (noisy host)
+  note messages_page c=16: warm-up did not settle (reached the maximum)
+  note messages_page c=16: host probe 1.738 after the window (noisy host)
+  note post_message c=1: warm-up did not settle (reached the maximum)
+  note post_message c=1: host probe 1.141 after the window (noisy host)
+  note post_message c=1: warm-up did not settle (reached the maximum)
+  note post_message c=1: host probe 1.158 after the window (noisy host)
+  note post_message c=1: warm-up did not settle (reached the maximum)
+  note post_message c=1: host probe 1.812 after the window (noisy host)
+  note post_message c=16: warm-up did not settle (reached the maximum)
+  note post_message c=16: host probe 1.126 after the window (noisy host)
+  note post_message c=16: warm-up did not settle (reached the maximum)
+  note post_message c=16: host probe 1.242 after the window (noisy host)
+  note post_message c=16: host probe 1.792 after the window (noisy host)
+  note room_show c=1: warm-up did not settle (reached the maximum)
+  note room_show c=1: host probe 1.568 after the window (noisy host)
+  note room_show c=1: warm-up did not settle (reached the maximum)
+  note room_show c=1: host probe 8.215 after the window (noisy host)
+  note room_show c=16: host probe 1.192 after the window (noisy host)
+  note room_show c=16: warm-up did not settle (reached the maximum)
+  note room_show c=16: host probe 2.034 after the window (noisy host)
+  note search c=1: warm-up did not settle (reached the maximum)
+  note search c=1: host probe 1.356 after the window (noisy host)
+  note search c=1: warm-up did not settle (reached the maximum)
+  note search c=1: warm-up did not settle (reached the maximum)
+  note search c=1: host probe 3.254 after the window (noisy host)
+  note search c=16: host probe 1.939 after the window (noisy host)
+  note sidebar c=1: host probe 1.135 after the window (noisy host)
+  note sidebar c=1: warm-up did not settle (reached the maximum)
+  note sidebar c=1: host probe 1.954 after the window (noisy host)
+  note sidebar c=16: host probe 1.242 after the window (noisy host)
+  note sidebar c=16: warm-up did not settle (reached the maximum)
+  note sidebar c=16: host probe 1.105 after the window (noisy host)
+  note sidebar c=16: warm-up did not settle (reached the maximum)
+  note sidebar c=16: host probe 1.606 after the window (noisy host)
+  responses: every one 2xx with 0 connection errors in 30 runs
+  decoded bytes equal Rust's on every probed route; post rows written equal the 2xx answers in every phase

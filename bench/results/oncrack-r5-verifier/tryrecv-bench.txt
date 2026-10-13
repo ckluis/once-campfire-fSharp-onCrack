@@ -1,0 +1,12 @@
+before median 3.25 ns  p25 1.39  p75 12.40
+after median 2.27 ns  p25 1.97  p75 3.22
+after median 1.96 ns  p25 1.94  p75 1.97
+before median 1.26 ns  p25 1.24  p75 1.27
+before median 2.07 ns  p25 1.25  p75 2.11
+after median 1.91 ns  p25 1.90  p75 1.93
+after median 1.91 ns  p25 1.90  p75 1.94
+before median 1.25 ns  p25 1.23  p75 1.27
+before median 1.24 ns  p25 1.23  p75 1.25
+after median 1.92 ns  p25 1.90  p75 1.93
+after median 1.91 ns  p25 1.90  p75 1.94
+before median 1.28 ns  p25 1.26  p75 1.30

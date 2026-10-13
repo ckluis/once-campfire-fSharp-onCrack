@@ -1,0 +1,26 @@
+{
+ "run": 13,
+ "clients": 500,
+ "shape": "target",
+ "app": "oncrack",
+ "started": "11:22:39",
+ "dir": "run13-c500",
+ "problems": [
+  "1 ERROR/WARN lines in the app's log"
+ ],
+ "ready": 500,
+ "failed": 0,
+ "posted": 8603,
+ "complete": 8603,
+ "window_stalls": 0,
+ "closed_midrun": 0,
+ "paced_complete": 30,
+ "paced_messages": 30,
+ "msgs_per_sec": 572.9,
+ "drain_secs": 0.01,
+ "max_ms": 300.287,
+ "publish_gaps": [],
+ "cpu_idle_stretches": [],
+ "app_error_lines": 1,
+ "miss": true
+}

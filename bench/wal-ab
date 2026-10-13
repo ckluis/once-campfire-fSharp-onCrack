@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# onCrack R4.4: posts at one concurrency against one running app with a post-path setting alternating by window (A/B in one warm
+# container: no restart, no re-warm-up, host drift cancels), and the WAL frames and bytes a post cost in each window. Run inside colima:
+#
+#   bench/wal-ab [--secs 8] [--warmup 40] [--rounds 4] [--conc 16] [--mounted DIR] [--env "K=V ..."] --a "SETTINGS" --b "SETTINGS"
+#
+# A SETTINGS string is what CAMPFIRE_POSTPATH_FILE takes (Database.StartPostPathControl): PostPath switches `name=value,...`
+# (group_window_us=300, ...) and fts_automerge=N; "" is the defaults. Windows run A B, B A, A B ... Frames come from the app's WAL trace
+# (the writer's totals are logged at every WAL restart, a few a second under load).
+set -euo pipefail
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+export SERVER_CPUS=${SERVER_CPUS:-0-3} LOADGEN_CPUS=${LOADGEN_CPUS:-4-7}
+export WORK=${WORK:-/var/tmp/campfire-bench-work}
+SECS=8 WARM=40 ROUNDS=4 CONC=16 ENVX="" MOUNT="" A="" B="" OUT=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --secs) SECS=$2; shift 2 ;;
+    --warmup) WARM=$2; shift 2 ;;
+    --rounds) ROUNDS=$2; shift 2 ;;
+    --conc) CONC=$2; shift 2 ;;
+    --env) ENVX=$2; shift 2 ;;
+    --mounted) MOUNT=$2; shift 2 ;;
+    --a) A=$2; shift 2 ;;
+    --b) B=$2; shift 2 ;;
+    --out) OUT=$2; shift 2 ;;
+    *) echo "unknown $1" >&2; exit 2 ;;
+  esac
+done
+[ -z "$MOUNT" ] || export ONCRACK_MOUNT=$MOUNT
+TRACE=/var/tmp/r44-ab-trace; rm -rf "$TRACE"; mkdir -p "$TRACE"
+export TRACE_DIR=$TRACE
+export ONCRACK_EXTRA_ENV="CAMPFIRE_POSTPATH_FILE=/tmp/postpath CAMPFIRE_WAL_TRACE=/trace/wal.log ${ENVX}"
+BENCH_RUN_LIB=1 source "$ROOT/bench/run"
+wait_for_quiet
+start_app oncrack >/dev/null
+CG=$(cgroup_dir)
+sleep 5
+COOKIE=$(lg login --base "$BASE" --email "$EMAIL" --password "$PASSWORD" | python3 -c 'import json,sys; print(json.load(sys.stdin)["cookie"])')
+CSRF=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["csrf"] or "")' "$(lg scrape --base "$BASE" --cookie "$COOKIE" --room "$ROOM")")
+PA=(--post-room "$WRITE_ROOM" --csrf "$CSRF")
+flip() { docker exec "$CONTAINER" sh -c "printf '%s' '$1' > /tmp/postpath"; sleep 0.3; }
+declare -A RES
+window() {  # label settings -> "rps us t0 t1"
+  flip "$2"
+  sleep 1.2   # a WAL restart line before the window starts
+  t0=$(date -u +%H:%M:%S.%3N)
+  res=$(lgc "$CG" http --base "$BASE" --cookie "$COOKIE" "${PA[@]}" --conc "$CONC" --duration "$SECS")
+  t1=$(date -u +%H:%M:%S.%3N)
+  sleep 1.2
+  python3 -c 'import json,sys; r=json.loads(sys.argv[1]); c=r["cost"]; print("%.0f %.1f %s %s %s" % (r["rps"], c["server_cpu_us_per_req"], sys.argv[2], sys.argv[3], r["errors"]))' "$res" "$t0" "$t1"
+}
+flip "$A"
+WARMUP_SECS=$WARM WARMUP_MAX_SECS=$WARM warm_up "$COOKIE" "$CONC" "${PA[@]}" >/dev/null
+echo "load $(cut -d' ' -f1-3 /proc/loadavg); post at c=$CONC; $SECS s windows; A='$A' B='$B' alternating, order flips each round"
+declare -a RA RB UA UB FA FB GA GB
+ab=()
+for r in $(seq 1 "$ROUNDS"); do
+  if [ $((r % 2)) = 1 ]; then first=A second=B; else first=B second=A; fi
+  for v in $first $second; do
+    if [ $v = A ]; then s=$A; else s=$B; fi
+    o=$(window $v "$s"); set -- $o
+    fr=$(python3 "$ROOT/bench/results/oncrack-r4-wal/frames.py" "$TRACE/wal.log" --between "$3" "$4" 2>/dev/null || echo "no frames")
+    echo "round $r $v: $1 posts/s  $2 us/post  err $5  | $fr   load $(cut -d' ' -f1 /proc/loadavg)"
+    ab+=("$v $1 $2")
+  done
+done
+python3 - "${ab[@]}" <<'PY'
+import sys, statistics as st
+d = {"A": [], "B": []}
+for x in sys.argv[1:]:
+    v, r, u = x.split()
+    d[v].append((float(r), float(u)))
+for v in "AB":
+    print(f"{v}: median {st.median(r for r, _ in d[v]):8.0f} posts/s  {st.median(u for _, u in d[v]):6.1f} us/post   [{' '.join('%.0f' % r for r, _ in d[v])}]")
+PY
+echo "container env: $(docker exec "$CONTAINER" sh -c 'env | grep -E "CAMPFIRE_FTS|CAMPFIRE_POSTPATH" | tr "\n" " "')"
+db=$(find "${WORK:?}/oncrack" -name production.sqlite3 | head -1)
+[ -z "$db" ] || echo "stored FTS config: $(sqlite3 "file:$db?mode=ro" "select group_concat(k||'='||v) from message_search_index_config" 2>&1)"
+if [ -n "${KEEP:-}" ] && [ -n "$db" ]; then mkdir -p "$KEEP"; cp "$db" "$db-wal" "$KEEP/" 2>/dev/null; fi
+cp "$TRACE/wal.log" "${OUT:-/var/tmp/r44-ab-wal.log}" 2>/dev/null || true
+docker rm -f "$CONTAINER" >/dev/null; rm -rf "${WORK:?}/oncrack" "$TRACE"

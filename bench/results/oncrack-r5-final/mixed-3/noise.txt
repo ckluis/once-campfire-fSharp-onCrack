@@ -1,0 +1,1 @@
+host-load-mixed-3.txt: 88 samples during the session, 57 at >=150% (65%), max 604%, median 196% -> NOISY

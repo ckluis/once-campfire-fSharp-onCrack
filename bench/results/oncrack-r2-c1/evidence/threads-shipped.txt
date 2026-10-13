@@ -1,0 +1,34 @@
+    thread CPU per request (clock-tick resolution), switches per request:
+      .NET Sockets       x4     162.5 us  vol 1.64 nonvol 0.00 /req
+      .NET TP Worker     x4      76.4 us  vol 5.73 nonvol 0.13 /req
+      campfire-db-che    x1       5.6 us  vol 0.46 nonvol 0.01 /req
+      campfire-db-wri    x1       4.9 us  vol 1.07 nonvol 0.00 /req
+      .NET Server GC     x4       3.2 us  vol 0.00 nonvol 0.00 /req
+      .NET BGC           x1       2.0 us  vol 0.00 nonvol 0.00 /req
+      .NET Tiered Com    x1       0.2 us  vol 0.00 nonvol 0.00 /req
+      request-log        x1       0.2 us  vol 0.02 nonvol 0.00 /req
+      total                     255.0 us
+                370992      context-switches                                                      
+                 73436      cpu-migrations                                                        
+                  7608      sched:sched_wakeup                                                    
+               5383360      raw_syscalls:sys_enter                                                
+POST                                               c=1        5123 rps  server 254.4 us/req 1.30 cores  loadgen  18.6 us/req 0.10 cores  {'200': 40982} err 0
+    thread CPU per request (clock-tick resolution), switches per request:
+      .NET Sockets       x4      23.7 us  vol 1.00 nonvol 0.00 /req
+      request-log        x1       0.1 us  vol 0.01 nonvol 0.00 /req
+      total                      23.8 us
+                189290      context-switches                                                      
+                    34      cpu-migrations                                                        
+                    17      sched:sched_wakeup                                                    
+                767961      raw_syscalls:sys_enter                                                
+/up                                                c=1       23498 rps  server  23.9 us/req 0.56 cores  loadgen  13.3 us/req 0.31 cores  {'200': 187982} err 0
+    thread CPU per request (clock-tick resolution), switches per request:
+      .NET Sockets       x4      21.1 us  vol 1.00 nonvol 0.00 /req
+      request-log        x1       0.1 us  vol 0.01 nonvol 0.00 /req
+      total                      21.2 us
+                199070      context-switches                                                      
+                    72      cpu-migrations                                                        
+                    10      sched:sched_wakeup                                                    
+                807860      raw_syscalls:sys_enter                                                
+/rooms/486777696                                   c=1       24715 rps  server  21.2 us/req 0.52 cores  loadgen  14.2 us/req 0.35 cores  {'200': 197720} err 0
+  container memory: peak 270 MB, now 249 MB (anon 152 MB)

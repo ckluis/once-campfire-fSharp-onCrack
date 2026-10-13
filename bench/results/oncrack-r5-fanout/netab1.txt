@@ -1,0 +1,12 @@
+== default
+1000 clients 619 msgs/s: sendmsg/delivery 0.1177  segments/delivery 0.3120  octets/delivery 7758  octets/segment 24861
+default exit 0
+== stream
+1000 clients 1690 msgs/s: sendmsg/delivery 0.1079  segments/delivery 0.3114  octets/delivery 10652  octets/segment 34209
+stream exit 0
+== default
+1000 clients 769 msgs/s: sendmsg/delivery 0.0735  segments/delivery 0.2058  octets/delivery 5319  octets/segment 25847
+default exit 0
+== stream
+1000 clients 1495 msgs/s: sendmsg/delivery 0.1224  segments/delivery 0.3410  octets/delivery 11120  octets/segment 32610
+stream exit 0

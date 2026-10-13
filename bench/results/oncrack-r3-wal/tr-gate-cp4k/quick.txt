@@ -1,0 +1,129 @@
+date: 2026-10-09T14:21:45-04:00
+host: 6.8.0-117-generic, , 8 threads, 5GB
+server cpus: 0-3 (nproc 4); loadgen cpus: 4-7; network: host
+env: WEB_CONCURRENCY=3 JOB_CONCURRENCY=3 RAILS_MAX_THREADS=5 
+rust extra env: 
+fsharp extra env: 
+oncrack extra env: CAMPFIRE_WAL_TRACE=/trace/wal.log CAMPFIRE_WAL_CHECKPOINT_PAGES=4000
+user agent: (none)
+oncrack image: campfire-oncrack:app sha256:88ae3de4b2282941d56a46ab6c485a87521b5b45d70fc0ae2b0e98f7293e313c 2026-10-09T09:37:52.382716397-04:00 built from commit: 2b412e53630ae882e42d881b1088460811ddf1f5
+oncrack build: MOUNTED /var/tmp/campfire-mounted over /opt/campfire (7074db8 (dirty files under src/: 2) at 2026-10-09T18:21:45Z)
+repo HEAD: 7074db8 (dirty: 2 files under src/ and rust/)
+work dir (seed copies): /var/tmp/campfire-bench-work (ext4)
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-08 11:27:25), built with rust:1.98.1-trixie
+seed: default (realistic workloads: crowd; classic: default); realistic concs 16, MIX_POSTERS 1, SPREAD_POSTERS 1, POST_RATE 0, POSTING_USERS 32, SEARCH_QUERIES 200, REAL_USERS 0 (0: all)
+schedule: apps oncrack, reps 1; suites: http; http secs 8, concs 16 64, routes post_message, warm-up 60s at each route and concentration, idle 5s
+log retention: 2 x 10m (json-file)
+[14:22:25] load before run: 1.36 2.20 1.69 (waited 40s)
+[14:22:28] host probe before run: {"spin_ms": 60.49, "spin_ms_max_cpu": 64.24, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.088} (waited 40s)
+[14:22:28] oncrack rep 1: starting (load: 1.36 2.20 1.69)
+[14:22:33] oncrack rep 1: cold start 241ms, idle 28MB (anon 15MB)
+[14:23:45] oncrack rep 1: post_message c=16 9385.6 rps p50 1.146 p99 6.003 {'200': 75096} err 0 cpu 260.5 us/req; warm-up 60.8 s fixed tail 10433.5 host 1.114 
+[14:24:57] oncrack rep 1: post_message c=64 14662.9 rps p50 3.905 p99 10.319 {'200': 117353} err 0 cpu 199.8 us/req; warm-up 60.1 s fixed tail 13169.7 host 1.081 
+[14:25:00] oncrack rep 1: done -> bench/results/oncrack-r3-wal/tr-gate-cp4k/oncrack-1.json
+```
+date: 2026-10-09T14:21:45-04:00
+host: 6.8.0-117-generic, , 8 threads, 5GB
+server cpus: 0-3 (nproc 4); loadgen cpus: 4-7; network: host
+env: WEB_CONCURRENCY=3 JOB_CONCURRENCY=3 RAILS_MAX_THREADS=5 
+rust extra env: 
+fsharp extra env: 
+oncrack extra env: CAMPFIRE_WAL_TRACE=/trace/wal.log CAMPFIRE_WAL_CHECKPOINT_PAGES=4000
+user agent: (none)
+oncrack image: campfire-oncrack:app sha256:88ae3de4b2282941d56a46ab6c485a87521b5b45d70fc0ae2b0e98f7293e313c 2026-10-09T09:37:52.382716397-04:00 built from commit: 2b412e53630ae882e42d881b1088460811ddf1f5
+oncrack build: MOUNTED /var/tmp/campfire-mounted over /opt/campfire (7074db8 (dirty files under src/: 2) at 2026-10-09T18:21:45Z)
+repo HEAD: 7074db8 (dirty: 2 files under src/ and rust/)
+work dir (seed copies): /var/tmp/campfire-bench-work (ext4)
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-08 11:27:25), built with rust:1.98.1-trixie
+seed: default (realistic workloads: crowd; classic: default); realistic concs 16, MIX_POSTERS 1, SPREAD_POSTERS 1, POST_RATE 0, POSTING_USERS 32, SEARCH_QUERIES 200, REAL_USERS 0 (0: all)
+schedule: apps oncrack, reps 1; suites: http; http secs 8, concs 16 64, routes post_message, warm-up 60s at each route and concentration, idle 5s
+log retention: 2 x 10m (json-file)
+```
+
+Reps: oncrack 1. Cells: median [min–max].
+
+### Startup and memory
+
+| Metric | onCrack |
+|---|---|
+| cold start: docker run → /up 200 (ms) | 241 |
+| idle memory.current (MB) | 28.0 |
+| idle anon (MB) | 15.0 |
+| peak memory.current under load (MB) | 967 |
+| peak anon under load (MB) | 177 |
+
+### HTTP (signed in as david; keep-alive; c = concurrent connections)
+
+`CPU µs/req` is the container's CPU (cgroup cpu.stat, user + system, unprofiled) over the run divided by its requests; for CPU a ratio below 1 means the first app spends more per request.
+
+| Metric | onCrack |
+|---|---|
+| post_message c=16 req/s | 9,386 |
+| post_message c=16 CPU µs/req | 260 |
+| post_message c=16 p50 ms | 1.15 |
+| post_message c=16 p99 ms | 6.00 |
+| post_message c=64 req/s | 14,663 |
+| post_message c=64 CPU µs/req | 200 |
+| post_message c=64 p50 ms | 3.90 |
+| post_message c=64 p99 ms | 10.3 |
+
+## Validity
+
+### Load average before each run (1, 5, 15 minutes; the run waited for the 1-minute figure to fall below LOAD_MAX)
+
+| App | Rep | Before | After |
+|---|---|---|---|
+| onCrack | 1 | 1.36 2.20 1.69 | 3.83 3.08 2.11 |
+
+### Host CPU probe (a fixed spin timed on every pinned CPU, against the quietest this VM has shown; bench/lib/hostprobe.py)
+
+The VM's load average cannot see another program on the Mac taking the cores its vCPUs run on; this can. A ratio of 1.00 is a quiet host, above 1.10 the pinned server and load generator were slowed by something outside the run. `After each window` probes the machine right after every measured run of the rep.
+
+| App | Rep | Before the run | After the run | Windows probed above 1.10 | Highest after a window |
+|---|---|---|---|---|---|
+| onCrack | 1 | 1.09 | 1.11 | 1/2 **noisy** | 1.11 |
+
+### Responses by status class, every HTTP run of every rep
+
+| App | Route | 2xx | 3xx | 4xx | 5xx | Errors (no response) |
+|---|---|---|---|---|---|---|
+| onCrack | post_message | 192,449 | 0 | 0 | 0 | 0 |
+
+### Warm-up before each measured run (the app runs the route at the measured concurrency until its throughput is flat; bench/lib/warmup.py)
+
+`measured / warm-up tail` is the measured run's requests a second over the mean of the last three 2 s warm-up windows: well above 1 would mean the app was still speeding up when measurement began, well below 1 that it was slowing down.
+
+| App | Route | c | warm-up seconds | settled | measured / warm-up tail |
+|---|---|---|---|---|---|
+| onCrack | post_message | 16 | 60.8 | 0/1 **←** | 0.90 |
+| onCrack | post_message | 64 | 60.1 | 0/1 **←** | 1.11 |
+
+### Rows written by `post_message` and the realistic workloads that post (messages counted in the app's SQLite file around each run: the write room's, or every room's for a realistic workload)
+
+| App | Rep | Phase | Posts answered below 400 | Rows written | Match |
+|---|---|---|---|---|---|
+| onCrack | 1 | warm-up c=16 | 745,595 | 745,595 | yes |
+| onCrack | 1 | run c=16 | 75,096 | 75,096 | yes |
+| onCrack | 1 | warm-up c=64 | 822,327 | 822,327 | yes |
+| onCrack | 1 | run c=64 | 117,353 | 117,353 | yes |
+| onCrack | 1 | **all** | 1,760,371 | 1,760,371 | yes |
+
+### Response bytes, one request per route (gzip: wire / decoded; identity: bytes) and the average over the c=16 run
+
+The probe is a single request after sign-in, before any load. Bodies carry per-request tokens and the clock, so sizes of two apps agree to within a few bytes when they render the same page. "c=16 avg" is what the load generator received per request on the wire (gzip unless the column says otherwise).
+
+| Route | onCrack gzip wire / decoded | onCrack identity | onCrack c=16 avg | vs Rust |
+|---|---|---|---|---|
+| post_message | – | – | 2,095 | – |
+onCrack in bench/results/oncrack-r3-wal/tr-gate-cp4k against the stored Rust and F# port medians (bench/results/phase7-final, 3 reps each, one session)
+
+| Workload | c | onCrack req/s | F# port stored | **onCrack / F# port** | Rust stored | **onCrack / Rust (vs stored Rust baseline)** | onCrack CPU us/req | F# port | Rust |
+|---|---|---|---|---|---|---|---|---|---|
+| post a message | 16 | 9,386 | 8,905 | **1.054x** | 7,174 | **1.308x** | 260.5 | 353.0 | 385.6 |
+
+Checks:
+  note post_message c=16: warm-up did not settle (fixed)
+  note post_message c=16: host probe 1.114 after the window (noisy host)
+  note post_message c=64: warm-up did not settle (fixed)
+  responses: every one 2xx with 0 connection errors in 2 runs
+  decoded bytes equal Rust's on every probed route; post rows written equal the 2xx answers in every phase

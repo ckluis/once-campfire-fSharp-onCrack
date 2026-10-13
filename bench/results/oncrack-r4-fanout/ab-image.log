@@ -1,0 +1,61 @@
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[06:32:26] load before run: 1.44 1.79 2.15 (waited 0s)
+[06:33:02] oncrack rep 1: cable 100 clients ready 100 lat all p50 4.639 p99 16.863 tput 3561.4 msg/s 53429 / 53429
+[06:33:27] oncrack rep 1: cable 500 clients ready 500 lat all p50 6.995 p99 9.991 tput 1153.6 msg/s 17331 / 17331
+[06:33:51] oncrack rep 1: cable 1000 clients ready 1000 lat all p50 9.639 p99 13.439 tput 731.0 msg/s 10979 / 10979
+[06:34:16] oncrack rep 1: cable 2000 clients ready 2000 lat all p50 13.439 p99 62.079 tput 407.9 msg/s 6134 / 6134
+[06:34:22] oncrack rep 1: done -> bench/results/oncrack-r4-fanout/pairs/../ab-image/1-off/oncrack-1.json
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+### Memory during cable fan-out, by process (MB, peak within the phase)
+| App | Route | 2xx | 3xx | 4xx | 5xx | Errors (no response) |
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[06:35:23] load before run: 1.47 2.02 2.20 (waited 0s)
+[06:36:12] oncrack rep 1: cable 100 clients ready 100 lat all p50 3.945 p99 9.919 tput 3477.2 msg/s 52168 / 52168
+[06:36:37] oncrack rep 1: cable 500 clients ready 500 lat all p50 6.575 p99 8.075 tput 1432.9 msg/s 21505 / 21505
+[06:37:02] oncrack rep 1: cable 1000 clients ready 1000 lat all p50 8.967 p99 16.135 tput 878.8 msg/s 13192 / 13192
+[06:37:27] oncrack rep 1: cable 2000 clients ready 2000 lat all p50 13.367 p99 18.575 tput 477.6 msg/s 7185 / 7185
+[06:37:32] oncrack rep 1: done -> bench/results/oncrack-r4-fanout/pairs/../ab-image/2-on/oncrack-1.json
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+### Memory during cable fan-out, by process (MB, peak within the phase)
+| App | Route | 2xx | 3xx | 4xx | 5xx | Errors (no response) |
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[06:38:42] load before run: 1.27 2.13 2.23 (waited 0s)
+[06:39:19] oncrack rep 1: cable 100 clients ready 100 lat all p50 4.847 p99 22.959 tput 3864.5 msg/s 57975 / 57975
+[06:39:44] oncrack rep 1: cable 500 clients ready 500 lat all p50 4.415 p99 8.239 tput 1358.2 msg/s 20385 / 20385
+[06:40:09] oncrack rep 1: cable 1000 clients ready 1000 lat all p50 7.163 p99 16.103 tput 758.2 msg/s 11384 / 11384
+[06:40:34] oncrack rep 1: cable 2000 clients ready 2000 lat all p50 11.167 p99 17.439 tput 473.8 msg/s 7119 / 7119
+[06:40:39] oncrack rep 1: done -> bench/results/oncrack-r4-fanout/pairs/../ab-image/3-on/oncrack-1.json
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+### Memory during cable fan-out, by process (MB, peak within the phase)
+| App | Route | 2xx | 3xx | 4xx | 5xx | Errors (no response) |
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[06:41:50] load before run: 1.30 2.28 2.31 (waited 0s)
+[06:42:26] oncrack rep 1: cable 100 clients ready 100 lat all p50 4.807 p99 11.175 tput 3517.3 msg/s 52765 / 52765
+[06:42:51] oncrack rep 1: cable 500 clients ready 500 lat all p50 7.183 p99 12.919 tput 1503.3 msg/s 22556 / 22556
+[06:43:16] oncrack rep 1: cable 1000 clients ready 1000 lat all p50 9.079 p99 12.263 tput 900.4 msg/s 13518 / 13518
+[06:43:41] oncrack rep 1: cable 2000 clients ready 2000 lat all p50 14.367 p99 20.143 tput 467.9 msg/s 7057 / 7057
+[06:43:46] oncrack rep 1: done -> bench/results/oncrack-r4-fanout/pairs/../ab-image/4-off/oncrack-1.json
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+### Memory during cable fan-out, by process (MB, peak within the phase)
+| App | Route | 2xx | 3xx | 4xx | 5xx | Errors (no response) |
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[06:44:47] load before run: 1.32 2.28 2.33 (waited 0s)
+[06:45:23] oncrack rep 1: cable 100 clients ready 100 lat all p50 5.639 p99 20.991 tput 3880.2 msg/s 58208 / 58208
+[06:45:48] oncrack rep 1: cable 500 clients ready 500 lat all p50 6.899 p99 8.983 tput 1580.9 msg/s 23723 / 23723
+[06:46:13] oncrack rep 1: cable 1000 clients ready 1000 lat all p50 9.687 p99 12.151 tput 898.1 msg/s 13521 / 13521
+[06:46:38] oncrack rep 1: cable 2000 clients ready 2000 lat all p50 14.119 p99 20.975 tput 422.5 msg/s 6396 / 6396
+[06:46:43] oncrack rep 1: done -> bench/results/oncrack-r4-fanout/pairs/../ab-image/5-off/oncrack-1.json
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+### Memory during cable fan-out, by process (MB, peak within the phase)
+| App | Route | 2xx | 3xx | 4xx | 5xx | Errors (no response) |
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[06:47:44] load before run: 1.46 2.37 2.38 (waited 0s)
+[06:48:20] oncrack rep 1: cable 100 clients ready 100 lat all p50 6.091 p99 17.567 tput 3642.8 msg/s 54648 / 54648
+[06:48:45] oncrack rep 1: cable 500 clients ready 500 lat all p50 6.179 p99 9.399 tput 1637.1 msg/s 24566 / 24566
+[06:49:10] oncrack rep 1: cable 1000 clients ready 1000 lat all p50 8.655 p99 12.127 tput 858.3 msg/s 12889 / 12889
+[06:49:35] oncrack rep 1: cable 2000 clients ready 2000 lat all p50 14.295 p99 18.431 tput 508.7 msg/s 7657 / 7657
+[06:49:40] oncrack rep 1: done -> bench/results/oncrack-r4-fanout/pairs/../ab-image/6-on/oncrack-1.json
+schedule: apps oncrack, reps 1; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+### Memory during cable fan-out, by process (MB, peak within the phase)
+| App | Route | 2xx | 3xx | 4xx | 5xx | Errors (no response) |
+AB DONE

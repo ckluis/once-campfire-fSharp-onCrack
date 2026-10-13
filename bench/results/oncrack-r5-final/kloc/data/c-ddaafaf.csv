@@ -1,0 +1,229 @@
+language,filename,blank,comment,code,"github.com/AlDanial/cloc v 2.10  T=0.35 s (656.3 files/s 379520.2 lines/s)"
+C/C++ Header,src/storage/marcel_tables.h,7,3,13461
+C,src/storage/active_storage.c,155,148,2534
+C,src/cable/socket.c,175,289,2531
+C,src/context.c,178,291,2272
+C,src/http/loop.c,133,170,2188
+C,src/integrations/unfurl.c,118,94,1899
+C,src/http/params.c,113,174,1862
+C,src/views/accounts.c,80,218,1785
+C,src/auth/user_agent.c,99,98,1738
+C,src/cable/pubsub.c,134,232,1682
+C,src/integrations/push.c,67,71,1647
+C,src/views/rooms_forms.c,66,108,1646
+C,src/models/user.c,141,129,1637
+C,src/actions/messages.c,140,247,1610
+C,src/views/messages.c,51,45,1604
+C,src/cable/channels.c,66,111,1380
+C,src/models/message.c,112,59,1354
+C,src/models/room.c,134,137,1303
+C,src/views/users_profiles.c,40,115,1282
+C,src/models/push_subscription.c,93,122,1119
+C,src/richtext/rt_dom.c,91,125,1115
+C,src/actions/messages/by_bots.c,80,127,1110
+C,src/front/h2.c,50,57,1077
+C,src/views/users.c,41,240,1064
+C,src/models/membership.c,138,117,1061
+C,src/views/render.c,85,57,1049
+C,src/views/rooms.c,20,29,1022
+C,src/routes.c,56,91,936
+C,src/actions/autocompletable/users.c,57,120,924
+C,src/auth/session.c,65,70,917
+C,src/integrations/http.c,49,102,913
+C,src/actions/rooms/closeds.c,92,171,912
+C,src/actions/active_storage/representations.c,49,46,909
+C,src/richtext/rt_attach.c,42,28,903
+C,src/models/account.c,96,78,891
+C,src/views/bots.c,36,150,877
+C,src/actions/users/push_subscriptions.c,81,155,857
+C,src/storage/media.c,56,20,835
+C,src/richtext/rt_sanitize.c,51,31,781
+C,src/http/request.c,64,92,772
+C,src/jobs/handlers.c,48,71,765
+C,src/richtext/rt_content.c,41,26,748
+C,src/richtext/rt_util.c,58,29,727
+C,src/actions/users.c,78,140,715
+C,src/actions/rooms/opens.c,82,167,704
+C,src/cable/broadcasts.c,43,57,695
+C,src/presenters/messages.c,37,39,694
+C,src/auth/tokens.c,35,22,620
+C,src/integrations/host_resolve.c,39,41,604
+C,src/actions/accounts/bots.c,71,170,597
+C,src/actions/active_storage/blobs.c,33,91,597
+C,src/views/pwa.c,13,21,591
+C,src/actions/rooms/directs.c,68,151,590
+C,src/actions/accounts.c,48,107,571
+C,src/actions/messages/boosts.c,54,96,555
+C,src/presenters/sidebars.c,50,45,552
+C,src/views/users_sidebars.c,33,72,534
+C,src/app.c,64,74,531
+C,src/db/writer.c,73,58,529
+C/C++ Header,src/views.h,134,256,524
+C,src/richtext/rt_autolink.c,35,37,516
+C,src/config.c,30,17,500
+C,src/models/webhook.c,66,83,491
+C,src/richtext/rt_uri.c,27,13,491
+C,src/cable/revocation.c,59,83,485
+C,src/models/search.c,47,49,485
+C,src/actions/rooms/involvements.c,43,115,482
+C,src/models/active_storage.c,50,54,479
+C,src/storage/files.c,37,46,476
+C,src/actions/users/avatars.c,38,116,474
+C,src/models/ban.c,57,45,474
+C,src/models/session.c,46,42,468
+C,src/db/reader.c,45,26,465
+C,src/actions/users/profiles.c,43,110,459
+C,src/actions/messages/boosts/by_bots.c,43,76,453
+C,src/auth/message.c,20,23,439
+C,src/auth/password.c,43,120,423
+C,src/presenters/searches.c,20,32,421
+C,src/actions/accounts/logos.c,31,71,415
+C,src/actions/first_runs.c,43,90,414
+C,src/assets.c,34,38,408
+C,src/views/searches.c,19,29,395
+C,src/actions/rooms.c,52,150,393
+C,src/jobs/queue.c,47,31,387
+C,src/views/session.c,18,11,387
+C,src/actions/users/push_subscriptions/test_notifications.c,40,77,385
+C,src/actions/active_storage/disk.c,29,65,382
+C,src/auth/crypto.c,24,48,376
+C,src/main.c,27,91,370
+C,src/http/output.c,41,42,366
+C,src/actions/pwa.c,21,95,365
+C,src/presenters/accounts.c,28,40,364
+C,src/views/users_push.c,21,34,348
+C,src/actions/searches.c,42,78,345
+C,src/actions/rooms/refreshes.c,30,100,344
+C,src/actions/accounts/custom_styles.c,34,51,338
+C,src/storage/process.c,30,37,333
+C,src/views/view_assets.c,29,24,333
+C,src/auth/before.c,32,78,332
+C,src/presenters/bots.c,22,28,326
+C,src/cache.c,36,27,324
+C,src/auth/json.c,19,12,319
+C,src/http/response.c,35,13,319
+C,src/models/rich_text_record.c,42,51,312
+C,src/actions/active_storage/direct_uploads.c,18,58,299
+C,src/presenters/layout.c,18,20,296
+C/C++ Header,src/richtext/internal.h,71,101,287
+C,src/models/boost.c,37,41,284
+C,src/actions/accounts/users.c,29,48,282
+C,src/richtext/rt_richtext.c,20,34,280
+C,src/storage/marcel.c,26,27,272
+C,src/views/messages_json.c,12,63,271
+C,src/presenters/rooms.c,14,16,267
+C/C++ Header,src/http/http_internal.h,48,119,265
+C,src/integrations/webhook.c,15,72,265
+C/C++ Header,src/storage/active_storage.h,62,217,265
+C,src/views/layout.c,7,11,250
+C,src/richtext/rt_pipeline.c,13,13,246
+C,src/richtext/rt_resolver.c,11,9,233
+C,src/presenters/users_profiles.c,24,35,229
+C,src/actions/sessions.c,38,85,217
+C,src/front/tls.c,19,7,214
+C,src/richtext/rt_plain.c,11,11,202
+C,src/views/translations.c,16,13,201
+C,src/actions/sessions/transfers.c,27,58,185
+C,src/encoding.c,21,39,185
+C/C++ Header,src/cable/channels.h,49,154,183
+C,vendor/media/cf-vips.c,12,8,178
+C,src/cache_key.c,24,13,177
+C,src/actions/welcome.c,16,58,173
+C/C++ Header,src/cable/cable.h,47,187,173
+C,src/views/escape.c,20,50,173
+C,src/db/schema.c,17,17,170
+C/C++ Header,src/cf.h,11,20,165
+C,src/db/statements.c,21,15,152
+C,src/actions/unfurl_links.c,13,38,150
+C,src/actions/users/bans.c,20,82,150
+C,src/cable/protocol.c,10,8,150
+C,src/actions/users/sidebars.c,19,63,147
+C,src/actions/qr_code.c,16,61,146
+C,src/models/sound.c,10,14,141
+C/C++ Header,src/integrations/push.h,41,118,140
+C/C++ Header,src/views/internal.h,41,79,140
+C,src/auth/platform.c,19,22,138
+C,src/actions/accounts/bots/keys.c,13,51,127
+C/C++ Header,src/auth.h,51,182,126
+C,src/actions/accounts/join_codes.c,14,27,111
+C,src/presenters/push_subscriptions.c,11,16,111
+C/C++ Header,src/actions/actions.h,37,43,100
+C,src/core/buffer.c,12,13,99
+C/C++ Header,src/models/types.h,28,67,99
+C,src/views/welcome.c,5,6,95
+C,src/actions/users/avatars_destroy.c,11,46,93
+C/C++ Header,src/front/h2.h,23,107,93
+C,src/views/first_run.c,5,147,92
+C,src/views/model.c,12,6,90
+C/C++ Header,src/context.h,40,224,88
+C/C++ Header,src/models/user.h,11,70,85
+C,src/views/qr_svg.c,8,34,84
+C,src/auth/rate.c,13,11,83
+C/C++ Header,src/db/schema_sql.h,3,17,81
+C,src/core/random.c,11,5,80
+C/C++ Header,src/storage/media.h,33,128,80
+C/C++ Header,src/presenters/bots.h,23,41,77
+C/C++ Header,src/models/message.h,12,55,76
+C,src/integrations/push_http.c,1,2,75
+C/C++ Header,src/config.h,13,40,73
+C/C++ Header,src/integrations/http.h,13,44,73
+C/C++ Header,src/auth/internal.h,31,51,71
+C/C++ Header,src/db/db_internal.h,40,92,71
+C/C++ Header,src/storage/storage.h,26,97,71
+C,src/gzip.c,9,42,70
+C/C++ Header,src/http/http.h,22,127,70
+C,src/views/users_avatars.c,7,22,70
+C/C++ Header,src/actions/avatar_upload.h,2,4,66
+C/C++ Header,src/cable/revocation.h,30,173,64
+C,src/models/touch.c,9,15,61
+C/C++ Header,src/models/membership.h,13,40,60
+C/C++ Header,src/models/push_subscription.h,12,34,56
+C/C++ Header,src/presenters/accounts.h,12,40,55
+C/C++ Header,src/auth/user_agent.h,19,51,54
+C/C++ Header,src/integrations/webhook.h,15,50,54
+C/C++ Header,src/models/room.h,8,45,53
+C/C++ Header,src/cache_key.h,12,59,51
+C/C++ Header,src/jobs/jobs.h,18,105,50
+C,src/models/first_run.c,8,23,48
+C/C++ Header,src/http/params.h,12,68,46
+C,src/views/ctx.c,3,6,46
+C/C++ Header,src/models/account.h,12,35,45
+C/C++ Header,src/views/users_models.h,9,34,45
+C/C++ Header,src/models/active_storage.h,12,27,44
+C/C++ Header,src/routes.h,16,55,44
+C/C++ Header,src/cache.h,12,120,42
+C/C++ Header,src/jobs/handlers.h,9,89,42
+C,src/core/clock.c,9,5,37
+C/C++ Header,src/front/tls.h,18,51,37
+C/C++ Header,src/integrations/unfurl.h,10,34,34
+C,src/models/types.c,5,23,32
+C/C++ Header,src/models/session.h,9,16,30
+C/C++ Header,src/db/writer.h,12,74,29
+C/C++ Header,src/richtext.h,14,75,27
+C,src/core/error.c,1,1,26
+C/C++ Header,src/models/boost.h,8,14,25
+C/C++ Header,src/models/rich_text_record.h,8,12,25
+C/C++ Header,src/integrations/host_resolve.h,11,71,24
+C/C++ Header,src/models/webhook.h,9,14,24
+C/C++ Header,src/models/search.h,9,14,23
+C/C++ Header,src/models/sound.h,8,17,23
+C/C++ Header,src/models/ban.h,8,13,21
+C/C++ Header,src/auth/platform.h,6,38,20
+C,src/core/alloc.c,7,1,20
+C/C++ Header,src/app.h,13,59,19
+C/C++ Header,src/models.h,2,7,19
+C/C++ Header,src/app_internal.h,13,40,17
+C/C++ Header,src/views/accounts_custom_styles.h,5,2,16
+C/C++ Header,src/core/alloc.h,6,10,13
+C/C++ Header,src/storage/marcel.h,8,39,12
+C/C++ Header,src/encoding.h,5,83,11
+C/C++ Header,src/integrations/push_http.h,0,3,10
+C/C++ Header,src/presenters/searches.h,5,25,9
+C/C++ Header,src/core/testclock.h,5,9,7
+C/C++ Header,src/models/first_run.h,5,15,7
+C/C++ Header,src/models/touch.h,4,32,7
+C/C++ Header,src/core/testrandom.h,4,9,6
+C/C++ Header,src/presenters/push_subscriptions.h,3,20,6
+C/C++ Header,src/presenters/users_profiles.h,3,17,6
+C/C++ Header,src/core/error.h,3,7,5
+SUM,,8058,14838,108371

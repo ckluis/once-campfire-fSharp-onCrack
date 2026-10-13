@@ -1,0 +1,7 @@
+09:14:10 load  10.58 7.92 8.44  | 112.8 beam.smp, 46.2 go, 10.9 postgres:, 8.3 claude, 
+09:14:16 load  11.37 8.18 8.52  | 109.2 beam.smp, 51.2 go, 9.5 XprotectService, 
+09:14:22 load  11.26 8.21 8.53  | 28.0 go, 7.3 WindowServer, 3.9 WallpaperAerialsExtension, 
+09:14:28 load  11.32 8.27 8.55  | 11.6 XprotectService, 7.0 WindowServer, 4.4 syspolicyd, 
+09:14:34 load  10.90 8.23 8.54  | 61.4 go, 19.1 compile, 7.4 WindowServer, 
+09:14:40 load  11.14 8.33 8.57  | 76.7 go, 16.2 compile, 9.9 XprotectService, 
+09:14:46 load  9.74 8.12 8.49  | 7.8 WindowServer, 6.5 XprotectService, 5.7 launchd, 5.5 syspolicyd, 

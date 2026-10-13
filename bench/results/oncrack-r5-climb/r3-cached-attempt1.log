@@ -1,0 +1,67 @@
+date: 2026-10-13T06:32:28-04:00
+host: 6.8.0-117-generic, , 8 threads, 5GB
+server cpus: 0-3 (nproc 4); loadgen cpus: 4-7; network: host
+env: WEB_CONCURRENCY=3 JOB_CONCURRENCY=3 RAILS_MAX_THREADS=5 
+rust extra env: 
+fsharp extra env: 
+oncrack extra env: CAMPFIRE_FRESH_AUTH=0
+user agent: (none)
+oncrack image: campfire-oncrack:r3final sha256:e34e485ff87ddd3d1fdb7f5dbebe6f2a1a563b3b8f6ccb5f403f31b6fbc753a4 2026-10-13T04:46:33.001661448-04:00 built from commit: 37c5988
+repo HEAD: 3e6a300 (dirty: 0 files under src/ and rust/)
+work dir (seed copies): /var/tmp/campfire-bench-work (ext4)
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11), built with rust:1.98.1-trixie
+seed: default (realistic workloads: crowd; classic: default); realistic concs 16, MIX_POSTERS 1, SPREAD_POSTERS 1, POST_RATE 0, POSTING_USERS 32, SEARCH_QUERIES 200, REAL_USERS 0 (0: all)
+schedule: apps oncrack, reps 3; suites: http; http secs 8, concs 1 16, routes room_show messages_page sidebar search post_message, warm-up 30s at each route and concentration, idle 5s
+log retention: 2 x 10m (json-file)
+[06:33:19] load before run: 1.44 2.79 3.02 (waited 50s)
+[06:33:23] host busy: {"spin_ms": 71.66, "spin_ms_max_cpu": 93.71, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.29}
+[06:33:36] host busy: {"spin_ms": 75.48, "spin_ms_max_cpu": 81.05, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.358}
+[06:33:52] host busy: {"spin_ms": 75.31, "spin_ms_max_cpu": 133.43, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.355}
+[06:34:05] host busy: {"spin_ms": 66.81, "spin_ms_max_cpu": 74.41, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.202}
+[06:34:18] host busy: {"spin_ms": 63.91, "spin_ms_max_cpu": 69.51, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.15}
+[06:34:30] host probe before run: {"spin_ms": 60.46, "spin_ms_max_cpu": 61.71, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.088} (waited 100s)
+[06:34:30] oncrack rep 1: starting (load: 0.62 2.26 2.82)
+[06:34:36] oncrack rep 1: cold start 312ms, idle 28MB (anon 15MB)
+[06:35:45] oncrack rep 1: room_show c=1 22592.8 rps p50 0.046 p99 0.055 {'200': 180745} err 0 cpu 22.0 us/req; warm-up 58.0 s settled tail 22968.3 host 1.078 
+[06:36:44] oncrack rep 1: room_show c=16 155775.1 rps p50 0.087 p99 0.277 {'200': 1246267} err 0 cpu 19.1 us/req; warm-up 48.0 s settled tail 172664.1 host 1.037 
+[06:37:46] oncrack rep 1: messages_page c=1 23646.1 rps p50 0.045 p99 0.057 {'200': 189171} err 0 cpu 20.9 us/req; warm-up 52.0 s settled tail 23265.8 host 1.051 
+[06:39:28] oncrack rep 1: messages_page c=16 154178.6 rps p50 0.094 p99 0.392 {'200': 1233492} err 0 cpu 21.5 us/req; warm-up 90.2 s reached the maximum tail 154214.3 host 1.164 
+[06:40:18] oncrack rep 1: sidebar c=1 27280.0 rps p50 0.036 p99 0.083 {'200': 218242} err 0 cpu 18.1 us/req; warm-up 38.0 s settled tail 23460.9 host 1.094 
+[06:41:31] oncrack rep 1: sidebar c=16 133333.0 rps p50 0.086 p99 0.636 {'200': 1067060} err 0 cpu 20.4 us/req; warm-up 56.0 s settled tail 170010.1 host 1.242 
+[06:43:13] oncrack rep 1: search c=1 3328.4 rps p50 0.126 p99 3.375 {'200': 26628} err 0 cpu 122.8 us/req; warm-up 90.0 s reached the maximum tail 11115.6 host 1.356 
+[06:43:54] oncrack rep 1: search c=16 166476.9 rps p50 0.089 p99 0.242 {'200': 1331901} err 0 cpu 19.3 us/req; warm-up 30.0 s settled tail 153992.7 host 1.076 
+[06:45:38] oncrack rep 1: post_message c=1 1626.7 rps p50 0.231 p99 1.012 {'200': 14877} err 0 cpu 372.7 us/req; warm-up 90.5 s reached the maximum tail 2270.8 host 1.141 
+[06:47:21] oncrack rep 1: post_message c=16 7261.2 rps p50 1.216 p99 5.795 {'200': 58101} err 0 cpu 259.4 us/req; warm-up 91.2 s reached the maximum tail 6911.0 host 1.126 
+[06:47:29] oncrack rep 1: done -> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-climb/r3-cached/oncrack-1.json
+[06:48:09] load before run: 1.48 2.48 2.75 (waited 40s)
+[06:48:13] host busy: {"spin_ms": 78.52, "spin_ms_max_cpu": 89.2, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.413}
+[06:48:26] host probe before run: {"spin_ms": 60.44, "spin_ms_max_cpu": 61.98, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.088} (waited 50s)
+[06:48:26] oncrack rep 2: starting (load: 1.22 2.38 2.71)
+[06:48:31] oncrack rep 2: cold start 265ms, idle 29MB (anon 15MB)
+[06:50:15] oncrack rep 2: room_show c=1 6777.0 rps p50 0.083 p99 0.812 {'200': 54220} err 0 cpu 65.1 us/req; warm-up 90.0 s reached the maximum tail 10815.5 host 1.568 
+[06:51:14] oncrack rep 2: room_show c=16 122940.9 rps p50 0.108 p99 0.54 {'200': 983604} err 0 cpu 24.1 us/req; warm-up 48.0 s settled tail 131734.6 host 1.192 
+[06:52:56] oncrack rep 2: messages_page c=1 18414.9 rps p50 0.045 p99 0.149 {'200': 147322} err 0 cpu 27.8 us/req; warm-up 90.0 s reached the maximum tail 17257.9 host 1.11 
+[06:53:37] oncrack rep 2: messages_page c=16 154626.2 rps p50 0.095 p99 0.338 {'200': 1237064} err 0 cpu 22.0 us/req; warm-up 30.0 s settled tail 153641.1 host 1.107 
+[06:54:50] oncrack rep 2: sidebar c=1 25333.3 rps p50 0.039 p99 0.056 {'200': 202669} err 0 cpu 19.2 us/req; warm-up 62.0 s settled tail 24844.7 host 1.135 
+[06:56:31] oncrack rep 2: sidebar c=16 170947.6 rps p50 0.087 p99 0.222 {'200': 1367651} err 0 cpu 19.4 us/req; warm-up 90.0 s reached the maximum tail 138397.5 host 1.105 
+[06:58:12] oncrack rep 2: search c=1 23548.3 rps p50 0.039 p99 0.11 {'200': 188389} err 0 cpu 20.7 us/req; warm-up 90.0 s reached the maximum tail 23732.9 host 1.076 
+[06:58:55] oncrack rep 2: search c=16 169291.4 rps p50 0.088 p99 0.244 {'200': 1354400} err 0 cpu 19.5 us/req; warm-up 32.0 s settled tail 173864.5 host 1.1 
+[07:00:36] oncrack rep 2: post_message c=1 2227.1 rps p50 0.266 p99 1.067 {'200': 17818} err 0 cpu 463.0 us/req; warm-up 90.0 s reached the maximum tail 2244.9 host 1.158 
+[07:02:20] oncrack rep 2: post_message c=16 6010.8 rps p50 1.322 p99 6.607 {'200': 48103} err 0 cpu 293.7 us/req; warm-up 92.1 s reached the maximum tail 6500.2 host 1.242 
+[07:02:24] oncrack rep 2: done -> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-climb/r3-cached/oncrack-2.json
+[07:03:14] load before run: 1.27 2.34 2.57 (waited 50s)
+[07:03:17] host busy: {"spin_ms": 64.78, "spin_ms_max_cpu": 70.84, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.166}
+[07:03:30] host busy: {"spin_ms": 61.75, "spin_ms_max_cpu": 62.71, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.111}
+[07:03:45] host busy: {"spin_ms": 66.44, "spin_ms_max_cpu": 138.08, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.196}
+[07:03:57] host probe before run: {"spin_ms": 60.83, "spin_ms_max_cpu": 62.44, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.095} (waited 80s)
+[07:03:57] oncrack rep 3: starting (load: 0.78 2.06 2.46)
+[07:04:03] oncrack rep 3: cold start 374ms, idle 29MB (anon 15MB)
+[07:05:45] oncrack rep 3: room_show c=1 17683.0 rps p50 0.045 p99 0.213 {'200': 141468} err 0 cpu 26.2 us/req; warm-up 90.0 s reached the maximum tail 15523.3 host 1.129 
+[07:06:43] oncrack rep 3: room_show c=16 152223.1 rps p50 0.097 p99 0.274 {'200': 1217837} err 0 cpu 21.0 us/req; warm-up 48.0 s settled tail 148128.4 host 1.083 
+[07:08:26] oncrack rep 3: messages_page c=1 11021.2 rps p50 0.076 p99 0.325 {'200': 88173} err 0 cpu 48.0 us/req; warm-up 90.0 s reached the maximum tail 13178.5 host 1.736 
+[07:09:17] oncrack rep 3: messages_page c=16 111307.5 rps p50 0.107 p99 0.688 {'200': 890561} err 0 cpu 24.9 us/req; warm-up 38.1 s settled tail 126079.1 host 1.507 
+[07:10:59] oncrack rep 3: sidebar c=1 12109.0 rps p50 0.071 p99 0.263 {'200': 96878} err 0 cpu 43.2 us/req; warm-up 90.0 s reached the maximum tail 11961.0 host 1.4 
+[07:12:27] oncrack rep 3: sidebar c=16 133471.3 rps p50 0.092 p99 0.525 {'200': 1067868} err 0 cpu 22.0 us/req; warm-up 76.0 s settled tail 142342.8 host 1.32 
+[07:14:08] oncrack rep 3: search c=1 14704.5 rps p50 0.047 p99 0.319 {'200': 117638} err 0 cpu 33.8 us/req; warm-up 90.0 s reached the maximum tail 12164.7 host 1.344 
+[07:14:55] oncrack rep 3: search c=16 118159.1 rps p50 0.105 p99 0.576 {'200': 945466} err 0 cpu 24.6 us/req; warm-up 34.0 s settled tail 119435.9 host 1.601 
+[07:16:37] oncrack rep 3: post_message c=1 2003.2 rps p50 0.358 p99 1.683 {'200': 16026} err 0 cpu 628.2 us/req; warm-up 90.0 s reached the maximum tail 1247.6 host 1.198 

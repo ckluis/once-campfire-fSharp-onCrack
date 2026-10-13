@@ -1,0 +1,22 @@
+diff --git a/src/Campfire.Db/Database.fs b/src/Campfire.Db/Database.fs
+index 81c8e96..c0e573f 100644
+--- a/src/Campfire.Db/Database.fs
++++ b/src/Campfire.Db/Database.fs
+@@ -211,7 +211,16 @@ module internal Pragmas =
+         let conn = Conn.Open(path, StatementCacheCapacity)
+         try
+             Schema.configureConnection conn
+-            if reader then conn.ExecuteBatch "PRAGMA query_only = ON"
++            if reader then
++                conn.ExecuteBatch "PRAGMA query_only = ON"
++                // onCrack: readers may map the database file (`CAMPFIRE_READER_MMAP_MB`), so the pages a commit made them
++                // drop from their cache come back without a read(2) copy. Off by default.
++                match Environment.GetEnvironmentVariable "CAMPFIRE_READER_MMAP_MB" with
++                | null -> ()
++                | value ->
++                    match Int32.TryParse value with
++                    | true, mb when mb > 0 -> conn.ExecuteBatch $"PRAGMA mmap_size = {int64 mb * 1024L * 1024L}"
++                    | _ -> ()
+             conn
+         with _ ->
+             (conn :> IDisposable).Dispose()

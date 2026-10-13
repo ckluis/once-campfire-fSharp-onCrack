@@ -1,0 +1,264 @@
+{
+ "_provenance": "The onCrack round 1 verifier's report (an adversarial review of units C1-C3, run 2026-10-07 on image 460e89d / HEAD f03b62a), copied verbatim under \"report\" from the round's workflow result. \"attacks\" and \"gates\" restate it one test per entry; every \"quote\" is a verbatim substring of \"report\" and every number in \"numbers\" appears in its quote, which site/build.py checks. The scratch xUnit project and the kill test the verifier wrote are beside this file (AttackTests.fs, Attack.Tests.fsproj, killtest.py; they ran from the session's scratch directory with CAMPFIRE_ROOT set to the repo, so the fsproj names absolute paths). logs/ holds the verifier's saved logs with ANSI colours removed, and logs/session-results.log every attack-test and kill-test result line from the verifier's tool output, in order. The fixes for the four findings are bench/results/oncrack-fixes.md.",
+ "report": {
+  "verify_passed": true,
+  "pixel_parity": "PASSED. I ran bin/pixel-parity with the full lean matrix on all five seeds, one after another, against campfire-candidate-oncrack. That image is labelled 460e89d, and the app source at HEAD f03b62a is identical apart from the AOT-only fsproj block. Every screenshot matched: 940/940 pixel-equal, 0 flaky, 0 not captured, in 3,843 s. By seed: default 860/860 (3,585 s), crowd 24/24, custom_styles 32/32, first_run 16/16, restricted 8/8. auth/sign_in/error and auth/sign_in/rate_limited timed out on the first attempt waiting for stylesheets (the 30 s hang C0 already recorded, which predates round 1) and matched on the retry. Reports are in /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/parity/out/pixel-parity-verifier-r1/ (run.log, <seed>/report.html). During the run WebKit's WPEWebProcess left a 5.8 GB core dump at /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/parity/core; I deleted it, and that brought free disk from 10 GB back to 21 GB.\n\nOther gates:\n- bin/verify with CAMPFIRE_REQUIRE_SEED=1 passed: 1,066 tests, 1,059 passed, 7 skipped (none of them for a missing seed), 0 failed.\n- bin/db-differential passed: the fixture, scenario and export tests, schema identity (the TEMP triggers stay out of the database file), and Rails rollback.\n- bin/kit-differential: 9 x 3,000 inputs, 0 differ.\n- bin/kit-differential http: 263 of 3,000 requests differ, every one only by an added content-length header, so it exits 1. With CAMPFIRE_GZIP_LENGTH=off, 0 differ.\n- Not run: the richtext and views differentials, because Campfire.RichText and Campfire.Views are unchanged since the fork (0ae3436).\n\nAttacks that held up:\n- SIGKILL during 16-thread posting with default settings: 3 runs in colima, 9,656 acknowledged posts, 0 lost, 0 duplicated, 0 missing from the search index; the newest acknowledged post was on the room page after restart.\n- Membership removed and restored 300 times under 12 concurrent readers: 0 leaks on the room page, messages page, sidebar or search.\n- Cross-user read after write with 8 concurrent posters under group commit: 200 checks, 0 stale, each post stored exactly once.\n- Cached hits against misses: headers and cookies equal, and a HEAD as the first request does not break the GET after it. Turbo-stream and JSON Accept headers on a warm key still get 406.\n- Page store bound: 4,000 different URLs of a 416 KB page grew the managed heap by 12 MB.\n- C2's open flake (an empty room page right after a post): not reproduced in 30 fresh boots, 15 runs of ReadCacheTests and 10 runs of GroupCommitTests plus VersionsTests.\n- Shared ETags: Jason gets a 304 for David's messages-page ETag, but the same happens with the cache off, so it is the port's behaviour (fresh_when) and not a cache leak.\n\nThe attack tests are in /private/tmp/claude-501/-Users-clank-Desktop-projects/fea4ed62-8823-4b82-bed5-fc54b6214d57/scratchpad/attack/AttackTests.fs, a scratch xUnit project; run it with CAMPFIRE_ROOT set to the repo. Logs are in that folder, and the kill test is scratchpad/killtest.py. No repo file was modified.",
+  "findings": [
+   {
+    "severity": "major",
+    "file": "/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/src/Campfire.App/ReadCache.fs",
+    "issue": "The read cache can keep serving a page rendered from the user's row as it was before a committed change to that user. Authentication loads the signed-in user first (Concerns.fs:158, through ReadCache.user), and only later does ReadCache.page take the version counters (ReadCache.fs:205, roomDeps at :234, userRoomsDeps at :238). The page is rendered from the user object authentication loaded. If a change to that user commits and its counters are released between those two points, the page is built from the old row but stored under the new counter values. It is then served to every later request until an unrelated write moves a counter. The pages hit are the room page (current-user-name meta tag and the composer's message template), the sidebar (name, avatar, and the administrator-only New Chat Room button) and the search page, which has the same layout. This breaks plan rule 2: a stale page after a committed write, by the same user and, for role changes, by an admin.",
+    "evidence": "Scratch tests A1, A1b and A1c each make 1,500 writes; after each write returns, a fresh request is checked while 12 other browsers read the same page.\n- A1, self-rename, room page: 93 and 75 stale pages in two runs. Example: after the rename to 'David 5' committed, the page still showed meta and template 'David 4', and the next request with no write in between showed 'David 4' again.\n- A1b, sidebar name: 50 stale.\n- A1c, restricted seed, role toggled by SQL: 79 sidebars disagreed with the committed role. Some showed New Chat Room after David became Member; others hid it after he became Administrator.\n- With CAMPFIRE_READ_CACHE=off, all three tests found 0 stale pages, so the cache causes it.\n- With CAMPFIRE_GROUP_COMMIT=off and the cache on, the room page and sidebar tests still fail, so group commit is not the cause.\n- Logs: scratchpad/attack/a1-cache-on.log, a1-cache-off.log, a1c-on.log, a1c-off.log.",
+    "fix": "Take the global counter value at the moment authentication loads the user, and use that value as the page's global dependency, so the page is neither stored nor served if a change to users happened in between. The users cache entry already holds this value as its Dep. Alternatively, take the page's counters before beforeActions runs, or add the user's updated_at to the cache key. Add A1, A1b and A1c to ReadCacheTests."
+   },
+   {
+    "severity": "minor",
+    "file": "/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/src/Campfire.Db/Versions.fs",
+    "issue": "Memory grows without bound with the room ids that signed-in users put in URLs. Versions.Room (line 67) calls rooms.GetOrAdd for any id. ReadCache.roomDeps (ReadCache.fs:234) calls it with the room id parsed from the URL before set_room checks that the room exists or that the user is a member. Cells are never removed, so any signed-in user can add one cell per request for /rooms/N or /rooms/N/messages with a new N.",
+    "evidence": "Scratch test A2: 40,000 requests for room ids that do not exist, half to /rooms/N and half to /rooms/N/messages, every one answered 302 or 404. The room version cells went from 0 to 40,000. The managed heap kept 587 bytes per request, against 392 with CAMPFIRE_READ_CACHE=off, so about 195 bytes per distinct id. Extrapolated, 10 million ids would hold about 2 GB. Logs: scratchpad/attack/a2.log and a2-off.log.",
+    "fix": "Create a room cell only once the room is known to exist and the user is a member: on a miss, take the cell after set_room succeeds, but keep the rule that counters are read before the first query. Or use a fixed-size array of counters indexed by a hash of the room id, where a collision only causes extra invalidation. Or skip caching for a room id that has no cell yet."
+   },
+   {
+    "severity": "minor",
+    "file": "/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/src/Campfire.Db/Database.fs",
+    "issue": "Group commit more than doubles how often concurrent posts are broadcast out of commit order. The writer answers every caller in a group one after another (Database.fs:712). Each request then broadcasts from its own continuation in messages#create (Messages.fs:432), so posts committed together go out in whatever order their continuations happen to run. The port reorders too, but much less. For appends this cannot be seen: the client re-sorts appended messages by data-sort-value (reference messages_controller.js:175-188), and created_at follows commit order inside a group. A replace and a remove of the same message from requests that are in flight at the same time are not re-sorted.",
+    "evidence": "Scratch test A5: 16 browsers each post 20 messages to All Talk, while a raw Hub subscriber records the data-message-id of each broadcast.\n- Group commit on: 100, 92, 93 and 95 adjacent inversions out of 319 pairs over four runs.\n- CAMPFIRE_GROUP_COMMIT=off: 40, 49, 38 and 33.\n- All 320 broadcasts arrived every time, with no lag.\n- Logs: scratchpad/attack/a45-on.log, a45-off.log, a5-reps.log.",
+    "fix": "If the order matters, send a message's broadcast as an after-commit event on the writer, so events go out in commit order, or have the client ignore a replace that is older than what it has (data-message-updated-at). Otherwise, record in oncrack-c2.md that group commit increases broadcast reordering and that clients re-sort appends."
+   },
+   {
+    "severity": "minor",
+    "file": "/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bin/kit-differential",
+    "issue": "bin/kit-differential http now exits 1 by default. Since C3, every gzipped buffer and frozen page carries a Content-Length, which Rust's kit does not send. This difference is deliberate and the bodies are identical, but the gate fails unless it is run with CAMPFIRE_GZIP_LENGTH=off. That turns off the code path being shipped, so the shipped path no longer has a header differential.",
+    "evidence": "With default settings: plain 1,500 requests, 181 differ; ssl 1,500 requests, 82 differ. Every difference shown is only an added ('content-length', N), on 200, 404 and other statuses. With CAMPFIRE_GZIP_LENGTH=off: 0 differ in both. Logs: scratchpad/kithttp.log and kithttp-off.log.",
+    "fix": "Make reference-tools/kit/http-differential/fuzz.py accept a content-length on gzip answers from the F# side when it equals the body's length, and fail on every other difference. Record the deliberate difference where onCrack's differences are listed."
+   }
+  ]
+ },
+ "attacks": [
+  {
+   "id": "A1",
+   "target": "read cache: a rename of the signed-in user, room page",
+   "how": "1,500 writes; after each returns, a fresh request is checked while 12 other browsers read the same page",
+   "result": "found",
+   "finding": "major",
+   "numbers": {
+    "stale": [
+     "93",
+     "75"
+    ],
+    "checks": "1,500"
+   },
+   "quote": [
+    "A1, self-rename, room page: 93 and 75 stale pages in two runs.",
+    "Scratch tests A1, A1b and A1c each make 1,500 writes; after each write returns, a fresh request is checked while 12 other browsers read the same page."
+   ],
+   "log": "logs/a1-cache-on.log",
+   "control": "logs/a1-cache-off.log"
+  },
+  {
+   "id": "A1b",
+   "target": "read cache: a rename of the signed-in user, sidebar",
+   "how": "1,500 writes under 12 concurrent readers",
+   "result": "found",
+   "finding": "major",
+   "numbers": {
+    "stale": [
+     "50"
+    ],
+    "checks": "1,500"
+   },
+   "quote": [
+    "A1b, sidebar name: 50 stale.",
+    "Scratch tests A1, A1b and A1c each make 1,500 writes; after each write returns, a fresh request is checked while 12 other browsers read the same page."
+   ],
+   "log": "logs/a1-cache-on.log",
+   "control": "logs/a1-cache-off.log"
+  },
+  {
+   "id": "A1c",
+   "target": "read cache: an administrator's role toggled by SQL (restricted seed), the New Chat Room button",
+   "how": "1,500 role changes under 12 concurrent readers",
+   "result": "found",
+   "finding": "major",
+   "numbers": {
+    "stale": [
+     "79"
+    ],
+    "checks": "1,500"
+   },
+   "quote": [
+    "A1c, restricted seed, role toggled by SQL: 79 sidebars disagreed with the committed role.",
+    "Scratch tests A1, A1b and A1c each make 1,500 writes; after each write returns, a fresh request is checked while 12 other browsers read the same page."
+   ],
+   "log": "logs/a1c-on.log",
+   "control": "logs/a1c-off.log"
+  },
+  {
+   "id": "A2",
+   "target": "version counters: room ids nobody has, put in URLs",
+   "how": "40,000 requests for room ids that do not exist",
+   "result": "found",
+   "finding": "minor",
+   "numbers": {
+    "cells": "40,000",
+    "requests": "40,000",
+    "bytes_per_id": "195"
+   },
+   "quote": [
+    "The room version cells went from 0 to 40,000.",
+    "so about 195 bytes per distinct id"
+   ],
+   "log": "logs/a2.log",
+   "control": "logs/a2-off.log"
+  },
+  {
+   "id": "A3",
+   "target": "read cache: membership removed and restored under concurrent readers",
+   "how": "300 rounds under 12 concurrent readers: room page, messages page, sidebar and search",
+   "result": "held",
+   "finding": null,
+   "numbers": {
+    "rounds": "300",
+    "leaks": "0"
+   },
+   "quote": "Membership removed and restored 300 times under 12 concurrent readers: 0 leaks on the room page, messages page, sidebar or search.",
+   "log": "logs/session-results.log"
+  },
+  {
+   "id": "A4",
+   "target": "group commit: cross-user read after write",
+   "how": "8 concurrent posters under group commit",
+   "result": "held",
+   "finding": null,
+   "numbers": {
+    "checks": "200",
+    "stale": "0"
+   },
+   "quote": "Cross-user read after write with 8 concurrent posters under group commit: 200 checks, 0 stale, each post stored exactly once.",
+   "log": "logs/session-results.log"
+  },
+  {
+   "id": "A5",
+   "target": "group commit: broadcast order of concurrent posts",
+   "how": "16 browsers post 20 messages each while a raw subscriber records the broadcasts",
+   "result": "found",
+   "finding": "minor",
+   "numbers": {
+    "inversions_on": [
+     "100",
+     "92",
+     "93",
+     "95"
+    ],
+    "inversions_off": [
+     "40",
+     "49",
+     "38",
+     "33"
+    ],
+    "pairs": "319"
+   },
+   "quote": [
+    "Group commit on: 100, 92, 93 and 95 adjacent inversions out of 319 pairs over four runs.",
+    "CAMPFIRE_GROUP_COMMIT=off: 40, 49, 38 and 33."
+   ],
+   "log": "logs/a5-reps.log"
+  },
+  {
+   "id": "A6",
+   "target": "read cache: a hit against a miss (headers), HEAD first, Accept headers, ETags per user",
+   "how": "same requests cached and uncached; a HEAD before the GET; turbo-stream and JSON Accept on a warm key",
+   "result": "held",
+   "finding": null,
+   "numbers": {},
+   "quote": "Cached hits against misses: headers and cookies equal, and a HEAD as the first request does not break the GET after it. Turbo-stream and JSON Accept headers on a warm key still get 406.",
+   "note": "Shared ETags: Jason gets a 304 for David's messages-page ETag, but the same happens with the cache off, so it is the port's behaviour (fresh_when) and not a cache leak.",
+   "log": "logs/a6-off.log"
+  },
+  {
+   "id": "A7",
+   "target": "C2's open flake: an empty room page right after a post",
+   "how": "30 fresh boots; 15 runs of ReadCacheTests; 10 runs of GroupCommitTests plus VersionsTests",
+   "result": "held",
+   "finding": null,
+   "numbers": {
+    "boots": "30",
+    "read_cache_runs": "15",
+    "group_commit_runs": "10"
+   },
+   "quote": "C2's open flake (an empty room page right after a post): not reproduced in 30 fresh boots, 15 runs of ReadCacheTests and 10 runs of GroupCommitTests plus VersionsTests.",
+   "log": "AttackTests.fs"
+  },
+  {
+   "id": "A8",
+   "target": "read cache: the page store's memory bound",
+   "how": "4,000 different URLs of a 416 KB page",
+   "result": "held",
+   "finding": null,
+   "numbers": {
+    "urls": "4,000",
+    "page_kb": "416",
+    "heap_mb": "12"
+   },
+   "quote": "Page store bound: 4,000 different URLs of a 416 KB page grew the managed heap by 12 MB.",
+   "log": "logs/a8.log"
+  },
+  {
+   "id": "A9",
+   "target": "read cache: cookies of a hit against a miss",
+   "how": "the same pages cached and uncached; Set-Cookie compared",
+   "result": "held",
+   "finding": null,
+   "numbers": {},
+   "quote": "Cached hits against misses: headers and cookies equal",
+   "log": "logs/session-results.log"
+  },
+  {
+   "id": "kill",
+   "target": "durability: SIGKILL during posting, default settings",
+   "how": "16 threads post; the container is killed mid-run and restarted on the same storage; every post answered 200 is looked for",
+   "result": "held",
+   "finding": null,
+   "numbers": {
+    "runs": "3",
+    "acknowledged": "9,656",
+    "lost": "0"
+   },
+   "quote": "SIGKILL during 16-thread posting with default settings: 3 runs in colima, 9,656 acknowledged posts, 0 lost, 0 duplicated, 0 missing from the search index; the newest acknowledged post was on the room page after restart.",
+   "log": "logs/session-results.log",
+   "script": "killtest.py"
+  },
+  {
+   "id": "kit-http",
+   "target": "the HTTP differential gate against Rust's kit, default settings",
+   "how": "bin/kit-differential http: 3,000 random requests to both kits",
+   "result": "found",
+   "finding": "minor",
+   "numbers": {
+    "differ": "263",
+    "requests": "3,000"
+   },
+   "quote": "bin/kit-differential http: 263 of 3,000 requests differ, every one only by an added content-length header, so it exits 1.",
+   "log": "logs/kithttp.log",
+   "control": "logs/kithttp-off.log"
+  }
+ ],
+ "gates": [
+  {
+   "gate": "bin/verify (CAMPFIRE_REQUIRE_SEED=1)",
+   "quote": "bin/verify with CAMPFIRE_REQUIRE_SEED=1 passed: 1,066 tests, 1,059 passed, 7 skipped (none of them for a missing seed), 0 failed."
+  },
+  {
+   "gate": "bin/db-differential",
+   "quote": "bin/db-differential passed"
+  },
+  {
+   "gate": "bin/kit-differential",
+   "quote": "bin/kit-differential: 9 x 3,000 inputs, 0 differ."
+  },
+  {
+   "gate": "bin/pixel-parity",
+   "quote": "940/940 pixel-equal, 0 flaky, 0 not captured, in 3,843 s."
+  }
+ ]
+}

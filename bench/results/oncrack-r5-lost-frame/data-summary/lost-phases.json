@@ -1,0 +1,449 @@
+[
+ {
+  "block": "ab3-r4-image",
+  "run": "run03-c500",
+  "posted": 40773,
+  "complete": 40772,
+  "problems": [
+   "1 of 40773 posted messages did not reach every client",
+   "1 window stalls"
+  ],
+  "client_evidence": "none (client trace off in this block)"
+ },
+ {
+  "block": "ab3-r4-image",
+  "run": "run07-c500",
+  "posted": 42086,
+  "complete": 42085,
+  "problems": [
+   "1 of 42086 posted messages did not reach every client",
+   "1 window stalls"
+  ],
+  "client_evidence": "none (client trace off in this block)"
+ },
+ {
+  "block": "ab3-r4-image",
+  "run": "run08-c500",
+  "posted": 33348,
+  "complete": 33346,
+  "problems": [
+   "2 of 33348 posted messages did not reach every client",
+   "2 window stalls",
+   "2 ERROR/WARN lines in the app's log"
+  ],
+  "client_evidence": "none (client trace off in this block)"
+ },
+ {
+  "block": "ab4-new-build",
+  "run": "run01-c500",
+  "posted": 35970,
+  "complete": 35969,
+  "problems": [
+   "1 of 35970 posted messages did not reach every client",
+   "1 window stalls"
+  ],
+  "client_evidence": "none (client trace off in this block)"
+ },
+ {
+  "block": "d2-procmem-default",
+  "run": "run08-c500",
+  "posted": 42144,
+  "complete": 42143,
+  "problems": [
+   "1 of 42144 posted messages did not reach every client",
+   "1 window stalls",
+   "the container used under one core for 1854 ms inside the phase (a freeze)"
+  ],
+  "missing_seqs": [
+   [
+    31755,
+    "received_by",
+    499
+   ]
+  ],
+  "clients": 500,
+  "odd_clients": [
+   {
+    "bad_markers": 0,
+    "bytes": 438024880,
+    "confirms": 6,
+    "first_seq": 1,
+    "frames": 84383,
+    "last_msg_ns": 22244039953,
+    "last_seq": 42174,
+    "local_port": 37166,
+    "missing": [
+     31755
+    ],
+    "missing_n": 1,
+    "multi_marker_frames": 0,
+    "open_ns": 6250957,
+    "pings": 1,
+    "receipts": 42173,
+    "slot": 42,
+    "stage_open": true,
+    "suspects": [
+     {
+      "first_nonzero": 0,
+      "frames_walked_before": 63520,
+      "head": "n<NUL>o<NUL>u<NUL>t<NUL> <NUL>b<NUL>m<NUL>k<NUL>3<NUL>1<NUL>7<NUL>5<NUL>6<NUL>z<NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL>\u0018\ufffdK\u0005\u0004\ufffd<NUL><NUL>",
+      "last_nonzero": 10297,
+      "len": 10298,
+      "nul_bytes": 6887,
+      "t_ns": 17166971126,
+      "tail": "<NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL>@\"|\t\u0004\ufffd<NUL><NUL>\u0001<NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NU",
+      "why": "a text frame over 1 KB with no marker"
+     }
+    ],
+    "tail_miss": 0,
+    "text_frames": 84382,
+    "unmarked_big": 1,
+    "worker": 0
+   }
+  ]
+ },
+ {
+  "block": "i-notrace500",
+  "run": "run01-c500",
+  "posted": 38947,
+  "complete": 38945,
+  "problems": [
+   "2 of 38947 posted messages did not reach every client",
+   "2 window stalls"
+  ],
+  "missing_seqs": [
+   [
+    16581,
+    "received_by",
+    499
+   ],
+   [
+    16579,
+    "received_by",
+    499
+   ]
+  ],
+  "clients": 500,
+  "odd_clients": [
+   {
+    "bad_markers": 0,
+    "bytes": 404814444,
+    "confirms": 6,
+    "first_seq": 1,
+    "frames": 77989,
+    "last_msg_ns": 22311471726,
+    "last_seq": 38977,
+    "local_port": 38658,
+    "missing": [
+     16581,
+     16579
+    ],
+    "missing_n": 2,
+    "multi_marker_frames": 0,
+    "open_ns": 28570971,
+    "pings": 1,
+    "receipts": 38975,
+    "slot": 7,
+    "stage_open": true,
+    "suspects": [
+     {
+      "head": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\\\ufffd\ufffd\ufffd\u0000\u0000\ufffdK\u001e\ufffd\ufffd\ufffd\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000 -\\\ufffd\ufffd\ufffd\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffdJ\u001e\ufffd\ufffd\ufffd\u0000\u0000\u0000\ufffd#\ufffd\ufffd\ufffd\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffdl\\\ufffd\ufffd\ufffd\u0000\u0000",
+      "len": 10298,
+      "t_ns": 13435779119,
+      "tail": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "why": "a text frame over 1 KB with no marker"
+     },
+     {
+      "head": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "len": 10298,
+      "t_ns": 13435779119,
+      "tail": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "why": "a text frame over 1 KB with no marker"
+     }
+    ],
+    "tail_miss": 0,
+    "text_frames": 77988,
+    "unmarked_big": 2,
+    "worker": 0
+   }
+  ]
+ },
+ {
+  "block": "i-notrace500",
+  "run": "run03-c500",
+  "posted": 30977,
+  "complete": 30976,
+  "problems": [
+   "1 of 30977 posted messages did not reach every client",
+   "1 window stalls"
+  ],
+  "missing_seqs": [
+   [
+    12530,
+    "received_by",
+    499
+   ]
+  ],
+  "clients": 500,
+  "odd_clients": [
+   {
+    "bad_markers": 0,
+    "bytes": 322022084,
+    "confirms": 6,
+    "first_seq": 1,
+    "frames": 62049,
+    "last_msg_ns": 22293158545,
+    "last_seq": 31007,
+    "local_port": 57244,
+    "missing": [
+     12530
+    ],
+    "missing_n": 1,
+    "multi_marker_frames": 0,
+    "open_ns": 30078853,
+    "pings": 1,
+    "receipts": 31006,
+    "slot": 87,
+    "stage_open": true,
+    "suspects": [
+     {
+      "head": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "len": 10298,
+      "t_ns": 12269195639,
+      "tail": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "why": "a text frame over 1 KB with no marker"
+     }
+    ],
+    "tail_miss": 0,
+    "text_frames": 62048,
+    "unmarked_big": 1,
+    "worker": 1
+   }
+  ]
+ },
+ {
+  "block": "i-notrace500",
+  "run": "run05-c500",
+  "posted": 41305,
+  "complete": 41304,
+  "problems": [
+   "1 of 41305 posted messages did not reach every client",
+   "1 window stalls"
+  ],
+  "missing_seqs": [
+   [
+    16917,
+    "received_by",
+    499
+   ]
+  ],
+  "clients": 500,
+  "odd_clients": [
+   {
+    "bad_markers": 0,
+    "bytes": 429309386,
+    "confirms": 6,
+    "first_seq": 1,
+    "frames": 82706,
+    "last_msg_ns": 22283289427,
+    "last_seq": 41335,
+    "local_port": 36032,
+    "missing": [
+     16917
+    ],
+    "missing_n": 1,
+    "multi_marker_frames": 0,
+    "open_ns": 1761707,
+    "pings": 1,
+    "receipts": 41334,
+    "slot": 5,
+    "stage_open": true,
+    "suspects": [
+     {
+      "head": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\\\"channel\\\":\\\"RoomMessagesChannel\\\",\\\"signed_stream_name\\\":\\\"IloybGtPaTh2WTJGdGN",
+      "len": 10298,
+      "t_ns": 12584775680,
+      "tail": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "why": "a text frame over 1 KB with no marker"
+     }
+    ],
+    "tail_miss": 0,
+    "text_frames": 82705,
+    "unmarked_big": 1,
+    "worker": 2
+   }
+  ]
+ },
+ {
+  "block": "m2-gc4mb",
+  "run": "run06-c500",
+  "posted": 41619,
+  "complete": 41618,
+  "problems": [
+   "1 of 41619 posted messages did not reach every client",
+   "1 window stalls"
+  ],
+  "missing_seqs": [
+   [
+    41137,
+    "received_by",
+    499
+   ]
+  ],
+  "clients": 500,
+  "odd_clients": [
+   {
+    "bad_markers": 0,
+    "bytes": 432571180,
+    "confirms": 6,
+    "first_seq": 1,
+    "frames": 83333,
+    "last_msg_ns": 22873275742,
+    "last_seq": 41649,
+    "local_port": 40036,
+    "missing": [
+     41137
+    ],
+    "missing_n": 1,
+    "multi_marker_frames": 0,
+    "open_ns": 29423515,
+    "pings": 1,
+    "receipts": 41648,
+    "slot": 103,
+    "stage_open": true,
+    "suspects": [
+     {
+      "first_nonzero": 0,
+      "frames_walked_before": 82288,
+      "head": "`c\ufffd<7\ufffd<NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL>\ufffd<NUL>\ufffdK7\ufffd<NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL>\f<NUL>\u0002<NUL><NUL><N",
+      "last_nonzero": 10293,
+      "len": 10298,
+      "nul_bytes": 8864,
+      "t_ns": 20814707305,
+      "tail": "<NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL>\ufffd\ufffd\ufffd@w\ufffd<NUL><NUL>\ufffd&\ufffdK7\ufffd<NUL><NUL> (\ufffdK7\ufffd<NUL><NUL>@(\ufffdK7\ufffd<NUL><NUL>`(\ufffdK7\ufffd<NUL><NUL>\ufffd(\ufffdK7\ufffd<NUL",
+      "why": "a text frame over 1 KB with no marker"
+     }
+    ],
+    "tail_miss": 0,
+    "text_frames": 83332,
+    "unmarked_big": 1,
+    "worker": 2
+   }
+  ]
+ },
+ {
+  "block": "v3-verify-default",
+  "run": "run03-c500",
+  "posted": 39784,
+  "complete": 39783,
+  "problems": [
+   "1 of 39784 posted messages did not reach every client",
+   "1 window stalls"
+  ],
+  "missing_seqs": [
+   [
+    21934,
+    "received_by",
+    499
+   ]
+  ],
+  "clients": 500,
+  "odd_clients": [
+   {
+    "bad_markers": 0,
+    "bytes": 413509200,
+    "confirms": 6,
+    "first_seq": 1,
+    "frames": 79663,
+    "last_msg_ns": 22284923152,
+    "last_seq": 39807,
+    "local_port": 37072,
+    "missing": [
+     21934
+    ],
+    "missing_n": 1,
+    "multi_marker_frames": 0,
+    "open_ns": 55980006,
+    "pings": 1,
+    "receipts": 39813,
+    "slot": 76,
+    "stage_open": true,
+    "suspects": [
+     {
+      "first_nonzero": 0,
+      "frames_walked_before": 43876,
+      "head": "\ufffdX\u001e\u033e\ufffd<NUL><NUL>`X\u001e\u033e\ufffd<NUL><NUL>\u0002<NUL><NUL><NUL>\u0001<NUL><NUL><NUL>\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd<NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL>\u0010$\ufffd\ufffd\ufffd\ufffd<NUL",
+      "last_nonzero": 10297,
+      "len": 10298,
+      "nul_bytes": 6848,
+      "t_ns": 14540387094,
+      "tail": "<NUL><NUL><NUL><NUL><NUL><NUL>h\ufffd|\ufffd\ufffd\ufffd<NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL>\bUA\ufffd\ufffd\ufffd<NUL><NUL><NUL><NUL><NUL><NU",
+      "why": "a text frame over 1 KB with no marker"
+     }
+    ],
+    "tail_miss": 0,
+    "text_frames": 79662,
+    "unmarked_big": 1,
+    "worker": 2
+   }
+  ]
+ },
+ {
+  "block": "y3-verify-gc4mb-fresh",
+  "run": "run02-c500",
+  "posted": 35906,
+  "complete": 35905,
+  "problems": [
+   "1 of 35906 posted messages did not reach every client",
+   "1 window stalls",
+   "50 ERROR/WARN lines in the app's log"
+  ],
+  "missing_seqs": [
+   [
+    32224,
+    "received_by",
+    499
+   ]
+  ],
+  "clients": 500,
+  "odd_clients": [
+   {
+    "bad_markers": 0,
+    "bytes": 373224536,
+    "confirms": 6,
+    "first_seq": 1,
+    "frames": 71907,
+    "last_msg_ns": 22316447378,
+    "last_seq": 35936,
+    "local_port": 42814,
+    "missing": [
+     32224
+    ],
+    "missing_n": 1,
+    "multi_marker_frames": 0,
+    "open_ns": 71034665,
+    "pings": 1,
+    "receipts": 35935,
+    "slot": 73,
+    "stage_open": true,
+    "suspects": [
+     {
+      "first_nonzero": 39,
+      "frames_walked_before": 64459,
+      "head": "<NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL><NUL>",
+      "last_nonzero": 10297,
+      "len": 10298,
+      "nul_bytes": 7661,
+      "t_ns": 18838362314,
+      "tail": "<NUL>\r\u0005\ufffd<NUL><NUL>\b(<NUL>\r\u0005\ufffd<NUL><NUL>((<NUL>\r\u0005\ufffd<NUL><NUL>H(<NUL>\r\u0005\ufffd<NUL><NUL>h(<NUL>\r\u0005\ufffd<NUL><NUL>\u0018\ufffd\u001e<NUL>\u0005\ufffd<NUL><NUL>\ufffd\u007f\u001e<NUL>\u0005\ufffd<NUL><NUL>\u0002<NUL><NUL><NUL>\u0001<NUL>",
+      "why": "a text frame over 1 KB with no marker"
+     }
+    ],
+    "tail_miss": 0,
+    "text_frames": 71906,
+    "unmarked_big": 1,
+    "worker": 2
+   }
+  ]
+ }
+]

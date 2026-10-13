@@ -1,0 +1,20 @@
+run 392741ac: acked 6317, non-200 0, connection errors 192 (after the kill)
+stored 6317 distinct tokens (6317 rows); unacknowledged but stored 0
+LOST acknowledged posts: 0 []
+DUPLICATED: 0 []
+acknowledged without a search-index row: 0 []
+room page after restart: status 200; newest acknowledged post on it: True
+journal_mode wal
+killtest exit=0 run=392741ac
+pragma integrity_check: ok
+fts5 integrity-check: ok
+stored posts 6317, matched by the index 6317
+index exit=0
+`/` is not writable.
+Bundler will use `/tmp/bundler20261010-1-i9bq771' as your home directory temporarily.
+rails: messages matching kt392741ac*: 6317
+rails: created message 933440955; matching rl392741ac: 1
+rails: room page messages 6449
+oncrack after rails: room page 200, rails' post on it: True
+oncrack after rails: search 200, rails' post found: True
+roundtrip exit=0

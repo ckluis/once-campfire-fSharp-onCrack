@@ -1,0 +1,5 @@
+/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-verifier/Attack.Tests.fsproj : warning NU1504: Duplicate 'PackageReference' items found. Remove the duplicate items or use the Update functionality to ensure a consistent restore behavior. The duplicate 'PackageReference' items are: FSharp.Core , FSharp.Core 10.1.401.
+/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-verifier/Attack.Tests.fsproj : error NU1008: The following PackageReference items cannot define a value for Version: xunit.v3. Projects using Central Package Management must define a Version value on a PackageVersion item. For more information, visit https://aka.ms/nuget/cpm/gettingstarted
+
+The build failed. Fix the build errors and run again.
+dotnet run --project Attack.Tests.fsproj -c Release --no-launch-profile  0.72s user 0.21s system 119% cpu 0.781 total

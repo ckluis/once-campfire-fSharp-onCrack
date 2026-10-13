@@ -1,0 +1,30 @@
+{
+ "cloc": "2.10 (sha256 bf59272455172108072a0a106379f7509fd4349bdcfd85203bac038ccd286d83)",
+ "options": "--by-file --skip-uniqueness",
+ "language": "F#",
+ "rules": "handwritten src/**/*.fs; excluded: obj/ and bin/ (generated), src/Campfire.Assets.Build (a build-time tool, as Rust build.rs sits outside src/), tests/, parity/, bench/, templates in other languages (none: templates are F# modules, counted as rendering code, as Rust views are)",
+ "oncrack": {
+  "revision": "191c468cf72ad09acee911208dec5eec811020dc (the image campfire-oncrack:app label; clean worktree ~/Desktop/projects/oncrack-measured)",
+  "files": 333,
+  "code": 44631,
+  "html5ever_port": {
+   "files": 4,
+   "code": 3582
+  }
+ },
+ "fsharp": {
+  "revision": "2e6c08e (the image campfire-fsharp:app was built from; checkout HEAD 9954ad0 changes no src/)",
+  "files": 327,
+  "code": 42475,
+  "html5ever_port": {
+   "files": 4,
+   "code": 3582
+  }
+ },
+ "excluded_assets_build": {
+  "files": 3,
+  "code": 513
+ },
+ "note": "Campfire.RichText/Html5ever is a first-party F# port of the html5ever tokenizer that Rust takes as a crate dependency (not counted in Rust); without it onCrack is 40,863 and the port 38,893.",
+ "note_r3": "onCrack recounted at 191c468 with the same cloc 2.10 (sha256 as above) and the same rules (git ls-files src/**/*.fs minus src/Campfire.Assets.Build); the port is unchanged from round 2 (same image 421f335c3ff8); Rust, C, Rails are upstream as published (upstream-performance-review.md)."
+}

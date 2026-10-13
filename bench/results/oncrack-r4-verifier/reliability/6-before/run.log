@@ -1,0 +1,36 @@
+1791662210 oncrack round 1: cable 1000/1000 subscribed, 0 disconnected, 7141/7141 delivered to all, 475.8 msgs/s
+1791662241 oncrack round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 10703/10703 delivered to all, 569.9 msgs/s
+1791662241 {
+1791662241   "oncrack": {
+1791662241     "cable": {
+1791662241       "clients": 1000,
+1791662241       "posters": 4,
+1791662241       "subscribed": [
+1791662241         1000
+1791662241       ],
+1791662241       "disconnected": [
+1791662241         0
+1791662241       ],
+1791662241       "delivered_to_all": [
+1791662241         "7141/7141"
+1791662241       ],
+1791662241       "median_delivered_msgs_per_sec": 475.8,
+1791662241       "median_all_clients_p99_ms": 53.919
+1791662241     },
+1791662241     "cable_heavy": {
+1791662241       "clients": 1000,
+1791662241       "posters": 64,
+1791662241       "subscribed": [
+1791662241         1000
+1791662241       ],
+1791662241       "disconnected": [
+1791662241         0
+1791662241       ],
+1791662241       "delivered_to_all": [
+1791662241         "10703/10703"
+1791662241       ],
+1791662241       "median_delivered_msgs_per_sec": 569.9,
+1791662241       "median_all_clients_p99_ms": 8323.071
+1791662241     }
+1791662241   }
+1791662241 }

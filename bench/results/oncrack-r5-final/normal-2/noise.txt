@@ -1,0 +1,1 @@
+host-load-normal-2.txt: 54 samples during the session, 30 at >=150% (56%), max 558%, median 180% -> NOISY

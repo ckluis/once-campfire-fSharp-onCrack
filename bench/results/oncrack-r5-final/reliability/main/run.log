@@ -1,0 +1,842 @@
+1791876688 rails: overload room_show 64 clients 5150.2 valid req/s, 0 errors, 0 invalid
+1791876696 rails: overload room_show 256 clients 5779.6 valid req/s, 0 errors, 0 invalid
+1791876706 rails: overload messages_page 64 clients 4710.6 valid req/s, 0 errors, 0 invalid
+1791876714 rails: overload messages_page 256 clients 5819.8 valid req/s, 0 errors, 0 invalid
+1791876724 rails: overload sidebar 64 clients 5737.5 valid req/s, 0 errors, 0 invalid
+1791876732 rails: overload sidebar 256 clients 5553.3 valid req/s, 0 errors, 0 invalid
+1791876742 rails: overload search 64 clients 5574.0 valid req/s, 0 errors, 0 invalid
+1791876750 rails: overload search 256 clients 5925.7 valid req/s, 0 errors, 0 invalid
+1791876781 rails round 1: cable 1000/1000 subscribed, 0 disconnected, 428/428 delivered to all, 27.5 msgs/s
+1791876838 rails round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 705/705 delivered to all, 17.4 msgs/s
+1791876852 rust: overload room_show 64 clients 51043.4 valid req/s, 0 errors, 0 invalid
+1791876860 rust: overload room_show 256 clients 50227.8 valid req/s, 0 errors, 0 invalid
+1791876870 rust: overload messages_page 64 clients 48327.7 valid req/s, 0 errors, 0 invalid
+1791876878 rust: overload messages_page 256 clients 47266.3 valid req/s, 0 errors, 0 invalid
+1791876888 rust: overload sidebar 64 clients 57834.5 valid req/s, 0 errors, 0 invalid
+1791876896 rust: overload sidebar 256 clients 58766.6 valid req/s, 0 errors, 0 invalid
+1791876906 rust: overload search 64 clients 58377.9 valid req/s, 0 errors, 0 invalid
+1791876914 rust: overload search 256 clients 51703.9 valid req/s, 0 errors, 0 invalid
+1791876940 rust round 1: cable 1000/1000 subscribed, 0 disconnected, 7608/7608 delivered to all, 506.7 msgs/s
+1791877028 rust round 1: cable_heavy 1000/1000 subscribed, 944 disconnected, 65/76602 delivered to all, 4.3 msgs/s
+1791877041 c: overload room_show 64 clients 97557.0 valid req/s, 0 errors, 0 invalid
+1791877049 c: overload room_show 256 clients 89202.1 valid req/s, 0 errors, 7 invalid
+1791877059 c: overload messages_page 64 clients 95517.4 valid req/s, 0 errors, 0 invalid
+1791877067 c: overload messages_page 256 clients 96323.2 valid req/s, 0 errors, 11 invalid
+1791877077 c: overload sidebar 64 clients 108210.2 valid req/s, 0 errors, 0 invalid
+1791877085 c: overload sidebar 256 clients 110912.8 valid req/s, 0 errors, 22 invalid
+1791877095 c: overload search 64 clients 104973.1 valid req/s, 0 errors, 0 invalid
+1791877103 c: overload search 256 clients 104824.0 valid req/s, 0 errors, 53 invalid
+1791877310 c round 1: cable 344/1000 subscribed, 918 disconnected, 43/62699 delivered to all, 2.9 msgs/s
+1791877516 c round 1: cable_heavy 116/1000 subscribed, 809 disconnected, 67/66217 delivered to all, 4.5 msgs/s
+1791877530 oncrack: overload room_show 64 clients 196150.3 valid req/s, 0 errors, 0 invalid
+1791877538 oncrack: overload room_show 256 clients 196107.3 valid req/s, 0 errors, 0 invalid
+1791877548 oncrack: overload messages_page 64 clients 210635.0 valid req/s, 0 errors, 0 invalid
+1791877556 oncrack: overload messages_page 256 clients 201115.8 valid req/s, 0 errors, 0 invalid
+1791877566 oncrack: overload sidebar 64 clients 236991.9 valid req/s, 0 errors, 0 invalid
+1791877574 oncrack: overload sidebar 256 clients 247233.4 valid req/s, 0 errors, 0 invalid
+1791877584 oncrack: overload search 64 clients 235876.8 valid req/s, 0 errors, 0 invalid
+1791877592 oncrack: overload search 256 clients 240500.3 valid req/s, 0 errors, 0 invalid
+1791877619 oncrack round 1: cable 1000/1000 subscribed, 0 disconnected, 9282/9282 delivered to all, 618.5 msgs/s
+1791877648 oncrack round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 13571/13571 delivered to all, 738.3 msgs/s
+1791877662 oncrack-cached: overload room_show 64 clients 206684.9 valid req/s, 0 errors, 0 invalid
+1791877670 oncrack-cached: overload room_show 256 clients 170058.0 valid req/s, 0 errors, 0 invalid
+1791877680 oncrack-cached: overload messages_page 64 clients 238084.2 valid req/s, 0 errors, 0 invalid
+1791877688 oncrack-cached: overload messages_page 256 clients 234868.1 valid req/s, 0 errors, 0 invalid
+1791877698 oncrack-cached: overload sidebar 64 clients 260935.8 valid req/s, 0 errors, 0 invalid
+1791877706 oncrack-cached: overload sidebar 256 clients 269078.9 valid req/s, 0 errors, 0 invalid
+1791877716 oncrack-cached: overload search 64 clients 247412.6 valid req/s, 0 errors, 0 invalid
+1791877724 oncrack-cached: overload search 256 clients 247644.2 valid req/s, 0 errors, 0 invalid
+1791877752 oncrack-cached round 1: cable 1000/1000 subscribed, 0 disconnected, 8025/8025 delivered to all, 531.6 msgs/s
+1791877782 oncrack-cached round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 11761/11761 delivered to all, 628.5 msgs/s
+1791877797 oncrack-prev: overload room_show 64 clients 165544.8 valid req/s, 0 errors, 0 invalid
+1791877805 oncrack-prev: overload room_show 256 clients 157736.1 valid req/s, 0 errors, 0 invalid
+1791877815 oncrack-prev: overload messages_page 64 clients 187012.1 valid req/s, 0 errors, 0 invalid
+1791877823 oncrack-prev: overload messages_page 256 clients 179716.0 valid req/s, 0 errors, 0 invalid
+1791877833 oncrack-prev: overload sidebar 64 clients 216686.2 valid req/s, 0 errors, 0 invalid
+1791877841 oncrack-prev: overload sidebar 256 clients 216367.4 valid req/s, 0 errors, 0 invalid
+1791877851 oncrack-prev: overload search 64 clients 207246.5 valid req/s, 0 errors, 0 invalid
+1791877859 oncrack-prev: overload search 256 clients 196527.2 valid req/s, 0 errors, 0 invalid
+1791877886 oncrack-prev round 1: cable 1000/1000 subscribed, 0 disconnected, 8682/8682 delivered to all, 578.4 msgs/s
+1791877973 oncrack-prev round 1: cable_heavy 1000/1000 subscribed, 860 disconnected, 1/78325 delivered to all, 0.1 msgs/s
+1791877987 oncrack-prev: overload room_show 64 clients 141750.9 valid req/s, 0 errors, 0 invalid
+1791877995 oncrack-prev: overload room_show 256 clients 169272.5 valid req/s, 0 errors, 0 invalid
+1791878005 oncrack-prev: overload messages_page 64 clients 220230.5 valid req/s, 0 errors, 0 invalid
+1791878013 oncrack-prev: overload messages_page 256 clients 169821.0 valid req/s, 0 errors, 0 invalid
+1791878023 oncrack-prev: overload sidebar 64 clients 223483.8 valid req/s, 0 errors, 0 invalid
+1791878031 oncrack-prev: overload sidebar 256 clients 216872.9 valid req/s, 0 errors, 0 invalid
+1791878041 oncrack-prev: overload search 64 clients 164222.8 valid req/s, 0 errors, 0 invalid
+1791878049 oncrack-prev: overload search 256 clients 157319.7 valid req/s, 0 errors, 0 invalid
+1791878076 oncrack-prev round 2: cable 1000/1000 subscribed, 0 disconnected, 8934/8934 delivered to all, 595.1 msgs/s
+1791878162 oncrack-prev round 2: cable_heavy 1000/1000 subscribed, 833 disconnected, 51/69389 delivered to all, 3.4 msgs/s
+1791878176 oncrack-cached: overload room_show 64 clients 222782.7 valid req/s, 0 errors, 0 invalid
+1791878184 oncrack-cached: overload room_show 256 clients 204258.6 valid req/s, 0 errors, 0 invalid
+1791878194 oncrack-cached: overload messages_page 64 clients 240197.1 valid req/s, 0 errors, 0 invalid
+1791878202 oncrack-cached: overload messages_page 256 clients 233803.5 valid req/s, 0 errors, 0 invalid
+1791878212 oncrack-cached: overload sidebar 64 clients 258824.5 valid req/s, 0 errors, 0 invalid
+1791878220 oncrack-cached: overload sidebar 256 clients 272346.9 valid req/s, 0 errors, 0 invalid
+1791878230 oncrack-cached: overload search 64 clients 249337.9 valid req/s, 0 errors, 0 invalid
+1791878238 oncrack-cached: overload search 256 clients 252195.7 valid req/s, 0 errors, 0 invalid
+1791878265 oncrack-cached round 2: cable 1000/1000 subscribed, 0 disconnected, 9294/9294 delivered to all, 619.3 msgs/s
+1791878295 oncrack-cached round 2: cable_heavy 1000/1000 subscribed, 0 disconnected, 13725/13725 delivered to all, 737.9 msgs/s
+1791878308 oncrack: overload room_show 64 clients 211367.1 valid req/s, 0 errors, 0 invalid
+1791878316 oncrack: overload room_show 256 clients 194268.3 valid req/s, 0 errors, 0 invalid
+1791878326 oncrack: overload messages_page 64 clients 225413.2 valid req/s, 0 errors, 0 invalid
+1791878334 oncrack: overload messages_page 256 clients 223637.7 valid req/s, 0 errors, 0 invalid
+1791878344 oncrack: overload sidebar 64 clients 250343.3 valid req/s, 0 errors, 0 invalid
+1791878352 oncrack: overload sidebar 256 clients 261142.4 valid req/s, 0 errors, 0 invalid
+1791878362 oncrack: overload search 64 clients 241661.0 valid req/s, 0 errors, 0 invalid
+1791878370 oncrack: overload search 256 clients 242453.4 valid req/s, 0 errors, 0 invalid
+1791878397 oncrack round 2: cable 1000/1000 subscribed, 0 disconnected, 9182/9182 delivered to all, 611.7 msgs/s
+1791878426 oncrack round 2: cable_heavy 1000/1000 subscribed, 0 disconnected, 12737/12737 delivered to all, 710.0 msgs/s
+1791878440 c: overload room_show 64 clients 98729.0 valid req/s, 0 errors, 0 invalid
+1791878448 c: overload room_show 256 clients 99030.7 valid req/s, 0 errors, 4 invalid
+1791878458 c: overload messages_page 64 clients 102054.4 valid req/s, 0 errors, 0 invalid
+1791878466 c: overload messages_page 256 clients 99170.5 valid req/s, 0 errors, 15 invalid
+1791878476 c: overload sidebar 64 clients 107748.0 valid req/s, 0 errors, 0 invalid
+1791878484 c: overload sidebar 256 clients 109828.8 valid req/s, 0 errors, 13 invalid
+1791878494 c: overload search 64 clients 102466.8 valid req/s, 0 errors, 0 invalid
+1791878502 c: overload search 256 clients 104837.1 valid req/s, 0 errors, 24 invalid
+1791878708 c round 2: cable 285/1000 subscribed, 940 disconnected, 122/56812 delivered to all, 8.1 msgs/s
+1791878915 c round 2: cable_heavy 110/1000 subscribed, 848 disconnected, 24/58385 delivered to all, 1.6 msgs/s
+1791878928 rust: overload room_show 64 clients 32583.4 valid req/s, 0 errors, 0 invalid
+1791878936 rust: overload room_show 256 clients 32880.2 valid req/s, 0 errors, 0 invalid
+1791878946 rust: overload messages_page 64 clients 34863.4 valid req/s, 0 errors, 0 invalid
+1791878954 rust: overload messages_page 256 clients 32505.2 valid req/s, 0 errors, 0 invalid
+1791878964 rust: overload sidebar 64 clients 43497.4 valid req/s, 0 errors, 0 invalid
+1791878972 rust: overload sidebar 256 clients 56294.5 valid req/s, 0 errors, 0 invalid
+1791878982 rust: overload search 64 clients 54680.4 valid req/s, 0 errors, 0 invalid
+1791878990 rust: overload search 256 clients 26264.8 valid req/s, 0 errors, 0 invalid
+1791879017 rust round 2: cable 1000/1000 subscribed, 0 disconnected, 7799/7799 delivered to all, 519.5 msgs/s
+1791879104 rust round 2: cable_heavy 1000/1000 subscribed, 902 disconnected, 64/68190 delivered to all, 4.3 msgs/s
+1791879122 rails: overload room_show 64 clients 3343.3 valid req/s, 0 errors, 0 invalid
+1791879130 rails: overload room_show 256 clients 3615.5 valid req/s, 0 errors, 0 invalid
+1791879140 rails: overload messages_page 64 clients 3460.0 valid req/s, 0 errors, 0 invalid
+1791879148 rails: overload messages_page 256 clients 3801.1 valid req/s, 0 errors, 0 invalid
+1791879158 rails: overload sidebar 64 clients 4126.7 valid req/s, 0 errors, 0 invalid
+1791879166 rails: overload sidebar 256 clients 4928.3 valid req/s, 0 errors, 0 invalid
+1791879176 rails: overload search 64 clients 4622.9 valid req/s, 0 errors, 0 invalid
+1791879184 rails: overload search 256 clients 5231.4 valid req/s, 0 errors, 0 invalid
+1791879215 rails round 2: cable 1000/1000 subscribed, 0 disconnected, 301/301 delivered to all, 19.7 msgs/s
+1791879253 rails round 2: cable_heavy 1000/1000 subscribed, 0 disconnected, 545/545 delivered to all, 24.3 msgs/s
+1791879270 rails: overload room_show 64 clients 4875.9 valid req/s, 0 errors, 0 invalid
+1791879278 rails: overload room_show 256 clients 5086.9 valid req/s, 0 errors, 0 invalid
+1791879288 rails: overload messages_page 64 clients 4817.2 valid req/s, 0 errors, 0 invalid
+1791879296 rails: overload messages_page 256 clients 4497.9 valid req/s, 0 errors, 0 invalid
+1791879306 rails: overload sidebar 64 clients 3265.6 valid req/s, 0 errors, 0 invalid
+1791879314 rails: overload sidebar 256 clients 3956.7 valid req/s, 0 errors, 0 invalid
+1791879324 rails: overload search 64 clients 4609.0 valid req/s, 0 errors, 0 invalid
+1791879332 rails: overload search 256 clients 5269.1 valid req/s, 0 errors, 0 invalid
+1791879363 rails round 3: cable 1000/1000 subscribed, 0 disconnected, 420/420 delivered to all, 27.7 msgs/s
+1791879397 rails round 3: cable_heavy 1000/1000 subscribed, 0 disconnected, 356/356 delivered to all, 18.5 msgs/s
+1791879412 rust: overload room_show 64 clients 36795.3 valid req/s, 0 errors, 0 invalid
+1791879420 rust: overload room_show 256 clients 35984.6 valid req/s, 0 errors, 0 invalid
+1791879430 rust: overload messages_page 64 clients 35931.9 valid req/s, 0 errors, 0 invalid
+1791879438 rust: overload messages_page 256 clients 35419.5 valid req/s, 0 errors, 0 invalid
+1791879448 rust: overload sidebar 64 clients 44660.8 valid req/s, 0 errors, 0 invalid
+1791879456 rust: overload sidebar 256 clients 48448.1 valid req/s, 0 errors, 0 invalid
+1791879466 rust: overload search 64 clients 50308.5 valid req/s, 0 errors, 0 invalid
+1791879474 rust: overload search 256 clients 48064.0 valid req/s, 0 errors, 0 invalid
+1791879502 rust round 3: cable 1000/1000 subscribed, 0 disconnected, 7605/7605 delivered to all, 506.8 msgs/s
+1791879588 rust round 3: cable_heavy 1000/1000 subscribed, 959 disconnected, 65/77958 delivered to all, 4.3 msgs/s
+1791879603 c: overload room_show 64 clients 75283.3 valid req/s, 0 errors, 0 invalid
+1791879611 c: overload room_show 256 clients 88001.3 valid req/s, 0 errors, 4 invalid
+1791879621 c: overload messages_page 64 clients 99111.8 valid req/s, 0 errors, 0 invalid
+1791879629 c: overload messages_page 256 clients 95982.1 valid req/s, 0 errors, 15 invalid
+1791879639 c: overload sidebar 64 clients 106084.7 valid req/s, 0 errors, 0 invalid
+1791879647 c: overload sidebar 256 clients 108024.0 valid req/s, 0 errors, 16 invalid
+1791879657 c: overload search 64 clients 101438.5 valid req/s, 0 errors, 0 invalid
+1791879665 c: overload search 256 clients 102214.1 valid req/s, 0 errors, 11 invalid
+1791879871 c round 3: cable 95/1000 subscribed, 876 disconnected, 181/79494 delivered to all, 12.1 msgs/s
+1791880078 c round 3: cable_heavy 238/1000 subscribed, 821 disconnected, 15/51202 delivered to all, 1.0 msgs/s
+1791880093 oncrack: overload room_show 64 clients 212794.6 valid req/s, 0 errors, 0 invalid
+1791880101 oncrack: overload room_show 256 clients 197806.2 valid req/s, 0 errors, 0 invalid
+1791880111 oncrack: overload messages_page 64 clients 230042.7 valid req/s, 0 errors, 0 invalid
+1791880119 oncrack: overload messages_page 256 clients 218411.4 valid req/s, 0 errors, 0 invalid
+1791880129 oncrack: overload sidebar 64 clients 252087.7 valid req/s, 0 errors, 0 invalid
+1791880137 oncrack: overload sidebar 256 clients 257083.7 valid req/s, 0 errors, 0 invalid
+1791880147 oncrack: overload search 64 clients 238608.8 valid req/s, 0 errors, 0 invalid
+1791880155 oncrack: overload search 256 clients 242023.0 valid req/s, 0 errors, 0 invalid
+1791880181 oncrack round 3: cable 1000/1000 subscribed, 0 disconnected, 9141/9141 delivered to all, 608.9 msgs/s
+1791880211 oncrack round 3: cable_heavy 1000/1000 subscribed, 0 disconnected, 13608/13608 delivered to all, 741.0 msgs/s
+1791880225 oncrack-cached: overload room_show 64 clients 215544.0 valid req/s, 0 errors, 0 invalid
+1791880233 oncrack-cached: overload room_show 256 clients 199881.7 valid req/s, 0 errors, 0 invalid
+1791880243 oncrack-cached: overload messages_page 64 clients 232572.1 valid req/s, 0 errors, 0 invalid
+1791880251 oncrack-cached: overload messages_page 256 clients 220933.4 valid req/s, 0 errors, 0 invalid
+1791880261 oncrack-cached: overload sidebar 64 clients 230305.7 valid req/s, 0 errors, 0 invalid
+1791880269 oncrack-cached: overload sidebar 256 clients 236498.7 valid req/s, 0 errors, 0 invalid
+1791880279 oncrack-cached: overload search 64 clients 238186.1 valid req/s, 0 errors, 0 invalid
+1791880287 oncrack-cached: overload search 256 clients 227732.6 valid req/s, 0 errors, 0 invalid
+1791880314 oncrack-cached round 3: cable 1000/1000 subscribed, 0 disconnected, 8400/8400 delivered to all, 559.7 msgs/s
+1791880345 oncrack-cached round 3: cable_heavy 1000/1000 subscribed, 0 disconnected, 12988/12988 delivered to all, 705.4 msgs/s
+1791880358 oncrack-prev: overload room_show 64 clients 210821.1 valid req/s, 0 errors, 0 invalid
+1791880366 oncrack-prev: overload room_show 256 clients 193931.1 valid req/s, 0 errors, 0 invalid
+1791880376 oncrack-prev: overload messages_page 64 clients 227185.8 valid req/s, 0 errors, 0 invalid
+1791880384 oncrack-prev: overload messages_page 256 clients 223038.0 valid req/s, 0 errors, 0 invalid
+1791880394 oncrack-prev: overload sidebar 64 clients 206193.4 valid req/s, 0 errors, 0 invalid
+1791880402 oncrack-prev: overload sidebar 256 clients 257777.8 valid req/s, 0 errors, 0 invalid
+1791880412 oncrack-prev: overload search 64 clients 238819.5 valid req/s, 0 errors, 0 invalid
+1791880420 oncrack-prev: overload search 256 clients 235026.5 valid req/s, 0 errors, 0 invalid
+1791880448 oncrack-prev round 3: cable 1000/1000 subscribed, 0 disconnected, 8751/8751 delivered to all, 583.0 msgs/s
+1791880534 oncrack-prev round 3: cable_heavy 1000/1000 subscribed, 844 disconnected, 117/49412 delivered to all, 7.8 msgs/s
+1791880534 {
+1791880534   "rails": {
+1791880534     "overload": [
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 4875.9,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 36.319
+1791880534       },
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 5086.9,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 173.695
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 4710.6,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 49.151
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 4497.9,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 179.839
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 4126.7,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 44.799
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 4928.3,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 203.007
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 4622.9,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 38.047
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 5269.1,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 157.055
+1791880534       }
+1791880534     ],
+1791880534     "cable": {
+1791880534       "clients": 1000,
+1791880534       "posters": 4,
+1791880534       "subscribed": [
+1791880534         1000,
+1791880534         1000,
+1791880534         1000
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         0,
+1791880534         0,
+1791880534         0
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "428/428",
+1791880534         "301/301",
+1791880534         "420/420"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 27.5,
+1791880534       "median_all_clients_p99_ms": 1511.423
+1791880534     },
+1791880534     "cable_heavy": {
+1791880534       "clients": 1000,
+1791880534       "posters": 64,
+1791880534       "subscribed": [
+1791880534         1000,
+1791880534         1000,
+1791880534         1000
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         0,
+1791880534         0,
+1791880534         0
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "705/705",
+1791880534         "545/545",
+1791880534         "356/356"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 18.5,
+1791880534       "median_all_clients_p99_ms": 15876.095
+1791880534     }
+1791880534   },
+1791880534   "rust": {
+1791880534     "overload": [
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 36795.3,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 3.807
+1791880534       },
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 35984.6,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 13.447
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 35931.9,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 3.859
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 35419.5,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 13.471
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 44660.8,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 3.377
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 56294.5,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 9.207
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 54680.4,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 2.799
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 48064.0,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 11.615
+1791880534       }
+1791880534     ],
+1791880534     "cable": {
+1791880534       "clients": 1000,
+1791880534       "posters": 4,
+1791880534       "subscribed": [
+1791880534         1000,
+1791880534         1000,
+1791880534         1000
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         0,
+1791880534         0,
+1791880534         0
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "7608/7608",
+1791880534         "7799/7799",
+1791880534         "7605/7605"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 506.8,
+1791880534       "median_all_clients_p99_ms": 44.607
+1791880534     },
+1791880534     "cable_heavy": {
+1791880534       "clients": 1000,
+1791880534       "posters": 64,
+1791880534       "subscribed": [
+1791880534         1000,
+1791880534         1000,
+1791880534         1000
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         944,
+1791880534         902,
+1791880534         959
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "65/76602",
+1791880534         "64/68190",
+1791880534         "65/77958"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 4.3,
+1791880534       "median_all_clients_p99_ms": 408.063
+1791880534     }
+1791880534   },
+1791880534   "c": {
+1791880534     "overload": [
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 97557.0,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 1.379
+1791880534       },
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 89202.1,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 15,
+1791880534         "median_p99_ms": 5.251
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 99111.8,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 1.173
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 96323.2,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 41,
+1791880534         "median_p99_ms": 4.847
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 107748.0,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 1.067
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 109828.8,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 51,
+1791880534         "median_p99_ms": 3.519
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 102466.8,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 1.126
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 104824.0,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 88,
+1791880534         "median_p99_ms": 3.775
+1791880534       }
+1791880534     ],
+1791880534     "cable": {
+1791880534       "clients": 1000,
+1791880534       "posters": 4,
+1791880534       "subscribed": [
+1791880534         344,
+1791880534         285,
+1791880534         95
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         918,
+1791880534         940,
+1791880534         876
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "43/62699",
+1791880534         "122/56812",
+1791880534         "181/79494"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 8.1,
+1791880534       "median_all_clients_p99_ms": 48.607
+1791880534     },
+1791880534     "cable_heavy": {
+1791880534       "clients": 1000,
+1791880534       "posters": 64,
+1791880534       "subscribed": [
+1791880534         116,
+1791880534         110,
+1791880534         238
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         809,
+1791880534         848,
+1791880534         821
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "67/66217",
+1791880534         "24/58385",
+1791880534         "15/51202"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 1.6,
+1791880534       "median_all_clients_p99_ms": 54.015
+1791880534     }
+1791880534   },
+1791880534   "oncrack": {
+1791880534     "overload": [
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 211367.1,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 1.043
+1791880534       },
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 196107.3,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.053
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 225413.2,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 1.085
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 218411.4,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.195
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 250343.3,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 0.886
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 257083.7,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.123
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 238608.8,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 0.875
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 242023.0,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.067
+1791880534       }
+1791880534     ],
+1791880534     "cable": {
+1791880534       "clients": 1000,
+1791880534       "posters": 4,
+1791880534       "subscribed": [
+1791880534         1000,
+1791880534         1000,
+1791880534         1000
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         0,
+1791880534         0,
+1791880534         0
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "9282/9282",
+1791880534         "9182/9182",
+1791880534         "9141/9141"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 611.7,
+1791880534       "median_all_clients_p99_ms": 42.367
+1791880534     },
+1791880534     "cable_heavy": {
+1791880534       "clients": 1000,
+1791880534       "posters": 64,
+1791880534       "subscribed": [
+1791880534         1000,
+1791880534         1000,
+1791880534         1000
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         0,
+1791880534         0,
+1791880534         0
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "13571/13571",
+1791880534         "12737/12737",
+1791880534         "13608/13608"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 738.3,
+1791880534       "median_all_clients_p99_ms": 9338.879
+1791880534     }
+1791880534   },
+1791880534   "oncrack-cached": {
+1791880534     "overload": [
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 215544.0,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 0.841
+1791880534       },
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 199881.7,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.223
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 238084.2,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 0.859
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 233803.5,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.045
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 258824.5,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 0.915
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 269078.9,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.057
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 247412.6,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 0.878
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 247644.2,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.231
+1791880534       }
+1791880534     ],
+1791880534     "cable": {
+1791880534       "clients": 1000,
+1791880534       "posters": 4,
+1791880534       "subscribed": [
+1791880534         1000,
+1791880534         1000,
+1791880534         1000
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         0,
+1791880534         0,
+1791880534         0
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "8025/8025",
+1791880534         "9294/9294",
+1791880534         "8400/8400"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 559.7,
+1791880534       "median_all_clients_p99_ms": 49.247
+1791880534     },
+1791880534     "cable_heavy": {
+1791880534       "clients": 1000,
+1791880534       "posters": 64,
+1791880534       "subscribed": [
+1791880534         1000,
+1791880534         1000,
+1791880534         1000
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         0,
+1791880534         0,
+1791880534         0
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "11761/11761",
+1791880534         "13725/13725",
+1791880534         "12988/12988"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 705.4,
+1791880534       "median_all_clients_p99_ms": 10215.423
+1791880534     }
+1791880534   },
+1791880534   "oncrack-prev": {
+1791880534     "overload": [
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 165544.8,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 1.448
+1791880534       },
+1791880534       {
+1791880534         "route": "room_show",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 169272.5,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.831
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 220230.5,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 0.827
+1791880534       },
+1791880534       {
+1791880534         "route": "messages_page",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 179716.0,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.747
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 216686.2,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 1.187
+1791880534       },
+1791880534       {
+1791880534         "route": "sidebar",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 216872.9,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.647
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 64,
+1791880534         "median_valid_rps": 207246.5,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 1.051
+1791880534       },
+1791880534       {
+1791880534         "route": "search",
+1791880534         "conc": 256,
+1791880534         "median_valid_rps": 196527.2,
+1791880534         "errors": 0,
+1791880534         "invalid_responses": 0,
+1791880534         "median_p99_ms": 4.655
+1791880534       }
+1791880534     ],
+1791880534     "cable": {
+1791880534       "clients": 1000,
+1791880534       "posters": 4,
+1791880534       "subscribed": [
+1791880534         1000,
+1791880534         1000,
+1791880534         1000
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         0,
+1791880534         0,
+1791880534         0
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "8682/8682",
+1791880534         "8934/8934",
+1791880534         "8751/8751"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 583.0,
+1791880534       "median_all_clients_p99_ms": 48.287
+1791880534     },
+1791880534     "cable_heavy": {
+1791880534       "clients": 1000,
+1791880534       "posters": 64,
+1791880534       "subscribed": [
+1791880534         1000,
+1791880534         1000,
+1791880534         1000
+1791880534       ],
+1791880534       "disconnected": [
+1791880534         860,
+1791880534         833,
+1791880534         844
+1791880534       ],
+1791880534       "delivered_to_all": [
+1791880534         "1/78325",
+1791880534         "51/69389",
+1791880534         "117/49412"
+1791880534       ],
+1791880534       "median_delivered_msgs_per_sec": 3.4,
+1791880534       "median_all_clients_p99_ms": 483.583
+1791880534     }
+1791880534   }
+1791880534 }

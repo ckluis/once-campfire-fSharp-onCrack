@@ -1,0 +1,19 @@
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.18
+Running tests from /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/tests/Campfire.App.Tests/bin/Release/net10.0/Campfire.App.Tests.dll (net10.0|arm64)
+skipped Campfire.App.Tests.MiscTests.transparent huge pages are disabled
+  transparent huge pages are a Linux setting (bin/linux-tests App runs this in the toolchain image)
+  from /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/tests/Campfire.App.Tests/bin/Release/net10.0/Campfire.App.Tests.dll (net10.0|arm64)
+/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/tests/Campfire.App.Tests/bin/Release/net10.0/Campfire.App.Tests.dll (net10.0|arm64) passed (24s 779ms)
+
+Test run summary: Passed!
+  total: 248
+  failed: 0
+  succeeded: 247
+  skipped: 1
+  duration: 24s 984ms
+bin/verify App  89.67s user 28.91s system 445% cpu 26.633 total

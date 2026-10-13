@@ -1,0 +1,274 @@
+{
+ "100": {
+  "rust": {
+   "msgs_per_sec": 2628.2,
+   "msgs_per_sec_reps": [
+    4229.4,
+    2628.2,
+    2515.4
+   ],
+   "server_cpu_us_per_delivery": 12.066404565630945,
+   "server_cores": 3.1477403559849138,
+   "loadgen_cores": 1.3430647203892554,
+   "loadgen_cpu_us_per_delivery": 5.110207443837057,
+   "sends_per_delivery": 0.4635,
+   "pss_idle_mb": 38.8,
+   "pss_saturated_mb": 97.8,
+   "paced_all_p50_ms": 3.147,
+   "paced_all_p99_ms": 4.391,
+   "paced_client_p50_ms": 2.867,
+   "paced_client_p99_ms": 4.227,
+   "saturated_all_p50_ms": 1.69,
+   "saturated_all_p99_ms": 4.419,
+   "posts_per_sec": 2628.2
+  },
+  "fsharp": {
+   "msgs_per_sec": 3373.6,
+   "msgs_per_sec_reps": [
+    3540.5,
+    3373.6,
+    2044.8
+   ],
+   "server_cpu_us_per_delivery": 9.333036949219522,
+   "server_cores": 3.107124062623339,
+   "loadgen_cores": 1.357818957472337,
+   "loadgen_cpu_us_per_delivery": 4.024836843349351,
+   "sends_per_delivery": 0.5187,
+   "pss_idle_mb": 110.8,
+   "pss_saturated_mb": 275.9,
+   "paced_all_p50_ms": 5.255,
+   "paced_all_p99_ms": 22.207,
+   "paced_client_p50_ms": 4.655,
+   "paced_client_p99_ms": 21.855,
+   "saturated_all_p50_ms": 1.188,
+   "saturated_all_p99_ms": 3.821,
+   "posts_per_sec": 3373.7
+  },
+  "oncrack": {
+   "msgs_per_sec": 6160.1,
+   "msgs_per_sec_reps": [
+    6903.3,
+    6160.1,
+    3700.6
+   ],
+   "server_cpu_us_per_delivery": 5.046706418344931,
+   "server_cores": 3.1214926372155287,
+   "loadgen_cores": 1.5651246500466605,
+   "loadgen_cpu_us_per_delivery": 2.540745523687376,
+   "sends_per_delivery": 0.2881,
+   "pss_idle_mb": 114.8,
+   "pss_saturated_mb": 267.4,
+   "paced_all_p50_ms": 5.531,
+   "paced_all_p99_ms": 22.735,
+   "paced_client_p50_ms": 4.911,
+   "paced_client_p99_ms": 22.015,
+   "saturated_all_p50_ms": 1.094,
+   "saturated_all_p99_ms": 3.879,
+   "posts_per_sec": 6160.2
+  }
+ },
+ "500": {
+  "rust": {
+   "msgs_per_sec": 1689.3,
+   "msgs_per_sec_reps": [
+    2548.8,
+    1633.8,
+    1689.3
+   ],
+   "server_cpu_us_per_delivery": 4.4498165318603276,
+   "server_cores": 3.66764841233318,
+   "loadgen_cores": 2.2985671442852382,
+   "loadgen_cpu_us_per_delivery": 2.72132497991504,
+   "sends_per_delivery": 0.1178,
+   "pss_idle_mb": 102.3,
+   "pss_saturated_mb": 105.8,
+   "paced_all_p50_ms": 6.551,
+   "paced_all_p99_ms": 7.827,
+   "paced_client_p50_ms": 4.459,
+   "paced_client_p99_ms": 7.363,
+   "saturated_all_p50_ms": 7.171,
+   "saturated_all_p99_ms": 26.799,
+   "posts_per_sec": 1689.5
+  },
+  "fsharp": {
+   "msgs_per_sec": 899.3,
+   "msgs_per_sec_reps": [
+    1004.6,
+    899.3,
+    666.7
+   ],
+   "server_cpu_us_per_delivery": 8.47017413856984,
+   "server_cores": 3.7751861702127663,
+   "loadgen_cores": 1.6569265506707398,
+   "loadgen_cpu_us_per_delivery": 3.684925054310552,
+   "sends_per_delivery": 0.3974,
+   "pss_idle_mb": 278.0,
+   "pss_saturated_mb": 532.2,
+   "paced_all_p50_ms": 8.279,
+   "paced_all_p99_ms": 12.831,
+   "paced_client_p50_ms": 5.523,
+   "paced_client_p99_ms": 10.423,
+   "saturated_all_p50_ms": 6.859,
+   "saturated_all_p99_ms": 21.071,
+   "posts_per_sec": 899.4
+  },
+  "oncrack": {
+   "msgs_per_sec": 2729.4,
+   "msgs_per_sec_reps": [
+    3032.9,
+    2729.4,
+    1978.3
+   ],
+   "server_cpu_us_per_delivery": 2.712231691533784,
+   "server_cores": 3.697603036154205,
+   "loadgen_cores": 2.5227438740952253,
+   "loadgen_cpu_us_per_delivery": 1.8485702895106801,
+   "sends_per_delivery": 0.1081,
+   "pss_idle_mb": 264.1,
+   "pss_saturated_mb": 280.7,
+   "paced_all_p50_ms": 6.339,
+   "paced_all_p99_ms": 9.911,
+   "paced_client_p50_ms": 4.811,
+   "paced_client_p99_ms": 8.895,
+   "saturated_all_p50_ms": 10.055,
+   "saturated_all_p99_ms": 40.287,
+   "posts_per_sec": 2729.8
+  }
+ },
+ "1000": {
+  "rust": {
+   "msgs_per_sec": 1229.7,
+   "msgs_per_sec_reps": [
+    1647.0,
+    1229.7,
+    1189.3
+   ],
+   "server_cpu_us_per_delivery": 3.170392814630451,
+   "server_cores": 3.862061692591616,
+   "loadgen_cores": 2.4430573079221727,
+   "loadgen_cpu_us_per_delivery": 1.9867100170140464,
+   "sends_per_delivery": 0.0306,
+   "pss_idle_mb": 109.1,
+   "pss_saturated_mb": 114.3,
+   "paced_all_p50_ms": 10.511,
+   "paced_all_p99_ms": 13.903,
+   "paced_client_p50_ms": 6.667,
+   "paced_client_p99_ms": 11.927,
+   "saturated_all_p50_ms": 58.207,
+   "saturated_all_p99_ms": 154.495,
+   "posts_per_sec": 1231.8
+  },
+  "fsharp": {
+   "msgs_per_sec": 395.3,
+   "msgs_per_sec_reps": [
+    467.8,
+    395.3,
+    340.0
+   ],
+   "server_cpu_us_per_delivery": 9.74065341865948,
+   "server_cores": 3.8713740458015264,
+   "loadgen_cores": 1.444591904445919,
+   "loadgen_cpu_us_per_delivery": 3.6544191865568405,
+   "sends_per_delivery": 0.351,
+   "pss_idle_mb": 532.4,
+   "pss_saturated_mb": 648.7,
+   "paced_all_p50_ms": 13.175,
+   "paced_all_p99_ms": 21.791,
+   "paced_client_p50_ms": 8.415,
+   "paced_client_p99_ms": 17.103,
+   "saturated_all_p50_ms": 19.711,
+   "saturated_all_p99_ms": 73.855,
+   "posts_per_sec": 395.5
+  },
+  "oncrack": {
+   "msgs_per_sec": 1506.8,
+   "msgs_per_sec_reps": [
+    1703.7,
+    1506.8,
+    1272.3
+   ],
+   "server_cpu_us_per_delivery": 2.550647571056005,
+   "server_cores": 3.8140855310992134,
+   "loadgen_cores": 2.6509465293922285,
+   "loadgen_cpu_us_per_delivery": 1.7593220927742423,
+   "sends_per_delivery": 0.0646,
+   "pss_idle_mb": 277.9,
+   "pss_saturated_mb": 302.0,
+   "paced_all_p50_ms": 9.295,
+   "paced_all_p99_ms": 14.567,
+   "paced_client_p50_ms": 6.535,
+   "paced_client_p99_ms": 12.711,
+   "saturated_all_p50_ms": 44.319,
+   "saturated_all_p99_ms": 99.967,
+   "posts_per_sec": 1508.0
+  }
+ },
+ "2000": {
+  "rust": {
+   "msgs_per_sec": 689.0,
+   "msgs_per_sec_reps": [
+    957.4,
+    587.9,
+    689.0
+   ],
+   "server_cpu_us_per_delivery": 2.857203430663968,
+   "server_cores": 3.9545424137008296,
+   "loadgen_cores": 2.5449121644017234,
+   "loadgen_cpu_us_per_delivery": 1.8468157941957355,
+   "sends_per_delivery": 0.0233,
+   "pss_idle_mb": 124.6,
+   "pss_saturated_mb": 134.0,
+   "paced_all_p50_ms": 17.039,
+   "paced_all_p99_ms": 22.991,
+   "paced_client_p50_ms": 9.303,
+   "paced_client_p99_ms": 19.119,
+   "saturated_all_p50_ms": 152.959,
+   "saturated_all_p99_ms": 347.903,
+   "posts_per_sec": 690.3
+  },
+  "fsharp": {
+   "msgs_per_sec": 168.6,
+   "msgs_per_sec_reps": [
+    211.2,
+    163.1,
+    168.6
+   ],
+   "server_cpu_us_per_delivery": 11.498301737756714,
+   "server_cores": 3.904136511519819,
+   "loadgen_cores": 1.2626128518321826,
+   "loadgen_cpu_us_per_delivery": 3.744403475184409,
+   "sends_per_delivery": 0.2374,
+   "pss_idle_mb": 761.0,
+   "pss_saturated_mb": 1027.4,
+   "paced_all_p50_ms": 21.343,
+   "paced_all_p99_ms": 28.975,
+   "paced_client_p50_ms": 13.151,
+   "paced_client_p99_ms": 26.607,
+   "saturated_all_p50_ms": 52.479,
+   "saturated_all_p99_ms": 198.783,
+   "posts_per_sec": 168.7
+  },
+  "oncrack": {
+   "msgs_per_sec": 731.2,
+   "msgs_per_sec_reps": [
+    777.1,
+    731.2,
+    657.2
+   ],
+   "server_cpu_us_per_delivery": 2.6414397595847374,
+   "server_cores": 3.806005065315916,
+   "loadgen_cores": 2.5421590758199444,
+   "loadgen_cpu_us_per_delivery": 1.7383472892641851,
+   "sends_per_delivery": 0.0567,
+   "pss_idle_mb": 298.5,
+   "pss_saturated_mb": 353.1,
+   "paced_all_p50_ms": 13.671,
+   "paced_all_p99_ms": 19.215,
+   "paced_client_p50_ms": 8.671,
+   "paced_client_p99_ms": 16.975,
+   "saturated_all_p50_ms": 117.887,
+   "saturated_all_p99_ms": 293.887,
+   "posts_per_sec": 731.9
+  }
+ }
+}

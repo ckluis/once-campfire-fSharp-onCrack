@@ -1,0 +1,23 @@
+date: 2026-10-10T22:48:10-04:00
+app: fsharp, clients: 500, prefix: none, runs: 6, fresh: 0, secs: 15
+app env: 
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-fsharp:app sha256:cccad24be9a176d72520c350823efbc82a76c219318fb2a7bc132e0b05bd38c2 2026-10-10T17:20:26.217039707-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-trace (d8fdaf4 (dirty files under src/: 0) at 2026-10-11T01:56:58Z)
+repo HEAD: 3ef8b16
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 21:56:57)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[22:49:30] load before run: 1.31 3.40 3.63 (waited 80s)
+[22:49:35] host busy: {"spin_ms": 71.32, "spin_ms_max_cpu": 180.23, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.283}
+[22:49:47] host busy: {"spin_ms": 61.55, "spin_ms_max_cpu": 68.3, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.108}
+[22:50:00] host probe before run: {"spin_ms": 59.84, "spin_ms_max_cpu": 61.72, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.077} (waited 100s)
+[22:50:04] fsharp: container up, cold start 1000ms
+ok   run 1 500 clients (target): 13136/13136 messages, 875.5 msg/s, drain 0.0 s
+ok   run 2 500 clients (target): 14072/14072 messages, 937.8 msg/s, drain 0.0 s
+ok   run 3 500 clients (target): 13867/13867 messages, 924.2 msg/s, drain 0.0 s
+ok   run 4 500 clients (target): 12629/12629 messages, 841.7 msg/s, drain 0.0 s
+ok   run 5 500 clients (target): 11738/11738 messages, 782.3 msg/s, drain 0.0 s
+ok   run 6 500 clients (target): 13584/13584 messages, 905.3 msg/s, drain 0.0 s
+[22:52:49] done: 6 phases, 0 with a problem
+exit 0

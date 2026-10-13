@@ -1,0 +1,19 @@
+rep                          merge                        stream                          ring
+1         1017  1.90us h1.08/1.07         979  1.89us h1.08/1.08         694  2.46us h1.14/1.43  
+2          990  1.86us h1.08/1.07         923  2.09us h1.06/1.08         864  1.98us h1.09/1.04  
+3          895  2.13us h1.07/1.95         812  2.35us h1.08/2.31         780  2.35us h1.11/1.09  
+4          962  1.93us h1.13/1.07         771  2.40us h1.05/1.07         245  7.39us h1.09/2.19  
+5          983  1.91us h1.04/1.06         903  2.07us h1.08/2.19         922  2.03us h1.16/1.09  
+6          778  2.39us h1.15/1.92         807  2.35us h1.14/1.10         926  2.07us h1.10/1.11  
+
+reps the host disturbed (a run under 60% of the rep's best, or a host probe over 1.3 before or after any run): [1, 3, 4, 5, 6]
+
+-- all reps (6) --
+merge      msgs/s median     972 [778-1017]  CPU/del 1.92 [1.86-2.39] us
+stream     msgs/s median     858 [771-979]  CPU/del 2.22 [1.89-2.40] us  | vs merge: msgs/s 0.96 0.93 0.91 0.80 0.92 1.04 (median 0.926); CPU 0.99 1.12 1.10 1.24 1.08 0.98 (median 1.094)
+ring       msgs/s median     822 [245-926]  CPU/del 2.21 [1.98-7.39] us  | vs merge: msgs/s 0.68 0.87 0.87 0.26 0.94 1.19 (median 0.872); CPU 1.29 1.06 1.10 3.83 1.06 0.87 (median 1.084)
+
+-- clean reps (1) --
+merge      msgs/s median     990 [990-990]  CPU/del 1.86 [1.86-1.86] us
+stream     msgs/s median     923 [923-923]  CPU/del 2.09 [2.09-2.09] us  | vs merge: msgs/s 0.93 (median 0.933); CPU 1.12 (median 1.124)
+ring       msgs/s median     864 [864-864]  CPU/del 1.98 [1.98-1.98] us  | vs merge: msgs/s 0.87 (median 0.872); CPU 1.06 (median 1.065)

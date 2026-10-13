@@ -1,0 +1,25 @@
+04:46:51 r5-fresh start, mac free 12 GiB
+05:20:01 r5-fresh exit 0
+05:20:01 r3-fresh start, mac free 12 GiB
+05:50:59 r3-fresh exit 0
+05:50:59 r5-cached start, mac free 13 GiB
+06:32:28 r5-cached exit 0
+06:32:28 r3-cached start, mac free 13 GiB
+07:17:24 stopped by hand: Mac free under 12 GiB (another project's go test -race) in r3-cached rep 3
+07:54:55 r3-cached rep 3 exit 0
+08:05:59 r5-cached start, mac free 14 GiB
+08:54:59 r5-cached exit 0
+08:55:00 r3-cached start, mac free 15 GiB
+09:38:48 r3-cached exit 0
+09:38:48 r5-fresh-post start, mac free 16 GiB
+09:53:08 r5-fresh-post exit 0
+09:53:08 r3-fresh-post start, mac free 16 GiB
+10:03:33 r3-fresh-post exit 0
+10:04:22 r3-fresh-post2 start, mac free 16 GiB
+10:14:01 r3-fresh-post2 exit 0
+10:14:01 r5-fresh-post2 start, mac free 15 GiB
+10:25:12 r5-fresh-post2 exit 0
+10:26:37 r5-cached3 start, mac free 14 GiB
+10:58:41 r5-cached3 exit 0
+10:58:41 r3-cached3 start, mac free 14 GiB
+11:28:53 r3-cached3 exit 0

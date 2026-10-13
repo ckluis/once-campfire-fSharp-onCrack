@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "verification_revision": "eed4105f4f5f38faa0159ce68852e2e0aec0fac1",
+    "started_at": "2026-10-11T00:27:42Z",
+    "seed_sha256": "f1dc1b9ad63a217db4bee6ef0f21aee98d10777372ee2ee6262af09e6479a685",
+    "server_cpus": "0-3",
+    "client_cpus": "4-7",
+    "network": "host",
+    "rounds": 3,
+    "profiles": [
+      "cable"
+    ],
+    "loadgen_sha256": "4568f79e1ce238f4f48b6ece5327a09d1c37e7087c79117a9970291d08bda0de",
+    "options": {
+      "apps": "fsharp",
+      "rounds": 3,
+      "port": 25130,
+      "cpus": "0-3",
+      "client_cpus": "4-7",
+      "profiles": "cable",
+      "overload_concurrencies": "64,256",
+      "overload_duration": 8,
+      "overload_routes": "room_show,messages_page,sidebar,search",
+      "cable_clients": 1000,
+      "cable_tput_secs": 15,
+      "cable_posters": 4,
+      "cable_heavy_posters": 64
+    },
+    "images": {
+      "fsharp": "sha256:cccad24be9a176d72520c350823efbc82a76c219318fb2a7bc132e0b05bd38c2"
+    },
+    "source_revisions": {
+      "fsharp": {
+        "head": "9954ad0b01e32a17023b30b4254e7c75053d2dd8",
+        "dirty": false
+      }
+    },
+    "complete": true
+  },
+  "results": {
+    "fsharp": {
+      "cable": {
+        "clients": 1000,
+        "posters": 4,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          0,
+          0,
+          0
+        ],
+        "delivered_to_all": [
+          "4343/4343",
+          "4377/4377",
+          "3218/3218"
+        ],
+        "median_delivered_msgs_per_sec": 289.1,
+        "median_all_clients_p99_ms": 144.511
+      },
+      "cable_heavy": {
+        "clients": 1000,
+        "posters": 64,
+        "subscribed": [
+          1000,
+          1000,
+          1000
+        ],
+        "disconnected": [
+          0,
+          4,
+          0
+        ],
+        "delivered_to_all": [
+          "5292/5292",
+          "4769/5154",
+          "4379/4379"
+        ],
+        "median_delivered_msgs_per_sec": 310.4,
+        "median_all_clients_p99_ms": 875.007
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+samples 30932
+
+threads (comm):
+   96.0%  .NET
+    3.6%  campfire-db-wri
+    0.3%  campfire-db-che
+    0.1%  request-log
+    0.0%  Kestrel
+
+layers (inclusive; a sample can be in several):
+   82.6%  cable: Campfire.Cable
+    5.1%  Kestrel transport (sockets, IOQueue, SocketSender)
+    1.1%  Kestrel pipes and upgraded stream
+   89.9%  thread pool dispatch
+   16.8%  posting (app: messages#create, render, db)
+    2.1%  GC
+   58.4%  kernel TCP send
+    0.1%  kernel TCP recv/epoll
+    7.0%  futex/scheduler
+
+self:
+   18.5%  __arch_copy_from_user
+   16.2%  void [System.Private.CoreLib] System.SpanHelpers::Memmove
+    4.2%  __pi_clear_page
+    2.3%  __wake_up_sync_key
+    2.1%  try_charge_memcg
+    1.8%  arch_counter_get_cntvct
+    1.6%  stub InitThreadManagerPerfMapData<JIT_CopiedWriteBarriers>
+    1.4%  __local_bh_enable_ip
+    1.4%  _raw_spin_unlock_irqrestore
+    1.3%  page_counter_try_charge
+
+inclusive:
+   99.6%  CorUnix::CPalThread::ThreadEntry
+   99.6%  start_thread
+   99.6%  thread_start
+   98.6%  [unknown]
+   98.5%  CallDescrWorkerInternal
+   98.5%  DispatchCallSimple
+   98.4%  KickOffThread_Worker
+   98.4%  ManagedThreadBase::KickOff
+   98.4%  KickOffThread
+   89.9%  bool [System.Private.CoreLib] System.Threading.ThreadPoolWorkQueue::Dispatch

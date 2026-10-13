@@ -1,0 +1,6 @@
+[14:00:40] load before run: 1.32 1.51 1.55 (waited 40s)
+[14:00:43] host probe before run: {"spin_ms": 60.65, "spin_ms_max_cpu": 62.76, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.091} (waited 40s)
+oncrack 1000 raw:3 #1        ready  1000 failed 0     948.2 msgs/s  server 3.65 cores  3.88 us/del  loadgen 2.08 cores  2.20 us/del  paced p50 5.879 p99 27.055  sat p99 159.615
+oncrack 1000 raw:3 #2        ready  1000 failed 0    1470.8 msgs/s  server 3.63 cores  2.46 us/del  loadgen 2.68 cores  1.82 us/del  paced p50 5.091 p99 18.383  sat p99 87.551
+oncrack 1000 raw:3 #3        ready  1000 failed 0     491.3 msgs/s  server 3.44 cores  6.91 us/del  loadgen 1.52 cores  3.09 us/del  paced p50 5.211 p99 22.927  sat p99 324.607
+-> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-fanout/dur8

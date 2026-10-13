@@ -1,0 +1,35 @@
+date: 2026-10-11T02:29:41-04:00
+app: fsharp, clients: 500, prefix: none, runs: 10, fresh: 1, secs: 15
+app env: DOTNET_GCgen0MaxBudget=400000
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-fsharp:app sha256:cccad24be9a176d72520c350823efbc82a76c219318fb2a7bc132e0b05bd38c2 2026-10-10T17:20:26.217039707-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-verify2 (6920635 (dirty files under src/: 0) at 2026-10-11T04:57:25Z)
+repo HEAD: 0eaed8f
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[02:30:41] load before run: 1.29 2.47 2.91 (waited 60s)
+[02:30:44] host busy: {"spin_ms": 63.95, "spin_ms_max_cpu": 101.32, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.151}
+[02:30:56] host probe before run: {"spin_ms": 58.2, "spin_ms_max_cpu": 60.96, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.047} (waited 70s)
+[02:31:00] fsharp: container up, cold start 261ms
+ok   run 1 500 clients (target): 5806/5806 messages, 386.8 msg/s, drain 0.0 s
+[02:31:31] fsharp: container up, cold start 224ms
+ok   run 2 500 clients (target): 6210/6210 messages, 413.5 msg/s, drain 0.0 s
+[02:32:02] fsharp: container up, cold start 214ms
+ok   run 3 500 clients (target): 6216/6216 messages, 414.1 msg/s, drain 0.0 s
+[02:32:33] fsharp: container up, cold start 200ms
+ok   run 4 500 clients (target): 6107/6107 messages, 406.8 msg/s, drain 0.0 s
+[02:33:05] fsharp: container up, cold start 197ms
+ok   run 5 500 clients (target): 6178/6178 messages, 411.6 msg/s, drain 0.0 s
+[02:33:36] fsharp: container up, cold start 222ms
+ok   run 6 500 clients (target): 6113/6113 messages, 407.3 msg/s, drain 0.0 s
+[02:34:07] fsharp: container up, cold start 214ms
+ok   run 7 500 clients (target): 5864/5864 messages, 390.6 msg/s, drain 0.0 s
+[02:34:40] fsharp: container up, cold start 766ms
+ok   run 8 500 clients (target): 4046/4046 messages, 269.5 msg/s, drain 0.0 s
+[02:35:13] fsharp: container up, cold start 811ms
+ok   run 9 500 clients (target): 3979/3979 messages, 264.9 msg/s, drain 0.0 s
+[02:35:47] fsharp: container up, cold start 791ms
+ok   run 10 500 clients (target): 4087/4087 messages, 272.1 msg/s, drain 0.01 s
+[02:36:15] done: 10 phases, 0 with a problem
+exit 0

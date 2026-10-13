@@ -1,0 +1,264 @@
+{
+ "image": "campfire-candidate-oncrack on campfire-oncrack:app from efd4ba1 (src/ equals the measured 2b412e5)",
+ "oracle": "campfire-reference:latest = Rails 90b3300 + parity/docker/parity_search_order.rb",
+ "seeds": {
+  "default": {
+   "cells": 34,
+   "equal": 34,
+   "states": [
+    "search/empty",
+    "search/no_results",
+    "search/recent",
+    "search/results",
+    "search/results/many",
+    "search/results/order",
+    "search/submitted"
+   ],
+   "detail": [
+    {
+     "state": "search/empty",
+     "cell": "chromium-desktop-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/empty",
+     "cell": "chromium-desktop-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/submitted",
+     "cell": "chromium-desktop-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/submitted",
+     "cell": "chromium-phone-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/submitted",
+     "cell": "chromium-desktop-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/empty",
+     "cell": "chromium-phone-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/empty",
+     "cell": "chromium-phone-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/recent",
+     "cell": "chromium-desktop-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/recent",
+     "cell": "chromium-desktop-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/recent",
+     "cell": "chromium-phone-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/recent",
+     "cell": "chromium-phone-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/submitted",
+     "cell": "chromium-phone-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-desktop-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-desktop-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-phone-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-phone-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-bp799-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-bp799-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-bp800-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-bp800-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-bp801-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-bp801-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results/many",
+     "cell": "chromium-desktop-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results/many",
+     "cell": "chromium-desktop-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results/many",
+     "cell": "chromium-phone-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results/many",
+     "cell": "chromium-phone-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results/order",
+     "cell": "chromium-desktop-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results/order",
+     "cell": "chromium-desktop-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results/order",
+     "cell": "chromium-phone-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/results/order",
+     "cell": "chromium-phone-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/no_results",
+     "cell": "chromium-desktop-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/no_results",
+     "cell": "chromium-desktop-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/no_results",
+     "cell": "chromium-phone-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/no_results",
+     "cell": "chromium-phone-dark",
+     "pixels_equal": true
+    }
+   ]
+  },
+  "custom_styles": {
+   "cells": 4,
+   "equal": 4,
+   "states": [
+    "search/custom_styles"
+   ],
+   "detail": [
+    {
+     "state": "search/custom_styles",
+     "cell": "chromium-phone-dark",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/custom_styles",
+     "cell": "chromium-phone-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/custom_styles",
+     "cell": "chromium-desktop-light",
+     "pixels_equal": true
+    },
+    {
+     "state": "search/custom_styles",
+     "cell": "chromium-desktop-dark",
+     "pixels_equal": true
+    }
+   ]
+  }
+ },
+ "port_vs_new_oracle_order_state": [
+  {
+   "state": "search/results/order",
+   "cell": "chromium-phone-dark",
+   "pixels_equal": false
+  },
+  {
+   "state": "search/results/order",
+   "cell": "chromium-phone-light",
+   "pixels_equal": false
+  },
+  {
+   "state": "search/results/order",
+   "cell": "chromium-desktop-dark",
+   "pixels_equal": false
+  },
+  {
+   "state": "search/results/order",
+   "cell": "chromium-desktop-light",
+   "pixels_equal": false
+  }
+ ],
+ "oncrack_order_state": [
+  {
+   "state": "search/results/order",
+   "cell": "chromium-phone-light",
+   "pixels_equal": true
+  },
+  {
+   "state": "search/results/order",
+   "cell": "chromium-phone-dark",
+   "pixels_equal": true
+  },
+  {
+   "state": "search/results/order",
+   "cell": "chromium-desktop-dark",
+   "pixels_equal": true
+  },
+  {
+   "state": "search/results/order",
+   "cell": "chromium-desktop-light",
+   "pixels_equal": true
+  }
+ ]
+}

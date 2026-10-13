@@ -1,0 +1,42 @@
+oncrack round 1: post_message 16 clients 12587.5 req/s
+oncrack round 1: post_message 64 clients 13584.4 req/s
+oncrack-cached round 1: post_message 16 clients 12687.9 req/s
+oncrack-cached round 1: post_message 64 clients 17253.6 req/s
+oncrack-cached round 2: post_message 16 clients 13183.6 req/s
+oncrack-cached round 2: post_message 64 clients 17271.5 req/s
+oncrack round 2: post_message 16 clients 13107.6 req/s
+oncrack round 2: post_message 64 clients 17479.9 req/s
+oncrack round 3: post_message 16 clients 11755.2 req/s
+oncrack round 3: post_message 64 clients 17678.4 req/s
+oncrack-cached round 3: post_message 16 clients 12971.3 req/s
+oncrack-cached round 3: post_message 64 clients 17409.1 req/s
+{
+  "oncrack": {
+    "room_show": null,
+    "messages_page": null,
+    "sidebar": null,
+    "search": null,
+    "post_message": {
+      "median_rps": 12587.5,
+      "runs": [
+        12587.5,
+        13107.6,
+        11755.2
+      ]
+    }
+  },
+  "oncrack-cached": {
+    "room_show": null,
+    "messages_page": null,
+    "sidebar": null,
+    "search": null,
+    "post_message": {
+      "median_rps": 12971.3,
+      "runs": [
+        12687.9,
+        13183.6,
+        12971.3
+      ]
+    }
+  }
+}

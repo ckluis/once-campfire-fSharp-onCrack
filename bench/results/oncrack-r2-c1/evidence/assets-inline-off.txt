@@ -1,0 +1,4 @@
+[19:18:51] oncrack rep 1: avatar c=16 170310.6 rps p50 0.085 p99 0.244 {'200': 1362541} err 0 cpu 21.8 us/req; warm-up 20.0 s settled tail 168633.1 ho
+[19:19:22] oncrack rep 1: avatar c=64 174886.8 rps p50 0.321 p99 1.098 {'200': 1400035} err 0 cpu 19.6 us/req; warm-up 20.0 s settled tail 190516.8 ho
+[19:19:53] oncrack rep 1: static_css c=16 191184.8 rps p50 0.075 p99 0.265 {'200': 1529553} err 0 cpu 19.6 us/req; warm-up 20.0 s settled tail 190850.
+[19:20:23] oncrack rep 1: static_css c=64 220647.6 rps p50 0.271 p99 0.677 {'200': 1765487} err 0 cpu 17.0 us/req; warm-up 20.0 s settled tail 220688.

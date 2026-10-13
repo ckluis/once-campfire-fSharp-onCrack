@@ -1,0 +1,22 @@
+bench/micro-linux fresh-micro (the whole app and its clients in one process, cores 0-3; windows alternate the setting; CPU per answer includes the clients').
+Room page, hq room of the crowd seed, 16 connections, 3 s windows, 5 rounds, first build (Stopwatch clock in the pool):
+c=16  hold                                       112750 answers/s     33.5 us CPU/answer
+c=16  nohold                                     104426 answers/s     36.6 us CPU/answer
+Room page, hq room, 6 rounds, build b73cc0f (millisecond clock in the pool):
+c=16  nohold                                     139593 answers/s     28.2 us CPU/answer      (hq room; 25-30 per round)
+c=16  hold                                       148081 answers/s     25.6 us CPU/answer
+Room page, watercooler room (2 members), 6 rounds, host busier:
+c=16  nohold                                      97839 answers/s     43.1 us CPU/answer
+c=16  hold                                       109352 answers/s     35.7 us CPU/answer
+Messages page, watercooler:
+c=16  nohold                                     173077 answers/s     22.5 us CPU/answer
+c=16  hold                                       178842 answers/s     20.7 us CPU/answer
+Room page with one connection posting 10 a second (42 posts a window in both):
+c=16  nohold                                      71356 answers/s     53.1 us CPU/answer
+c=16  hold                                        78020 answers/s     48.4 us CPU/answer
+Room page with one connection posting 200 a second:
+c=16  nohold                                      32254 answers/s    113.7 us CPU/answer
+c=16  hold                                        38810 answers/s     89.1 us CPU/answer
+Room page with one connection posting as fast as it can (WAL restarts in both, longest 13 ms in both; CAMPFIRE_WAL_TRACE=1):
+c=16  nohold                                      11846 answers/s    326.2 us CPU/answer
+c=16  hold                                        14173 answers/s    280.0 us CPU/answer

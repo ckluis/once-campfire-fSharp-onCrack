@@ -1,0 +1,28 @@
+date: 2026-10-11T02:24:38-04:00
+app: oncrack, clients: 500, prefix: none, runs: 6, fresh: 1, secs: 15
+app env: CAMPFIRE_CABLE_VERIFY=1 DOTNET_GCgen0MaxBudget=400000 CAMPFIRE_CABLE_DIRECT=off
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-verify2 (6920635 (dirty files under src/: 0) at 2026-10-11T04:57:25Z)
+repo HEAD: 0eaed8f
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[02:25:49] load before run: 1.28 2.79 3.11 (waited 70s)
+[02:26:01] host busy: {"spin_ms": 281.18, "spin_ms_max_cpu": 290.47, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.06}
+[02:26:21] host busy: {"spin_ms": 284.21, "spin_ms_max_cpu": 310.74, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.115}
+[02:26:34] host probe before run: {"spin_ms": 58.61, "spin_ms_max_cpu": 61.62, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.055} (waited 90s)
+[02:26:37] oncrack: container up, cold start 196ms
+ok   run 1 500 clients (target): 13600/13600 messages, 905.8 msg/s, drain 0.01 s
+[02:27:08] oncrack: container up, cold start 192ms
+ok   run 2 500 clients (target): 12615/12615 messages, 840.0 msg/s, drain 0.01 s
+[02:27:40] oncrack: container up, cold start 188ms
+ok   run 3 500 clients (target): 12561/12561 messages, 836.3 msg/s, drain 0.01 s
+[02:28:11] oncrack: container up, cold start 213ms
+ok   run 4 500 clients (target): 12775/12775 messages, 849.9 msg/s, drain 0.02 s
+[02:28:42] oncrack: container up, cold start 182ms
+ok   run 5 500 clients (target): 12468/12468 messages, 830.2 msg/s, drain 0.01 s
+[02:29:13] oncrack: container up, cold start 205ms
+ok   run 6 500 clients (target): 12665/12665 messages, 843.0 msg/s, drain 0.02 s
+[02:29:40] done: 6 phases, 0 with a problem
+exit 0

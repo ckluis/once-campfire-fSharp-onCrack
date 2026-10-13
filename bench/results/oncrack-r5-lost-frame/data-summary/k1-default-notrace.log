@@ -1,0 +1,30 @@
+date: 2026-10-10T23:47:12-04:00
+app: oncrack, clients: 500, prefix: none, runs: 15, fresh: 0, secs: 15
+app env: 
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-trace (d8fdaf4 (dirty files under src/: 0) at 2026-10-11T01:56:58Z)
+repo HEAD: 4725a20
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[23:47:42] load before run: 1.27 2.82 3.07 (waited 30s)
+[23:47:45] host probe before run: {"spin_ms": 58.77, "spin_ms_max_cpu": 60.16, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.058} (waited 30s)
+[23:47:48] oncrack: container up, cold start 238ms
+ok   run 1 500 clients (target): 48026/48026 messages, 3201.2 msg/s, drain 0.0 s
+ok   run 2 500 clients (target): 48159/48159 messages, 3209.8 msg/s, drain 0.0 s
+ok   run 3 500 clients (target): 41996/41996 messages, 2798.8 msg/s, drain 0.0 s
+ok   run 4 500 clients (target): 43194/43194 messages, 2879.2 msg/s, drain 0.0 s
+ok   run 5 500 clients (target): 46803/46803 messages, 3119.6 msg/s, drain 0.0 s
+ok   run 6 500 clients (target): 48095/48095 messages, 3205.8 msg/s, drain 0.0 s
+ok   run 7 500 clients (target): 33264/33264 messages, 2216.8 msg/s, drain 0.0 s
+ok   run 8 500 clients (target): 47839/47839 messages, 3188.6 msg/s, drain 0.0 s
+ok   run 9 500 clients (target): 48212/48212 messages, 3213.6 msg/s, drain 0.0 s
+ok   run 10 500 clients (target): 47726/47726 messages, 3181.0 msg/s, drain 0.0 s
+ok   run 11 500 clients (target): 42511/42511 messages, 2833.3 msg/s, drain 0.0 s
+ok   run 12 500 clients (target): 44630/44630 messages, 2974.7 msg/s, drain 0.0 s
+ok   run 13 500 clients (target): 48101/48101 messages, 3205.5 msg/s, drain 0.0 s
+ok   run 14 500 clients (target): 43373/43373 messages, 2890.4 msg/s, drain 0.0 s
+ok   run 15 500 clients (target): 44691/44691 messages, 2978.5 msg/s, drain 0.0 s
+[23:54:50] done: 15 phases, 0 with a problem
+exit 0

@@ -1,0 +1,678 @@
+{
+ "c": {
+  "cable": {
+   "clients": 1000,
+   "median": {
+    "complete": 86.0,
+    "disconnected": 857.0,
+    "drain": 0.0,
+    "errors": 0.0,
+    "msgs": 5.75,
+    "p99": 74.89500000000001,
+    "posted": 42398.0,
+    "pss": 72.0,
+    "ready": 174.0
+   },
+   "posters": 4,
+   "rounds": {
+    "complete": [
+     88,
+     84
+    ],
+    "disconnected": [
+     922,
+     792
+    ],
+    "drain": [
+     0.0,
+     0.0
+    ],
+    "errors": [
+     0,
+     0
+    ],
+    "msgs": [
+     5.9,
+     5.6
+    ],
+    "p99": [
+     42.783,
+     107.007
+    ],
+    "posted": [
+     49839,
+     34957
+    ],
+    "pss": [
+     73.0,
+     71.0
+    ],
+    "ready": [
+     252,
+     96
+    ],
+    "round": [
+     1,
+     2
+    ]
+   }
+  },
+  "cable_heavy": {
+   "clients": 1000,
+   "median": {
+    "complete": 159.0,
+    "disconnected": 901.5,
+    "drain": 0.0,
+    "errors": 0.0,
+    "msgs": 10.6,
+    "p99": 150.207,
+    "posted": 44779.0,
+    "pss": 71.0,
+    "ready": 149.5
+   },
+   "posters": 64,
+   "rounds": {
+    "complete": [
+     159,
+     159
+    ],
+    "disconnected": [
+     934,
+     869
+    ],
+    "drain": [
+     0.0,
+     0.0
+    ],
+    "errors": [
+     0,
+     0
+    ],
+    "msgs": [
+     10.6,
+     10.6
+    ],
+    "p99": [
+     194.047,
+     106.367
+    ],
+    "posted": [
+     44377,
+     45181
+    ],
+    "pss": [
+     71.0,
+     71.0
+    ],
+    "ready": [
+     204,
+     95
+    ],
+    "round": [
+     1,
+     2
+    ]
+   }
+  }
+ },
+ "oncrack": {
+  "cable": {
+   "clients": 1000,
+   "median": {
+    "complete": 5417.5,
+    "disconnected": 0.0,
+    "drain": 0.005,
+    "errors": 0.0,
+    "msgs": 360.85,
+    "p99": 78.36699999999999,
+    "posted": 5417.5,
+    "pss": 281.5,
+    "ready": 1000.0
+   },
+   "posters": 4,
+   "rounds": {
+    "complete": [
+     5779,
+     5056
+    ],
+    "disconnected": [
+     0,
+     0
+    ],
+    "drain": [
+     0.0,
+     0.01
+    ],
+    "errors": [
+     0,
+     0
+    ],
+    "msgs": [
+     385.0,
+     336.7
+    ],
+    "p99": [
+     80.255,
+     76.479
+    ],
+    "posted": [
+     5779,
+     5056
+    ],
+    "pss": [
+     282.1,
+     280.9
+    ],
+    "ready": [
+     1000,
+     1000
+    ],
+    "round": [
+     1,
+     2
+    ]
+   }
+  },
+  "cable_heavy": {
+   "clients": 1000,
+   "median": {
+    "complete": 8108.5,
+    "disconnected": 0.0,
+    "drain": 5.029999999999999,
+    "errors": 0.0,
+    "msgs": 400.54999999999995,
+    "p99": 12677.118999999999,
+    "posted": 8108.5,
+    "pss": 913.95,
+    "ready": 1000.0
+   },
+   "posters": 64,
+   "rounds": {
+    "complete": [
+     8159,
+     8058
+    ],
+    "disconnected": [
+     0,
+     0
+    ],
+    "drain": [
+     4.96,
+     5.1
+    ],
+    "errors": [
+     0,
+     0
+    ],
+    "msgs": [
+     402.4,
+     398.7
+    ],
+    "p99": [
+     12935.167,
+     12419.071
+    ],
+    "posted": [
+     8159,
+     8058
+    ],
+    "pss": [
+     918.0,
+     909.9
+    ],
+    "ready": [
+     1000,
+     1000
+    ],
+    "round": [
+     1,
+     2
+    ]
+   }
+  }
+ },
+ "oncrack-cached": {
+  "cable": {
+   "clients": 1000,
+   "median": {
+    "complete": 5951.0,
+    "disconnected": 0.0,
+    "drain": 0.0,
+    "errors": 0.0,
+    "msgs": 396.4,
+    "p99": 75.119,
+    "posted": 5951.0,
+    "pss": 278.45,
+    "ready": 1000.0
+   },
+   "posters": 4,
+   "rounds": {
+    "complete": [
+     5930,
+     5972
+    ],
+    "disconnected": [
+     0,
+     0
+    ],
+    "drain": [
+     0.0,
+     0.0
+    ],
+    "errors": [
+     0,
+     0
+    ],
+    "msgs": [
+     395.0,
+     397.8
+    ],
+    "p99": [
+     91.455,
+     58.783
+    ],
+    "posted": [
+     5930,
+     5972
+    ],
+    "pss": [
+     282.9,
+     274.0
+    ],
+    "ready": [
+     1000,
+     1000
+    ],
+    "round": [
+     1,
+     2
+    ]
+   }
+  },
+  "cable_heavy": {
+   "clients": 1000,
+   "median": {
+    "complete": 9143.5,
+    "disconnected": 0.0,
+    "drain": 4.635,
+    "errors": 0.0,
+    "msgs": 454.45000000000005,
+    "p99": 13275.135,
+    "posted": 9143.5,
+    "pss": 936.3499999999999,
+    "ready": 1000.0
+   },
+   "posters": 64,
+   "rounds": {
+    "complete": [
+     10202,
+     8085
+    ],
+    "disconnected": [
+     0,
+     0
+    ],
+    "drain": [
+     3.94,
+     5.33
+    ],
+    "errors": [
+     0,
+     0
+    ],
+    "msgs": [
+     528.1,
+     380.8
+    ],
+    "p99": [
+     13156.351,
+     13393.919
+    ],
+    "posted": [
+     10202,
+     8085
+    ],
+    "pss": [
+     934.9,
+     937.8
+    ],
+    "ready": [
+     1000,
+     1000
+    ],
+    "round": [
+     1,
+     2
+    ]
+   }
+  }
+ },
+ "oncrack-prev": {
+  "cable": {
+   "clients": 1000,
+   "median": {
+    "complete": 6260.0,
+    "disconnected": 0.0,
+    "drain": 0.0,
+    "errors": 0.0,
+    "msgs": 416.95000000000005,
+    "p99": 58.303,
+    "posted": 6260.0,
+    "pss": 272.5,
+    "ready": 1000.0
+   },
+   "posters": 4,
+   "rounds": {
+    "complete": [
+     6598,
+     5922
+    ],
+    "disconnected": [
+     0,
+     0
+    ],
+    "drain": [
+     0.0,
+     0.0
+    ],
+    "errors": [
+     0,
+     0
+    ],
+    "msgs": [
+     439.6,
+     394.3
+    ],
+    "p99": [
+     52.991,
+     63.615
+    ],
+    "posted": [
+     6598,
+     5922
+    ],
+    "pss": [
+     278.3,
+     266.7
+    ],
+    "ready": [
+     1000,
+     1000
+    ],
+    "round": [
+     1,
+     2
+    ]
+   }
+  },
+  "cable_heavy": {
+   "clients": 1000,
+   "median": {
+    "complete": 104.5,
+    "disconnected": 881.5,
+    "drain": 0.0,
+    "errors": 0.0,
+    "msgs": 6.949999999999999,
+    "p99": 609.023,
+    "posted": 55565.0,
+    "pss": 675.5,
+    "ready": 1000.0
+   },
+   "posters": 64,
+   "rounds": {
+    "complete": [
+     110,
+     99
+    ],
+    "disconnected": [
+     833,
+     930
+    ],
+    "drain": [
+     0.0,
+     0.0
+    ],
+    "errors": [
+     0,
+     0
+    ],
+    "msgs": [
+     7.3,
+     6.6
+    ],
+    "p99": [
+     541.695,
+     676.351
+    ],
+    "posted": [
+     46265,
+     64865
+    ],
+    "pss": [
+     633.3,
+     717.7
+    ],
+    "ready": [
+     1000,
+     1000
+    ],
+    "round": [
+     1,
+     2
+    ]
+   }
+  }
+ },
+ "rails": {
+  "cable": {
+   "clients": 1000,
+   "median": {
+    "complete": 226,
+    "disconnected": 0,
+    "drain": 3.55,
+    "errors": 0,
+    "msgs": 9.9,
+    "p99": 13000.703,
+    "posted": 226,
+    "pss": 2385.1,
+    "ready": 1000
+   },
+   "posters": 4,
+   "rounds": {
+    "complete": [
+     226
+    ],
+    "disconnected": [
+     0
+    ],
+    "drain": [
+     3.55
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     9.9
+    ],
+    "p99": [
+     13000.703
+    ],
+    "posted": [
+     226
+    ],
+    "pss": [
+     2385.1
+    ],
+    "ready": [
+     1000
+    ],
+    "round": [
+     1
+    ]
+   }
+  },
+  "cable_heavy": {
+   "clients": 1000,
+   "median": {
+    "complete": 256,
+    "disconnected": 0,
+    "drain": 0.05,
+    "errors": 0,
+    "msgs": 11.4,
+    "p99": 22216.703,
+    "posted": 256,
+    "pss": 2707.6,
+    "ready": 1000
+   },
+   "posters": 64,
+   "rounds": {
+    "complete": [
+     256
+    ],
+    "disconnected": [
+     0
+    ],
+    "drain": [
+     0.05
+    ],
+    "errors": [
+     0
+    ],
+    "msgs": [
+     11.4
+    ],
+    "p99": [
+     22216.703
+    ],
+    "posted": [
+     256
+    ],
+    "pss": [
+     2707.6
+    ],
+    "ready": [
+     1000
+    ],
+    "round": [
+     1
+    ]
+   }
+  }
+ },
+ "rust": {
+  "cable": {
+   "clients": 1000,
+   "median": {
+    "complete": 4659.0,
+    "disconnected": 0.0,
+    "drain": 0.0,
+    "errors": 0.0,
+    "msgs": 310.15,
+    "p99": 165.503,
+    "posted": 4659.0,
+    "pss": 97.45,
+    "ready": 1000.0
+   },
+   "posters": 4,
+   "rounds": {
+    "complete": [
+     4361,
+     4957
+    ],
+    "disconnected": [
+     0,
+     0
+    ],
+    "drain": [
+     0.0,
+     0.0
+    ],
+    "errors": [
+     0,
+     0
+    ],
+    "msgs": [
+     290.2,
+     330.1
+    ],
+    "p99": [
+     227.839,
+     103.167
+    ],
+    "posted": [
+     4361,
+     4957
+    ],
+    "pss": [
+     97.4,
+     97.5
+    ],
+    "ready": [
+     1000,
+     1000
+    ],
+    "round": [
+     1,
+     2
+    ]
+   }
+  },
+  "cable_heavy": {
+   "clients": 1000,
+   "median": {
+    "complete": 56.0,
+    "disconnected": 951.0,
+    "drain": 0.0,
+    "errors": 0.0,
+    "msgs": 3.75,
+    "p99": 501.247,
+    "posted": 54992.0,
+    "pss": 121.2,
+    "ready": 1000.0
+   },
+   "posters": 64,
+   "rounds": {
+    "complete": [
+     67,
+     45
+    ],
+    "disconnected": [
+     994,
+     908
+    ],
+    "drain": [
+     0.0,
+     0.0
+    ],
+    "errors": [
+     0,
+     0
+    ],
+    "msgs": [
+     4.5,
+     3.0
+    ],
+    "p99": [
+     532.479,
+     470.015
+    ],
+    "posted": [
+     78355,
+     31629
+    ],
+    "pss": [
+     121.4,
+     121.0
+    ],
+    "ready": [
+     1000,
+     1000
+    ],
+    "round": [
+     1,
+     2
+    ]
+   }
+  }
+ }
+}

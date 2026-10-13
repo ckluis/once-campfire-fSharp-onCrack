@@ -1,0 +1,103 @@
+{
+  "metadata": {
+    "verification_revision": "a05b344d4c1f70f886c48130b56b41bc4d7296c5",
+    "response_validation": "route-contract-v1",
+    "started_at": "2026-10-09T18:56:03Z",
+    "seed_sha256": "bc5a851525b4abd5b51dd23ed9fb947761a27d9d4fff4be75c5dda018e8e7c2e",
+    "server_cpus": "0-3",
+    "client_cpus": "4-7",
+    "network": "host",
+    "gzip": true,
+    "duration": 8,
+    "concurrencies": "16,64",
+    "rounds": 3,
+    "loadgen_sha256": "351a66af1ea13003b845c24a63c59d7e5d2d46ddf101aa5c0e0b78e0a0869b1e",
+    "routes": "post_message",
+    "profile": "read-and-post-v1",
+    "mixed_writer": null,
+    "images": {
+      "oncrack": "sha256:bbe75e76cd580124c1bb2834e4aa5376e4b1be0012b225bc22baf6e624cf8f8c",
+      "oncrack-cached": "sha256:bbe75e76cd580124c1bb2834e4aa5376e4b1be0012b225bc22baf6e624cf8f8c"
+    },
+    "image_labels": {
+      "oncrack": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.revision": "4ac9b2b3bd7e60aeffa829e8225ebf10d5c80248",
+        "org.opencontainers.image.source": ""
+      },
+      "oncrack-cached": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.revision": "4ac9b2b3bd7e60aeffa829e8225ebf10d5c80248",
+        "org.opencontainers.image.source": ""
+      }
+    },
+    "source_revisions": {
+      "oncrack": {
+        "head": "4ac9b2b3bd7e60aeffa829e8225ebf10d5c80248",
+        "dirty": false
+      },
+      "oncrack-cached": {
+        "head": "4ac9b2b3bd7e60aeffa829e8225ebf10d5c80248",
+        "dirty": false
+      }
+    },
+    "preflight_only": false,
+    "topology": {
+      "oncrack": {
+        "processes": 1,
+        "runtime": ".NET (Kestrel)",
+        "cable": "native",
+        "jobs": "in-process",
+        "response_cache_mb": "64"
+      },
+      "oncrack-cached": {
+        "processes": 1,
+        "runtime": ".NET (Kestrel)",
+        "cable": "native",
+        "jobs": "in-process",
+        "response_cache_mb": "64"
+      }
+    },
+    "runtimes": {
+      "oncrack": "oncrack",
+      "oncrack-cached": "oncrack"
+    },
+    "search_order": {
+      "oncrack": "id",
+      "oncrack-cached": "id"
+    },
+    "complete": true
+  },
+  "results": {
+    "oncrack": {
+      "room_show": null,
+      "messages_page": null,
+      "sidebar": null,
+      "search": null,
+      "post_message": {
+        "median_rps": 12587.5,
+        "runs": [
+          12587.5,
+          13107.6,
+          11755.2
+        ]
+      }
+    },
+    "oncrack-cached": {
+      "room_show": null,
+      "messages_page": null,
+      "sidebar": null,
+      "search": null,
+      "post_message": {
+        "median_rps": 12971.3,
+        "runs": [
+          12687.9,
+          13183.6,
+          12971.3
+        ]
+      }
+    }
+  }
+}

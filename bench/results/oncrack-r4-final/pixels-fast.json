@@ -1,0 +1,602 @@
+{
+ "_about": "bin/pixel-parity --fast (Chromium, light, desktop and phone) on campfire-oncrack:app, built from ea1f85b (src/ at HEAD is identical: git diff ea1f85b HEAD -- src is empty), against the Rails reference with the dbc7620 search order; screenshot layer only. States: realtime and messages (default seed, 86), search (default 14, custom_styles 2). Corrected 2026-10-10: the first text said 'built from 191c468', copied from round 3's script.",
+ "runs": {
+  "a/default": {
+   "equal": 86,
+   "screenshots": 86,
+   "different": 0,
+   "not_captured": 0,
+   "states": [
+    "messages/autolinked",
+    "messages/boosts/many",
+    "messages/boosts/none",
+    "messages/boosts/one",
+    "messages/boosts/text_boost",
+    "messages/boosts/yours",
+    "messages/code_with_language",
+    "messages/code_without_language",
+    "messages/edited",
+    "messages/emoji_only",
+    "messages/file",
+    "messages/file_unvariable_image",
+    "messages/formatting",
+    "messages/from_bot",
+    "messages/from_deactivated_user",
+    "messages/image",
+    "messages/image_downscaled",
+    "messages/long",
+    "messages/mention",
+    "messages/mention/mentioned",
+    "messages/mention_marshal_era_sgid",
+    "messages/opengraph_embed",
+    "messages/opengraph_trix_twitter_avatar",
+    "messages/plain",
+    "messages/solo_unfurled_link",
+    "messages/sound_with_image",
+    "messages/sound_with_text",
+    "messages/table",
+    "messages/threaded",
+    "messages/video",
+    "realtime/attachment_sent",
+    "realtime/boost_removed",
+    "realtime/boosted",
+    "realtime/message_deleted",
+    "realtime/message_edited",
+    "realtime/message_sent",
+    "realtime/new_room_in_sidebar",
+    "realtime/presence_read",
+    "realtime/removed_from_room",
+    "realtime/room_deleted_then_send",
+    "realtime/typing/many",
+    "realtime/typing/one",
+    "realtime/unread_in_sidebar"
+   ],
+   "cells": [
+    {
+     "state": "messages/plain",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/mention/mentioned",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/boosts/many",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/mention/mentioned",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/plain",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/boosts/many",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/threaded",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/threaded",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/message_sent",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/message_sent",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/long",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/attachment_sent",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/long",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/emoji_only",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/attachment_sent",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/message_edited",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/emoji_only",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/code_with_language",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/message_edited",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/code_with_language",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/message_deleted",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/message_deleted",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/code_without_language",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/code_without_language",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/boosted",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/table",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/boosted",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/boost_removed",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/table",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/boost_removed",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/formatting",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/typing/one",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/formatting",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/typing/one",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/mention",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/mention",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/typing/many",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/mention_marshal_era_sgid",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/typing/many",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/unread_in_sidebar",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/mention_marshal_era_sgid",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/sound_with_image",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/unread_in_sidebar",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/sound_with_image",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/new_room_in_sidebar",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/new_room_in_sidebar",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/sound_with_text",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/sound_with_text",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/opengraph_embed",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/opengraph_embed",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/room_deleted_then_send",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/solo_unfurled_link",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/solo_unfurled_link",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/removed_from_room",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/opengraph_trix_twitter_avatar",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/room_deleted_then_send",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/removed_from_room",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/opengraph_trix_twitter_avatar",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/autolinked",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/autolinked",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/presence_read",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/image",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/image",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "realtime/presence_read",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/image_downscaled",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/video",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/image_downscaled",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/video",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/file",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/file",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/file_unvariable_image",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/file_unvariable_image",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/from_bot",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/from_bot",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/from_deactivated_user",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/from_deactivated_user",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/edited",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/edited",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/boosts/none",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/boosts/none",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/boosts/one",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/boosts/one",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/boosts/yours",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/boosts/yours",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/boosts/text_boost",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "messages/boosts/text_boost",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    }
+   ]
+  },
+  "b/custom_styles": {
+   "equal": 2,
+   "screenshots": 2,
+   "different": 0,
+   "not_captured": 0,
+   "states": [
+    "search/custom_styles"
+   ],
+   "cells": [
+    {
+     "state": "search/custom_styles",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/custom_styles",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    }
+   ]
+  },
+  "b/default": {
+   "equal": 14,
+   "screenshots": 14,
+   "different": 0,
+   "not_captured": 0,
+   "states": [
+    "search/empty",
+    "search/no_results",
+    "search/recent",
+    "search/results",
+    "search/results/many",
+    "search/results/order",
+    "search/submitted"
+   ],
+   "cells": [
+    {
+     "state": "search/empty",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/empty",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/submitted",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/submitted",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/recent",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/recent",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/results",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/results/many",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/results/many",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/results/order",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/results/order",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/no_results",
+     "cell": "chromium-desktop-light",
+     "result": "equal"
+    },
+    {
+     "state": "search/no_results",
+     "cell": "chromium-phone-light",
+     "result": "equal"
+    }
+   ]
+  }
+ },
+ "total": {
+  "equal": 102,
+  "screenshots": 102,
+  "different": 0,
+  "not_captured": 0
+ }
+}

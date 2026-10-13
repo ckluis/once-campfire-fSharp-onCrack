@@ -1,0 +1,32 @@
+date: 2026-10-10T23:54:51-04:00
+app: oncrack, clients: 500, prefix: none, runs: 15, fresh: 0, secs: 15
+app env: CAMPFIRE_CABLE_GATHER=off
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-trace (d8fdaf4 (dirty files under src/: 0) at 2026-10-11T01:56:58Z)
+repo HEAD: 550d15a
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[23:56:01] load before run: 1.41 3.27 3.35 (waited 70s)
+[23:56:03] host busy: {"spin_ms": 62.04, "spin_ms_max_cpu": 66.49, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.116}
+[23:56:16] host busy: {"spin_ms": 62.81, "spin_ms_max_cpu": 77.04, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.13}
+[23:56:29] host probe before run: {"spin_ms": 59.99, "spin_ms_max_cpu": 61.78, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.08} (waited 90s)
+[23:56:33] oncrack: container up, cold start 485ms
+ok   run 1 500 clients (target): 42250/42250 messages, 2816.2 msg/s, drain 0.0 s
+ok   run 2 500 clients (target): 41525/41525 messages, 2767.5 msg/s, drain 0.0 s
+ok   run 3 500 clients (target): 45086/45086 messages, 3005.1 msg/s, drain 0.0 s
+ok   run 4 500 clients (target): 42556/42556 messages, 2836.3 msg/s, drain 0.0 s
+ok   run 5 500 clients (target): 44252/44252 messages, 2949.4 msg/s, drain 0.0 s
+ok   run 6 500 clients (target): 40347/40347 messages, 2689.0 msg/s, drain 0.0 s
+ok   run 7 500 clients (target): 31131/31131 messages, 2075.1 msg/s, drain 0.0 s
+ok   run 8 500 clients (target): 29096/29096 messages, 1939.3 msg/s, drain 0.0 s
+ok   run 9 500 clients (target): 32731/32731 messages, 2181.4 msg/s, drain 0.0 s
+ok   run 10 500 clients (target): 34575/34575 messages, 2304.1 msg/s, drain 0.0 s
+ok   run 11 500 clients (target): 41459/41459 messages, 2762.3 msg/s, drain 0.0 s
+ok   run 12 500 clients (target): 42421/42421 messages, 2827.4 msg/s, drain 0.0 s
+ok   run 13 500 clients (target): 41880/41880 messages, 2791.5 msg/s, drain 0.0 s
+ok   run 14 500 clients (target): 43713/43713 messages, 2913.3 msg/s, drain 0.0 s
+ok   run 15 500 clients (target): 33210/33210 messages, 2213.2 msg/s, drain 0.0 s
+[00:03:34] done: 15 phases, 0 with a problem
+exit 0

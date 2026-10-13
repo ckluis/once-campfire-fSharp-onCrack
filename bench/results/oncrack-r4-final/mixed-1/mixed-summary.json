@@ -1,0 +1,359 @@
+{
+  "metadata": {
+    "verification_revision": "a05b344d4c1f70f886c48130b56b41bc4d7296c5",
+    "response_validation": "route-contract-v1",
+    "started_at": "2026-10-10T22:11:47Z",
+    "seed_sha256": "f1dc1b9ad63a217db4bee6ef0f21aee98d10777372ee2ee6262af09e6479a685",
+    "server_cpus": "0-3",
+    "client_cpus": "4-7",
+    "network": "host",
+    "gzip": true,
+    "duration": 8,
+    "concurrencies": "16",
+    "rounds": 3,
+    "loadgen_sha256": "351a66af1ea13003b845c24a63c59d7e5d2d46ddf101aa5c0e0b78e0a0869b1e",
+    "routes": "room_show,messages_page,sidebar,search",
+    "profile": "mixed-read-write-v1",
+    "mixed_writer": {
+      "clients": 1,
+      "maximum_writes_per_second": 10,
+      "room": 201306877,
+      "catch_up": false
+    },
+    "images": {
+      "rails": "sha256:a9a31e4b152dcb98c40481e1daba5cfe7d9e119c79a9c87dcd46261cbd910368",
+      "rust": "sha256:b0e047159ee217631110f99c318fcb5c40ace80aa5f9803325b6bd06589454ef",
+      "c": "sha256:51001f452cc56b2ca1ca8694a6b107ece42b4fcb11a822ecbf7200aac2d9fa62",
+      "fsharp": "sha256:cccad24be9a176d72520c350823efbc82a76c219318fb2a7bc132e0b05bd38c2",
+      "oncrack": "sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b",
+      "oncrack-cached": "sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b"
+    },
+    "image_labels": {
+      "rails": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.source": ""
+      },
+      "rust": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.source": ""
+      },
+      "c": {
+        "maintainer": "Clement Verna <cverna@fedoraproject.org>"
+      },
+      "fsharp": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.revision": "",
+        "org.opencontainers.image.source": ""
+      },
+      "oncrack": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.revision": "ea1f85b4b66e9f2f6756bdd428772e5aed29703f",
+        "org.opencontainers.image.source": ""
+      },
+      "oncrack-cached": {
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.revision": "ea1f85b4b66e9f2f6756bdd428772e5aed29703f",
+        "org.opencontainers.image.source": ""
+      }
+    },
+    "source_revisions": {
+      "rails": {
+        "head": "0aa339d81e0501841e3f23f0dd6e9b2e06e6b60d",
+        "dirty": false
+      },
+      "rust": {
+        "head": "f9dca47e592fdcd23a75e4c8b6b97f5d452ccdc1",
+        "dirty": false
+      },
+      "c": {
+        "head": "cd0cbe4b24bcee0aa6ad75e6bc29d4e773628332",
+        "dirty": false
+      },
+      "fsharp": {
+        "head": "9954ad0b01e32a17023b30b4254e7c75053d2dd8",
+        "dirty": false
+      },
+      "oncrack": {
+        "head": "993ddcee325909bce790e63e47f6a8ef5eac11c5",
+        "dirty": false
+      },
+      "oncrack-cached": {
+        "head": "993ddcee325909bce790e63e47f6a8ef5eac11c5",
+        "dirty": false
+      }
+    },
+    "preflight_only": false,
+    "topology": {
+      "rails": {
+        "http_workers": "4",
+        "threads": "1",
+        "jobs": "Redis/Resque",
+        "cable": "Action Cable",
+        "response_cache_mb": "64"
+      },
+      "rust": {
+        "processes": 1,
+        "readers": "5",
+        "job_workers": "3",
+        "cable": "native tokio",
+        "jobs": "in-process",
+        "response_cache_mb": "64"
+      },
+      "c": {
+        "processes": 1,
+        "http_loops": "affinity, capped at 4",
+        "cache_bytes": "67108864",
+        "jobs": "in-process"
+      },
+      "fsharp": {
+        "processes": 1,
+        "runtime": ".NET (Kestrel)",
+        "response_cache": "none (port of Rust ccece30)",
+        "cable": "native",
+        "jobs": "in-process"
+      },
+      "oncrack": {
+        "processes": 1,
+        "runtime": ".NET (Kestrel)",
+        "cable": "native",
+        "jobs": "in-process",
+        "response_cache_mb": "64"
+      },
+      "oncrack-cached": {
+        "processes": 1,
+        "runtime": ".NET (Kestrel)",
+        "cable": "native",
+        "jobs": "in-process",
+        "response_cache_mb": "64"
+      }
+    },
+    "runtimes": {
+      "rails": "rails",
+      "rust": "rust",
+      "c": "c",
+      "fsharp": "fsharp",
+      "oncrack": "oncrack",
+      "oncrack-cached": "oncrack"
+    },
+    "search_order": {
+      "rails": "id",
+      "rust": "id",
+      "c": "id",
+      "fsharp": "created_at",
+      "oncrack": "id",
+      "oncrack-cached": "id"
+    },
+    "complete": true
+  },
+  "mixed_results": {
+    "rails": {
+      "room_show": {
+        "median_rps": 2214.3,
+        "runs": [
+          2214.3,
+          2887.8,
+          1876.0
+        ]
+      },
+      "messages_page": {
+        "median_rps": 3506.7,
+        "runs": [
+          2970.2,
+          3506.7,
+          3616.9
+        ]
+      },
+      "sidebar": {
+        "median_rps": 4311.2,
+        "runs": [
+          3564.1,
+          4403.4,
+          4311.2
+        ]
+      },
+      "search": {
+        "median_rps": 4223.8,
+        "runs": [
+          3486.2,
+          4223.8,
+          4235.6
+        ]
+      }
+    },
+    "rust": {
+      "room_show": {
+        "median_rps": 47019.6,
+        "runs": [
+          38200.0,
+          47637.6,
+          47019.6
+        ]
+      },
+      "messages_page": {
+        "median_rps": 44604.1,
+        "runs": [
+          31778.1,
+          44733.1,
+          44604.1
+        ]
+      },
+      "sidebar": {
+        "median_rps": 54503.7,
+        "runs": [
+          40335.7,
+          54503.7,
+          55286.4
+        ]
+      },
+      "search": {
+        "median_rps": 54269.1,
+        "runs": [
+          46984.8,
+          54269.1,
+          54355.9
+        ]
+      }
+    },
+    "c": {
+      "room_show": {
+        "median_rps": 69821.5,
+        "runs": [
+          64250.4,
+          69821.5,
+          72658.0
+        ]
+      },
+      "messages_page": {
+        "median_rps": 50904.0,
+        "runs": [
+          50904.0,
+          49905.4,
+          73445.7
+        ]
+      },
+      "sidebar": {
+        "median_rps": 53044.8,
+        "runs": [
+          53044.8,
+          52368.3,
+          82645.7
+        ]
+      },
+      "search": {
+        "median_rps": 77184.1,
+        "runs": [
+          50680.5,
+          77184.1,
+          79814.2
+        ]
+      }
+    },
+    "fsharp": {
+      "room_show": {
+        "median_rps": 32351.3,
+        "runs": [
+          32536.3,
+          32351.3,
+          26870.8
+        ]
+      },
+      "messages_page": {
+        "median_rps": 40336.2,
+        "runs": [
+          40336.2,
+          32664.0,
+          40336.7
+        ]
+      },
+      "sidebar": {
+        "median_rps": 36967.9,
+        "runs": [
+          36967.9,
+          24617.6,
+          37044.4
+        ]
+      },
+      "search": {
+        "median_rps": 29210.2,
+        "runs": [
+          33873.0,
+          25102.2,
+          29210.2
+        ]
+      }
+    },
+    "oncrack": {
+      "room_show": {
+        "median_rps": 155206.4,
+        "runs": [
+          157617.9,
+          120556.0,
+          155206.4
+        ]
+      },
+      "messages_page": {
+        "median_rps": 174025.9,
+        "runs": [
+          174025.9,
+          176784.1,
+          150958.7
+        ]
+      },
+      "sidebar": {
+        "median_rps": 165376.3,
+        "runs": [
+          184510.4,
+          165376.3,
+          153016.9
+        ]
+      },
+      "search": {
+        "median_rps": 156907.4,
+        "runs": [
+          176143.8,
+          138786.1,
+          156907.4
+        ]
+      }
+    },
+    "oncrack-cached": {
+      "room_show": {
+        "median_rps": 126504.6,
+        "runs": [
+          126504.6,
+          121211.5,
+          146277.1
+        ]
+      },
+      "messages_page": {
+        "median_rps": 138647.7,
+        "runs": [
+          133712.5,
+          138647.7,
+          153174.9
+        ]
+      },
+      "sidebar": {
+        "median_rps": 159766.9,
+        "runs": [
+          179486.8,
+          145237.4,
+          159766.9
+        ]
+      },
+      "search": {
+        "median_rps": 142387.2,
+        "runs": [
+          179550.6,
+          137887.9,
+          142387.2
+        ]
+      }
+    }
+  }
+}

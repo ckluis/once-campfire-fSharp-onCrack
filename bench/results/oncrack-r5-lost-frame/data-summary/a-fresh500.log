@@ -1,0 +1,44 @@
+date: 2026-10-10T22:08:22-04:00
+app: oncrack, clients: 500, prefix: 100, runs: 10, fresh: 1, secs: 15
+app env:  CAMPFIRE_CABLE_TRACE=/trace/cable.jsonl
+loadgen args:  (client trace 1)
+server trace: 1
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-trace (d8fdaf4 (dirty files under src/: 0) at 2026-10-11T01:56:58Z)
+repo HEAD: 86490e2
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 21:56:57)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[22:09:22] load before run: 1.40 3.04 2.27 (waited 60s)
+[22:09:24] host probe before run: {"spin_ms": 59.71, "spin_ms_max_cpu": 64.7, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.074} (waited 60s)
+[22:09:28] oncrack: container up, cold start 243ms
+ok   run 1 100 clients (prefix): 71815/71815 messages, 4787.5 msg/s, drain 0.0 s
+ok   run 1 500 clients (target): 33685/33685 messages, 2245.4 msg/s, drain 0.0 s
+[22:10:27] oncrack: container up, cold start 262ms
+ok   run 2 100 clients (prefix): 95214/95214 messages, 6347.2 msg/s, drain 0.0 s
+MISS run 2 500 clients (target): 1 ERROR/WARN lines in the app's log
+[22:11:26] oncrack: container up, cold start 292ms
+MISS run 3 100 clients (prefix): 1 ERROR/WARN lines in the app's log
+MISS run 3 500 clients (target): 1 ERROR/WARN lines in the app's log
+[22:12:26] oncrack: container up, cold start 241ms
+ok   run 4 100 clients (prefix): 72055/72055 messages, 4803.3 msg/s, drain 0.0 s
+ok   run 4 500 clients (target): 47295/47295 messages, 3152.1 msg/s, drain 0.0 s
+[22:13:25] oncrack: container up, cold start 214ms
+MISS run 5 100 clients (prefix): 1 ERROR/WARN lines in the app's log
+ok   run 5 500 clients (target): 44135/44135 messages, 2941.9 msg/s, drain 0.0 s
+[22:14:24] oncrack: container up, cold start 200ms
+MISS run 6 100 clients (prefix): 2 ERROR/WARN lines in the app's log
+ok   run 6 500 clients (target): 47328/47328 messages, 3154.4 msg/s, drain 0.0 s
+[22:15:23] oncrack: container up, cold start 222ms
+MISS run 7 100 clients (prefix): 1 ERROR/WARN lines in the app's log
+ok   run 7 500 clients (target): 44579/44579 messages, 2971.4 msg/s, drain 0.0 s
+[22:16:22] oncrack: container up, cold start 259ms
+ok   run 8 100 clients (prefix): 103588/103588 messages, 6905.5 msg/s, drain 0.0 s
+ok   run 8 500 clients (target): 47534/47534 messages, 3168.2 msg/s, drain 0.0 s
+[22:17:21] oncrack: container up, cold start 192ms
+ok   run 9 100 clients (prefix): 99988/99988 messages, 6665.3 msg/s, drain 0.0 s
+MISS run 9 500 clients (target): 1 ERROR/WARN lines in the app's log
+[22:18:20] oncrack: container up, cold start 195ms
+ok   run 10 100 clients (prefix): 72568/72568 messages, 4834.8 msg/s, drain 0.0 s
+ok   run 10 500 clients (target): 43554/43554 messages, 2899.7 msg/s, drain 0.0 s
+[22:19:16] done: 20 phases, 7 with a problem
+exit 0

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# onCrack R2.5: bench/mem once per environment setting, printing each run's table.
+# Run inside colima:  bench/mem-sweep OUT.jsonl MOUNTED_DIR SCENARIO ... -- 'K=V [K=V ...]' 'K=V' ...
+# Each quoted setting is one run's --env (its label too); a setting of 'X=1' is the baseline (a variable nothing reads).
+set -uo pipefail
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+out=$1; mount=$2; shift 2
+sc=(); while [ "$1" != "--" ]; do sc+=("$1"); shift; done; shift
+for v in "$@"; do
+  echo "=== $v"
+  "$ROOT/bench/mem" --mounted "$mount" --label "$v" --env "$v" --out "$out" "${sc[@]}" 2>&1 | grep -E '^(  get|  post|  real|idle|post|get|cable|upload|real|whole)'
+done

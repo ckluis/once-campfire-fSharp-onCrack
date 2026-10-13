@@ -1,0 +1,39 @@
+date: 2026-10-11T02:44:30-04:00
+app: oncrack, clients: 500, prefix: none, runs: 10, fresh: 1, secs: 15
+app env: CAMPFIRE_CABLE_VERIFY=1 DOTNET_GCgen0MaxBudget=400000
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r5-verify2 (6920635 (dirty files under src/: 0) at 2026-10-11T04:57:25Z)
+repo HEAD: 0eaed8f
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[02:45:41] load before run: 1.47 2.94 2.92 (waited 70s)
+[02:45:53] host busy: {"spin_ms": 283.17, "spin_ms_max_cpu": 294.97, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.096}
+[02:46:16] host busy: {"spin_ms": 286.27, "spin_ms_max_cpu": 295.56, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.152}
+[02:46:38] host busy: {"spin_ms": 276.2, "spin_ms_max_cpu": 297.46, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 4.97}
+[02:47:00] host busy: {"spin_ms": 286.92, "spin_ms_max_cpu": 295.59, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.163}
+[02:47:23] host busy: {"spin_ms": 282.19, "spin_ms_max_cpu": 313.06, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.078}
+[02:47:45] host probe before run: {"spin_ms": 287.01, "spin_ms_max_cpu": 305.48, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 5.165} (waited 120s)
+[02:47:51] oncrack: container up, cold start 922ms
+MISS run 1 500 clients (target): the container used under one core for 1286 ms inside the phase (a freeze), 31 ERROR/WARN lines in the app's log
+[02:48:23] oncrack: container up, cold start 227ms
+MISS run 2 500 clients (target): 29 ERROR/WARN lines in the app's log
+[02:48:54] oncrack: container up, cold start 195ms
+MISS run 3 500 clients (target): 34 ERROR/WARN lines in the app's log
+[02:49:26] oncrack: container up, cold start 201ms
+MISS run 4 500 clients (target): 33 ERROR/WARN lines in the app's log
+[02:49:59] oncrack: container up, cold start 713ms
+MISS run 5 500 clients (target): the container used under one core for 1048 ms inside the phase (a freeze), 30 ERROR/WARN lines in the app's log
+[02:50:33] oncrack: container up, cold start 733ms
+MISS run 6 500 clients (target): the container used under one core for 1805 ms inside the phase (a freeze), 32 ERROR/WARN lines in the app's log
+[02:51:07] oncrack: container up, cold start 737ms
+MISS run 7 500 clients (target): the container used under one core for 1805 ms inside the phase (a freeze), 29 ERROR/WARN lines in the app's log
+[02:51:41] oncrack: container up, cold start 717ms
+MISS run 8 500 clients (target): the container used under one core for 1559 ms inside the phase (a freeze), 30 ERROR/WARN lines in the app's log
+[02:52:14] oncrack: container up, cold start 728ms
+MISS run 9 500 clients (target): the container used under one core for 1285 ms inside the phase (a freeze), 28 ERROR/WARN lines in the app's log
+[02:52:48] oncrack: container up, cold start 761ms
+MISS run 10 500 clients (target): the container used under one core for 3129 ms inside the phase (a freeze), 31 ERROR/WARN lines in the app's log
+[02:53:16] done: 10 phases, 10 with a problem
+exit 0

@@ -1,0 +1,74 @@
+date: 2026-10-12T08:57:35-04:00
+app: oncrack, clients: 500, prefix: none, runs: 30, fresh: 1, secs: 15
+app env: CAMPFIRE_CABLE_VERIFY=1 DOTNET_GCgen0MaxBudget=400000
+loadgen args:  (client trace 1)
+server trace: 0
+image: campfire-oncrack:app sha256:ecfb867a2f579135edd81d2ee703eb49b3491da8fb73e6981e3acea24909a61b 2026-10-10T16:33:47.023147364-04:00
+oncrack build: MOUNTED /var/tmp/campfire-r52 (426bcef (dirty files under src/: 0) at 2026-10-12T12:55:03Z)
+repo HEAD: c2a6fca
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11)
+host: 6.8.0-117-generic, 8 threads; server cpus 0-3, loadgen cpus 4-7
+[08:57:35] load before run: 0.72 0.94 0.71 (waited 0s)
+[08:57:37] host probe before run: {"spin_ms": 58.94, "spin_ms_max_cpu": 61.3, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.061} (waited 0s)
+[08:57:41] oncrack: container up, cold start 269ms
+ok   run 1 500 clients (target): 32359/32359 messages, 2156.3 msg/s, drain 0.0 s
+[08:58:12] oncrack: container up, cold start 245ms
+ok   run 2 500 clients (target): 36808/36808 messages, 2453.3 msg/s, drain 0.0 s
+[08:58:44] oncrack: container up, cold start 199ms
+ok   run 3 500 clients (target): 36345/36345 messages, 2422.5 msg/s, drain 0.0 s
+[08:59:15] oncrack: container up, cold start 288ms
+ok   run 4 500 clients (target): 40974/40974 messages, 2730.4 msg/s, drain 0.0 s
+[08:59:46] oncrack: container up, cold start 223ms
+ok   run 5 500 clients (target): 38637/38637 messages, 2574.6 msg/s, drain 0.01 s
+[09:00:17] oncrack: container up, cold start 194ms
+ok   run 6 500 clients (target): 36462/36462 messages, 2430.2 msg/s, drain 0.0 s
+[09:00:49] oncrack: container up, cold start 280ms
+ok   run 7 500 clients (target): 31404/31404 messages, 2093.3 msg/s, drain 0.0 s
+[09:01:20] oncrack: container up, cold start 192ms
+ok   run 8 500 clients (target): 40254/40254 messages, 2683.2 msg/s, drain 0.0 s
+[09:01:51] oncrack: container up, cold start 187ms
+ok   run 9 500 clients (target): 47510/47510 messages, 3166.7 msg/s, drain 0.0 s
+[09:02:22] oncrack: container up, cold start 228ms
+MISS run 10 500 clients (target): 3 ERROR/WARN lines in the app's log
+[09:02:54] oncrack: container up, cold start 335ms
+MISS run 11 500 clients (target): 6 ERROR/WARN lines in the app's log
+[09:03:25] oncrack: container up, cold start 219ms
+MISS run 12 500 clients (target): 2 ERROR/WARN lines in the app's log
+[09:03:56] oncrack: container up, cold start 192ms
+ok   run 13 500 clients (target): 43368/43368 messages, 2890.3 msg/s, drain 0.0 s
+[09:04:27] oncrack: container up, cold start 219ms
+ok   run 14 500 clients (target): 41949/41949 messages, 2794.8 msg/s, drain 0.0 s
+[09:04:59] oncrack: container up, cold start 336ms
+ok   run 15 500 clients (target): 46610/46610 messages, 3106.8 msg/s, drain 0.0 s
+[09:05:30] oncrack: container up, cold start 190ms
+ok   run 16 500 clients (target): 47258/47258 messages, 3149.6 msg/s, drain 0.0 s
+[09:06:01] oncrack: container up, cold start 183ms
+ok   run 17 500 clients (target): 33099/33099 messages, 2205.9 msg/s, drain 0.0 s
+[09:06:32] oncrack: container up, cold start 279ms
+MISS run 18 500 clients (target): 6 ERROR/WARN lines in the app's log
+[09:07:04] oncrack: container up, cold start 306ms
+ok   run 19 500 clients (target): 43049/43049 messages, 2869.5 msg/s, drain 0.0 s
+[09:07:35] oncrack: container up, cold start 206ms
+ok   run 20 500 clients (target): 45547/45547 messages, 3036.0 msg/s, drain 0.0 s
+[09:08:06] oncrack: container up, cold start 198ms
+ok   run 21 500 clients (target): 43518/43518 messages, 2900.4 msg/s, drain 0.0 s
+[09:08:37] oncrack: container up, cold start 262ms
+ok   run 22 500 clients (target): 46214/46214 messages, 3080.7 msg/s, drain 0.0 s
+[09:09:09] oncrack: container up, cold start 188ms
+ok   run 23 500 clients (target): 47139/47139 messages, 3141.8 msg/s, drain 0.0 s
+[09:09:40] oncrack: container up, cold start 189ms
+ok   run 24 500 clients (target): 47354/47354 messages, 3155.8 msg/s, drain 0.0 s
+[09:10:11] oncrack: container up, cold start 193ms
+ok   run 25 500 clients (target): 49264/49264 messages, 3283.9 msg/s, drain 0.0 s
+[09:10:42] oncrack: container up, cold start 185ms
+ok   run 26 500 clients (target): 48484/48484 messages, 3230.4 msg/s, drain 0.0 s
+[09:11:13] oncrack: container up, cold start 182ms
+ok   run 27 500 clients (target): 49070/49070 messages, 3270.7 msg/s, drain 0.0 s
+[09:11:45] oncrack: container up, cold start 187ms
+ok   run 28 500 clients (target): 49109/49109 messages, 3273.3 msg/s, drain 0.0 s
+[09:12:16] oncrack: container up, cold start 186ms
+ok   run 29 500 clients (target): 49436/49436 messages, 3294.6 msg/s, drain 0.0 s
+[09:12:47] oncrack: container up, cold start 204ms
+ok   run 30 500 clients (target): 49305/49305 messages, 3285.7 msg/s, drain 0.0 s
+[09:13:15] done: 30 phases, 4 with a problem
+exit 0

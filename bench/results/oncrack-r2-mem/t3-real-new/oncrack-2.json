@@ -1,0 +1,556 @@
+{
+ "app": "oncrack",
+ "rep": 2,
+ "cold_start_ms": 221,
+ "memory": {
+  "idle_current_mb": 29,
+  "idle_anon_mb": 15,
+  "peak_current_mb": 566,
+  "peak_anon_mb": 443,
+  "cgroup_peak_mb": 567
+ },
+ "http": [
+  {
+   "avg_bytes": 16078,
+   "conc": 16,
+   "errors": 0,
+   "gzip": true,
+   "lanes": {
+    "posts": {
+     "avg_bytes": 2098,
+     "conc": 1,
+     "errors": 0,
+     "latency": {
+      "max_ms": 7.447,
+      "mean_ms": 0.8,
+      "n": 9908,
+      "p50_ms": 0.731,
+      "p90_ms": 0.967,
+      "p99_ms": 2.227
+     },
+     "ok": 9908,
+     "pick": "cycle",
+     "rps": 1238.4,
+     "statuses": {
+      "200": 9908
+     },
+     "targets": 1
+    },
+    "reads": {
+     "avg_bytes": 16486,
+     "conc": 16,
+     "errors": 0,
+     "latency": {
+      "max_ms": 9.647,
+      "mean_ms": 0.38,
+      "n": 339551,
+      "p50_ms": 0.173,
+      "p90_ms": 0.743,
+      "p99_ms": 1.621
+     },
+     "ok": 339551,
+     "pick": "cycle",
+     "rps": 42440.0,
+     "statuses": {
+      "200": 339551
+     },
+     "targets": 1
+    }
+   },
+   "latency": {
+    "max_ms": 9.647,
+    "mean_ms": 0.39,
+    "n": 349459,
+    "p50_ms": 0.196,
+    "p90_ms": 0.752,
+    "p99_ms": 1.7
+   },
+   "ok": 349459,
+   "path": "mix mixed",
+   "rps": 43678.3,
+   "secs": 8.0,
+   "statuses": {
+    "200": 349459
+   },
+   "cost": {
+    "wall_s": 8.0,
+    "server_usage_us": 28385869,
+    "server_user_us": 22452922,
+    "server_system_us": 5932947,
+    "loadgen_user_us": 3486707,
+    "loadgen_system_us": 4457244,
+    "n": 349459,
+    "server_cpu_us_per_req": 81.2,
+    "server_user_us_per_req": 64.3,
+    "server_system_us_per_req": 17.0,
+    "loadgen_cpu_us_per_req": 22.7,
+    "server_cores_busy": 3.55,
+    "loadgen_cores_busy": 0.99
+   },
+   "route": "mixed",
+   "warmup": {
+    "secs": 90.0,
+    "windows_rps": [
+     44697.8,
+     47942.7,
+     43722.8,
+     44257.3,
+     44055.3,
+     45123.2,
+     41971.4,
+     38276.1,
+     42905.0,
+     42905.4,
+     43713.1,
+     43312.8,
+     44162.2,
+     44329.8,
+     38144.6,
+     39709.7,
+     43744.4,
+     42995.9,
+     43997.3,
+     42998.4,
+     41524.1,
+     42904.6,
+     41429.4,
+     41220.4,
+     42576.4,
+     43559.2,
+     43162.7,
+     42542.0,
+     43717.5,
+     41874.8,
+     43451.4,
+     42014.6,
+     41861.8,
+     43486.0,
+     43746.3,
+     43503.9,
+     43865.7,
+     42583.0,
+     43711.3,
+     43823.6,
+     43478.4,
+     44157.5,
+     43056.4,
+     42450.6,
+     42537.8
+    ],
+    "reason": "reached the maximum",
+    "window_secs": 2.0,
+    "settled": false,
+    "tail_rps": 42681.6
+   },
+   "host_probe_after": {
+    "spin_ms": 57.87,
+    "spin_ms_max_cpu": 60.21,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 55.57,
+    "ratio": 1.041
+   }
+  },
+  {
+   "avg_bytes": 7338,
+   "conc": 16,
+   "errors": 0,
+   "gzip": true,
+   "lanes": {
+    "reads": {
+     "avg_bytes": 7338,
+     "conc": 16,
+     "errors": 0,
+     "latency": {
+      "max_ms": 3.981,
+      "mean_ms": 0.08,
+      "n": 1500477,
+      "p50_ms": 0.077,
+      "p90_ms": 0.135,
+      "p99_ms": 0.202
+     },
+     "ok": 1500477,
+     "pick": "random",
+     "rps": 187551.9,
+     "statuses": {
+      "200": 1500477
+     },
+     "targets": 2112
+    }
+   },
+   "latency": {
+    "max_ms": 3.981,
+    "mean_ms": 0.08,
+    "n": 1500477,
+    "p50_ms": 0.077,
+    "p90_ms": 0.135,
+    "p99_ms": 0.202
+   },
+   "ok": 1500477,
+   "path": "mix spread",
+   "rps": 187551.9,
+   "secs": 8.0,
+   "statuses": {
+    "200": 1500477
+   },
+   "cost": {
+    "wall_s": 8.0,
+    "server_usage_us": 24899569,
+    "server_user_us": 15289494,
+    "server_system_us": 9610075,
+    "loadgen_user_us": 9818288,
+    "loadgen_system_us": 9143087,
+    "n": 1500477,
+    "server_cpu_us_per_req": 16.6,
+    "server_user_us_per_req": 10.2,
+    "server_system_us_per_req": 6.4,
+    "loadgen_cpu_us_per_req": 12.6,
+    "server_cores_busy": 3.11,
+    "loadgen_cores_busy": 2.37
+   },
+   "route": "spread",
+   "warmup": {
+    "secs": 30.0,
+    "windows_rps": [
+     163985.2,
+     189229.0,
+     186910.7,
+     188461.5,
+     187682.9,
+     188609.2,
+     188548.3,
+     188264.8,
+     187854.6,
+     187794.7,
+     188001.4,
+     188577.2,
+     187767.4,
+     188204.3,
+     188711.5
+    ],
+    "reason": "settled",
+    "window_secs": 2.0,
+    "settled": true,
+    "tail_rps": 188227.7
+   },
+   "host_probe_after": {
+    "spin_ms": 59.73,
+    "spin_ms_max_cpu": 63.22,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 55.57,
+    "ratio": 1.075
+   }
+  },
+  {
+   "avg_bytes": 15925,
+   "conc": 16,
+   "errors": 0,
+   "gzip": true,
+   "lanes": {
+    "posts": {
+     "avg_bytes": 2103,
+     "conc": 1,
+     "errors": 0,
+     "latency": {
+      "max_ms": 16.399,
+      "mean_ms": 1.51,
+      "n": 5288,
+      "p50_ms": 1.401,
+      "p90_ms": 1.745,
+      "p99_ms": 4.387
+     },
+     "ok": 5288,
+     "pick": "random",
+     "rps": 660.9,
+     "statuses": {
+      "200": 5288
+     },
+     "targets": 108
+    },
+    "reads": {
+     "avg_bytes": 16757,
+     "conc": 16,
+     "errors": 0,
+     "latency": {
+      "max_ms": 16.863,
+      "mean_ms": 1.46,
+      "n": 87844,
+      "p50_ms": 1.375,
+      "p90_ms": 1.709,
+      "p99_ms": 4.037
+     },
+     "ok": 87844,
+     "pick": "random",
+     "rps": 10978.7,
+     "statuses": {
+      "200": 87844
+     },
+     "targets": 2112
+    }
+   },
+   "latency": {
+    "max_ms": 16.863,
+    "mean_ms": 1.46,
+    "n": 93132,
+    "p50_ms": 1.377,
+    "p90_ms": 1.71,
+    "p99_ms": 4.049
+   },
+   "ok": 93132,
+   "path": "mix spread_mixed",
+   "rps": 11639.6,
+   "secs": 8.0,
+   "statuses": {
+    "200": 93132
+   },
+   "cost": {
+    "wall_s": 8.01,
+    "server_usage_us": 30966065,
+    "server_user_us": 28463889,
+    "server_system_us": 2502176,
+    "loadgen_user_us": 1215182,
+    "loadgen_system_us": 2166895,
+    "n": 93132,
+    "server_cpu_us_per_req": 332.5,
+    "server_user_us_per_req": 305.6,
+    "server_system_us_per_req": 26.9,
+    "loadgen_cpu_us_per_req": 36.3,
+    "server_cores_busy": 3.87,
+    "loadgen_cores_busy": 0.42
+   },
+   "route": "spread_mixed",
+   "warmup": {
+    "secs": 30.0,
+    "windows_rps": [
+     11552.9,
+     11733.3,
+     11389.9,
+     11807.1,
+     11522.7,
+     11623.9,
+     11886.4,
+     12070.7,
+     11880.0,
+     11874.0,
+     11905.7,
+     11718.7,
+     11803.1,
+     11842.4,
+     11724.5
+    ],
+    "reason": "settled",
+    "window_secs": 2.0,
+    "settled": true,
+    "tail_rps": 11790.0
+   },
+   "host_probe_after": {
+    "spin_ms": 58.35,
+    "spin_ms_max_cpu": 61.59,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 55.57,
+    "ratio": 1.05
+   }
+  },
+  {
+   "avg_bytes": 4672,
+   "conc": 16,
+   "errors": 0,
+   "gzip": true,
+   "lanes": {
+    "reads": {
+     "avg_bytes": 4672,
+     "conc": 16,
+     "errors": 0,
+     "latency": {
+      "max_ms": 65.343,
+      "mean_ms": 1.12,
+      "n": 114227,
+      "p50_ms": 0.683,
+      "p90_ms": 1.662,
+      "p99_ms": 7.667
+     },
+     "ok": 114227,
+     "pick": "random",
+     "rps": 14276.5,
+     "statuses": {
+      "200": 114227
+     },
+     "targets": 104800
+    }
+   },
+   "latency": {
+    "max_ms": 65.343,
+    "mean_ms": 1.12,
+    "n": 114227,
+    "p50_ms": 0.683,
+    "p90_ms": 1.662,
+    "p99_ms": 7.667
+   },
+   "ok": 114227,
+   "path": "mix search_spread",
+   "rps": 14276.5,
+   "secs": 8.0,
+   "statuses": {
+    "200": 114227
+   },
+   "cost": {
+    "wall_s": 8.0,
+    "server_usage_us": 30180692,
+    "server_user_us": 26474821,
+    "server_system_us": 3705870,
+    "loadgen_user_us": 1401985,
+    "loadgen_system_us": 2128657,
+    "n": 114227,
+    "server_cpu_us_per_req": 264.2,
+    "server_user_us_per_req": 231.8,
+    "server_system_us_per_req": 32.4,
+    "loadgen_cpu_us_per_req": 30.9,
+    "server_cores_busy": 3.77,
+    "loadgen_cores_busy": 0.44
+   },
+   "route": "search_spread",
+   "warmup": {
+    "secs": 30.3,
+    "windows_rps": [
+     14007.7,
+     15679.1,
+     15615.2,
+     15417.9,
+     15709.1,
+     15696.5,
+     15518.4,
+     15838.5,
+     15511.9,
+     15643.6,
+     15532.3,
+     15690.6,
+     15555.4,
+     15539.7,
+     15762.4
+    ],
+    "reason": "settled",
+    "window_secs": 2.0,
+    "settled": true,
+    "tail_rps": 15619.2
+   },
+   "host_probe_after": {
+    "spin_ms": 58.83,
+    "spin_ms_max_cpu": 60.43,
+    "cpus": "0-3,4-7",
+    "baseline_ms": 55.57,
+    "ratio": 1.059
+   }
+  }
+ ],
+ "cable": [],
+ "upload": {},
+ "loadavg_start": "1.32 3.35 3.16 1/200 1334487",
+ "loadavg_end": "6.23 4.92 3.86 1/246 1345611",
+ "post_rows": [
+  {
+   "route": "mixed",
+   "phase": "warm-up",
+   "conc": 16,
+   "ok": 112694,
+   "statuses": {
+    "200": 112694
+   },
+   "rows": 112694
+  },
+  {
+   "route": "mixed",
+   "phase": "run",
+   "conc": 16,
+   "ok": 9908,
+   "statuses": {
+    "200": 9908
+   },
+   "rows": 9908
+  },
+  {
+   "route": "spread_mixed",
+   "phase": "warm-up",
+   "conc": 16,
+   "ok": 19846,
+   "statuses": {
+    "200": 19846
+   },
+   "rows": 19846
+  },
+  {
+   "route": "spread_mixed",
+   "phase": "run",
+   "conc": 16,
+   "ok": 5288,
+   "statuses": {
+    "200": 5288
+   },
+   "rows": 5288
+  }
+ ],
+ "probe": [],
+ "host_probe_start": {
+  "spin_ms": 58.98,
+  "spin_ms_max_cpu": 61.63,
+  "cpus": "0-3,4-7",
+  "baseline_ms": 55.57,
+  "ratio": 1.061
+ },
+ "host_probe_end": {
+  "spin_ms": 58.89,
+  "spin_ms_max_cpu": 60.06,
+  "cpus": "0-3,4-7",
+  "baseline_ms": 55.57,
+  "ratio": 1.06
+ },
+ "seed": "crowd",
+ "realistic": {
+  "seed": "crowd",
+  "sign_in_secs": 31.2,
+  "workloads": {
+   "mixed": {
+    "reads": {
+     "conc": "c",
+     "pick": "cycle",
+     "targets": 1,
+     "users": 1
+    },
+    "posts": {
+     "conc": 1,
+     "pick": "cycle",
+     "targets": 1,
+     "users": 1
+    }
+   },
+   "spread": {
+    "reads": {
+     "conc": "c",
+     "pick": "random",
+     "targets": 2112,
+     "users": 525
+    }
+   },
+   "spread_mixed": {
+    "reads": {
+     "conc": "c",
+     "pick": "random",
+     "targets": 2112,
+     "users": 525
+    },
+    "posts": {
+     "conc": 1,
+     "pick": "random",
+     "targets": 108,
+     "users": 31
+    }
+   },
+   "search_spread": {
+    "reads": {
+     "conc": "c",
+     "pick": "random",
+     "targets": 104800,
+     "users": 524
+    }
+   }
+  }
+ }
+}
