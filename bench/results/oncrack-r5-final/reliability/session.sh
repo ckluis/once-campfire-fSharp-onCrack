@@ -33,4 +33,6 @@ mkdir -p /mnt/cfv/out
 pid=$!
 taskset -c 4-7 $R/bench/results/oncrack-r5-final/scripts/guard.sh $pid > /dev/null 2>&1 < /dev/null &
 wait $pid; rc=$?
+# guard.sh kills this subshell only, and the harness (ruby bin/reliability) outlives it (met in main's first run, 2026-10-13 04:09): stop it too.
+if [ $rc -ge 128 ]; then pkill -f "[r]uby bin/reliability"; sleep 2; docker ps -q --filter name=cf-native-reliability | xargs -r docker rm -f > /dev/null; fi
 echo $rc > $D/$part.exit
