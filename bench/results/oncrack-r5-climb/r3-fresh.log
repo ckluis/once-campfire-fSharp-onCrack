@@ -1,0 +1,243 @@
+date: 2026-10-13T05:20:01-04:00
+host: 6.8.0-117-generic, , 8 threads, 5GB
+server cpus: 0-3 (nproc 4); loadgen cpus: 4-7; network: host
+env: WEB_CONCURRENCY=3 JOB_CONCURRENCY=3 RAILS_MAX_THREADS=5 
+rust extra env: 
+fsharp extra env: 
+oncrack extra env: 
+user agent: (none)
+oncrack image: campfire-oncrack:r3final sha256:e34e485ff87ddd3d1fdb7f5dbebe6f2a1a563b3b8f6ccb5f403f31b6fbc753a4 2026-10-13T04:46:33.001661448-04:00 built from commit: 37c5988
+repo HEAD: 3e6a300 (dirty: 0 files under src/ and rust/)
+work dir (seed copies): /var/tmp/campfire-bench-work (ext4)
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11), built with rust:1.98.1-trixie
+seed: default (realistic workloads: crowd; classic: default); realistic concs 16, MIX_POSTERS 1, SPREAD_POSTERS 1, POST_RATE 0, POSTING_USERS 32, SEARCH_QUERIES 200, REAL_USERS 0 (0: all)
+schedule: apps oncrack, reps 3; suites: http; http secs 8, concs 1 16, routes room_show messages_page sidebar search post_message, warm-up 30s at each route and concentration, idle 5s
+log retention: 2 x 10m (json-file)
+[05:21:01] load before run: 1.34 2.86 3.04 (waited 60s)
+[05:21:04] host probe before run: {"spin_ms": 61.03, "spin_ms_max_cpu": 66.72, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.098} (waited 60s)
+[05:21:04] oncrack rep 1: starting (load: 1.34 2.86 3.04)
+[05:21:09] oncrack rep 1: cold start 294ms, idle 29MB (anon 15MB)
+[05:21:59] oncrack rep 1: room_show c=1 23706.7 rps p50 0.039 p99 0.058 {'200': 189656} err 0 cpu 22.2 us/req; warm-up 38.0 s settled tail 23564.4 host 1.074 
+[05:22:39] oncrack rep 1: room_show c=16 149479.5 rps p50 0.095 p99 0.255 {'200': 1195896} err 0 cpu 20.7 us/req; warm-up 30.0 s settled tail 150800.8 host 1.063 
+[05:23:20] oncrack rep 1: messages_page c=1 25225.5 rps p50 0.038 p99 0.065 {'200': 201806} err 0 cpu 21.1 us/req; warm-up 30.0 s settled tail 24092.3 host 1.062 
+[05:24:01] oncrack rep 1: messages_page c=16 157464.1 rps p50 0.091 p99 0.245 {'200': 1259761} err 0 cpu 19.5 us/req; warm-up 30.0 s settled tail 157401.6 host 1.074 
+[05:24:41] oncrack rep 1: sidebar c=1 24920.5 rps p50 0.037 p99 0.054 {'200': 199366} err 0 cpu 20.6 us/req; warm-up 30.0 s settled tail 24836.2 host 1.049 
+[05:25:22] oncrack rep 1: sidebar c=16 167656.8 rps p50 0.086 p99 0.232 {'200': 1341309} err 0 cpu 17.9 us/req; warm-up 30.0 s settled tail 168880.6 host 1.057 
+[05:26:03] oncrack rep 1: search c=1 24954.8 rps p50 0.038 p99 0.055 {'200': 199640} err 0 cpu 20.8 us/req; warm-up 30.0 s settled tail 24485.4 host 1.073 
+[05:26:44] oncrack rep 1: search c=16 162263.9 rps p50 0.088 p99 0.24 {'200': 1298160} err 0 cpu 18.5 us/req; warm-up 30.0 s settled tail 163563.0 host 1.064 
+[05:27:24] oncrack rep 1: post_message c=1 4976.3 rps p50 0.18 p99 0.318 {'200': 39811} err 0 cpu 257.2 us/req; warm-up 30.0 s settled tail 4985.7 host 1.09 
+[05:29:06] oncrack rep 1: post_message c=16 11462.8 rps p50 0.893 p99 4.511 {'200': 91714} err 0 cpu 189.0 us/req; warm-up 90.3 s reached the maximum tail 10326.7 host 1.092 
+[05:29:09] oncrack rep 1: done -> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-climb/r3-fresh/oncrack-1.json
+[05:29:59] load before run: 1.31 2.62 2.89 (waited 50s)
+[05:30:02] host busy: {"spin_ms": 64.38, "spin_ms_max_cpu": 74.55, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.159}
+[05:30:15] host busy: {"spin_ms": 62.9, "spin_ms_max_cpu": 74.89, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.132}
+[05:30:28] host probe before run: {"spin_ms": 60.85, "spin_ms_max_cpu": 62.52, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.095} (waited 70s)
+[05:30:28] oncrack rep 2: starting (load: 0.91 2.40 2.81)
+[05:30:33] oncrack rep 2: cold start 305ms, idle 28MB (anon 15MB)
+[05:31:44] oncrack rep 2: room_show c=1 23216.3 rps p50 0.04 p99 0.059 {'200': 185732} err 0 cpu 22.8 us/req; warm-up 60.0 s settled tail 22350.5 host 1.051 
+[05:32:25] oncrack rep 2: room_show c=16 141821.8 rps p50 0.1 p99 0.279 {'200': 1134613} err 0 cpu 22.4 us/req; warm-up 30.0 s settled tail 147338.0 host 1.077 
+[05:34:06] oncrack rep 2: messages_page c=1 21632.7 rps p50 0.042 p99 0.164 {'200': 173063} err 0 cpu 24.2 us/req; warm-up 90.0 s reached the maximum tail 21329.9 host 1.11 
+[05:34:47] oncrack rep 2: messages_page c=16 141101.9 rps p50 0.099 p99 0.302 {'200': 1128871} err 0 cpu 23.1 us/req; warm-up 30.0 s settled tail 142287.3 host 1.075 
+[05:35:36] oncrack rep 2: sidebar c=1 23664.1 rps p50 0.042 p99 0.056 {'200': 189315} err 0 cpu 21.7 us/req; warm-up 38.0 s settled tail 24015.8 host 1.078 
+[05:36:17] oncrack rep 2: sidebar c=16 159651.1 rps p50 0.089 p99 0.25 {'200': 1277286} err 0 cpu 19.1 us/req; warm-up 30.0 s settled tail 162111.1 host 1.095 
+[05:37:58] oncrack rep 2: search c=1 21595.3 rps p50 0.041 p99 0.171 {'200': 172764} err 0 cpu 23.9 us/req; warm-up 90.0 s reached the maximum tail 17090.0 host 1.11 
+[05:38:39] oncrack rep 2: search c=16 146114.3 rps p50 0.099 p99 0.309 {'200': 1168971} err 0 cpu 22.6 us/req; warm-up 30.0 s settled tail 141756.4 host 1.094 
+[05:40:20] oncrack rep 2: post_message c=1 3645.1 rps p50 0.205 p99 0.362 {'200': 29162} err 0 cpu 282.2 us/req; warm-up 90.7 s reached the maximum tail 2736.5 host 1.056 
+[05:42:03] oncrack rep 2: post_message c=16 11183.6 rps p50 0.889 p99 4.523 {'200': 95906} err 0 cpu 188.4 us/req; warm-up 90.9 s reached the maximum tail 9948.9 host 1.07 
+[05:42:06] oncrack rep 2: done -> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-climb/r3-fresh/oncrack-2.json
+[05:42:56] load before run: 1.39 2.31 2.55 (waited 50s)
+[05:42:59] host probe before run: {"spin_ms": 58.1, "spin_ms_max_cpu": 61.35, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.045} (waited 50s)
+[05:42:59] oncrack rep 3: starting (load: 1.39 2.31 2.55)
+[05:43:04] oncrack rep 3: cold start 228ms, idle 28MB (anon 15MB)
+[05:43:45] oncrack rep 3: room_show c=1 24014.9 rps p50 0.04 p99 0.058 {'200': 192121} err 0 cpu 22.0 us/req; warm-up 30.0 s settled tail 23749.9 host 1.077 
+[05:44:26] oncrack rep 3: room_show c=16 147899.1 rps p50 0.096 p99 0.257 {'200': 1183247} err 0 cpu 21.2 us/req; warm-up 30.0 s settled tail 147119.5 host 1.057 
+[05:45:09] oncrack rep 3: messages_page c=1 24114.3 rps p50 0.04 p99 0.058 {'200': 192916} err 0 cpu 22.1 us/req; warm-up 32.0 s settled tail 24052.1 host 1.062 
+[05:45:49] oncrack rep 3: messages_page c=16 154724.0 rps p50 0.092 p99 0.25 {'200': 1237844} err 0 cpu 20.0 us/req; warm-up 30.0 s settled tail 153735.0 host 1.071 
+[05:46:30] oncrack rep 3: sidebar c=1 25077.7 rps p50 0.038 p99 0.055 {'200': 200624} err 0 cpu 20.5 us/req; warm-up 30.0 s settled tail 24556.6 host 1.054 
+[05:47:11] oncrack rep 3: sidebar c=16 166077.9 rps p50 0.086 p99 0.234 {'200': 1328682} err 0 cpu 18.2 us/req; warm-up 30.0 s settled tail 165384.3 host 1.095 
+[05:47:52] oncrack rep 3: search c=1 24664.5 rps p50 0.038 p99 0.055 {'200': 197318} err 0 cpu 21.1 us/req; warm-up 30.0 s settled tail 24092.9 host 1.053 
+[05:48:32] oncrack rep 3: search c=16 161081.0 rps p50 0.089 p99 0.237 {'200': 1288704} err 0 cpu 18.8 us/req; warm-up 30.0 s settled tail 160954.2 host 1.072 
+[05:49:14] oncrack rep 3: post_message c=1 3469.3 rps p50 0.183 p99 0.314 {'200': 31263} err 0 cpu 259.5 us/req; warm-up 30.0 s settled tail 4859.6 host 1.072 
+[05:50:56] oncrack rep 3: post_message c=16 12201.9 rps p50 0.874 p99 4.511 {'200': 97632} err 0 cpu 185.8 us/req; warm-up 90.7 s reached the maximum tail 13527.9 host 1.076 
+[05:50:59] oncrack rep 3: done -> /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-climb/r3-fresh/oncrack-3.json
+```
+date: 2026-10-13T05:20:01-04:00
+host: 6.8.0-117-generic, , 8 threads, 5GB
+server cpus: 0-3 (nproc 4); loadgen cpus: 4-7; network: host
+env: WEB_CONCURRENCY=3 JOB_CONCURRENCY=3 RAILS_MAX_THREADS=5 
+rust extra env: 
+fsharp extra env: 
+oncrack extra env: 
+user agent: (none)
+oncrack image: campfire-oncrack:r3final sha256:e34e485ff87ddd3d1fdb7f5dbebe6f2a1a563b3b8f6ccb5f403f31b6fbc753a4 2026-10-13T04:46:33.001661448-04:00 built from commit: 37c5988
+repo HEAD: 3e6a300 (dirty: 0 files under src/ and rust/)
+work dir (seed copies): /var/tmp/campfire-bench-work (ext4)
+loadgen: /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/target/rust/aarch64-unknown-linux-gnu/release/loadgen (2026-10-10 23:47:11), built with rust:1.98.1-trixie
+seed: default (realistic workloads: crowd; classic: default); realistic concs 16, MIX_POSTERS 1, SPREAD_POSTERS 1, POST_RATE 0, POSTING_USERS 32, SEARCH_QUERIES 200, REAL_USERS 0 (0: all)
+schedule: apps oncrack, reps 3; suites: http; http secs 8, concs 1 16, routes room_show messages_page sidebar search post_message, warm-up 30s at each route and concentration, idle 5s
+log retention: 2 x 10m (json-file)
+```
+
+Reps: oncrack 3. Cells: median [min–max].
+
+### Startup and memory
+
+| Metric | onCrack |
+|---|---|
+| cold start: docker run → /up 200 (ms) | 294 [228–305] |
+| idle memory.current (MB) | 28.0 [28.0–29.0] |
+| idle anon (MB) | 15.0 [15.0–15.0] |
+| peak memory.current under load (MB) | 696 [677–702] |
+| peak anon under load (MB) | 181 [179–185] |
+
+### HTTP (signed in as david; keep-alive; c = concurrent connections)
+
+`CPU µs/req` is the container's CPU (cgroup cpu.stat, user + system, unprofiled) over the run divided by its requests; for CPU a ratio below 1 means the first app spends more per request.
+
+| Metric | onCrack |
+|---|---|
+| room_show c=1 req/s | 23,707 [23,216–24,015] |
+| room_show c=1 CPU µs/req | 22.2 [22.0–22.8] |
+| room_show c=1 p50 ms | 0.04 [0.04–0.04] |
+| room_show c=1 p99 ms | 0.06 [0.06–0.06] |
+| room_show c=16 req/s | 147,899 [141,822–149,480] |
+| room_show c=16 CPU µs/req | 21.2 [20.7–22.4] |
+| room_show c=16 p50 ms | 0.10 [0.10–0.10] |
+| room_show c=16 p99 ms | 0.26 [0.26–0.28] |
+| messages_page c=1 req/s | 24,114 [21,633–25,226] |
+| messages_page c=1 CPU µs/req | 22.1 [21.1–24.2] |
+| messages_page c=1 p50 ms | 0.04 [0.04–0.04] |
+| messages_page c=1 p99 ms | 0.07 [0.06–0.16] |
+| messages_page c=16 req/s | 154,724 [141,102–157,464] |
+| messages_page c=16 CPU µs/req | 20.0 [19.5–23.1] |
+| messages_page c=16 p50 ms | 0.09 [0.09–0.10] |
+| messages_page c=16 p99 ms | 0.25 [0.24–0.30] |
+| sidebar c=1 req/s | 24,920 [23,664–25,078] |
+| sidebar c=1 CPU µs/req | 20.6 [20.5–21.7] |
+| sidebar c=1 p50 ms | 0.04 [0.04–0.04] |
+| sidebar c=1 p99 ms | 0.06 [0.05–0.06] |
+| sidebar c=16 req/s | 166,078 [159,651–167,657] |
+| sidebar c=16 CPU µs/req | 18.2 [17.9–19.1] |
+| sidebar c=16 p50 ms | 0.09 [0.09–0.09] |
+| sidebar c=16 p99 ms | 0.23 [0.23–0.25] |
+| search c=1 req/s | 24,664 [21,595–24,955] |
+| search c=1 CPU µs/req | 21.1 [20.8–23.9] |
+| search c=1 p50 ms | 0.04 [0.04–0.04] |
+| search c=1 p99 ms | 0.06 [0.06–0.17] |
+| search c=16 req/s | 161,081 [146,114–162,264] |
+| search c=16 CPU µs/req | 18.8 [18.5–22.6] |
+| search c=16 p50 ms | 0.09 [0.09–0.10] |
+| search c=16 p99 ms | 0.24 [0.24–0.31] |
+| post_message c=1 req/s | 3,645 [3,469–4,976] |
+| post_message c=1 CPU µs/req | 260 [257–282] |
+| post_message c=1 p50 ms | 0.18 [0.18–0.20] |
+| post_message c=1 p99 ms | 0.32 [0.31–0.36] |
+| post_message c=16 req/s | 11,463 [11,184–12,202] |
+| post_message c=16 CPU µs/req | 188 [186–189] |
+| post_message c=16 p50 ms | 0.89 [0.87–0.89] |
+| post_message c=16 p99 ms | 4.51 [4.51–4.52] |
+
+## Validity
+
+### Load average before each run (1, 5, 15 minutes; the run waited for the 1-minute figure to fall below LOAD_MAX)
+
+| App | Rep | Before | After |
+|---|---|---|---|
+| onCrack | 1 | 1.34 2.86 3.04 | 3.02 3.11 3.05 |
+| onCrack | 2 | 0.91 2.40 2.81 | 3.40 2.77 2.70 |
+| onCrack | 3 | 1.39 2.31 2.55 | 4.66 3.62 2.99 |
+
+### Host CPU probe (a fixed spin timed on every pinned CPU, against the quietest this VM has shown; bench/lib/hostprobe.py)
+
+The VM's load average cannot see another program on the Mac taking the cores its vCPUs run on; this can. A ratio of 1.00 is a quiet host, above 1.10 the pinned server and load generator were slowed by something outside the run. `After each window` probes the machine right after every measured run of the rep.
+
+| App | Rep | Before the run | After the run | Windows probed above 1.10 | Highest after a window |
+|---|---|---|---|---|---|
+| onCrack | 1 | 1.10 | 1.12 | 0/10 | 1.09 |
+| onCrack | 2 | 1.09 | 1.09 | 2/10 **noisy** | 1.11 |
+| onCrack | 3 | 1.04 | 1.04 | 0/10 | 1.09 |
+
+### Responses by status class, every HTTP run of every rep
+
+| App | Route | 2xx | 3xx | 4xx | 5xx | Errors (no response) |
+|---|---|---|---|---|---|---|
+| onCrack | room_show | 4,081,265 | 0 | 0 | 0 | 0 |
+| onCrack | messages_page | 4,194,261 | 0 | 0 | 0 | 0 |
+| onCrack | sidebar | 4,536,582 | 0 | 0 | 0 | 0 |
+| onCrack | search | 4,325,557 | 0 | 0 | 0 | 0 |
+| onCrack | post_message | 385,488 | 0 | 0 | 0 | 0 |
+
+### Warm-up before each measured run (the app runs the route at the measured concurrency until its throughput is flat; bench/lib/warmup.py)
+
+`measured / warm-up tail` is the measured run's requests a second over the mean of the last three 2 s warm-up windows: well above 1 would mean the app was still speeding up when measurement began, well below 1 that it was slowing down.
+
+| App | Route | c | warm-up seconds | settled | measured / warm-up tail |
+|---|---|---|---|---|---|
+| onCrack | room_show | 1 | 38.0 [30.0–60.0] | 3/3 | 1.01 |
+| onCrack | room_show | 16 | 30.0 [30.0–30.0] | 3/3 | 0.99 |
+| onCrack | messages_page | 1 | 32.0 [30.0–90.0] | 2/3 **←** | 1.01 |
+| onCrack | messages_page | 16 | 30.0 [30.0–30.0] | 3/3 | 1.00 |
+| onCrack | sidebar | 1 | 30.0 [30.0–38.0] | 3/3 | 1.00 |
+| onCrack | sidebar | 16 | 30.0 [30.0–30.0] | 3/3 | 0.99 |
+| onCrack | search | 1 | 30.0 [30.0–90.0] | 2/3 **←** | 1.02 |
+| onCrack | search | 16 | 30.0 [30.0–30.0] | 3/3 | 1.00 |
+| onCrack | post_message | 1 | 30.0 [30.0–90.7] | 2/3 **←** | 1.00 |
+| onCrack | post_message | 16 | 90.7 [90.3–90.9] | 0/3 **←** | 1.11 |
+
+### Rows written by `post_message` and the realistic workloads that post (messages counted in the app's SQLite file around each run: the write room's, or every room's for a realistic workload)
+
+| App | Rep | Phase | Posts answered below 400 | Rows written | Match |
+|---|---|---|---|---|---|
+| onCrack | 1 | warm-up c=1 | 144,535 | 144,535 | yes |
+| onCrack | 1 | run c=1 | 39,811 | 39,811 | yes |
+| onCrack | 1 | warm-up c=16 | 1,048,283 | 1,048,283 | yes |
+| onCrack | 1 | run c=16 | 91,714 | 91,714 | yes |
+| onCrack | 1 | **all** | 1,324,343 | 1,324,343 | yes |
+| onCrack | 2 | warm-up c=1 | 235,703 | 235,703 | yes |
+| onCrack | 2 | run c=1 | 29,162 | 29,162 | yes |
+| onCrack | 2 | warm-up c=16 | 958,345 | 958,345 | yes |
+| onCrack | 2 | run c=16 | 95,906 | 95,906 | yes |
+| onCrack | 2 | **all** | 1,319,116 | 1,319,116 | yes |
+| onCrack | 3 | warm-up c=1 | 141,827 | 141,827 | yes |
+| onCrack | 3 | run c=1 | 31,263 | 31,263 | yes |
+| onCrack | 3 | warm-up c=16 | 988,683 | 988,683 | yes |
+| onCrack | 3 | run c=16 | 97,632 | 97,632 | yes |
+| onCrack | 3 | **all** | 1,259,405 | 1,259,405 | yes |
+
+### Response bytes, one request per route (gzip: wire / decoded; identity: bytes) and the average over the c=16 run
+
+The probe is a single request after sign-in, before any load. Bodies carry per-request tokens and the clock, so sizes of two apps agree to within a few bytes when they render the same page. "c=16 avg" is what the load generator received per request on the wire (gzip unless the column says otherwise).
+
+| Route | onCrack gzip wire / decoded | onCrack identity | onCrack c=16 avg | vs Rust |
+|---|---|---|---|---|
+| room_show | 200 24,080 / 416,122 | 200 416,122 | 24,080 | – |
+| messages_page | 200 15,967 / 383,844 | 200 383,844 | 15,967 | – |
+| sidebar | 200 5,826 / 30,763 | 200 30,763 | 5,826 | – |
+| search | 200 9,712 / 149,623 | 200 149,623 | 9,712 | – |
+| post_message | – | – | 2,097 | – |
+onCrack in /Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-climb/r3-fresh against the stored Rust and F# port medians (bench/results/phase7-final, 3 reps each, one session)
+
+| Workload | c | onCrack req/s | F# port stored | **onCrack / F# port** | Rust stored | **onCrack / Rust (vs stored Rust baseline)** | onCrack CPU us/req | F# port | Rust |
+|---|---|---|---|---|---|---|---|---|---|
+| room page | 16 | 147,899 [141,822-149,480] | 40,422 | **3.659x** | 28,623 | **5.167x** | 21.2 [21-22] | 93.6 | 122.4 |
+| room page | 1 | 23,707 [23,216-24,015] | 7,617 | **3.112x** | 6,481 | **3.658x** | 22.2 [22-23] | 208.7 | 142.1 |
+| messages page | 16 | 154,724 [141,102-157,464] | 37,836 | **4.089x** | 30,063 | **5.147x** | 20.0 [20-23] | 102.2 | 114.2 |
+| messages page | 1 | 24,114 [21,633-25,226] | 8,312 | **2.901x** | 6,822 | **3.535x** | 22.1 [21-24] | 199.3 | 139.2 |
+| sidebar | 16 | 166,078 [159,651-167,657] | 37,555 | **4.422x** | 28,238 | **5.881x** | 18.2 [18-19] | 101.8 | 123.2 |
+| sidebar | 1 | 24,920 [23,664-25,078] | 8,000 | **3.115x** | 6,196 | **4.022x** | 20.6 [20-22] | 181.0 | 149.0 |
+| search | 16 | 161,081 [146,114-162,264] | 34,070 | **4.728x** | 26,606 | **6.054x** | 18.8 [18-23] | 107.3 | 123.9 |
+| search | 1 | 24,664 [21,595-24,955] | 6,055 | **4.073x** | 5,646 | **4.368x** | 21.1 [21-24] | 315.1 | 158.3 |
+| post a message | 16 | 11,463 [11,184-12,202] | 8,905 | **1.287x** | 7,174 | **1.598x** | 188.4 [186-189] | 353.0 | 385.6 |
+| post a message | 1 | 3,645 [3,469-4,976] | 3,052 | **1.194x** | 2,779 | **1.312x** | 259.5 [257-282] | 629.1 | 403.7 |
+
+Checks:
+  note messages_page c=1: warm-up did not settle (reached the maximum)
+  note messages_page c=1: host probe 1.11 after the window (noisy host)
+  note post_message c=1: warm-up did not settle (reached the maximum)
+  note post_message c=16: warm-up did not settle (reached the maximum)
+  note post_message c=16: warm-up did not settle (reached the maximum)
+  note post_message c=16: warm-up did not settle (reached the maximum)
+  note search c=1: warm-up did not settle (reached the maximum)
+  note search c=1: host probe 1.11 after the window (noisy host)
+  responses: every one 2xx with 0 connection errors in 30 runs
+  decoded bytes equal Rust's on every probed route; post rows written equal the 2xx answers in every phase
