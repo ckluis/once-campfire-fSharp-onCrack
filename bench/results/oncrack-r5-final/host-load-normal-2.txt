@@ -77,4 +77,4 @@
 # mac_free_gib=16.6
 22:52:00 load  23.09 15.50 13.28  | sum 558 | 478.9 beam.smp, 22.3 beam.smp, 11.4 beam.smp, 11.0 beam.smp, 
 22:52:10 load  21.78 15.47 13.29  | sum 352 | 102.0 beam.smp, 84.6 beam.smp, 59.3 beam.smp, 43.2 beam.smp, 
-# NOTE: no host samples 22:52:10 to ~22:59:50 (my foreground wait was moved to the background by the Bash tool's timeout and ended; the session itself ran to 22:59). The noise figure covers 22:42-22:52 only.
+# gap: no host samples 22:52:10 to ~22:59:50 (my foreground wait was moved to the background by the Bash tool's timeout and ended; the session itself ran to 22:59). The noise figure covers 22:42-22:52 only.

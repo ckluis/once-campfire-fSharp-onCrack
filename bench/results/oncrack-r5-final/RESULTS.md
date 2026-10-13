@@ -19,7 +19,7 @@ Round 4 (one session each): normal 3.29x Rust and 2.40x C; the C ratio is unchan
 
 **The spread behind it (do not quote the headline without this).** `totals.md`: each session's own geometric mean, fresh/Rust 2.11x, 3.28x, 4.74x (normal) and 6.33x, 3.12x,
 3.00x (mixed); fresh/C 1.46x, 2.99x, 1.41x (normal) and 2.38x, 1.48x, 3.81x (mixed). Only normal-1 and mixed-1 passed the noise rule; normal-2, normal-3, mixed-2 and mixed-3 were
-NOISY (55-65% of host samples at >= 150% non-VM CPU, see below). The noise is not symmetric: onCrack's cells fall further under host load than C's or Rust's in some
+NOISY (54-65% of host samples at >= 150% non-VM CPU, see below). The noise is not symmetric: onCrack's cells fall further under host load than C's or Rust's in some
 sessions (room page 9,787 to 163,603 across mixed rounds; its 160k req/s needs ~2.5 of the 4 client cores) and the post path (disk) falls 10x under another project's
 fsyncs (normal-1 onCrack post 1,975 to 12,449). A quiet host is what round 4 had for its one session; this round did not get one, so the honest reading is
 "between 2x and 5x Rust, between 1.4x and 3.8x C, ahead in every cell at its median", not a point value.
@@ -33,7 +33,7 @@ write path is the one most exposed to a shared disk. The hand re-runs' quiet set
 |---|---|---:|---|---|
 | normal-1 | 10-12 22:07 | 22% | ok | |
 | mixed-1 | 10-12 22:42 | 24% | ok | |
-| normal-2 | 10-12 22:43 | 56% of the sampled 55% | NOISY | host sampler lost 22:52-23:00 (my wait was moved to the background by the tool timeout); sampled part was NOISY |
+| normal-2 | 10-12 22:43 | 56% (of the 9 of 16 minutes sampled) | NOISY | host sampler lost 22:52-23:00 (my wait was moved to the background by the tool timeout); sampled part was NOISY |
 | mixed-2 | 10-12 23:09 | 54% | NOISY | |
 | normal-3 | 10-12 23:26 | 65% | NOISY | the one re-run of normal-2, pooled with the others |
 | mixed-3 | 10-12 23:57 | 65% | NOISY | the one re-run of mixed-2, pooled with the others |
