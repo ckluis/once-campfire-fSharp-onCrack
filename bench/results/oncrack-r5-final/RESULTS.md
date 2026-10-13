@@ -32,7 +32,7 @@ write path is the one most exposed to a shared disk. The hand re-runs' quiet set
 | Session | Started (EDT) | Host samples >= 150% | Rule 2 | Notes |
 |---|---|---:|---|---|
 | normal-1 | 10-12 22:07 | 22% | ok | |
-| mixed-1 | 10-12 22:42 | 24% | ok | |
+| mixed-1 | 10-12 22:28 | 24% | ok | |
 | normal-2 | 10-12 22:43 | 56% (of the 9 of 16 minutes sampled) | NOISY | host sampler lost 22:52-23:00 (my wait was moved to the background by the tool timeout); sampled part was NOISY |
 | mixed-2 | 10-12 23:09 | 54% | NOISY | |
 | normal-3 | 10-12 23:26 | 65% | NOISY | the one re-run of normal-2, pooled with the others |
