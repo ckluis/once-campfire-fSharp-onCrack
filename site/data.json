@@ -2581,8 +2581,8 @@
   "oncrack": {
     "meta": {
       "description": "onCrack: the same Campfire, pixel for pixel, on a server free to do less work. Faster than current upstream Rust and C on Basecamp's own harness, and more runnable in production: no client cut under load, durability as Rails has it. One timeline from the F# port it was forked from; every number links to its source.",
-      "repo_url": null,
-      "branch": "crack",
+      "repo_url": "https://github.com/ckluis/once-campfire-fSharp-onCrack",
+      "branch": "main",
       "port_page": "https://ckluis.github.io/once-campfire-fSharp/",
       "port_repo": "https://github.com/ckluis/once-campfire-fSharp",
       "_note": "site/build.py reads \"oncrack\"; the rest of this file is the F# port's story (site/collect_tokens.py), not drawn here. Set repo_url once onCrack has a public repository and file links go to its GitHub view."

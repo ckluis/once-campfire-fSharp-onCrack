@@ -1,45 +1,94 @@
-# Campfire in F#
+# onCrack: Campfire in F#, unchained
 
-An F# implementation of [ONCE Campfire](https://github.com/basecamp/once-campfire), built on
-ASP.NET Core and Falco. It aims to be a drop-in replacement for the Rails app: the same SQLite
-database, storage layout and signed or encrypted cookies, with the same pages and behavior.
+[ONCE Campfire](https://github.com/basecamp/once-campfire) in F# (ASP.NET Core and Falco), forked from the
+[F# port](https://github.com/ckluis/once-campfire-fSharp) with one constraint dropped. The port does the same work per
+request as the Rust port. onCrack may do any work it likes, as long as two rules hold:
 
-**Status: complete, and faster than the Rust port under load.** Every screen the parity harness captures renders the
-same as the Rust port's, byte for byte (214 states across 5 seeds), and the five benchmarked workloads run 1.24-1.33x the
-Rust port's throughput at 16 connections while spending 8-23% less CPU per request. The story, with every measured
-version on one chart, is the [project page](https://ckluis.github.io/once-campfire-fSharp/) (`index.html`); the phases
-are in [`plans/fsharp-port.md`](plans/fsharp-port.md).
+- **The UI stays pixel-identical to Rails.** 944 of 944 parity screenshots are equal, on every seed, on the final code.
+- **It stays correct.** No stale or cross-user data, every write committed before it is answered, durability as Rails
+  has it (`journal_mode=wal`, `synchronous=normal`). Anything weaker is an opt-in setting, off by default.
 
-It is translated from the [Rust port](https://github.com/basecamp/once-campfire-rust) (pinned in
-`rust/`), which reproduces the Rails app (pinned in `reference/`) and ships the parity harness,
-golden vectors and benchmark tooling this repository reuses under the MIT license.
+The story, with every measured version on one chart and every number linked to the file it came from, is the
+[project page](https://ckluis.github.io/once-campfire-fSharp-onCrack/) (`index.html`, built by `site/build.py`).
+The brief and rules are [`plans/oncrack.md`](plans/oncrack.md); the closing report is
+[`bench/results/oncrack-r5-final.md`](bench/results/oncrack-r5-final.md).
 
-The Rails frontend ships with a few
-[port-owned overrides](src/Campfire.Assets/OVERRIDES.md): three JavaScript files and one image that
-deliberately differ from Rails.
+## Claim one: faster
 
-## Performance
+Measured with Basecamp's own harness ([once-campfire-verification](https://github.com/basecamp/once-campfire-verification)),
+16 clients, against current upstream Rust `f9dca47` and C `cd0cbe4`, in one Linux VM (colima) on an Apple M4, four
+CPUs for the server and four for the load generator. Default settings, which re-check the session and room membership on
+every cache hit, as upstream's contract asks.
 
-Measured with 16 concurrent clients in a Linux VM (colima, 8 vCPUs) on an Apple M4, with four hardware threads
-allocated to each app, the reference Rails app and the unmodified Rust image on the same machine and seed, 3 reps each
-in alternating order ([`bench/results/phase7-final.md`](bench/results/phase7-final.md)):
-
-| HTTP workload (requests/sec) | Rails | [Rust](https://github.com/basecamp/once-campfire-rust) | F# | F# / Rust |
+| | over Rust | over C | over the F# port | over Rails |
 |---|---:|---:|---:|---:|
-| Room page | 239 | 28,623 | 40,422 | 1.41× ¹ |
-| Messages page | 381 | 30,063 | 37,836 | 1.26× |
-| Sidebar | 599 | 28,238 | 37,555 | 1.33× |
-| Search | 408 | 26,606 | 34,070 | 1.28× |
-| Post a message | 330 | 7,174 | 8,905 | 1.24× |
+| Normal profile (five workloads), per session | 2.11-4.74x | 1.41-3.81x | | |
+| Normal profile, three sessions pooled | 3.76x | 2.40x | 5.25x | 35.7x |
+| Mixed profile (reads while a writer posts), pooled | 3.76x | 2.26x | 6.78x | 56.4x |
+| CPU per room page (Rust and C spend this much more) | 3.79x | 2.93x | | |
 
-Every response was 2xx, every post's row was counted, and decoded bodies are identical to the Rust port's. F# spends
-8-23% less CPU per request than Rust at 16 and 64 connections. ¹ The room page settles about 6% lower after 80 s,
-when the thread pool grows (about 1.33×). A last tuning unit then turned off the thread pool's hill climbing
-([`bench/results/phase7-unit-7.5.md`](bench/results/phase7-unit-7.5.md), F# re-measured against these Rust medians):
-p99 on the room, messages and sidebar pages fell to Rust's level (about 1.0-1.1 ms at 16 clients) and F# ran 1.22-1.40×
-Rust. Where Rust still leads: CPU per request at a single connection, memory, cold start and Action Cable fan-out (see
-the results files). Part of the lead is how the request log is written: F# batches plain lines, the Rust port writes one
-coloured line per request.
+**Quote the range, not one number.** Four of the six sessions ran beside other projects' work on the same Mac and
+broke the plan's noise rule; each session's own result is in the first row. onCrack is ahead of Rust and C at the median
+in every workload of every session. 224 million timed responses were checked against the harness's content contract,
+with 0 errors. Source: [`bench/results/oncrack-r5-final/RESULTS.md`](bench/results/oncrack-r5-final/RESULTS.md).
+
+Action Cable fan-out (one message to every client, this project's cable suite, the one quiet session of three):
+1.65x, 1.24x, 1.17x and 1.01x Rust at 100, 500, 1,000 and 2,000 clients. At 2,000 they are level: both servers
+spend most of their time in the kernel's `sendmsg`.
+
+## Claim two: more runnable in production
+
+[PR #6](https://github.com/basecamp/once-campfire-verification/pull/6)'s reliability profiles, 3 rounds each:
+
+| `cable_heavy`: 1,000 clients, 64 posters with no limit | Clients cut | Messages that reached every client |
+|---|---:|---|
+| **onCrack** | **0 / 0 / 0** | all of them, 710-741 a second |
+| Rust `f9dca47` | 902-959 | 64-65 of 68,000-78,000 |
+| C `cd0cbe4` | 809-848 | 15-67 of 51,000-66,000 |
+| Rails | 0 / 0 / 0 | all of them, 17-24 a second |
+
+This is a different policy, not a free win. onCrack keeps every reader and slows the posters down instead: in this
+profile the slowest client gets a message 8-10 s after it is posted, and the Cable backlog takes about 1 GB of memory
+(capped by `CAMPFIRE_CABLE_HUB_BYTES`, 1 GiB) against Rust's 125 MB. Source:
+[`bench/results/oncrack-r5-final/reliability/RESULTS.md`](bench/results/oncrack-r5-final/reliability/RESULTS.md).
+
+## What onCrack does that the port does not
+
+- **Keeps finished pages.** A versioned read cache keeps rendered and gzipped pages until a commit changes what they
+  show. Who may see a kept page is decided again on every request (`CAMPFIRE_FRESH_AUTH`, on by default).
+  Out-of-process writes to the database are seen through SQLite's WAL index.
+- **Commits concurrent writes together.** Group commit: one transaction for every write already queued, each still
+  committed before its caller hears back.
+- **Serves cache hits from the front server** without a trip through the app, and sends gzipped answers with a
+  `Content-Length`.
+- **Cable** writes a batch of frames in one gathered `sendmsg`. A shared, byte-bounded log keeps every subscriber that
+  is reading, cuts only the ones that stall, and holds posters while most of a room is far behind.
+- **Native AOT** as an opt-in image (`--build-arg NATIVE_AOT=true`): about 95 ms cold start.
+
+Each change was adversarially verified in its round; the units and their reports are in `bench/results/oncrack-*.md`.
+
+## What it costs
+
+- **Memory.** About 2.4-2.9x Rust's in the cable suite.
+- **Latency at low load.** Rust answers paced Cable traffic faster at 100 clients (3.3 against 5.2 ms at the median).
+- **Code.** 41.9 thousand lines by upstream's counting rules, against Rust's 31.0 and the port's 38.2.
+
+Still open: no harness repeat on a quiet host yet, a possible 12-14% more CPU per post than round three's build, and
+two Linux Cable timing tests that pass two runs in three.
+
+## Settings
+
+The defaults are the measured configuration. The ones a deployment is most likely to touch:
+
+| Setting | Default | What it does |
+|---|---|---|
+| `CAMPFIRE_FRESH_AUTH` | on | Re-check session and membership on every cache hit. `0` reuses the cached decision (faster; not upstream's contract). |
+| `CAMPFIRE_RESPONSE_CACHE_MB` | | One budget for both response caches; `0` turns them off. |
+| `CAMPFIRE_GROUP_COMMIT` | on | `off` commits one write per transaction. |
+| `CAMPFIRE_CABLE_HUB_BYTES` | 1 GiB | The most all Cable logs hold together; over it, the subscribers furthest behind are cut. |
+| `CAMPFIRE_CABLE_LAG_BYTES` | 256 MB | The most one broadcasting's log holds behind its oldest subscriber. |
+
+Every other `CAMPFIRE_*` switch is documented where it is read (`src/**/Config.fs`) and in [`AGENTS.md`](AGENTS.md).
 
 ## Running it
 
@@ -47,12 +96,12 @@ With [ONCE](https://github.com/basecamp/once), or Docker directly, as with the R
 the reference's: uid 1000, `/rails`, `/rails/storage/{db,files,backups}`, ports 80 and 443, the ONCE hooks):
 
 ```sh
-docker build -t campfire-fsharp:app --build-arg APP_VERSION=... --build-arg GIT_REVISION=... .
+docker build -t campfire-oncrack:app --build-arg APP_VERSION=... --build-arg GIT_REVISION=... .
 docker run -d -p 80:80 -p 443:443 \
   -e SECRET_KEY_BASE=... -e VAPID_PUBLIC_KEY=... -e VAPID_PRIVATE_KEY=... \
   -e TLS_DOMAIN=chat.example.com \
   -v campfire:/rails/storage \
-  campfire-fsharp:app
+  campfire-oncrack:app
 ```
 
 `TLS_DOMAIN` enables automatic Let's Encrypt certificates; `DISABLE_SSL` enables plain HTTP. The settings are in
@@ -256,5 +305,5 @@ specific to this port are listed below, each citing the reference file it depart
 
 ## License
 
-MIT ([`MIT-LICENSE`](MIT-LICENSE)). The F# port is © 2026 Chris Kluis; Campfire, the Rust port, its parity harness and
-vectors are © 37signals, LLC.
+MIT ([`MIT-LICENSE`](MIT-LICENSE)). onCrack and the F# port are © 2026 Chris Kluis; Campfire, the Rust port, its parity
+harness and vectors are © 37signals, LLC.
