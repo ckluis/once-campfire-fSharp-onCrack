@@ -863,7 +863,7 @@ def claim_prod(F):
             '<li><span class="cl-n"><span class="num-big">%s<i class="sl">/</i>%s</span></span><span class="cl-l">posted messages reached every client in the median round, and every posted message did in every round. Rust: %s of %s.</span></li></ul>'
             '<ul class="claim-facts">'
             '<li><b>Durability is Rails&#39;.</b> Every write commits before it is answered; nothing weaker ships. The last <code>kill -9</code> runs (%s of them, round three) lost %s and duplicated %s.</li>'
-            '<li><b>Memory is bounded.</b> A shared log for Cable with a byte budget, %s <span data-lit="name">GiB</span> for the whole hub.</li>'
+            '<li><b>Cable&#39;s backlog is bounded.</b> A shared log with a byte budget, %s <span data-lit="name">GiB</span> for the whole hub; over it, the clients furthest behind are cut. Its known slack is in the report.</li>'
             '<li><b>It holds the posters, not the readers.</b> It takes %s posts a second to Rust&#39;s %s, a %s s <span data-lit="name">p99</span> from a post to the slowest client, and about %s MB of memory to Rust&#39;s %s. A different policy, not a free win.</li></ul>'
             '<p class="claim-foot">%s%s</p></article>'
             % (counter(F['relhi', 'oncrack', 'disconnected'], 0, ''), L.n(F['rel_clients']), L.n(V(3, 'rounds of PR #6\'s reliability profiles, every app', [REL_SESSION + '/summary.json'], 'len(rounds.round)')), L.n(V(3, 'rounds of PR #6\'s reliability profiles, every app', [REL_SESSION + '/summary.json'], 'len(rounds.round)')),
@@ -908,8 +908,8 @@ def hero(F, cl):
             '<h2 class="climb-h">One timeline, three lines.</h2>'
             '%s'
             '<figcaption id="climb-cap"><span><b>The climb on this project&#39;s own suite, over pinned Rust</b> (<span data-lit="commit">ccece30</span>, stored medians): one dot per logged version, geometric mean of the five workloads at 16 connections, '
-            'left to right in the order they ran, clock time under the dots. The F# port&#39;s own climb is dotted; onCrack forks from its final dot (%s). Rounds one and two had only the cached decision; the default became fresh authorization in round three, '
-            'so the fresh line branches there. Latest: fresh %s, cached %s. <b>Round four logged nothing on this suite</b> and its final image was never measured on it. '
+            'left to right in the order they ran, clock time under the dots. The F# port&#39;s own climb is dotted; onCrack forks from its final re-baseline (%s). Rounds one and two had only the cached decision; the default became fresh authorization in round three, '
+            'so the fresh line branches there (the dotted join is not a measurement). Latest: fresh %s, cached %s. <b>Round three&#39;s two dots were measured in round five</b>, on the same day as round five&#39;s, and sit at round three&#39;s close: round three logged none of its own. <b>Round four logged nothing on this suite</b> and its final image was never measured on it. '
             'C was never run on this suite, so it has no line; Rails sits on the floor. The <a href="#upstream">table below</a> is the comparable headline: current Rust and C on upstream&#39;s harness. '
             'Hover or tap a dot for what was done and the numbers.</span>%s</figcaption></figure>'
             '%s'
@@ -944,13 +944,13 @@ def beats(F, hc):
         ds = [d for d in hc['dots'] if d['band'] == band and d['series'] == series and d['kept']]
         return cv(ds[-1]['v'], 'the climb chart, %s: the last kept dot of %s, over pinned Rust' % (series, band), 'the band\'s last dot') if ds else None
 
-    def chartline(band, series_list):
+    def chartline(band, series_list, lead='On the chart at its close'):
         parts = []
         for s_, nm in series_list:
             v = lastv(s_, band)
             if v:
                 parts.append('%s %s' % (nm, x(v)))
-        return '<p class="bc-chart">On the chart at its close: %s.</p>' % ', '.join(parts) if parts else ''
+        return '<p class="bc-chart">%s: %s.</p>' % (lead, ', '.join(parts)) if parts else ''
 
     cards = [
         ('port-build', 'Port, the build', 'Translate it.',
@@ -972,7 +972,7 @@ def beats(F, hc):
         ('r3', 'Round three', 'Check who is asking, every time.',
          '<b>Fresh authorization on every cache hit became the default</b> (<span data-lit="name">R3.2</span>), search by message id as upstream&#39;s (<span data-lit="name">R3.3</span>). The cached decision stays an opt-in.',
          'Fresh: %s Rust, %s C, %s the port on upstream&#39;s harness (two sessions pooled: %s and %s on their own).' % (x(H('r3', 'rust')), x(H('r3', 'c')), x(H('r3', 'port')), x(H('r3', 'rust_s1')), x(H('r3', 'rust_s2'))),
-         chartline('r3', [('fresh', 'fresh'), ('cached', 'cached')])),
+         chartline('r3', [('fresh', 'fresh'), ('cached', 'cached')], 'On the chart, its final image measured in round five')),
         ('r4', 'Round four', 'Fan-out, and keep every subscriber.',
          'Gather writes (one <code>sendmsg</code> over the frames) and Cable reliability: a shared byte-bounded log, a cut for a stall and not for slowness, a gate that slows the posters. The fan-out lead at the largest room was withdrawn.',
          '%s Rust, %s C on one session; fan-out %s, %s, %s and %s&times; Rust at %s, %s, %s and %s clients.' % (x(H('r4', 'rust')), x(H('r4', 'c')), x(H('r4', 'f100')).replace('×', '&times;'), x(H('r4', 'f500')).replace('×', '&times;'), x(H('r4', 'f1000')).replace('×', '&times;'), x(H('r4', 'f2000')).replace('×', ''), *[L.n(F['clients'][n]) for n in CABLE_COUNTS]),
@@ -1136,7 +1136,7 @@ def fanout(F):
     return ('<section class="beat fanout" id="fanout" aria-labelledby="fan-h"><div class="wrap">'
             '<p class="kicker reveal">Fan-out</p><h2 id="fan-h" class="reveal">One message, a thousand clients.</h2>'
             '<p class="line reveal">A post goes out over Action Cable to everyone in the room. onCrack delivers %s Rust&#39;s messages a second at %s clients, '
-            '%s at %s and %s at %s: ahead, with every rep of onCrack above every rep of Rust. At %s clients it is %s, <b>level, not ahead</b>: the reps overlap and both servers are bound by the <code>sendmsg</code> syscall. '
+            '%s at %s and %s at %s: ahead, with every rep of onCrack above every rep of Rust in the one quiet session of the three. At %s clients it is %s, <b>level, not ahead</b>: the reps overlap and both servers are bound by the <code>sendmsg</code> syscall. '
             'Every message reached every client in every one of the %s Cable phases of the final run.</p>'
             '<div class="fan reveal">%s<div class="fan-tabs" role="presentation">%s</div><div class="fan-panes">%s</div></div>'
             '<p class="links reveal">%s %s %s</p></div></section>'
@@ -1150,7 +1150,7 @@ def proof(F):
     kill = next(a for a in F['ver']['attacks'] if a['id'] == 'kill')
     VF = 'bench/results/oncrack-verifier/verifier.json'
     tiles = [
-        ('p-correct', '%s' % L.n(F['ver_n'], link=False), 'attack tests', 'The verifier tried to break it: %s major bug and %s minor ones, each fixed, with the tests that hold them.'
+        ('p-correct', '%s' % L.n(F['ver_n'], link=False), 'attack tests, round one', 'Round one&#39;s verifier tried to break the caches: %s major bug and %s minor ones, each fixed, with the tests that hold them. Every later round had its own verifier; what each found and fixed is in the iterations panel.'
          % (L.n(F['findings']['major'], link=False), L.n(F['findings']['minor'], link=False))),
         ('p-durability', L.n(F['kill']['lost'], link=False), 'posts lost',
          'of %s acknowledged, with the server killed mid-run (the verifier, round one; round three&#39;s repeat, %s runs, lost %s too). Durability is Rails&#39;, by default.' % (L.n(F['kill']['acked'], link=False), L.n(F['kill_runs'], link=False), L.n(F['kill_lost'], link=False))),
@@ -1159,7 +1159,7 @@ def proof(F):
         ('p-pixels', '%s<i class="sl">/</i>%s' % (L.n(F['pp_total']['equal'], link=False), L.n(F['pp_total']['screenshots'], link=False)), 'screenshots',
          'pixel-equal to Rails on all %s seeds: the full gate, run on the final code.' % L.n(F['pp_seeds'], link=False)),
         ('p-ceiling', L.n(lg, D2, link=False), 'of %s cores' % L.n(F['ncores'], link=False),
-         'the load generator used at onCrack&#39;s fastest workload. Not the rig&#39;s ceiling.'),
+         'the load generator used at onCrack&#39;s fastest workload, in round one&#39;s run. Not the rig&#39;s ceiling.'),
         ('p-repro', '<span class="pt-g" aria-hidden="true">$_</span>', 'Reproduce it', 'The commands, the seed, the CPU pinning and the image digests.'),
         ('p-ledger', '<span data-lit="count">__NROWS__</span>', 'numbers, each sourced', 'Every one, the file it came from and how it was worked out. The build fails without them.'),
     ]
