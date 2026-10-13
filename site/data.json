@@ -2580,7 +2580,7 @@
   },
   "oncrack": {
     "meta": {
-      "description": "onCrack: the same Campfire, pixel for pixel, on a server free to do less work. Measured in one session against Rails, the Rust port and the F# port it was forked from; every number links to its source.",
+      "description": "onCrack: the same Campfire, pixel for pixel, on a server free to do less work. Faster than current upstream Rust and C on Basecamp's own harness, and more runnable in production: no client cut under load, durability as Rails has it. One timeline from the F# port it was forked from; every number links to its source.",
       "repo_url": null,
       "branch": "crack",
       "port_page": "https://ckluis.github.io/once-campfire-fSharp/",

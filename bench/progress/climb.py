@@ -18,7 +18,7 @@ import os
 import statistics
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 LOG = os.path.join(ROOT, "bench/results/oncrack-log.jsonl")
@@ -28,6 +28,7 @@ WORKLOADS = [("room_show", "Room page"), ("messages_page", "Messages page"), ("s
              ("search", "Search"), ("post_message", "Post a message")]
 CONCS = [("c16", 16), ("c1", 1)]
 e = html.escape
+EDT = timezone(timedelta(hours=-4), "EDT")   # the work was run in US Eastern; a fixed zone so the page does not depend on the machine that builds it
 
 # The two eras the page draws. onCrack's is the line (onCrack over the stored Rust medians, starting from the F# port's final
 # result); the port's is the Phase 7 history of the app onCrack was forked from, drawn in a panel apart from the line.
@@ -105,12 +106,13 @@ def read_log(path, mode=None):
     return rows
 
 
-def entries(hist, era=ONCRACK):
+def entries(hist, era=ONCRACK, mode=None):
     if era is PORT_ERA:
         rows = [dict(h) for h in hist["port_era"]["comparable"]] + [port_start_entry(hist)]
+        mode = "cached"   # the port's log has no modes; its rows read as the one default
     else:
         rows = [start_entry(hist)]
-    return rows + read_log(era["log"])
+    return rows + read_log(era["log"], mode)
 
 
 def commits_between(a, b):
@@ -122,6 +124,13 @@ def commits_between(a, b):
     except (OSError, subprocess.SubprocessError):
         return []
     return [l for l in out.splitlines() if l and not l.split(" ", 1)[1].startswith("bench: log")]
+
+
+def _clip(text, n):
+    """text cut at a word boundary within n characters, with an ellipsis."""
+    if len(text) <= n:
+        return text
+    return text[:n].rsplit(" ", 1)[0].rstrip(" ,;(") + "…"
 
 
 def describe(rows):
@@ -243,9 +252,9 @@ def prelude(hist):
             '<div class="cc-pre-grid">%s</div></section>' % "".join(cards))
 
 
-def card(era, r, view, measured, rust, port, ov, rails):
+def card(era, r, view, measured, rust, port, ov, rails, series=None):
     """The hover card of one dot. `port` is the stored F# port (a column and a ratio in onCrack's chart, None in the port era's)."""
-    name = era["name"]
+    name = era["name"] if not series else series
     t = when(r)
     rows = []
     for w, label in WORKLOADS:
@@ -282,10 +291,10 @@ def card(era, r, view, measured, rust, port, ov, rails):
             '<table><tr class="cc-grp"><th></th><th colspan="%d">16 connections</th><th colspan="%d">1 connection</th></tr>'
             '<tr class="cc-sub"><th></th>%s</tr>%s</table>'
             '%s<span class="cc-foot">Requests per second, CPU µs per request beneath. %s Greyed %s values were carried from an earlier run.</span></span>'
-            % (e(t.astimezone().strftime("%a %-d %b, %H:%M %Z") if t else "?"), e(str(r.get("unit", ""))), e(str(r.get("tier", ""))),
+            % (e(t.astimezone(EDT).strftime("%a %-d %b, %H:%M %Z") if t else "?"), e(str(r.get("unit", ""))), e(str(r.get("tier", ""))),
                "" if kept else " · reverted", e(str(r.get("change", ""))), e(str(r.get("commit", ""))),
-               e(str(r.get("build", ""))[:30]), (" · overall %.2f× of Rust" % ov) if ov else "", span, span, sub_head, "".join(rows), done(r),
-               foot, name))
+               e(_clip(str(r.get("build", "")), 44)), (" · overall %.2f× of Rust" % ov) if ov else "", span, span, sub_head, "".join(rows), done(r),
+               foot, era["name"]))
 
 
 CSS = """
@@ -388,7 +397,7 @@ def climb(era=ONCRACK):
     for i, (t, v, r, *_) in enumerate(pts):
         if i % step == 0 or i == len(pts) - 1:
             svg.append('<text x="%.1f" y="%d" class="cc-tick" text-anchor="middle">%s</text><text x="%.1f" y="%d" class="cc-day" text-anchor="middle">%s</text>'
-                       % (X(r), H - B + 20, t.astimezone().strftime("%H:%M"), X(r), H - B + 36, t.astimezone().strftime("%a %-d %b")))
+                       % (X(r), H - B + 20, t.astimezone(EDT).strftime("%H:%M"), X(r), H - B + 36, t.astimezone(EDT).strftime("%a %-d %b")))
     svg.append("</svg>")
 
     dots = []
@@ -423,6 +432,261 @@ def climb(era=ONCRACK):
         if port_level:
             out["vs_port"] = latest[1] / port_level
     return out
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------
+# The hero chart (round 5's page rebuild): the port's climb, onCrack's two modes and the reference lines on one timeline.
+#
+# Lines: the F# port's own history (bench/results/phase7-log.jsonl, over the Rust of its own session, phase7-start); onCrack with the cached decision
+# (the opt-in; rounds 1 and 2 only had this one) and onCrack with fresh authorization (the default since round 3), both over the stored Rust medians of
+# phase7-final (bench/results/oncrack-log.jsonl, rows tagged "mode"; a row without one is cached). All three are "x Rust on this project's own suite", not
+# upstream's harness: the page's table of upstream's harness is the comparable headline. Rust is 1x. Rails is the stored 5b baseline's ratio. C was never
+# measured on this suite, so it has no line.
+#
+# The axis is the port chart's: one slot per logged version in the order they ran (every dot is labelled with its clock time, the bands with their days),
+# not the clock itself, because round one logged thirteen versions in a day and round five two in a week. Iterations are bands: the slots of each band
+# sit together under its label, and a round that logged nothing on this suite (round four) keeps an empty band, so the gap is visible.
+# ---------------------------------------------------------------------------------------------------------------------------------
+
+SERIES = {
+    "port": {"label": "F# port's own climb", "short": "F# port", "end": "port", "cls": "cc-s-port"},
+    "cached": {"label": "onCrack, cached decision (opt-in)", "short": "onCrack, cached", "end": "cached", "cls": "cc-s-cached"},
+    "fresh": {"label": "onCrack, fresh authorization (default)", "short": "onCrack, fresh", "end": "fresh", "cls": "cc-s-fresh"},
+}
+
+
+def _points(era, mode):
+    """The dots of one line, in log order, with carried values: [(time, ratio, row, view, measured)], and the era's stored Rust, Rails and port."""
+    stored = medians("rust", era["rust"])
+    rails = medians("reference", era["rails"])
+    port = medians("fsharp") if era["port_col"] else None
+    rows = carry(versions(describe(entries(history(), era, mode))))
+    pts = [(when(r), overall(v, r.get("rust") or stored), r, v, m) for r, v, m in rows]
+    return [p for p in pts if p[0] and p[1] is not None], stored, rails, port
+
+
+def _band_of(bands, era, row):
+    """Which iteration a logged run belongs to: the first band whose unit list or prefix names its unit (history.json "bands")."""
+    unit = str(row.get("unit", ""))
+    for b in bands:
+        if b.get("empty") or b["era"] != era:
+            continue
+        if unit in b.get("units", []) or any(unit.startswith(x) for x in b.get("unit_prefix", [])):
+            return b["key"]
+    for b in bands:
+        if b["era"] == era and b.get("rest"):
+            return b["key"]
+    raise KeyError("no band for unit %r (%s)" % (unit, era))
+
+
+def hero_chart():
+    """The one hero chart: HTML (SVG, legend, dots with their cards), the numbers behind it and the bands (for the beats under it)."""
+    hist = history()
+    bands = hist["bands"]
+    port_pts, port_rust, port_rails, _ = _points(PORT_ERA, "cached")
+    cached_pts, o_rust, o_rails, o_port = _points(ONCRACK, "cached")
+    fresh_pts, *_ = _points(ONCRACK, "fresh")
+    fork = cached_pts[0]                      # the port's final re-baseline: the fork point, on the port's line and the start of onCrack's
+    cached_pts = cached_pts[1:]
+    fresh_pts = [p for p in fresh_pts if p[2].get("unit") != "port final"]
+    # The port's own 'final' row is the same session as the fork point (bench/results/phase7-final): one dot, at the time the port logged it.
+    final_i = next(i for i, p in enumerate(port_pts) if p[2].get("unit") == "final")
+    fork_t = port_pts[final_i][0]
+    port_pts = port_pts[:final_i] + [(fork_t, fork[1], fork[2], fork[3], fork[4])] + port_pts[final_i + 1:]
+
+    dots = []
+    def add(series, pt, era, basis, label):
+        t, v, r, view, measured = pt
+        dots.append({"series": series, "t": t, "v": v, "r": r, "view": view, "m": measured, "era": era, "basis": basis, "label": label,
+                     "kept": r.get("kept", True), "band": _band_of(bands, "port" if era is PORT_ERA else "oncrack", r) if r.get("unit") != "port final" else None})
+    for p in port_pts:
+        add("port", p, PORT_ERA, (port_rust, port_rails, None), "F# port")
+    for p in cached_pts:
+        add("cached", p, ONCRACK, (o_rust, o_rails, o_port), "onCrack, cached decision")
+    for p in fresh_pts:
+        add("fresh", p, ONCRACK, (o_rust, o_rails, o_port), "onCrack, fresh authorization")
+    for d in dots:
+        if d["band"] is None:                 # the fork point closes the port's tuning band
+            d["band"] = next(b["key"] for b in bands if b["era"] == "port" and b.get("rest"))
+    # One slot per (time, commit) for onCrack's two modes, everything else its own slot. Slots follow the order the runs were logged (the port's dots, then onCrack's):
+    # the log is chronological but for a few rows logged late, and a dot's carried values depend on that order, so sorting by clock would draw a carry artifact as a dip.
+    order = list(range(len(dots)))
+    slot_of, slots = {}, []
+    for i in order:
+        d = dots[i]
+        key = (d["t"], d["r"].get("commit")) if d["series"] in ("cached", "fresh") else ("own", i)
+        if key not in slot_of:
+            slot_of[key] = len(slots)
+            slots.append({"band": d["band"], "t": d["t"], "dots": []})
+        d["slot"] = slot_of[key]
+        slots[d["slot"]]["dots"].append(i)
+    W, H, L, R, T, B = 1000, 520, 56, 150, 66, 66
+    MINW = 4.6
+    layout, x = [], 0.0
+    for b in bands:
+        mine = [i for i, sl in enumerate(slots) if sl["band"] == b["key"]]
+        w = max(len(mine) + 0.6, MINW, len(b["label"]) * 0.62) if not b.get("empty") or mine else max(MINW, len(b["label"]) * 0.62)
+        layout.append({"band": b, "slots": mine, "x0": x, "w": w})
+        x += w
+    unit_px = (W - L - R) / x
+    sx = {}
+    for lb in layout:
+        n = max(len(lb["slots"]), 1)
+        for k, si in enumerate(lb["slots"]):
+            sx[si] = L + (lb["x0"] + (k + 0.5) * lb["w"] / n) * unit_px
+    vals = [d["v"] for d in dots]
+    lo, hi = 0.0, max(vals) * 1.1
+    rails_level = overall(medians("reference", ONCRACK["rails"]), o_rust)
+    port_level = overall(medians("fsharp"), o_rust)
+    Yf = lambda v: H - B - (H - T - B) * (v - lo) / (hi - lo)
+    X = lambda d: sx[d["slot"]]
+
+    svg = ['<svg viewBox="0 0 %d %d" aria-hidden="true">' % (W, H)]
+    for lb in layout:                          # iteration bands: a shade on alternate bands, a divider, a label that links to its beat
+        b = lb["band"]
+        x0, x1 = L + lb["x0"] * unit_px, L + (lb["x0"] + lb["w"]) * unit_px
+        if lb["band"]["key"] in {bb["key"] for bb in bands[1::2]}:
+            svg.append('<rect class="cc-band" x="%.1f" y="%d" width="%.1f" height="%d"/>' % (x0, T - 34, x1 - x0, H - B - T + 34))
+        svg.append('<line class="cc-div" x1="%.1f" x2="%.1f" y1="%d" y2="%d"/>' % (x0, x0, T - 34, H - B))
+        ds = [dots[i] for si in lb["slots"] for i in slots[si]["dots"]]
+        span = ""
+        if ds:
+            t0, t1 = min(d["t"] for d in ds).astimezone(EDT), max(d["t"] for d in ds).astimezone(EDT)
+            span = t0.strftime("%-d %b") if t0.date() == t1.date() else "%s – %s" % (t0.strftime("%-d %b"), t1.strftime("%-d %b"))
+        mid = (x0 + x1) / 2
+        svg.append('<a href="#beat-%s" class="cc-bandlink"><text x="%.1f" y="%d" class="cc-bandname" text-anchor="middle">%s</text>'
+                   '<text x="%.1f" y="%d" class="cc-bandspan" text-anchor="middle">%s</text></a>'
+                   % (b["key"], mid, T - 18, e(b["label"]), mid, T - 5, e(span if ds else b.get("empty_note", ""))))
+        if b.get("empty"):
+            svg.append('<text x="%.1f" y="%.1f" class="cc-none" text-anchor="middle">nothing logged</text><text x="%.1f" y="%.1f" class="cc-none" text-anchor="middle">on this suite</text>'
+                       % (mid, Yf(hi * 0.5) - 4, mid, Yf(hi * 0.5) + 12))
+    svg.append('<line class="cc-div" x1="%d" x2="%d" y1="%d" y2="%d"/>' % (W - R, W - R, T - 34, H - B))
+    g = 1
+    for g in nice_ticks(lo, hi):
+        svg.append('<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" class="cc-grid"/><text x="10" y="%.1f" class="cc-axis">%g×</text>' % (L, W - R, Yf(g), Yf(g), Yf(g) + 4, g))
+    svg.append('<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" class="cc-rust"/><text x="%d" y="%.1f" class="cc-rustlabel">Rust 1×</text>' % (L, W - R, Yf(1), Yf(1), W - R + 10, Yf(1) + 5))
+    svg.append('<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" class="cc-rails"/><text x="%d" y="%.1f" class="cc-raillabel">Rails</text>' % (L, W - R, Yf(rails_level), Yf(rails_level), W - R + 10, Yf(rails_level) + 4))
+
+    def line(series, pts_, extra=None):
+        pts_ = sorted(pts_, key=lambda d: d["slot"])
+        return " ".join("%.1f,%.1f" % (X(d), Yf(d["v"])) for d in pts_ if d["kept"] and (extra is None or extra(d)))
+    by = lambda s_: [d for d in dots if d["series"] == s_]
+    fork_d = next(d for d in dots if d["r"].get("unit") == "port final")
+    cached_line = [fork_d] + [d for d in by("cached") if d["kept"]]
+    cached_kept = sorted(cached_line, key=lambda d: d["slot"])
+    # onCrack's lines start at the fork point; the port's line runs through it and goes on
+    port_line = sorted([d for d in by("port") if d["kept"]], key=lambda d: d["slot"])
+    svg.append('<polyline class="cc-line cc-l-port" points="%s"/>' % " ".join("%.1f,%.1f" % (X(d), Yf(d["v"])) for d in port_line))
+    svg.append('<polyline class="cc-line cc-l-cached" points="%s"/>' % " ".join("%.1f,%.1f" % (X(d), Yf(d["v"])) for d in cached_kept))
+    fresh_kept = sorted([d for d in by("fresh") if d["kept"]], key=lambda d: d["slot"])
+    branch = None
+    if fresh_kept:
+        before = [d for d in cached_kept if d["t"] < fresh_kept[0]["t"]]
+        branch = before[-1]                    # fresh starts where the default changed: from the last cached dot before the first fresh one
+        svg.append('<polyline class="cc-line cc-l-branch" points="%.1f,%.1f %.1f,%.1f"/>' % (X(branch), Yf(branch["v"]), X(fresh_kept[0]), Yf(fresh_kept[0]["v"])))
+        svg.append('<polyline class="cc-line cc-l-fresh" points="%s"/>' % " ".join("%.1f,%.1f" % (X(d), Yf(d["v"])) for d in fresh_kept))
+    # line-end labels, pushed apart where they would touch
+    ends = []
+    for s_, pts_ in (("fresh", fresh_kept), ("cached", cached_kept), ("port", port_line)):
+        if pts_:
+            ends.append([s_, Yf(pts_[-1]["v"]), pts_[-1]])
+    port_final_y = Yf(port_level)
+    ends.sort(key=lambda a: a[1])
+    for i in range(1, len(ends)):
+        if ends[i][1] - ends[i - 1][1] < 15:
+            ends[i][1] = ends[i - 1][1] + 15
+    last_slot_x = max(sx.values())
+    for s_, y, d in ends:
+        svg.append('<text x="%d" y="%.1f" class="cc-endlabel cc-t-%s">%s</text>' % (W - R + 10, y + 4, s_, "%s %.2f×" % (SERIES[s_]["end"], d["v"])))
+    # time ticks: the first dot of each band and about every fifth after it
+    ticks = []
+    for lb in layout:
+        for k, si in enumerate(lb["slots"]):
+            if k == 0 or (k % 5 == 0 and len(lb["slots"]) - k > 2) or (len(lb["slots"]) > 1 and k == len(lb["slots"]) - 1 and k % 5 > 2):
+                ticks.append(si)
+    prev_day, prev_x = None, -99
+    for si in ticks:
+        if sx[si] - prev_x < 40:
+            continue
+        prev_x = sx[si]
+        t = slots[si]["t"].astimezone(EDT)
+        day = t.strftime("%a %-d %b")
+        svg.append('<text x="%.1f" y="%d" class="cc-tick" text-anchor="middle">%s</text>' % (sx[si], H - B + 18, t.strftime("%H:%M")))
+        if day != prev_day:
+            svg.append('<text x="%.1f" y="%d" class="cc-day" text-anchor="middle">%s</text>' % (sx[si], H - B + 33, day))
+            prev_day = day
+    svg.append("</svg>")
+
+    # dots: HTML, so each carries its own CSS-only card
+    last_of = {s_: (pts_[-1] if pts_ else None) for s_, pts_ in (("fresh", fresh_kept), ("cached", cached_kept), ("port", port_line))}
+    html_dots = []
+    for i in sorted(range(len(dots)), key=lambda i: -dots[i]["v"]):
+        d = dots[i]
+        left, top = X(d) / W * 100, Yf(d["v"]) / H * 100
+        stored, rails, port = d["basis"]
+        isfork = d is fork_d
+        cls = ["cc-dot", SERIES[d["series"]]["cls"], "cc-kept" if d["kept"] else "cc-dropped"]
+        if d is last_of.get(d["series"]) and d["kept"] and d["series"] != "port":
+            cls.append("cc-last")
+        if isfork:
+            cls.append("cc-fork")
+        if left > 58:
+            cls.append("cc-flip")
+        label = "F# port, final re-baseline: where onCrack forked" if isfork else "%s: %s" % (d["label"], d["r"].get("change", ""))
+        html_dots.append('<span class="%s" tabindex="0" role="button" style="left:%.2f%%;top:%.2f%%" aria-label="%s, %.2f times Rust">%s</span>'
+                         % (" ".join(cls), left, top, e(label), d["v"],
+                            card(d["era"], d["r"], d["view"], d["m"], d["r"].get("rust") or stored, port, d["v"], rails,
+                                 series=("F# port" if isfork else d["label"]) if d["era"] is ONCRACK else None)))
+    legend = ('<ul class="cc-legend">'
+              '<li><i class="cc-sw cc-sw-fresh"></i>onCrack, fresh authorization <small>the default since round three</small></li>'
+              '<li><i class="cc-sw cc-sw-cached"></i>onCrack, cached decision <small>opt-in; all there was in rounds one and two</small></li>'
+              '<li><i class="cc-sw cc-sw-port"></i>the F# port\'s own climb <small>the line onCrack forked from</small></li>'
+              '<li><i class="cc-sw cc-sw-rust"></i>Rust, pinned <small>1×</small></li>'
+              '<li><i class="cc-sw cc-sw-rails"></i>Rails <small>stored baseline</small></li></ul>')
+    chart = ('<div class="cc cc-hero">%s<div class="cc-scroll"><div class="cc-chart cc-wide">%s%s</div></div></div>' % (legend, "".join(svg), "".join(html_dots)))
+    bandinfo = []
+    for lb in layout:
+        ds = [dots[i] for si in lb["slots"] for i in slots[si]["dots"]]
+        bandinfo.append({"key": lb["band"]["key"], "label": lb["band"]["label"], "n": len(ds), "empty": bool(lb["band"].get("empty")),
+                         "first": min((d["t"] for d in ds), default=None), "last": max((d["t"] for d in ds), default=None)})
+    return {"chart": chart, "css": CSS_HERO, "bands": bandinfo, "hist": hist,
+            "dots": [{"series": d["series"], "t": d["t"], "v": d["v"], "unit": d["r"].get("unit"), "change": d["r"].get("change", ""), "tier": d["r"].get("tier"),
+                      "kept": d["kept"], "commit": d["r"].get("commit", ""), "band": d["band"]} for d in sorted(dots, key=lambda d: (d["t"], d["slot"]))],
+            "latest": {s_: (pts_[-1]["v"] if pts_ else None) for s_, pts_ in (("fresh", fresh_kept), ("cached", cached_kept), ("port", port_line))},
+            "port_level": port_level, "rails_level": rails_level, "fork": fork_d["v"], "branch_commit": branch["r"].get("commit") if branch else None}
+
+
+CSS_HERO = """
+.cc-hero{--cc-port:#5a6b94;--cc-cached:#b9570f;--cc-fresh:#0f766e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cc-hero{--cc-port:#9fb1dc;--cc-cached:#f59e4b;--cc-fresh:#2dd4bf}}
+:root[data-theme="dark"] .cc-hero{--cc-port:#9fb1dc;--cc-cached:#f59e4b;--cc-fresh:#2dd4bf}
+.cc-legend{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-wrap:wrap;gap:6px 22px;font-size:13px;color:var(--cc-ink)}
+.cc-legend li{display:flex;align-items:center;gap:8px} .cc-legend small{color:var(--cc-mute);font-size:12px}
+.cc-sw{display:inline-block;width:30px;height:0;border-top:4px solid var(--cc-fresh);border-radius:2px}
+.cc-sw-cached{border-top:3px dashed var(--cc-cached)} .cc-sw-port{border-top:3px dotted var(--cc-port)}
+.cc-sw-rust{border-top:2px dashed var(--cc-ink);opacity:.7} .cc-sw-rails{border-top:2px dotted var(--cc-mute)}
+.cc-chart.cc-wide{aspect-ratio:1000/520}
+.cc-hero .cc-band{fill:var(--cc-ink);opacity:.045} .cc-hero .cc-div{stroke:var(--cc-line);stroke-width:1}
+.cc-bandlink{cursor:pointer;outline:none} .cc-bandname{fill:var(--cc-ink);font-weight:700;font-size:12.5px} .cc-bandspan{fill:var(--cc-mute);font-size:10.5px}
+.cc-bandlink:hover .cc-bandname,.cc-bandlink:focus .cc-bandname{fill:var(--cc-fresh);text-decoration:underline}
+.cc-none{fill:var(--cc-mute);font-size:11px;font-style:italic}
+.cc-hero .cc-line{fill:none;stroke-linejoin:round;stroke-linecap:round}
+.cc-l-fresh{stroke:var(--cc-fresh);stroke-width:4.5}
+.cc-l-cached{stroke:var(--cc-cached);stroke-width:3;stroke-dasharray:8 6}
+.cc-l-branch{stroke:var(--cc-fresh);stroke-width:2.5;stroke-dasharray:2 6;opacity:.7}
+.cc-l-port{stroke:var(--cc-port);stroke-width:3;stroke-dasharray:1 6}
+.cc-rails{stroke:var(--cc-mute);stroke-width:1.5;stroke-dasharray:2 5} .cc-raillabel{fill:var(--cc-mute);font-weight:650;font-size:12.5px}
+.cc-endlabel{font-weight:700;font-size:12.5px} .cc-t-fresh{fill:var(--cc-fresh)} .cc-t-cached{fill:var(--cc-cached)} .cc-t-port{fill:var(--cc-port)}
+.cc-hero .cc-dot{width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-width:2.5px}
+.cc-hero .cc-s-fresh{border-color:var(--cc-fresh)} .cc-hero .cc-s-cached{border-color:var(--cc-cached)} .cc-hero .cc-s-port{border-color:var(--cc-port);width:10px;height:10px;margin:-5px 0 0 -5px;border-width:2px}
+.cc-hero .cc-dot.cc-last{width:17px;height:17px;margin:-8.5px 0 0 -8.5px}
+.cc-hero .cc-s-fresh.cc-last{background:var(--cc-fresh)} .cc-hero .cc-s-cached.cc-last{background:var(--cc-cached)}
+.cc-hero .cc-dot.cc-fork{width:15px;height:15px;margin:-7.5px 0 0 -7.5px;border-color:var(--cc-ink);border-width:3px;background:var(--cc-port)}
+.cc-hero .cc-dot.cc-dropped{border-color:var(--cc-drop);width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-width:2px;background:var(--cc-card)}
+.cc-hero .cc-dot:hover,.cc-hero .cc-dot:focus{z-index:6}
+.cc-hero .cc-dot:hover::before,.cc-hero .cc-dot:focus::before{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--cc-ink);opacity:.35}
+@media (max-width:640px){.cc-hero .cc-chart.cc-wide{min-width:980px}}
+"""
 
 
 def check_start():

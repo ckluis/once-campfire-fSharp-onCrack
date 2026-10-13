@@ -26,9 +26,18 @@ If one of these tools doesn't exist yet, building it is part of your unit. Recor
 **onCrack's gates and scoring** (unit C0): `bin/pixel-parity` is the one-command "the UI is identical" check (the parity harness's
 screenshot layer, per seed; see its header for the retry of cells the harness could not capture). `bench/quick` runs onCrack only and
 `bench/quick compare DIR` scores it against the stored Rust and F# port medians of `bench/results/phase7-final/`; `bench/quick log` appends to
-`bench/results/oncrack-log.jsonl` (the port's own `phase7-log.jsonl` is history) and rebuilds `index.html`. Its hero is the current-upstream
-comparison (`site/build.py`'s `hero`, from `bench/results/oncrack-r3-fresh-auth/upstream-*`: fresh authorization, two normal sessions pooled; round 2's cached-decision sessions are the panel `p-upstream`); the climb chart (`bench/progress/climb.py`: onCrack over the pinned
-Rust `ccece30`, starting from the port's final result) is the panel "The climb against pinned Rust", and the port's dots are in another. `bench/run --apps
+`bench/results/oncrack-log.jsonl` (the port's own `phase7-log.jsonl` is history) and rebuilds `index.html`. **The page** (round 5's rebuild, `site/build.py`; run `python3 site/build.py`, it refuses to
+write the page when a digit a reader can see has no ledger row or a claim stops being true): the hero is two claims, each with an evidence panel (faster: `p-fresh`, the final run's three sessions per profile pooled, with each session
+beside the pool and the CPU per request; more runnable in production: `p-prod`, with `p-reliability` for PR #6's tables and `p-fanout`, `p-pixels`, `p-durability` behind it), then ONE climb chart and a beat per iteration, then upstream's harness table.
+Every figure that is not history comes from `bench/results/oncrack-r5-final/` (`R5F` in `build.py`); change that constant, not the copy, for a later final run. `claims_check`, `cable_verdict` and the checks in `facts()` stop the build if onCrack is not ahead at the pooled
+median in every cell, a session shows it behind Rust, a Cable phase flags (`cable/phases.py`'s rule), onCrack cuts a client in `cable`/`cable_heavy`, or the fan-out verdict at 100/500/1,000/2,000 clients stops being ahead, ahead, ahead, level: rewrite the copy then, never the check.
+The chart is `bench/progress/climb.py`'s `hero_chart()`: three lines on one axis (the F# port's own climb from `phase7-log.jsonl`; onCrack, cached decision; onCrack, fresh authorization, drawn from the rows' `mode` field, a row without one being cached),
+Rust at 1x and Rails as references (C was never run on this suite, so it has no line), the fork dot shared by the port's line and onCrack's, iteration bands from `bench/progress/history.json` (`bands`: which units belong to which round; a band with
+`empty` is a round that logged nothing on the suite), one slot per logged version in log order with the clock under the dots. `bench/quick log --mode fresh|cached --round N` adds rows; a new unit name must match a band's `units` or `unit_prefix`
+(`_band_of` raises otherwise). The fresh line branches from the last cached dot before its first fresh dot, drawn as a dotted join that is not a measurement. The beats' closing headlines are read out of the final report's history table by pattern (`HT` in `facts()`;
+each must match once), so an edit to that table's wording fails the build loudly. Round 2's cached-decision sessions are the panel `p-upstream`, the port's own dots are `p-port-era`, and every dot is a row of `p-climb`. Screenshots of the page: `cmux browser`, not headless Chrome; the
+webview is hidden while it runs, so animations and counters do not run in it (disable them with a style tag before a screenshot) and `:hover`/`:focus` cards must be forced with CSS to be seen.
+`bench/run --apps
 reference,rust,fsharp,oncrack` measures all four in one session (`fsharp` is the port). Tier 3 of an unchanged image must land within noise of
 the port: `bench/results/oncrack-c0.md`.
 

@@ -335,5 +335,74 @@
   "start_time": "2026-10-06T14:25:25Z",
   "start_time_note": "When the third F# rep of the Phase 7 start finished (fsharp-3.json was written); a checkout resets file times, so it is recorded here.",
   "start_description": "Unit 7.0 rebuilt the measuring before anyone optimized: container logs capped, every route warmed for at least 30 s until flat within 3%, the host's pinned CPUs probed before each window, CPU per request from the container's cgroup, and bench/quick for Rust and F# only. Rust was measured here once more, and these Rust medians are the stored reference every later dot compares against."
- }
+ },
+ "bands": [
+  {
+   "key": "port-build",
+   "era": "port",
+   "label": "Port, build",
+   "units": [
+    "phase 5",
+    "baseline"
+   ],
+   "note": "phases 0-5 of the port: the first whole-app run and the 5b baseline"
+  },
+  {
+   "key": "port-tune",
+   "era": "port",
+   "label": "Port, tune",
+   "rest": true,
+   "note": "phases 6-7: every other dot of the port's log, ending at the final re-baseline that onCrack forked from (the fork dot)"
+  },
+  {
+   "key": "r1",
+   "era": "oncrack",
+   "label": "Round 1",
+   "units": [
+    "c0",
+    "C1",
+    "groupcommit",
+    "search",
+    "runtime",
+    "verifier-fixes",
+    "round1-final"
+   ],
+   "note": "units C0-C4 and the verifier's fixes, closed by the four-way re-baseline (unit round1-final)"
+  },
+  {
+   "key": "r2",
+   "era": "oncrack",
+   "label": "Round 2",
+   "unit_prefix": [
+    "r2-"
+   ],
+   "note": "every logged unit named r2-*"
+  },
+  {
+   "key": "r3",
+   "era": "oncrack",
+   "label": "Round 3",
+   "unit_prefix": [
+    "r3-"
+   ],
+   "note": "the round's final image, measured on this suite in round 5 (round 3 logged no project-suite row of its own)"
+  },
+  {
+   "key": "r4",
+   "era": "oncrack",
+   "label": "Round 4",
+   "empty": true,
+   "empty_note": "no dot",
+   "note": "round 4 logged nothing on the project suite and its final image was never measured on it (bench/results/oncrack-r5-final.md, deviation 7)"
+  },
+  {
+   "key": "r5",
+   "era": "oncrack",
+   "label": "Round 5",
+   "unit_prefix": [
+    "r5-"
+   ],
+   "note": "the final image, both modes"
+  }
+ ]
 }
