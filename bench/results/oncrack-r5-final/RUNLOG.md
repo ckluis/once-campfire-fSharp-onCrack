@@ -13,11 +13,11 @@ Runner for steps 1-5 of `PLAN.md`. Branch `crack`, nothing pushed, no `src/` cha
 
 ## Sessions (the HTTP runner, 2026-10-12/13)
 
-Steps 7 and 9 of PLAN.md ran: six upstream-harness sessions (normal-1/2/3, mixed-1/2/3) and seven hand re-run sets, committed one by one. Results, noise and the spread: `RESULTS.md`. Tables: `pooled.md`, `totals.md`, `normal-N/table.md`, `mixed-N/table.md`. Tooling: `scripts/session.sh` (quiet wait, detached start, exit file), `run-profile.sh`, `wait.sh`, `collect.sh`. Steps 6 (cable suite) and 8 (PR #6 reliability) were not part of this runner and are **not started**.
+Steps 7 and 9 of PLAN.md ran: six upstream-harness sessions (normal-1/2/3, mixed-1/2/3) and seven hand re-run sets, committed one by one. Results, noise and the spread: `RESULTS.md`. Tables: `pooled.md`, `totals.md`, `normal-N/table.md`, `mixed-N/table.md`. Tooling: `scripts/session.sh` (quiet wait, detached start, exit file), `run-profile.sh`, `wait.sh`, `collect.sh`. Step 8 (PR #6 reliability) was not part of this runner and is **not started**. Step 6 (the cable suite) ran in a separate runner, below.
 
 ## Not started
 
-PLAN.md steps 6 (the cable suite) and 8 (PR #6 reliability) are not part of this runner and **were not started**. The images, the
+PLAN.md step 8 (PR #6 reliability) is not part of this runner and was **not started**. The images, the
 plan and the tooling for them are in place (`oncrack-r4-final/scripts/` and `cable/`, `reliability/session.sh` are the starting points; their paths name round 4's directory and need `r5-final`).
 The Mac was at 16-21 GiB free at the end and another project's Go build cache regrew 3 GB in minutes while this ran; check `df -h ~` before a session.
 
@@ -28,3 +28,7 @@ The Mac was at 16-21 GiB free at the end and another project's Go build cache re
 - **The disk floor (12 GiB) was breached** during the pixel gate (slices G-L and I at 11.5-11.9 GiB; 8.6 GiB while I1 hung). I stopped at the lowest point; the cause was another project's Go test run and build cache (12 GB), which I cleaned once no go process was running. Details in `pixels.md`.
 - **Harness flakes seen:** `auth/sign_in/error` not captured (stylesheet wait) in 3 attempts at B and again 2 of 3 in B2 (captured by the last); the compare crashed in `parity/capture/network.ts` (`Response has been disposed`) 50 cells into `realtime/**`; one compare hung 40 minutes at 25 of 40 cells with the VM idle. All passed when re-run.
 - **Image digests and sources are in `env.txt`.** The `campfire-oncrack:r45-before`, `campfire-fsharp:app`, `campfire-rust-upstream:f9dca47`, `campfire-c-upstream:cd0cbe4` and `campfire-rails-upstream:0aa339d` images are still in the VM.
+
+## Cable suite (step 6), 2026-10-13
+
+Three whole sessions, results in `cable/RESULTS.md`: session 1 incomplete (a `bench/run` memory-file read raced the sampler's rename, no `rust-3.json`; 66% of host samples noisy), session 2 NOISY (64%) and its sends pass stopped by the disk guard at 11.9 GiB (another project's Go build cache; finished in a continuation), **session 3 complete, uninterrupted, quiet (7% noisy): the headline.** onCrack vs Rust f9dca47 on delivered messages a second: 1.65x / 1.24x / 1.17x / 1.01x at 100 / 500 / 1,000 / 2,000 clients; server CPU per delivery 0.62x / 0.81x / 0.84x / 0.96x; 0 phases with a message missing (no missing-id dump), 0 closed mid-run. Sessions 1 and 2 are kept in full and not pooled. `bench/run` got a retry on the memory-file read (no `src/` change).
