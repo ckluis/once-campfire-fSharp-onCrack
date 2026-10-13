@@ -1,0 +1,1 @@
+host-load-normal-1.txt: 100 samples during the session, 22 at >=150% (22%), max 334%, median 38% -> ok

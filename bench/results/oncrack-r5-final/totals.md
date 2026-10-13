@@ -16,3 +16,5 @@
 | normal-1 | 2.11x | 1.46x | 2.73x | 3.50x | 2.42x | 0.60x |
 | normal-2 | 3.28x | 2.99x | 5.23x | 3.31x | 3.02x | 0.99x |
 | normal-3 | 4.74x | 1.41x | 6.72x | 7.49x | 2.23x | 0.63x |
+
+Hand re-runs (review.jsonl): 84 timed windows (every one valid: True), 84 warm-ups, 28 database audits (every one ok: True, rich-text rows equal acknowledged: True, search-index rows missing: 0), 4,474,566 acknowledged posts audited.

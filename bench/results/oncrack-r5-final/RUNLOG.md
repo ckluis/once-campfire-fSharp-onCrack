@@ -11,9 +11,13 @@ Runner for steps 1-5 of `PLAN.md`. Branch `crack`, nothing pushed, no `src/` cha
 | 4b. Extra: `bin/linux-tests Cable` | Not asked for, run because 9 of the 17 skips are the lost-frame gather tests round 5 is about: **120 tests, 118 passed, 0 failed, 2 skipped** (the gated pin-stress reproducer, the recorder), on Linux in the toolchain image. | `logs/linux-cable.log` |
 | 5. KLOC by upstream's rules | Rails `0aa339d` 5.5, Rust `f9dca47` 31.0, C `cd0cbe4` 94.9, F# port 38.2, **onCrack 41.9** (cloc 2.10; static-data tables left out, the all-code column beside; both F# counts include the 3.6 KLOC html5ever tokenizer port). Calibrated: Rails reproduces upstream's published figure to the line, Rust and C within 1.0% and 0.1%. | `kloc/kloc.md`, `kloc/kloc.json` |
 
+## Sessions (the HTTP runner, 2026-10-12/13)
+
+Steps 7 and 9 of PLAN.md ran: six upstream-harness sessions (normal-1/2/3, mixed-1/2/3) and seven hand re-run sets, committed one by one. Results, noise and the spread: `RESULTS.md`. Tables: `pooled.md`, `totals.md`, `normal-N/table.md`, `mixed-N/table.md`. Tooling: `scripts/session.sh` (quiet wait, detached start, exit file), `run-profile.sh`, `wait.sh`, `collect.sh`. Steps 6 (cable suite) and 8 (PR #6 reliability) were not part of this runner and are **not started**.
+
 ## Not started
 
-PLAN.md steps 6-9 (the cable suite, the four upstream-harness sessions, the PR #6 reliability session, the hand re-runs) are not part of this runner's steps and **were not started**. The images, the
+PLAN.md steps 6 (the cable suite) and 8 (PR #6 reliability) are not part of this runner and **were not started**. The images, the
 plan and the tooling for them are in place (`oncrack-r4-final/scripts/` and `cable/`, `reliability/session.sh` are the starting points; their paths name round 4's directory and need `r5-final`).
 The Mac was at 16-21 GiB free at the end and another project's Go build cache regrew 3 GB in minutes while this ran; check `df -h ~` before a session.
 
