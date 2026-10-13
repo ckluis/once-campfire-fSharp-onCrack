@@ -1,0 +1,52 @@
+1791880681 fsharp round 1: cable 1000/1000 subscribed, 0 disconnected, 5021/5021 delivered to all, 334.5 msgs/s
+1791880708 fsharp round 1: cable_heavy 1000/1000 subscribed, 0 disconnected, 6305/6305 delivered to all, 412.4 msgs/s
+1791880734 fsharp round 2: cable 1000/1000 subscribed, 0 disconnected, 3892/3892 delivered to all, 259.1 msgs/s
+1791880821 fsharp round 2: cable_heavy 1000/1000 subscribed, 229 disconnected, 3375/5757 delivered to all, 222.7 msgs/s
+1791880848 fsharp round 3: cable 1000/1000 subscribed, 0 disconnected, 4471/4471 delivered to all, 297.7 msgs/s
+1791880936 fsharp round 3: cable_heavy 1000/1000 subscribed, 5 disconnected, 2092/6081 delivered to all, 137.0 msgs/s
+1791880936 {
+1791880936   "fsharp": {
+1791880936     "cable": {
+1791880936       "clients": 1000,
+1791880936       "posters": 4,
+1791880936       "subscribed": [
+1791880936         1000,
+1791880936         1000,
+1791880936         1000
+1791880936       ],
+1791880936       "disconnected": [
+1791880936         0,
+1791880936         0,
+1791880936         0
+1791880936       ],
+1791880936       "delivered_to_all": [
+1791880936         "5021/5021",
+1791880936         "3892/3892",
+1791880936         "4471/4471"
+1791880936       ],
+1791880936       "median_delivered_msgs_per_sec": 297.7,
+1791880936       "median_all_clients_p99_ms": 89.919
+1791880936     },
+1791880936     "cable_heavy": {
+1791880936       "clients": 1000,
+1791880936       "posters": 64,
+1791880936       "subscribed": [
+1791880936         1000,
+1791880936         1000,
+1791880936         1000
+1791880936       ],
+1791880936       "disconnected": [
+1791880936         0,
+1791880936         229,
+1791880936         5
+1791880936       ],
+1791880936       "delivered_to_all": [
+1791880936         "6305/6305",
+1791880936         "3375/5757",
+1791880936         "2092/6081"
+1791880936       ],
+1791880936       "median_delivered_msgs_per_sec": 222.7,
+1791880936       "median_all_clients_p99_ms": 749.055
+1791880936     }
+1791880936   }
+1791880936 }

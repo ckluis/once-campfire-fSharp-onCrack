@@ -15,11 +15,9 @@ Runner for steps 1-5 of `PLAN.md`. Branch `crack`, nothing pushed, no `src/` cha
 
 Steps 7 and 9 of PLAN.md ran: six upstream-harness sessions (normal-1/2/3, mixed-1/2/3) and seven hand re-run sets, committed one by one. Results, noise and the spread: `RESULTS.md`. Tables: `pooled.md`, `totals.md`, `normal-N/table.md`, `mixed-N/table.md`. Tooling: `scripts/session.sh` (quiet wait, detached start, exit file), `run-profile.sh`, `wait.sh`, `collect.sh`. Step 8 (PR #6 reliability) was not part of this runner and is **not started**. Step 6 (the cable suite) ran in a separate runner, below.
 
-## Not started
+## Reliability (step 8): done, see the section below
 
-PLAN.md step 8 (PR #6 reliability) is not part of this runner and was **not started**. The images, the
-plan and the tooling for them are in place (`oncrack-r4-final/scripts/` and `cable/`, `reliability/session.sh` are the starting points; their paths name round 4's directory and need `r5-final`).
-The Mac was at 16-21 GiB free at the end and another project's Go build cache regrew 3 GB in minutes while this ran; check `df -h ~` before a session.
+The gates runner left step 8 not started; the reliability runner below did it. The Mac was at 16-21 GiB free at the end of the gates runner and another project's Go build cache regrew 3 GB in minutes while this ran.
 
 ## Things the next reader should know
 
@@ -32,3 +30,7 @@ The Mac was at 16-21 GiB free at the end and another project's Go build cache re
 ## Cable suite (step 6), 2026-10-13
 
 Three whole sessions, results in `cable/RESULTS.md`: session 1 incomplete (a `bench/run` memory-file read raced the sampler's rename, no `rust-3.json`; 66% of host samples noisy), session 2 NOISY (64%) and its sends pass stopped by the disk guard at 11.9 GiB (another project's Go build cache; finished in a continuation), **session 3 complete, uninterrupted, quiet (7% noisy): the headline.** onCrack vs Rust f9dca47 on delivered messages a second: 1.65x / 1.24x / 1.17x / 1.01x at 100 / 500 / 1,000 / 2,000 clients; server CPU per delivery 0.62x / 0.81x / 0.84x / 0.96x; 0 phases with a message missing (no missing-id dump), 0 closed mid-run. Sessions 1 and 2 are kept in full and not pooled. `bench/run` got a retry on the memory-file read (no `src/` change).
+
+## PR #6 reliability (step 8), 2026-10-13
+
+Results in `reliability/RESULTS.md` (tables `reliability/tables.md`, `overload.md`, `summarize.md`; data `reliability/main/`, `reliability/fsharp/`, `reliability/fsharp-overload-check/`). Rails, Rust, C, onCrack HEAD, oncrack-cached and onCrack before R4.5: overload and cable, 3 rounds, one harness process (`main/`); the F# port on the cable profiles alone (its search order still fails the overload contract: `search: differs from seed SQL`, `fsharp-overload-check/`), 3 rounds (`fsharp/`). cable_heavy: **onCrack 0 clients disconnected and every message delivered to every client in all 3 rounds (738 / 710 / 741 msgs/s)**, Rust 902-959 disconnected, C 809-848 (it subscribed only 95-344 of the 1,000 clients on cable; noted, not investigated), onCrack before R4.5 833-860, Rails 0 at 17-24 posts/s, the F# port 0 / 229 / 5 and undelivered posts. Host noise 10% and 13% of samples (under the 25% line). One disturbance, documented in RESULTS.md: the disk guard (Mac at 11.9 GiB, another project's 7 GiB Go cache, cleaned with `go clean -cache` with no go process running) killed the session's wrapper but not the harness, which ran on to the end; the wrapper's host-load loop and the harness JSON copy were lost for it and done by hand. `session.sh` now stops the harness if its guard fires. No `src/` change.

@@ -1,0 +1,50 @@
+# host load during reliability-fsharp (ps -A, non-VM processes: top 4 by %CPU and the sum of all, every 10 s; loadavg)
+04:36:03 load  4.81 5.59 5.43  | sum 132 | 45.8 fseventsd, 18.3 Finder, 10.3 postgres:, 9.8 gen.test, 
+04:36:13 load  4.46 5.48 5.39  | sum 29 | 5.9 trustd, 5.8 syspolicyd, 5.7 tccd, 5.3 claude, 
+04:36:23 load  4.38 5.43 5.38  | sum 33 | 10.8 claude, 6.0 syspolicyd, 4.7 tccd, 4.6 trustd, 
+04:36:33 load  3.94 5.30 5.33  | sum 124 | 56.8 cmux, 16.7 airportd, 8.1 claude, 6.7 configd, 
+04:36:43 load  3.93 5.26 5.31  | sum 54 | 17.2 mds_stores, 5.5 mdworker_shared, 5.5 mdworker_shared, 5.3 claude, 
+04:36:53 load  3.63 5.15 5.28  | sum 66 | 31.0 com.apple.WebKit.WebContent, 6.3 trustd, 6.0 syspolicyd, 5.9 tccd, 
+04:37:03 load  3.31 5.03 5.23  | sum 148 | 88.3 go, 18.1 fseventsd, 8.5 XprotectService, 6.7 syspolicyd, 
+04:37:13 load  3.02 4.91 5.19  | sum 49 | 7.3 syspolicyd, 6.7 trustd, 6.3 tccd, 6.2 claude, 
+04:37:23 load  2.79 4.80 5.14  | sum 96 | 69.5 com.apple.WebKit.WebContent, 4.2 taal.test, 2.8 trustd, 2.8 syspolicyd, 
+04:37:33 load  2.60 4.69 5.10  | sum 35 | 13.0 claude, 3.4 opencode, 2.9 taal.test, 2.6 trustd, 
+# quiet after 90s; session starts
+04:37:47 load  2.85 4.64 5.07  | sum 119 | 72.1 go, 9.0 claude, 5.3 fseventsd, 4.6 tccd, 
+# mac_free_gib=16.6
+04:37:57 load  3.79 4.78 5.12  | sum 25 | 3.7 tccd, 3.3 trustd, 2.9 taal.test, 2.2 syspolicyd, 
+04:38:07 load  4.03 4.81 5.12  | sum 28 | 5.9 syspolicyd, 4.6 trustd, 3.9 tccd, 2.3 taal.test, 
+04:38:17 load  4.12 4.80 5.12  | sum 33 | 7.2 tccd, 6.7 trustd, 4.5 syspolicyd, 2.9 taal.test, 
+# mac_free_gib=16.6
+04:38:27 load  4.40 4.84 5.13  | sum 29 | 4.7 claude, 4.5 tccd, 4.1 trustd, 2.8 taal.test, 
+04:38:37 load  4.70 4.89 5.14  | sum 80 | 20.2 taal.test, 15.7 XprotectService, 10.4 go, 8.2 fseventsd, 
+04:38:47 load  7.48 5.48 5.35  | sum 149 | 81.0 go, 41.7 compile, 4.9 fseventsd, 4.5 claude, 
+# mac_free_gib=16.5
+04:38:57 load  7.07 5.47 5.34  | sum 19 | 3.7 trustd, 3.7 tccd, 3.2 claude, 2.0 syspolicyd, 
+04:39:07 load  6.54 5.40 5.32  | sum 26 | 4.3 claude, 3.4 zsh, 2.4 cmux, 1.9 claude, 
+04:39:17 load  8.85 5.93 5.51  | sum 55 | 21.3 XprotectService, 5.8 taal.test, 5.6 syspolicyd, 5.5 go, 
+# mac_free_gib=16.3
+04:39:27 load  8.76 6.01 5.55  | sum 19 | 9.7 bash, 5.5 syspolicyd, 1.8 claude, 0.7 trustd, 
+04:39:37 load  8.12 5.96 5.53  | sum 307 | 76.9 fseventsd, 54.0 spreekuur.test, 36.1 kasboek, 27.4 XprotectService, 
+04:39:48 load  9.18 6.26 5.64  | sum 288 | 70.2 fseventsd, 50.9 kasboek.test, 41.8 spreekuur.test, 33.3 postgres:, 
+# mac_free_gib=15.9
+04:39:58 load  8.48 6.20 5.63  | sum 148 | 51.9 spreekuur.test, 27.9 fseventsd, 11.1 postgres:, 10.7 kasboek.test, 
+04:40:08 load  7.86 6.15 5.62  | sum 190 | 71.1 kasboek.test, 45.1 fseventsd, 16.7 postgres:, 12.6 Finder, 
+04:40:18 load  7.04 6.03 5.58  | sum 240 | 71.8 fseventsd, 28.0 postgres:, 18.2 Finder, 12.0 mds, 
+# mac_free_gib=15.9
+04:40:28 load  6.88 6.03 5.58  | sum 48 | 11.1 fseventsd, 4.8 syspolicyd, 4.6 trustd, 4.2 tccd, 
+04:40:38 load  7.89 6.26 5.67  | sum 153 | 32.6 postgres:, 21.5 taal.test, 20.7 zwerm.test, 18.1 postgres:, 
+04:40:48 load  8.45 6.43 5.74  | sum 144 | 36.7 postgres:, 22.0 fseventsd, 18.2 claude, 12.6 taal.test, 
+# mac_free_gib=16.1
+04:40:58 load  7.60 6.32 5.71  | sum 76 | 26.8 fseventsd, 7.5 engine.test, 6.7 claude, 6.2 tccd, 
+04:41:08 load  7.29 6.29 5.70  | sum 80 | 17.5 engine.test, 16.1 fseventsd, 6.4 claude, 5.9 tccd, 
+04:41:18 load  7.48 6.36 5.73  | sum 79 | 25.1 werk.test, 11.4 fseventsd, 7.6 trustd, 7.2 tccd, 
+# mac_free_gib=16.2
+04:41:28 load  6.89 6.27 5.71  | sum 63 | 24.3 launchd, 4.7 cmux, 4.3 trustd, 4.3 tccd, 
+04:41:38 load  6.14 6.13 5.66  | sum 21 | 3.2 tccd, 3.1 syspolicyd, 3.0 trustd, 1.6 claude, 
+04:41:48 load  5.28 5.94 5.60  | sum 18 | 2.9 tccd, 2.8 trustd, 2.6 syspolicyd, 2.4 claude, 
+# mac_free_gib=16.2
+04:41:58 load  4.86 5.83 5.57  | sum 115 | 33.0 fseventsd, 27.5 launchd, 21.0 zwerm.test, 5.5 Finder, 
+04:42:08 load  4.34 5.69 5.52  | sum 19 | 3.3 claude, 2.3 cmux, 1.9 tccd, 1.5 syspolicyd, 
+04:42:18 load  4.34 5.64 5.51  | sum 24 | 3.7 zicht.test, 3.3 fseventsd, 1.8 (postgres), 1.7 claude, 
+# session ended 04:42:18
