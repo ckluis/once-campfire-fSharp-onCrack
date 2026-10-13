@@ -1,0 +1,1 @@
+host-load-mixed-1.txt: 82 samples during the session, 20 at >=150% (24%), max 368%, median 41% -> ok
