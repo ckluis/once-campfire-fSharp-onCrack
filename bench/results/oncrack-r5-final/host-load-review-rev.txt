@@ -1,0 +1,74 @@
+# host load during review-rev (ps -A, non-VM processes: top 4 by %CPU and the sum of all, every 10 s; loadavg)
+00:18:26 load  37.42 32.14 26.49  | sum 177 | 28.6 Python, 17.3 Python, 14.9 claude, 13.9 Python, 
+00:18:36 load  35.39 31.86 26.45  | sum 333 | 31.0 Python, 27.4 Python, 24.1 Python, 23.5 Python, 
+00:18:47 load  30.70 30.98 26.20  | sum 249 | 85.8 beam.smp, 23.4 Python, 22.4 fseventsd, 9.4 mds, 
+00:18:57 load  30.73 31.00 26.27  | sum 245 | 158.8 beam.smp, 13.9 Python, 9.9 mds, 9.6 syspolicyd, 
+00:19:07 load  30.55 30.95 26.31  | sum 276 | 48.3 mds, 45.5 beam.smp, 24.7 top, 23.0 (Python), 
+00:19:17 load  31.53 31.15 26.43  | sum 274 | 31.9 Python, 25.8 Python, 25.4 Python, 22.2 beam.smp, 
+00:19:27 load  29.12 30.64 26.30  | sum 286 | 18.3 Python, 17.2 Python, 17.1 Python, 16.3 Python, 
+00:19:37 load  27.03 30.15 26.18  | sum 259 | 165.1 beam.smp, 30.0 claude, 6.7 syspolicyd, 5.9 trustd, 
+00:19:47 load  25.75 29.78 26.10  | sum 174 | 27.6 Python, 19.9 Python, 16.4 Python, 16.1 Python, 
+00:19:57 load  22.47 28.95 25.84  | sum 50 | 9.2 Python, 7.6 trustd, 6.6 syspolicyd, 6.3 tccd, 
+00:20:07 load  22.22 28.67 25.78  | sum 246 | 19.3 Python, 18.9 Python, 16.8 Python, 15.9 Python, 
+00:20:17 load  21.33 28.28 25.68  | sum 39 | 11.4 Python, 4.0 fseventsd, 2.6 trustd, 2.3 tccd, 
+00:20:27 load  18.20 27.38 25.39  | sum 88 | 18.0 link, 17.8 link, 17.7 link, 10.9 go, 
+00:20:37 load  17.48 26.93 25.25  | sum 438 | 86.6 web.test, 83.5 fseventsd, 54.8 kasboek.test, 45.1 spreekuur.test, 
+00:20:47 load  15.91 26.29 25.04  | sum 278 | 74.3 kasboek.test, 65.3 spreekuur.test, 51.5 fseventsd, 20.0 postgres:, 
+00:20:57 load  14.62 25.67 24.84  | sum 227 | 62.1 kasboek.test, 52.6 fseventsd, 18.6 postgres:, 18.4 postgres:, 
+00:21:07 load  13.65 25.10 24.64  | sum 76 | 17.6 kasboek.test, 15.7 fseventsd, 8.6 postgres:, 4.2 postgres:, 
+00:21:17 load  11.78 24.32 24.37  | sum 145 | 53.1 fseventsd, 11.1 Finder, 10.3 claude, 9.4 postgres:, 
+00:21:28 load  10.42 23.62 24.12  | sum 102 | 28.7 go, 17.2 link, 14.6 fseventsd, 8.3 Python, 
+00:21:38 load  9.21 22.92 23.87  | sum 235 | 194.9 go, 21.4 link, 4.7 fseventsd, 1.8 claude, 
+00:21:48 load  7.94 22.20 23.60  | sum 33 | 4.2 opendirectoryd, 3.4 syspolicyd, 3.4 logd, 2.9 trustd, 
+00:21:58 load  7.02 21.54 23.35  | sum 220 | 154.1 com.apple.WebKit.WebContent, 11.9 fseventsd, 7.2 claude, 6.2 trustd, 
+00:22:08 load  6.32 20.91 23.10  | sum 118 | 74.9 zwerm.test, 10.8 fseventsd, 5.2 trustd, 5.0 syspolicyd, 
+00:22:18 load  5.66 20.29 22.86  | sum 74 | 22.5 go, 19.9 link, 4.2 syspolicyd, 4.0 trustd, 
+00:22:28 load  5.02 19.67 22.61  | sum 46 | 6.5 fseventsd, 5.9 zicht.test, 3.7 syspolicyd, 3.5 trustd, 
+00:22:38 load  4.71 19.12 22.38  | sum 44 | 9.9 bash, 6.8 syspolicyd, 4.9 com.apple.WebKit.WebContent, 3.6 opendirectoryd, 
+# quiet after 250s; session starts
+00:22:45 load  4.49 18.83 22.26  | sum 183 | 57.8 compile, 39.3 compile, 19.5 claude, 17.7 cmux, 
+# mac_free_gib=17.8
+00:22:55 load  6.22 18.74 22.18  | sum 73 | 15.0 bash, 7.4 (git), 6.8 XprotectService, 6.6 fseventsd, 
+00:23:05 load  6.75 18.43 22.04  | sum 276 | 20.7 Python, 19.8 Python, 19.5 Python, 17.4 Python, 
+00:23:15 load  11.50 19.07 22.22  | sum 162 | 31.6 Python, 19.3 Python, 18.9 spreekuur, 14.0 beam.smp, 
+# mac_free_gib=17.7
+00:23:25 load  10.88 18.69 22.05  | sum 11 | 2.1 trustd, 1.8 tccd, 1.8 syspolicyd, 1.2 claude, 
+00:23:35 load  9.98 18.24 21.85  | sum 9 | 2.4 claude, 1.9 cmux, 0.9 trustd, 0.7 tccd, 
+00:23:45 load  11.28 18.24 21.80  | sum 231 | 25.0 Python, 22.5 Python, 20.8 Python, 20.6 Python, 
+# mac_free_gib=17.7
+00:23:55 load  12.38 18.26 21.77  | sum 11 | 4.8 Python, 1.3 cmux, 0.8 claude, 0.5 trustd, 
+00:24:05 load  10.93 17.75 21.55  | sum 6 | 1.2 cmux, 0.9 claude, 0.7 trustd, 0.6 tccd, 
+00:24:16 load  10.48 17.43 21.39  | sum 24 | 14.8 bash, 4.0 syspolicyd, 1.3 cmux, 1.0 claude, 
+# mac_free_gib=17.7
+00:24:26 load  10.17 17.14 21.24  | sum 24 | 3.7 opendirectoryd, 3.2 mdworker_shared, 3.2 bash, 2.5 logd, 
+00:24:36 load  9.68 16.80 21.07  | sum 38 | 16.7 cmux, 15.4 bash, 0.8 WindowServer, 0.8 claude, 
+00:24:46 load  10.94 16.83 21.03  | sum 279 | 27.0 Python, 18.9 Python, 18.6 Python, 17.9 Python, 
+# mac_free_gib=17.7
+00:24:56 load  12.74 17.03 21.05  | sum 47 | 8.3 Python, 7.9 syspolicyd, 5.3 trustd, 4.4 fseventsd, 
+00:25:06 load  11.69 16.67 20.88  | sum 9 | 2.6 syspolicyd, 1.2 trustd, 0.9 tccd, 0.7 cmux, 
+00:25:16 load  11.14 16.38 20.73  | sum 335 | 19.0 Python, 18.2 Python, 17.5 Python, 16.9 Python, 
+# mac_free_gib=17.7
+00:25:26 load  14.16 16.85 20.84  | sum 75 | 27.6 Python, 7.2 fseventsd, 5.9 syspolicyd, 4.6 mds, 
+00:25:36 load  13.50 16.62 20.71  | sum 38 | 19.1 cmux, 4.5 claude, 2.6 trustd, 2.5 tccd, 
+00:25:46 load  12.57 16.32 20.56  | sum 14 | 3.5 syspolicyd, 2.6 trustd, 2.2 tccd, 2.1 claude, 
+# mac_free_gib=17.7
+00:25:56 load  11.80 16.03 20.41  | sum 23 | 5.8 trustd, 5.0 tccd, 4.3 syspolicyd, 1.8 cmux, 
+00:26:06 load  10.54 15.54 20.15  | sum 18 | 4.1 trustd, 3.6 tccd, 3.0 syspolicyd, 2.2 cmux, 
+00:26:16 load  10.37 15.34 20.03  | sum 32 | 8.1 bash, 7.3 syspolicyd, 3.8 trustd, 3.5 tccd, 
+# mac_free_gib=17.7
+00:26:26 load  9.61 15.01 19.86  | sum 26 | 7.1 cmux, 3.9 trustd, 3.5 tccd, 2.7 syspolicyd, 
+00:26:36 load  8.90 14.68 19.69  | sum 13 | 2.3 trustd, 2.2 cmux, 2.0 tccd, 1.9 claude, 
+00:26:46 load  7.85 14.27 19.48  | sum 17 | 2.8 trustd, 2.6 syspolicyd, 2.4 tccd, 1.7 claude, 
+# mac_free_gib=17.7
+00:26:56 load  7.72 14.03 19.33  | sum 11 | 2.1 trustd, 1.9 tccd, 1.8 syspolicyd, 1.2 claude, 
+00:27:06 load  7.46 13.76 19.18  | sum 11 | 2.3 trustd, 2.0 tccd, 1.6 syspolicyd, 1.4 claude, 
+00:27:16 load  7.47 13.56 19.04  | sum 28 | 16.0 bash, 6.2 syspolicyd, 1.4 trustd, 1.3 tccd, 
+# mac_free_gib=17.7
+00:27:26 load  7.54 13.37 18.91  | sum 37 | 15.0 bash, 5.9 syspolicyd, 5.7 claude, 2.1 claude, 
+00:27:36 load  7.51 13.18 18.78  | sum 36 | 11.4 cmux, 6.5 cmux, 6.3 claude, 3.1 Finder, 
+00:27:46 load  6.73 12.82 18.58  | sum 7 | 1.6 claude, 1.4 claude, 1.1 com.apple.DriverKit-AppleBCMWLAN, 0.7 trustd, 
+# mac_free_gib=17.7
+00:27:56 load  6.30 12.53 18.41  | sum 7 | 1.9 claude, 1.5 claude, 0.7 com.apple.DriverKit-AppleBCMWLAN, 0.6 trustd, 
+00:28:07 load  6.00 12.27 18.25  | sum 21 | 6.0 claude, 5.2 claude, 3.4 claude, 1.1 claude, 
+00:28:17 load  5.23 11.89 18.05  | sum 30 | 9.6 cmux, 4.2 claude, 3.7 claude, 3.2 claude, 
+# session ended 00:28:17

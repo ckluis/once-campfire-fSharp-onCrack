@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# session.sh NAME [bin/benchmark args...]: on the Mac. (1) waits for a quiet host (non-VM CPU under 100% for 3 samples 10 s apart, at most 600 s, then
+# session.sh NAME [bin/benchmark args...] (NAME review-*: runs review-round.sh with the tag NAME and the args as variants instead): on the Mac. (1) waits for a quiet host (non-VM CPU under 100% for 3 samples 10 s apart, at most 600 s, then
 # starts anyway and says so), writing host-load-NAME.txt; (2) starts run-fg.sh NAME in the VM DETACHED (nohup, setsid), which writes
 # logs/session-NAME.exit on the Mac's disk when it ends; (3) returns. Wait with: scripts/hostload-wait.sh NAME logs/session-NAME.exit 540 (repeat).
 name=$1; shift
@@ -18,5 +18,6 @@ done
 rm -f /tmp/hostsum.$$
 if [ $ok -ge 3 ]; then echo "# quiet after ${waited}s; session starts" >> "$out"; else echo "# NOT quiet after ${waited}s (sum >= 100%); session starts anyway" >> "$out"; fi
 rm -f $R/logs/session-$name.exit
-colima ssh -- bash -c "setsid nohup bash -c '$R/scripts/run-fg.sh $name $* > $R/logs/session-$name.log 2>&1; echo \$? > $R/logs/session-$name.exit' > /dev/null 2>&1 < /dev/null &"
+case $name in review-*) cmd="$R/scripts/review-round.sh $name $*" ;; *) cmd="$R/scripts/run-fg.sh $name $*" ;; esac
+colima ssh -- bash -c "setsid nohup bash -c '$cmd > $R/logs/session-$name.log 2>&1; echo \$? > $R/logs/session-$name.exit' > /dev/null 2>&1 < /dev/null &"
 echo "started $name $(date +%T)"

@@ -1,0 +1,53 @@
+# host load during review-fwd (ps -A, non-VM processes: top 4 by %CPU and the sum of all, every 10 s; loadavg)
+00:12:04 load  26.37 26.83 22.98  | sum 223 | 79.2 mediaanalysisd, 25.8 fseventsd, 16.9 kasboek.test, 13.5 claude, 
+00:12:14 load  25.67 26.64 22.96  | sum 380 | 26.1 Python, 23.4 Python, 22.2 Python, 20.7 top, 
+00:12:24 load  24.99 26.49 22.95  | sum 78 | 22.1 fseventsd, 9.0 engine.test, 7.0 Python, 4.8 cmux, 
+00:12:34 load  21.52 25.70 22.71  | sum 70 | 24.2 fseventsd, 13.0 engine.test, 8.2 claude, 3.7 trustd, 
+00:12:44 load  18.59 24.93 22.47  | sum 93 | 38.0 fseventsd, 10.4 engine.test, 5.4 Finder, 4.6 mds, 
+# quiet after 40s; session starts
+00:12:50 load  16.36 24.24 22.25  | sum 96 | 16.6 werk.test, 14.0 bash, 10.3 claude, 7.9 cmux, 
+# mac_free_gib=18.3
+00:13:00 load  15.31 23.76 22.10  | sum 85 | 32.5 com.apple.WebKit.WebContent, 15.5 bash, 7.8 loginwindow, 4.4 zwerm.test, 
+00:13:10 load  14.86 23.38 21.99  | sum 177 | 58.9 beam.smp, 57.4 beam.smp, 15.1 fseventsd, 7.5 com.apple.DriverKit-AppleBCMWLAN, 
+00:13:20 load  15.14 23.17 21.93  | sum 269 | 83.2 beam.smp, 82.6 beam.smp, 46.8 cmux, 14.4 fseventsd, 
+# mac_free_gib=18.3
+00:13:30 load  15.17 22.92 21.86  | sum 65 | 14.6 bash, 14.5 bash, 13.5 bash, 5.1 syspolicyd, 
+00:13:40 load  17.17 23.07 21.92  | sum 279 | 24.7 Python, 22.7 Python, 21.3 Python, 19.2 Python, 
+00:13:50 load  17.85 23.03 21.92  | sum 257 | 48.6 beam.smp, 37.3 (beam.smp), 22.3 beam.smp, 16.2 fseventsd, 
+# mac_free_gib=18.3
+00:14:01 load  24.32 24.26 22.37  | sum 236 | 28.0 beam.smp, 27.0 Python, 21.1 Python, 20.8 Python, 
+00:14:11 load  29.66 25.39 22.79  | sum 323 | 22.9 Python, 22.3 Python, 22.0 Python, 21.7 Python, 
+00:14:21 load  28.19 25.22 22.76  | sum 156 | 74.1 beam.smp, 27.5 Python, 6.9 fseventsd, 4.9 tccd, 
+# mac_free_gib=18.3
+00:14:31 load  29.48 25.60 22.93  | sum 326 | 48.1 go, 23.6 link, 20.7 Python, 18.9 cmux, 
+00:14:41 load  30.66 25.96 23.08  | sum 315 | 24.1 beam.smp, 15.3 Python, 14.5 Python, 13.6 Python, 
+00:14:51 load  30.55 26.11 23.17  | sum 119 | 20.3 Python, 14.1 beam.smp, 7.8 fseventsd, 6.6 opendirectoryd, 
+# mac_free_gib=18.3
+00:15:01 load  32.73 26.73 23.42  | sum 254 | 14.6 Python, 13.4 Python, 13.2 syspolicyd, 12.7 Python, 
+00:15:11 load  35.77 27.58 23.76  | sum 270 | 23.9 mds, 21.8 Python, 19.9 mds_stores, 18.8 cloudd, 
+00:15:21 load  37.00 28.10 23.99  | sum 325 | 21.9 Python, 21.9 Python, 21.3 Python, 20.9 Python, 
+# mac_free_gib=18.2
+00:15:31 load  35.64 28.13 24.05  | sum 175 | 34.8 mds, 31.2 beam.smp, 22.9 Python, 11.7 Python, 
+00:15:41 load  36.45 28.55 24.25  | sum 219 | 20.2 beam.smp, 19.9 (Python), 19.3 Python, 18.7 Python, 
+00:15:51 load  36.22 28.75 24.37  | sum 293 | 17.0 Python, 16.3 Python, 15.0 Python, 14.7 Python, 
+# mac_free_gib=18.0
+00:16:01 load  37.95 29.38 24.64  | sum 312 | 65.9 kasboek, 33.7 beam.smp, 32.5 Python, 29.4 mds, 
+00:16:11 load  37.78 29.60 24.78  | sum 230 | 19.0 Python, 18.0 Python, 17.5 Python, 16.5 Python, 
+00:16:21 load  36.93 29.71 24.87  | sum 216 | 37.3 beam.smp, 19.7 fseventsd, 15.4 mds, 11.2 Python, 
+# mac_free_gib=18.1
+00:16:32 load  37.97 30.16 25.09  | sum 170 | 27.8 beam.smp, 23.6 mds_stores, 23.5 Python, 17.2 Python, 
+00:16:42 load  35.95 29.98 25.08  | sum 284 | 24.3 beam.smp, 19.1 Python, 18.9 Python, 16.6 Python, 
+00:16:52 load  37.83 30.60 25.36  | sum 311 | 20.7 Python, 19.9 Python, 18.7 Python, 16.9 Python, 
+# mac_free_gib=18.0
+00:17:02 load  36.69 30.59 25.42  | sum 229 | 52.3 mds, 41.1 beam.smp, 21.9 Python, 14.1 Python, 
+00:17:12 load  35.41 30.51 25.45  | sum 287 | 15.1 Python, 14.6 Python, 14.4 Python, 14.1 Python, 
+00:17:22 load  34.44 30.47 25.50  | sum 403 | 19.6 Python, 19.5 Python, 18.9 Python, 18.3 Python, 
+# mac_free_gib=18.0
+00:17:32 load  38.84 31.53 25.93  | sum 307 | 120.0 beam.smp, 37.6 mds, 21.2 Python, 21.2 beam.smp, 
+00:17:42 load  34.90 30.93 25.78  | sum 329 | 217.8 beam.smp, 61.0 com.apple.WebKit.WebContent, 6.7 trustd, 5.3 tccd, 
+00:17:52 load  35.14 31.10 25.90  | sum 295 | 21.5 Python, 19.4 Python, 18.3 Python, 17.7 Python, 
+# mac_free_gib=18.0
+00:18:02 load  36.39 31.52 26.11  | sum 248 | 93.3 beam.smp, 89.9 beam.smp, 11.4 Python, 8.2 syspolicyd, 
+00:18:12 load  36.92 31.79 26.27  | sum 305 | 48.1 beam.smp, 17.5 Python, 14.7 Python, 14.5 Python, 
+00:18:22 load  37.63 32.09 26.44  | sum 260 | 17.6 Python, 17.5 beam.smp, 16.8 Python, 15.4 Python, 
+# session ended 00:18:22
