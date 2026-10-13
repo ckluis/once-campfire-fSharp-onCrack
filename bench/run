@@ -492,7 +492,8 @@ PY
   fi
 
   sleep 0.5
-  local peak; peak=$(cat "$OUT/.$app-$rep.mem")
+  # The sampler replaces the file by rename every 200 ms; on virtiofs a read can land between the unlink and the rename (R5 final cable rust rep 3).
+  local peak; peak=$(cat "$OUT/.$app-$rep.mem" 2>/dev/null || { sleep 0.3; cat "$OUT/.$app-$rep.mem"; })
   local cg_peak; cg_peak=$(( $(cat "$cg/memory.peak" 2>/dev/null || echo 0) / 1048576 ))
   kill "$SAMPLER" 2>/dev/null || true; SAMPLER=""
   python3 - "$f" "$app" "$rep" "$cold_ms" "$idle_cur" "$idle_anon" "$peak" "$cg_peak" "$http_json" "$cable_json" "$upload_json" "$load_start" "$(cat /proc/loadavg)" "$rows_json" "$probe_json" "$probe_start" "$(host_probe)" "$real_json" "$SEED_NAME" <<'PY'

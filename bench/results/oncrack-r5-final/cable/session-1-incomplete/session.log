@@ -1,0 +1,121 @@
+== rust rep 1 01:16:30 load 0.26 2.52 2.91
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:16:31] load before run: 0.26 2.52 2.91 (waited 0s)
+[01:16:34] host probe before run: {"spin_ms": 60.63, "spin_ms_max_cpu": 63.49, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.091} (waited 0s)
+[01:16:44] rust rep 1: cold start 107ms, idle 16MB (anon 15MB)
+[01:17:07] rust rep 1: cable 100 clients ready 100 lat all p50 1.295 p99 4.335 tput 3729.5 msg/s 55948 / 55948
+[01:17:32] rust rep 1: cable 500 clients ready 500 lat all p50 2.519 p99 3.147 tput 2059.1 msg/s 31093 / 31093
+[01:17:58] rust rep 1: cable 1000 clients ready 1000 lat all p50 7.851 p99 480.767 tput 796.1 msg/s 11951 / 11951
+[01:18:23] rust rep 1: cable 2000 clients ready 2000 lat all p50 9.799 p99 20.159 tput 282.1 msg/s 4242 / 4242
+[01:18:29] rust rep 1: done -> bench/results/oncrack-r5-final/cable/t3/rust-1.json
+== fsharp rep 1 01:18:29 load 3.16 2.97 3.03
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:19:19] load before run: 1.37 2.51 2.87 (waited 0s)
+[01:19:21] host probe before run: {"spin_ms": 60.6, "spin_ms_max_cpu": 62.07, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.091} (waited 0s)
+[01:19:32] fsharp rep 1: cold start 251ms, idle 27MB (anon 15MB)
+[01:19:55] fsharp rep 1: cable 100 clients ready 100 lat all p50 4.735 p99 17.871 tput 3329.7 msg/s 49952 / 49952
+[01:20:20] fsharp rep 1: cable 500 clients ready 500 lat all p50 3.111 p99 5.647 tput 808.4 msg/s 12131 / 12131
+[01:20:45] fsharp rep 1: cable 1000 clients ready 1000 lat all p50 5.531 p99 15.743 tput 377.7 msg/s 5669 / 5669
+[01:21:10] fsharp rep 1: cable 2000 clients ready 2000 lat all p50 16.023 p99 28.511 tput 206.8 msg/s 3106 / 3106
+[01:21:15] fsharp rep 1: done -> bench/results/oncrack-r5-final/cable/t3/fsharp-1.json
+== oncrack rep 1 01:21:15 load 3.25 2.83 2.94
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:22:05] load before run: 1.41 2.39 2.78 (waited 0s)
+[01:22:08] host probe before run: {"spin_ms": 60.53, "spin_ms_max_cpu": 64.83, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.089} (waited 0s)
+[01:22:18] oncrack rep 1: cold start 232ms, idle 29MB (anon 15MB)
+[01:22:41] oncrack rep 1: cable 100 clients ready 100 lat all p50 2.365 p99 10.463 tput 6065.5 msg/s 90987 / 90987
+[01:23:06] oncrack rep 1: cable 500 clients ready 500 lat all p50 2.525 p99 7.575 tput 1589.0 msg/s 23841 / 23841
+[01:23:31] oncrack rep 1: cable 1000 clients ready 1000 lat all p50 4.531 p99 7.555 tput 1406.9 msg/s 21118 / 21118
+[01:23:56] oncrack rep 1: cable 2000 clients ready 2000 lat all p50 6.579 p99 71.231 tput 825.8 msg/s 12404 / 12404
+[01:24:01] oncrack rep 1: done -> bench/results/oncrack-r5-final/cable/t3/oncrack-1.json
+== oncrack rep 2 01:24:01 load 4.35 2.99 2.94
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:25:12] load before run: 1.35 2.36 2.72 (waited 0s)
+[01:31:45] host probe before run: {"spin_ms": 60.99, "spin_ms_max_cpu": 62.46, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.098} (waited 290s)
+[01:31:57] oncrack rep 2: cold start 1147ms, idle 29MB (anon 15MB)
+[01:32:20] oncrack rep 2: cable 100 clients ready 100 lat all p50 3.213 p99 26.607 tput 4408.9 msg/s 66138 / 66138
+[01:32:45] oncrack rep 2: cable 500 clients ready 500 lat all p50 2.727 p99 19.087 tput 2674.2 msg/s 40122 / 40122
+[01:33:10] oncrack rep 2: cable 1000 clients ready 1000 lat all p50 3.911 p99 8.271 tput 1709.1 msg/s 25656 / 25656
+[01:33:35] oncrack rep 2: cable 2000 clients ready 2000 lat all p50 6.163 p99 8.191 tput 902.7 msg/s 13567 / 13567
+[01:33:40] oncrack rep 2: done -> bench/results/oncrack-r5-final/cable/t3/oncrack-2.json
+== fsharp rep 2 01:33:40 load 4.51 2.06 2.18
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:34:51] load before run: 1.40 1.62 2.01 (waited 0s)
+[01:35:33] host probe before run: {"spin_ms": 60.36, "spin_ms_max_cpu": 62.49, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.086} (waited 30s)
+[01:35:43] fsharp rep 2: cold start 290ms, idle 27MB (anon 15MB)
+[01:36:06] fsharp rep 2: cable 100 clients ready 100 lat all p50 2.825 p99 10.703 tput 701.6 msg/s 10526 / 10526
+[01:36:32] fsharp rep 2: cable 500 clients ready 500 lat all p50 5.915 p99 37.951 tput 226.3 msg/s 3418 / 3418
+[01:36:56] fsharp rep 2: cable 1000 clients ready 1000 lat all p50 16.415 p99 90.111 tput 197.5 msg/s 2968 / 2968
+[01:37:22] fsharp rep 2: cable 2000 clients ready 2000 lat all p50 17.119 p99 146.943 tput 71.8 msg/s 1089 / 1089
+[01:37:36] fsharp rep 2: done -> bench/results/oncrack-r5-final/cable/t3/fsharp-2.json
+== rust rep 2 01:37:36 load 2.87 2.07 2.10
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:38:16] load before run: 1.47 1.81 2.01 (waited 0s)
+[01:38:19] host probe before run: {"spin_ms": 59.34, "spin_ms_max_cpu": 63.99, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.068} (waited 0s)
+[01:38:29] rust rep 2: cold start 104ms, idle 16MB (anon 15MB)
+[01:38:52] rust rep 2: cable 100 clients ready 100 lat all p50 1.399 p99 2.095 tput 2444.1 msg/s 36667 / 36667
+[01:39:17] rust rep 2: cable 500 clients ready 500 lat all p50 3.009 p99 4.407 tput 825.1 msg/s 12534 / 12534
+[01:39:42] rust rep 2: cable 1000 clients ready 1000 lat all p50 6.847 p99 51.583 tput 100.4 msg/s 1522 / 1522
+[01:40:10] rust rep 2: cable 2000 clients ready 2000 lat all p50 34.591 p99 714.751 tput 393.1 msg/s 6415 / 6415
+[01:40:28] rust rep 2: done -> bench/results/oncrack-r5-final/cable/t3/rust-2.json
+== rust rep 3 01:40:28 load 2.89 2.26 2.15
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:41:08] load before run: 1.48 1.98 2.06 (waited 0s)
+[01:41:58] host probe before run: {"spin_ms": 59.2, "spin_ms_max_cpu": 59.8, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.065} (waited 30s)
+[01:42:08] rust rep 3: cold start 120ms, idle 16MB (anon 15MB)
+[01:42:31] rust rep 3: cable 100 clients ready 100 lat all p50 1.367 p99 2.883 tput 2565.9 msg/s 38489 / 38489
+[01:42:56] rust rep 3: cable 500 clients ready 500 lat all p50 3.533 p99 8.535 tput 563.4 msg/s 8452 / 8452
+[01:43:23] rust rep 3: cable 1000 clients ready 1000 lat all p50 44.159 p99 1894.399 tput 325.5 msg/s 4888 / 4888
+[01:43:49] rust rep 3: cable 2000 clients ready 2000 lat all p50 12.591 p99 81.919 tput 147.1 msg/s 2219 / 2219
+cat: bench/results/oncrack-r5-final/cable/t3/.rust-3.mem: No such file or directory
+== fsharp rep 3 01:43:51 load 5.28 2.72 2.28
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:45:11] load before run: 1.39 2.07 2.09 (waited 0s)
+[01:45:14] host probe before run: {"spin_ms": 59.97, "spin_ms_max_cpu": 61.04, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.079} (waited 0s)
+[01:45:24] fsharp rep 3: cold start 286ms, idle 28MB (anon 15MB)
+[01:45:48] fsharp rep 3: cable 100 clients ready 100 lat all p50 2.875 p99 10.391 tput 1817.7 msg/s 27268 / 27268
+[01:46:13] fsharp rep 3: cable 500 clients ready 500 lat all p50 5.719 p99 28.207 tput 324.3 msg/s 5012 / 5012
+[01:46:42] fsharp rep 3: cable 1000 clients ready 1000 lat all p50 49.599 p99 1037.823 tput 70.1 msg/s 1089 / 1089
+[01:47:07] fsharp rep 3: cable 2000 clients ready 2000 lat all p50 37.119 p99 388.607 tput 74.2 msg/s 1116 / 1116
+[01:47:27] fsharp rep 3: done -> bench/results/oncrack-r5-final/cable/t3/fsharp-3.json
+== oncrack rep 3 01:47:27 load 3.64 2.65 2.29
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:48:27] load before run: 1.34 2.16 2.14 (waited 0s)
+[01:48:30] host probe before run: {"spin_ms": 59.54, "spin_ms_max_cpu": 63.08, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.072} (waited 0s)
+[01:48:40] oncrack rep 3: cold start 222ms, idle 28MB (anon 15MB)
+[01:49:03] oncrack rep 3: cable 100 clients ready 100 lat all p50 2.771 p99 9.095 tput 4019.2 msg/s 60293 / 60293
+[01:49:29] oncrack rep 3: cable 500 clients ready 500 lat all p50 5.531 p99 30.991 tput 738.6 msg/s 11131 / 11131
+[01:49:56] oncrack rep 3: cable 1000 clients ready 1000 lat all p50 14.103 p99 44.351 tput 225.6 msg/s 3427 / 3427
+[01:50:21] oncrack rep 3: cable 2000 clients ready 2000 lat all p50 33.279 p99 206.591 tput 399.8 msg/s 6002 / 6002
+[01:50:41] oncrack rep 3: done -> bench/results/oncrack-r5-final/cable/t3/oncrack-3.json
+== sends rust 01:50:41
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:51:41] load before run: 1.38 2.31 2.23 (waited 0s)
+[01:51:44] host probe before run: {"spin_ms": 57.94, "spin_ms_max_cpu": 60.79, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.043} (waited 0s)
+[01:51:54] rust rep 1: cold start 128ms, idle 16MB (anon 15MB)
+[01:52:10] rust rep 1: cable 100 clients ready 100 lat all p50 1.543 p99 2.459 tput 2654.6 msg/s 21244 / 21244
+[01:52:28] rust rep 1: cable 500 clients ready 500 lat all p50 2.823 p99 3.979 tput 639.9 msg/s 5148 / 5148
+[01:52:46] rust rep 1: cable 1000 clients ready 1000 lat all p50 7.675 p99 42.175 tput 97.3 msg/s 780 / 780
+[01:53:11] rust rep 1: cable 2000 clients ready 2000 lat all p50 28.847 p99 315.903 tput 130.1 msg/s 1825 / 1825
+[01:53:16] rust rep 1: done -> bench/results/oncrack-r5-final/cable/sends/rust-1.json
+== sends fsharp 01:53:16
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:53:56] load before run: 1.35 2.13 2.18 (waited 0s)
+[01:53:59] host probe before run: {"spin_ms": 58.26, "spin_ms_max_cpu": 59.73, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.048} (waited 0s)
+[01:54:09] fsharp rep 1: cold start 256ms, idle 27MB (anon 15MB)
+[01:54:25] fsharp rep 1: cable 100 clients ready 100 lat all p50 4.987 p99 11.159 tput 3247.4 msg/s 25983 / 25983
+[01:54:43] fsharp rep 1: cable 500 clients ready 500 lat all p50 3.307 p99 9.951 tput 928.6 msg/s 7433 / 7433
+[01:55:01] fsharp rep 1: cable 1000 clients ready 1000 lat all p50 5.243 p99 19.519 tput 410.9 msg/s 3290 / 3290
+[01:55:19] fsharp rep 1: cable 2000 clients ready 2000 lat all p50 9.535 p99 12.415 tput 188.2 msg/s 1511 / 1511
+[01:55:24] fsharp rep 1: done -> bench/results/oncrack-r5-final/cable/sends/fsharp-1.json
+== sends oncrack 01:55:24
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[01:55:55] load before run: 1.44 2.00 2.13 (waited 0s)
+[01:56:28] host probe before run: {"spin_ms": 58.57, "spin_ms_max_cpu": 61.96, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.054} (waited 20s)
+[01:56:38] oncrack rep 1: cold start 219ms, idle 29MB (anon 15MB)
+[01:56:55] oncrack rep 1: cable 100 clients ready 100 lat all p50 2.509 p99 14.975 tput 6027.2 msg/s 48222 / 48222
+[01:57:13] oncrack rep 1: cable 500 clients ready 500 lat all p50 2.409 p99 6.227 tput 3002.3 msg/s 24029 / 24029
+[01:57:31] oncrack rep 1: cable 1000 clients ready 1000 lat all p50 4.731 p99 47.391 tput 1937.3 msg/s 15515 / 15515
+[01:57:49] oncrack rep 1: cable 2000 clients ready 2000 lat all p50 6.287 p99 57.311 tput 856.1 msg/s 6866 / 6866
+[01:57:54] oncrack rep 1: done -> bench/results/oncrack-r5-final/cable/sends/oncrack-1.json
+SESSION DONE
