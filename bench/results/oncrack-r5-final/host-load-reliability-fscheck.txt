@@ -1,0 +1,8 @@
+# host load during reliability-fscheck (ps -A, non-VM processes: top 4 by %CPU and the sum of all, every 10 s; loadavg)
+# quiet after 0s; session starts
+03:30:15 load  3.08 3.03 4.82  | sum 124 | 43.5 fseventsd, 12.8 Finder, 12.5 postgres:, 8.0 gen.test, 
+# mac_free_gib=15.2
+03:30:25 load  3.37 3.10 4.83  | sum 153 | 45.7 fseventsd, 29.1 cmux, 13.4 postgres:, 11.0 Finder, 
+03:30:35 load  3.17 3.06 4.79  | sum 34 | 8.8 claude, 5.9 trustd, 5.9 tccd, 5.1 syspolicyd, 
+03:30:45 load  2.99 3.02 4.77  | sum 27 | 4.1 claude, 4.0 claude, 3.3 tccd, 3.2 trustd, 
+# session ended 03:30:45
