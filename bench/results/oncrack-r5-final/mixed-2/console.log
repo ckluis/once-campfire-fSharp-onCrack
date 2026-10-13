@@ -1,0 +1,278 @@
+rails round 1: room_show 16 clients 2804.8 req/s
+rails round 1: messages_page 16 clients 2706.5 req/s
+rails round 1: sidebar 16 clients 3636.4 req/s
+rails round 1: search 16 clients 3367.2 req/s
+rust round 1: room_show 16 clients 37918.3 req/s
+rust round 1: messages_page 16 clients 27412.1 req/s
+rust round 1: sidebar 16 clients 30245.3 req/s
+rust round 1: search 16 clients 35179.2 req/s
+c round 1: room_show 16 clients 36491.9 req/s
+c round 1: messages_page 16 clients 70066.2 req/s
+c round 1: sidebar 16 clients 70941.6 req/s
+c round 1: search 16 clients 65632.2 req/s
+fsharp round 1: room_show 16 clients 24635.1 req/s
+fsharp round 1: messages_page 16 clients 21384.7 req/s
+fsharp round 1: sidebar 16 clients 6122.5 req/s
+fsharp round 1: search 16 clients 2787.7 req/s
+oncrack round 1: room_show 16 clients 152834.3 req/s
+oncrack round 1: messages_page 16 clients 51347.4 req/s
+oncrack round 1: sidebar 16 clients 86479.2 req/s
+oncrack round 1: search 16 clients 28055.7 req/s
+oncrack-cached round 1: room_show 16 clients 162054.0 req/s
+oncrack-cached round 1: messages_page 16 clients 163595.1 req/s
+oncrack-cached round 1: sidebar 16 clients 175420.5 req/s
+oncrack-cached round 1: search 16 clients 158100.6 req/s
+oncrack-cached round 2: room_show 16 clients 43740.7 req/s
+oncrack-cached round 2: messages_page 16 clients 23037.5 req/s
+oncrack-cached round 2: sidebar 16 clients 164171.7 req/s
+oncrack-cached round 2: search 16 clients 86519.3 req/s
+oncrack round 2: room_show 16 clients 9787.1 req/s
+oncrack round 2: messages_page 16 clients 118810.1 req/s
+oncrack round 2: sidebar 16 clients 180292.6 req/s
+oncrack round 2: search 16 clients 59141.4 req/s
+fsharp round 2: room_show 16 clients 15647.7 req/s
+fsharp round 2: messages_page 16 clients 21451.6 req/s
+fsharp round 2: sidebar 16 clients 21452.7 req/s
+fsharp round 2: search 16 clients 21942.5 req/s
+c round 2: room_show 16 clients 50283.4 req/s
+c round 2: messages_page 16 clients 49452.0 req/s
+c round 2: sidebar 16 clients 11890.8 req/s
+c round 2: search 16 clients 58818.9 req/s
+rust round 2: room_show 16 clients 31169.6 req/s
+rust round 2: messages_page 16 clients 11186.4 req/s
+rust round 2: sidebar 16 clients 47491.2 req/s
+rust round 2: search 16 clients 50053.9 req/s
+rails round 2: room_show 16 clients 1818.3 req/s
+rails round 2: messages_page 16 clients 341.2 req/s
+rails round 2: sidebar 16 clients 1951.3 req/s
+rails round 2: search 16 clients 3818.8 req/s
+rails round 3: room_show 16 clients 2532.2 req/s
+rails round 3: messages_page 16 clients 256.4 req/s
+rails round 3: sidebar 16 clients 3373.5 req/s
+rails round 3: search 16 clients 3774.1 req/s
+rust round 3: room_show 16 clients 39247.4 req/s
+rust round 3: messages_page 16 clients 18725.6 req/s
+rust round 3: sidebar 16 clients 7052.0 req/s
+rust round 3: search 16 clients 25687.1 req/s
+c round 3: room_show 16 clients 61799.5 req/s
+c round 3: messages_page 16 clients 67176.8 req/s
+c round 3: sidebar 16 clients 74709.1 req/s
+c round 3: search 16 clients 62442.1 req/s
+fsharp round 3: room_show 16 clients 15285.8 req/s
+fsharp round 3: messages_page 16 clients 21912.7 req/s
+fsharp round 3: sidebar 16 clients 21505.7 req/s
+fsharp round 3: search 16 clients 19251.8 req/s
+oncrack round 3: room_show 16 clients 117098.5 req/s
+oncrack round 3: messages_page 16 clients 134121.3 req/s
+oncrack round 3: sidebar 16 clients 18282.3 req/s
+oncrack round 3: search 16 clients 105539.7 req/s
+oncrack-cached round 3: room_show 16 clients 156242.9 req/s
+oncrack-cached round 3: messages_page 16 clients 158977.0 req/s
+oncrack-cached round 3: sidebar 16 clients 168332.0 req/s
+oncrack-cached round 3: search 16 clients 164551.9 req/s
+{
+  "rails": {
+    "room_show": {
+      "median_rps": 2532.2,
+      "runs": [
+        2804.8,
+        1818.3,
+        2532.2
+      ]
+    },
+    "messages_page": {
+      "median_rps": 341.2,
+      "runs": [
+        2706.5,
+        341.2,
+        256.4
+      ]
+    },
+    "sidebar": {
+      "median_rps": 3373.5,
+      "runs": [
+        3636.4,
+        1951.3,
+        3373.5
+      ]
+    },
+    "search": {
+      "median_rps": 3774.1,
+      "runs": [
+        3367.2,
+        3818.8,
+        3774.1
+      ]
+    }
+  },
+  "rust": {
+    "room_show": {
+      "median_rps": 37918.3,
+      "runs": [
+        37918.3,
+        31169.6,
+        39247.4
+      ]
+    },
+    "messages_page": {
+      "median_rps": 18725.6,
+      "runs": [
+        27412.1,
+        11186.4,
+        18725.6
+      ]
+    },
+    "sidebar": {
+      "median_rps": 30245.3,
+      "runs": [
+        30245.3,
+        47491.2,
+        7052.0
+      ]
+    },
+    "search": {
+      "median_rps": 35179.2,
+      "runs": [
+        35179.2,
+        50053.9,
+        25687.1
+      ]
+    }
+  },
+  "c": {
+    "room_show": {
+      "median_rps": 50283.4,
+      "runs": [
+        36491.9,
+        50283.4,
+        61799.5
+      ]
+    },
+    "messages_page": {
+      "median_rps": 67176.8,
+      "runs": [
+        70066.2,
+        49452.0,
+        67176.8
+      ]
+    },
+    "sidebar": {
+      "median_rps": 70941.6,
+      "runs": [
+        70941.6,
+        11890.8,
+        74709.1
+      ]
+    },
+    "search": {
+      "median_rps": 62442.1,
+      "runs": [
+        65632.2,
+        58818.9,
+        62442.1
+      ]
+    }
+  },
+  "fsharp": {
+    "room_show": {
+      "median_rps": 15647.7,
+      "runs": [
+        24635.1,
+        15647.7,
+        15285.8
+      ]
+    },
+    "messages_page": {
+      "median_rps": 21451.6,
+      "runs": [
+        21384.7,
+        21451.6,
+        21912.7
+      ]
+    },
+    "sidebar": {
+      "median_rps": 21452.7,
+      "runs": [
+        6122.5,
+        21452.7,
+        21505.7
+      ]
+    },
+    "search": {
+      "median_rps": 19251.8,
+      "runs": [
+        2787.7,
+        21942.5,
+        19251.8
+      ]
+    }
+  },
+  "oncrack": {
+    "room_show": {
+      "median_rps": 117098.5,
+      "runs": [
+        152834.3,
+        9787.1,
+        117098.5
+      ]
+    },
+    "messages_page": {
+      "median_rps": 118810.1,
+      "runs": [
+        51347.4,
+        118810.1,
+        134121.3
+      ]
+    },
+    "sidebar": {
+      "median_rps": 86479.2,
+      "runs": [
+        86479.2,
+        180292.6,
+        18282.3
+      ]
+    },
+    "search": {
+      "median_rps": 59141.4,
+      "runs": [
+        28055.7,
+        59141.4,
+        105539.7
+      ]
+    }
+  },
+  "oncrack-cached": {
+    "room_show": {
+      "median_rps": 156242.9,
+      "runs": [
+        162054.0,
+        43740.7,
+        156242.9
+      ]
+    },
+    "messages_page": {
+      "median_rps": 158977.0,
+      "runs": [
+        163595.1,
+        23037.5,
+        158977.0
+      ]
+    },
+    "sidebar": {
+      "median_rps": 168332.0,
+      "runs": [
+        175420.5,
+        164171.7,
+        168332.0
+      ]
+    },
+    "search": {
+      "median_rps": 158100.6,
+      "runs": [
+        158100.6,
+        86519.3,
+        164551.9
+      ]
+    }
+  }
+}
