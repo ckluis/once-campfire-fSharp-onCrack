@@ -99,3 +99,8 @@ schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 
 [02:32:38] rust rep 1: cable 2000 clients ready 2000 lat all p50 15.687 p99 271.871 tput 215.6 msg/s 2630 / 2630
 [02:32:48] rust rep 1: done -> bench/results/oncrack-r5-final/cable/sends/rust-1.json
 == sends fsharp 02:32:48
+schedule: apps rust,fsharp,oncrack, reps 3; suites: cable; http secs 8, concs 1 16 64, routes up, warm-up 30s at each route and concentration, idle 10s
+[02:33:48] load before run: 1.36 2.23 2.25 (waited 0s)
+[02:38:46] host probe before run: {"spin_ms": 58.58, "spin_ms_max_cpu": 61.49, "cpus": "0-3,4-7", "baseline_ms": 55.57, "ratio": 1.054} (waited 210s)
+[02:38:57] fsharp rep 1: cold start 274ms, idle 27MB (anon 15MB)
+[02:39:13] fsharp rep 1: cable 100 clients ready 100 lat all p50 2.579 p99 9.391 tput 1065.2 msg/s 8537 / 8537
