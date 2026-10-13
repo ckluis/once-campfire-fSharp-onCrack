@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-final/totals.py", line 61, in <module>
+    rows = [json.loads(l) for l in open(os.path.join(HERE, 'review.jsonl'))]
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/clank/Desktop/projects/once-campfire-fsharp-oncrack/bench/results/oncrack-r5-final/review.jsonl'
