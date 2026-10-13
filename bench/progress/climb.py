@@ -86,7 +86,10 @@ def port_start_entry(hist):
             "workloads": medians("fsharp", PORT_ERA["rust"])}
 
 
-def read_log(path):
+def read_log(path, mode=None):
+    """The log's rows. Round 5 added "mode" (fresh | cached) to the project-suite rows; a row without it is cached (rounds 1-2). The chart
+    draws one mode's line: CLIMB_MODE (default cached, which is every row logged before round 5 and keeps the chart as it was)."""
+    mode = mode or os.environ.get("CLIMB_MODE", "cached")
     rows = []
     if os.path.exists(path):
         with open(path) as f:
@@ -94,9 +97,11 @@ def read_log(path):
                 line = line.strip()
                 if line:
                     try:
-                        rows.append(json.loads(line))
+                        r = json.loads(line)
                     except json.JSONDecodeError:
-                        pass
+                        continue
+                    if r.get("mode", "cached") == mode:
+                        rows.append(r)
     return rows
 
 
